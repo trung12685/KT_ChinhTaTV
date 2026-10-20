@@ -50,4 +50,25 @@ var changedOrder = "Đầu trang XPS" + new string('a', 60) + "con đo" + new st
 var contextual = PreviewLocator.Locate(new(1, longBody, longBody.IndexOf("đo", StringComparison.Ordinal), 2), changedOrder);
 Assert(contextual?.Start == changedOrder.IndexOf("đo", StringComparison.Ordinal),
     "Ngữ cảnh duy nhất khi thứ tự nội dung ngoài vùng lỗi khác nhau");
+var rpc = new System.Runtime.InteropServices.COMException("RPC", unchecked((int)0x800706BA));
+Assert(WordConnectionPolicy.IsDisconnected(rpc), "Nhận diện Word RPC server unavailable");
+int attempts = 0, recoveries = 0;
+int recovered = WordConnectionPolicy.ReadWithRecovery(() =>
+{
+    if (++attempts == 1) throw rpc;
+    return 42;
+}, () => recoveries++);
+Assert(recovered == 42 && attempts == 2 && recoveries == 1, "Khôi phục đúng một lần rồi đọc lại");
+attempts = recoveries = 0;
+try { WordConnectionPolicy.ReadWithRecovery<int>(() => { attempts++; throw rpc; }, () => recoveries++); }
+catch (System.Runtime.InteropServices.COMException) { }
+Assert(attempts == 2 && recoveries == 1, "Không lặp vô hạn khi Word tiếp tục lỗi");
+attempts = recoveries = 0;
+try { WordConnectionPolicy.ReadWithRecovery<int>(() => { attempts++; throw new IOException("file"); }, () => recoveries++); }
+catch (IOException) { }
+Assert(attempts == 1 && recoveries == 0, "Không khởi động Word lại vì lỗi file thông thường");
+attempts = 0;
+try { WordConnectionPolicy.ReadWithRecovery<int>(() => { attempts++; throw rpc; }, () => throw new InvalidOperationException("unsaved")); }
+catch (InvalidOperationException) { }
+Assert(attempts == 1, "Không đọc lại khi khôi phục từ chối vì thay đổi chưa lưu");
 Console.WriteLine($"{checks} checks passed.");

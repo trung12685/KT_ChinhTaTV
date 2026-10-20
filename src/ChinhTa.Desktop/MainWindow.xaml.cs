@@ -30,7 +30,20 @@ public partial class MainWindow : Window
         hover.Stop();
         Mouse.OverrideCursor = Cursors.Wait;
         try { action(); }
-        catch (Exception ex) { MessageBox.Show(this, ex.Message, "Không thể thực hiện", MessageBoxButton.OK, MessageBoxImage.Warning); }
+        catch (Exception ex)
+        {
+            Diagnostics.Write("UI.Operation", ex);
+            pending = displayed = null;
+            anchors.Clear();
+            highlighter.Clear();
+            Issues.ItemsSource = null;
+            string message = WordConnectionPolicy.IsDisconnected(ex)
+                ? "Ứng dụng mất kết nối với Microsoft Word. Hãy chọn Kiểm tra → Quét lại để thử khôi phục bản lưu gần nhất. " +
+                  "Không cần đóng các cửa sổ Word khác. Nếu lỗi xảy ra ngay khi mở, hãy mở lại file."
+                : ex.Message;
+            MessageBox.Show(this, message + "\n\nBản làm việc: " + session.RecoveryPath +
+                "\nNhật ký: " + Diagnostics.LogPath, "Không thể thực hiện", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
         finally { Mouse.OverrideCursor = null; }
     }
     private bool CanDiscard() => !session.Changed || MessageBox.Show(this,
@@ -57,7 +70,8 @@ public partial class MainWindow : Window
         Issues.ItemsSource = found;
         Status.Text = $"{Path.GetFileName(session.Source)} — {found.Count} cảnh báo. " +
             $"Quét: {checkSeconds:F1}s; dựng trang: {timer.Elapsed.TotalSeconds - checkSeconds:F1}s. " +
-            "Chọn hoặc rê chuột lên lỗi để đánh dấu riêng, không xuất lại Word.";
+            "Chọn hoặc rê chuột lên lỗi để đánh dấu riêng, không xuất lại Word." +
+            (session.Recovered ? " Đã khôi phục kết nối Word; lịch sử hoàn tác trước khôi phục không còn." : "");
     }
     private void ClosePreview()
     {

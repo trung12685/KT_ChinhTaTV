@@ -10,6 +10,9 @@ public sealed class WordSession : IDisposable
     private dynamic? app;
     private dynamic? document;
     private readonly string folder = Path.Combine(Path.GetTempPath(), "ChinhTa-" + Guid.NewGuid());
+    private bool snapshotCurrent = true;
+    public bool Recovered { get; private set; }
+    public string RecoveryPath => Path.Combine(folder, "working.docx");
     public string Source { get; private set; } = "";
     public bool Changed { get; private set; }
     public bool IsOpen => document is not null;
@@ -20,15 +23,24 @@ public sealed class WordSession : IDisposable
     }
     public void Open(string path)
     {
-        DisposeDocument();
+        // Do not reuse an RCW from a Word process that has already exited.
+        CloseConnection();
+        Source = Path.GetFullPath(path);
+        Changed = false;
+        Recovered = false;
+        File.Copy(path, RecoveryPath, true);
+        snapshotCurrent = true;
+        ReadWithRecovery("Word.Open", () => { Connect(); return true; });
+    }
+    private void Connect()
+    {
         app ??= Activator.CreateInstance(Type.GetTypeFromProgID("Word.Application")
             ?? throw new InvalidOperationException("Cần cài Microsoft Word desktop trên Windows."));
         app!.Visible = false;
         app.DisplayAlerts = 0;
         app.ScreenUpdating = false;
         app.AutomationSecurity = 3; // Never enable macros in documents opened by this instance.
-        var working = Path.Combine(folder, "working.docx");
-        File.Copy(path, working, true);
+        var working = RecoveryPath;
         dynamic docs = app.Documents;
         try { document = docs.Open(working, ReadOnly: false, AddToRecentFiles: false, Visible: false); }
         finally { Release(docs); }
@@ -37,10 +49,24 @@ public sealed class WordSession : IDisposable
             DisposeDocument();
             throw new InvalidOperationException("Bản thử chưa hỗ trợ Track Changes hoặc tài liệu được bảo vệ.");
         }
-        Source = Path.GetFullPath(path);
-        Changed = false;
     }
-    public IReadOnlyList<Issue> Check()
+    private void Reconnect()
+    {
+        if (!snapshotCurrent)
+            throw new InvalidOperationException("Word mất kết nối trước khi lưu được thay đổi cuối. " +
+                "Không tự mở lại để tránh bỏ thay đổi âm thầm. Bản lưu gần nhất: " + RecoveryPath);
+        Diagnostics.Write("Word.Reconnect", null);
+        CloseConnection();
+        Connect();
+        Recovered = true;
+    }
+    private T ReadWithRecovery<T>(string operation, Func<T> read) => WordConnectionPolicy.ReadWithRecovery(() =>
+    {
+        try { return read(); }
+        catch (Exception error) { Diagnostics.Write(operation, error); throw; }
+    }, Reconnect);
+    public IReadOnlyList<Issue> Check() => ReadWithRecovery("Word.Check", CheckCore);
+    private IReadOnlyList<Issue> CheckCore()
     {
         var paragraphs = new List<Paragraph>();
         dynamic ps = document!.Paragraphs;
@@ -78,6 +104,8 @@ public sealed class WordSession : IDisposable
         try
         {
             if ((string)r.Text != issue.Original) throw new InvalidOperationException("Vị trí lỗi đã thay đổi. Hãy quét lại.");
+            snapshotCurrent = false;
+            Changed = true;
             undo.StartCustomRecord("Sửa lỗi chính tả");
             try
             {
@@ -93,10 +121,24 @@ public sealed class WordSession : IDisposable
             finally { undo.EndCustomRecord(); }
         }
         finally { Release(undo); Release(r); }
+        Checkpoint();
     }
-    public void Undo() { if ((bool)document!.Undo()) Changed = true; }
-    public string ExportPreview(IReadOnlyList<Issue> issues, IDictionary<Issue, PreviewAnchor> anchors)
+    private void Checkpoint()
     {
+        document!.Save();
+        snapshotCurrent = true;
+    }
+    public void Undo()
+    {
+        snapshotCurrent = false;
+        if ((bool)document!.Undo()) Changed = true;
+        Checkpoint();
+    }
+    public string ExportPreview(IReadOnlyList<Issue> issues, IDictionary<Issue, PreviewAnchor> anchors)
+        => ReadWithRecovery("Word.ExportPreview", () => ExportPreviewCore(issues, anchors));
+    private string ExportPreviewCore(IReadOnlyList<Issue> issues, IDictionary<Issue, PreviewAnchor> anchors)
+    {
+        anchors.Clear();
         // Export the unmodified document once. Selection highlighting belongs exclusively to WPF.
         document!.Repaginate();
         var pageTexts = new Dictionary<int, (int Start, string Text)>();
@@ -134,22 +176,39 @@ public sealed class WordSession : IDisposable
     {
         if (string.Equals(Path.GetFullPath(path), Source, StringComparison.OrdinalIgnoreCase))
             throw new InvalidOperationException("Hãy chọn tên khác để giữ nguyên tài liệu gốc.");
-        document!.Save();
-        File.Copy(Path.Combine(folder, "working.docx"), path, true);
+        Checkpoint();
+        File.Copy(RecoveryPath, path, true);
         Changed = false;
     }
-    private void DisposeDocument()
+    private void CloseConnection()
     {
-        if (document is null) return;
-        try { document.Close(0); } finally { Release(document); document = null; }
-    }
-    public void Dispose()
-    {
-        try { DisposeDocument(); }
+        // A dead COM server can throw from Close/Quit too. Still release both handles.
+        dynamic? oldDocument = document; document = null;
+        dynamic? oldApp = app; app = null;
+        try
+        {
+            if (oldDocument is not null)
+                try { oldDocument.Close(0); }
+                catch (COMException error) { Diagnostics.Write("Word.Close", error); }
+        }
         finally
         {
-            if (app is not null) { try { app.Quit(0); } finally { Release(app); app = null; } }
-            try { Directory.Delete(folder, true); } catch (IOException) { }
+            Release(oldDocument);
+            try
+            {
+                if (oldApp is not null)
+                    try { oldApp.Quit(0); }
+                    catch (COMException error) { Diagnostics.Write("Word.Quit", error); }
+            }
+            finally { Release(oldApp); }
         }
+    }
+    private void DisposeDocument() => CloseConnection();
+    public void Dispose()
+    {
+        CloseConnection();
+        // Keep the last checkpoint if a mutation could not be saved successfully.
+        if (!snapshotCurrent) return;
+        try { Directory.Delete(folder, true); } catch (IOException) { }
     }
 }

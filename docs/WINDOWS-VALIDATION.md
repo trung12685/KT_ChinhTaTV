@@ -13,3 +13,7 @@
 11. Tắt mạng sau khi build, chạy lại mở/quét/sửa/lưu để xác nhận offline. Thử trên bản sao tài liệu, không dùng duy nhất bản tài liệu gốc.
 
 Ghi kết quả cùng phiên bản Windows, Word, .NET và cấu hình máy. Chỉ công bố các bước thực sự đã chạy.
+
+12. Bản 0.1.3: mở/đóng/chuyển giữa hai tài liệu ít nhất 10 lần. Xác minh tiến trình Word riêng cũ kết thúc và các phiên Word có sẵn của người dùng vẫn hoạt động.
+13. Trên máy thử nghiệm, với file giả, xác định đúng PID Word do ứng dụng tạo (không chọn Word người dùng), kết thúc PID đó rồi chọn Quét lại. Kiểm tra khôi phục nội dung đã checkpoint, thông báo mất lịch sử Undo và highlight mới; không tự lặp sửa. Nếu Word không khởi động được sau một lần thử, hiển thị thông báo dễ hiểu và đường dẫn nhật ký, không thử vô hạn.
+14. Sửa rồi hoàn tác, lưu bản sao và so sánh nội dung/định dạng để xác minh checkpoint không phá Undo. Thử lỗi quyền lưu bản làm việc: phải báo, không tự khôi phục rồi âm thầm bỏ thay đổi. Kiểm tra nhật ký không chứa nội dung tài liệu.
