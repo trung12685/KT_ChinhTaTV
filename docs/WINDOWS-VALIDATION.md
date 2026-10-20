@@ -54,3 +54,5 @@ Ghi kết quả cùng phiên bản Windows, Word, .NET và cấu hình máy. Ch�
 
 38. Bản 0.1.16: chọn Kiểm tra → Kiểm tra Word tự động… sau giải nén đủ ZIP. Chờ Explorer mở thư mục OfficeCheck-*. `office-check.txt` phải có PASS từng bước và RESULT PASS. Nếu FAIL, gửi chính báo cáo mới (có version/Word Build/giai đoạn/chuỗi HRESULT), không cần thử tiếp bằng văn bản thật. Mẫu dùng tọa độ cố định để kiểm thao tác; chỉ sau khi bài kiểm tra đạt mới kiểm đo/vị trí trên Bao cao.docx.
 39. Trên Windows, kiểm lại nguồn ZIP luôn là snapshot không được Word mở. Trường hợp 0x80070020 ở 0.1.15 không được tái diễn. Kiểm một Line và nhóm ba Line, SaveCopy, Undo, đọc lại trong Word. Đối chiếu báo cáo Office với phiên bản ứng dụng để tránh đọc lỗi cũ.
+
+39. Bản 0.1.17: kiểm tra Word tự động phải xác minh cả nét XPS tại tọa độ dự kiến. Mở bản gốc Bao cao.docx, kiểm đủ ba cảnh báo Line và ba vị trí rê chuột. Sửa ba mục cùng lượt, lưu bản sao/mở lại: cả ba nét phải đúng vị trí, không có pict trùng. Nếu nét thiếu/lệch, thao tác phải rollback và ghi lỗi thay vì báo đã sửa. Thử bản từng sửa bằng 0.1.16 để kiểm thay hai Line cũ và thêm Line trích yếu, không nhân đôi.

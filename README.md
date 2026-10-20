@@ -17,7 +17,7 @@ Bản 0.1.2 xuất XPS không có highlight từ tài liệu làm việc một l
 
 Khi ánh xạ không chắc chắn (thứ tự vẽ phức tạp, nội dung mơ hồ, glyph thiếu chữ Unicode hoặc lỗi qua ranh giới trang), ứng dụng đến trang và báo **chưa ánh xạ chắc chắn**, không đoán vị trí. Cần xác minh tọa độ thực tế trên Windows với nhiều font/zoom/bảng. Các thao tác mở, quét và xuất Word vẫn đồng bộ; lần mở và sau mỗi sửa/hoàn tác có thể làm giao diện chờ. Thanh trạng thái ghi thời gian quét/dựng trang, và thời gian đánh dấu khi chọn lỗi. Chưa có số đo trên Windows.
 
-## Phạm vi hiện có — 0.1.16
+## Phạm vi hiện có — 0.1.17
 
 Chọn **Loại văn bản** ở phía trên: Nhà nước, Đảng hoặc cá nhân. Đổi loại khi đang mở tài liệu sẽ quét và dựng lại bản xem trước; các ô tích cũ được đặt lại. Mặc định là Nhà nước. Không tự đoán loại tài liệu từ vài từ trong nội dung.
 
@@ -136,3 +136,9 @@ Chỉ tự đặt lại Line có marker của ứng dụng trong vùng đã xác
 Nhật ký 0.1.15 xác định IOException 0x80070020 khi ZipFile.OpenRead mở RecoveryPath đang được Word giữ handle ghi. File.Copy checkpoint đã thành công trước bước đó; dùng chính bản `.undo.docx` riêng làm đầu vào ZIP thay vì RecoveryPath. Không thay cơ chế VML/rollback đã có. Kiểm thử mới giữ khóa độc quyền trên file làm việc và vẫn ghi được candidate từ bản sao.
 
 Menu **Kiểm tra → Kiểm tra Word tự động…** mở một WordSession riêng với mẫu giả đi kèm ZIP, nhận diện mốc, chạy đúng FixMany/ghi gói/mở lại/xác minh, xuất XPS, lưu bản sao, Undo nhóm, rồi mở lại bản đã lưu để kiểm ba Line còn tồn tại. Báo cáo `office-check.txt`, XPS và DOCX mẫu ở thư mục OfficeCheck-* trong thư mục diagnostics; Explorer tự mở sau kiểm tra. Không dùng tài liệu người dùng đang mở. Tọa độ mẫu cố định chỉ kiểm thao tác ghi/lưu, không chứng minh vị trí thể thức hay pipeline đo XPS. Chưa chạy bài kiểm tra Windows này trong cloud Linux.
+
+## Bản 0.1.17 — vị trí Line và nhận diện trích yếu
+
+So sánh DOCX gốc và bản sau sửa xác định hai vấn đề: VML dùng tọa độ trang trong đầu mút cục bộ nhưng thiếu vị trí hộp; dấu cách cuối đoạn trích yếu đầu làm ngắt nhận diện cả khối. Nay ghi margin-left/top theo trang với đầu mút cục bộ, tách căn giữa cấu trúc khỏi điều kiện đo chữ và dọn khung pict rỗng khi thay Line của ứng dụng.
+
+Phân trang trước khi đọc metadata. Vai trò chưa nhận diện phải có cảnh báo. Trước chấp nhận sửa, xuất XPS và kiểm đầu/cuối/cao độ nét thực tế trong dung sai 1pt; nếu thiếu hoặc lệch, khôi phục bản trước. Menu kiểm tra Word tự động cũng chạy bước xác minh nét này. 139 kiểm tra đạt với cả cặp tài liệu riêng tư, build Windows thành công; chưa chạy Office 2021 trong cloud Linux. Tài liệu riêng tư không được đưa vào Git hoặc ZIP.

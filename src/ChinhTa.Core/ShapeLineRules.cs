@@ -2,7 +2,7 @@ namespace ChinhTa.Core;
 
 public enum LineRole { Agency, Motto, Subject }
 public record LayoutParagraph(int Start, string Text, int Page, bool InTable, int CellStart,
-    int CellEnd, bool Centered, int TableStart = -1);
+    int CellEnd, bool Centered, int TableStart = -1, bool? ParagraphCentered = null);
 public record LineTarget(LineRole Role, int Start, string Text, int RegionStart, int RegionEnd, bool Centered)
 {
     public string Label => Role switch { LineRole.Agency => "cơ quan ban hành", LineRole.Motto => "tiêu ngữ", _ => "trích yếu" };
@@ -61,7 +61,7 @@ public static class ShapeLineRules
                     if (last is not null) { bounded = true; end = p.Start + p.Text.Length; continue; }
                     break;
                 }
-                if (p.InTable || !p.Centered || last is not null && end > last.Start + last.Text.Length)
+                if (p.InTable || !(p.ParagraphCentered ?? p.Centered) || last is not null && end > last.Start + last.Text.Length)
                 { bounded = last is not null; break; }
                 last = p; end = p.Start + p.Text.Length;
             }
@@ -69,6 +69,8 @@ public static class ShapeLineRules
         }
         return targets.OrderBy(t => t.Start).ToArray();
     }
+    public static IReadOnlyList<LineRole> UnidentifiedRoles(IReadOnlyList<LineTarget> targets) =>
+        Enum.GetValues<LineRole>().Where(role => !targets.Any(t => t.Role == role)).ToArray();
     public static string Citation(LineRole role) => role switch
     {
         LineRole.Agency => "NĐ30, PL I, Phần I.II.2.b (PDF 22).",

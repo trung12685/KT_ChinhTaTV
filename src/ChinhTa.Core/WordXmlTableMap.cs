@@ -3,7 +3,7 @@ using System.Xml.Linq;
 namespace ChinhTa.Core;
 
 // Positions come from live Word ranges, never from guessed XML character counts.
-public record WordParagraphSnapshot(int Start, int End, string Text, int Page, bool InTable, bool Centered);
+public record WordParagraphSnapshot(int Start, int End, string Text, int Page, bool InTable, bool Centered, bool? ParagraphCentered = null);
 public sealed class WordXmlMappingException(string code, int paragraph, int xmlLength, int wordLength)
     : InvalidOperationException(code)
 {
@@ -77,7 +77,7 @@ public static class WordXmlTableMap
                 balanced = BalancedMargins(cell, table, styles);
             }
             result.Add(new(item.Start, item.Text, item.Page, cell is not null, cellStart, cellEnd,
-                item.Centered && balanced, tableStart));
+                item.Centered && balanced, tableStart, item.ParagraphCentered));
         }
         return result;
     }

@@ -1,5 +1,6 @@
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Windows.Xps.Packaging;
 using ChinhTa.Core;
 
 namespace ChinhTa.Desktop;
@@ -79,6 +80,8 @@ public sealed class WordSession : IDisposable
     public IReadOnlyList<Issue> Check() => ReadWithRecovery("Word.Check", CheckCore);
     private IReadOnlyList<Issue> CheckCore()
     {
+        // Page information after reopening may be stale until Word has paginated.
+        document!.Repaginate();
         var paragraphs = new List<Paragraph>();
         IReadOnlyList<LayoutParagraph> headerLayout = [];
         var liveLayout = new List<WordParagraphSnapshot>();
@@ -146,6 +149,16 @@ public sealed class WordSession : IDisposable
                 (mappingWarning is null ? "Không đọc được cấu trúc XML của tài liệu." : "Mã kiểm tra: " + mappingWarning.DiagnosticCode + ".") +
                 " Các vùng đã xác minh vẫn được kiểm tra; vùng chưa xác minh cần kiểm tra thủ công.",
                 false, FixKind.ShapeLine, CanFix: false, Title: "Chưa kiểm tra được đường kẻ"));
+        if (Profile == DocumentProfile.State && paragraphs.FirstOrDefault(p => p.Text.Length > 0) is Paragraph reference)
+        {
+            foreach (var role in ShapeLineRules.UnidentifiedRoles(LineTargets))
+            {
+                string label = role switch {LineRole.Agency => "cơ quan ban hành", LineRole.Motto => "tiêu ngữ", _ => "trích yếu"};
+                issues.Add(new(reference.Start, reference.Text.Length, reference.Text, reference.Text,
+                    "Chưa nhận diện được mốc " + label + "; chưa kết luận đường kẻ vùng này đúng hoặc thiếu. Cần kiểm tra lại nhận diện.",
+                    false, FixKind.ShapeLine, CanFix:false, Title:"Chưa kiểm tra đường kẻ dưới " + label));
+            }
+        }
         if (Profile != DocumentProfile.Personal)
         {
             dynamic sections = document.Sections;
@@ -179,12 +192,13 @@ public sealed class WordSession : IDisposable
         int page = (int)range.Information[3];
         bool inTable = (bool)range.Information[12];
         dynamic format = range.ParagraphFormat;
-        bool centered;
-        try { centered = (int)format.Alignment == 1 && Math.Abs((float)format.LeftIndent) < .1 &&
+        bool centered, paragraphCentered;
+        try { paragraphCentered = (int)format.Alignment == 1;
+            centered = paragraphCentered && Math.Abs((float)format.LeftIndent) < .1 &&
             Math.Abs((float)format.RightIndent) < .1 && Math.Abs((float)format.FirstLineIndent) < .1 && !text.Contains('\t') &&
             text.TrimEnd('\r', '\a', '\n') == text.TrimEnd('\r', '\a', '\n').Trim(); }
         finally { Release(format); }
-        return new(start, (int)range.End, text, page, inTable, centered);
+        return new(start, (int)range.End, text, page, inTable, centered, paragraphCentered);
     }
     private IReadOnlyList<WordLineShape> ReadLineShapes()
     {
@@ -269,6 +283,32 @@ public sealed class WordSession : IDisposable
         }
         finally { Release(shapes); }
     }
+    private void VerifyRenderedLines(IReadOnlyList<Issue> plan)
+    {
+        document!.Repaginate();
+        string path = Path.Combine(folder, Guid.NewGuid() + ".verify.xps");
+        try
+        {
+            document.ExportAsFixedFormat(path, 18, OpenAfterExport:false);
+            using var xps = new XpsDocument(path, FileAccess.Read);
+            var sequence = xps.GetFixedDocumentSequence();
+            var rendered = new PreviewHighlighter().HorizontalLines(sequence, 1);
+            foreach (var item in plan)
+            {
+                var fix = item.LineFix!;
+                if (RenderedLineVerifier.Find(new(fix.Left, fix.Top, fix.Width), rendered) is not null) continue;
+                var failure = new InvalidOperationException("Word chưa hiển thị Line đúng tọa độ đề xuất; phải khôi phục bản trước.");
+                failure.Data["ChinhTa.LineVerification"] = FormattableString.Invariant(
+                    $"Role={fix.Role}; ExpectedLeft={fix.Left:F2}; ExpectedTop={fix.Top:F2}; ExpectedWidth={fix.Width:F2}; RenderedCount={rendered.Count}");
+                throw failure;
+            }
+        }
+        finally
+        {
+            try { if (File.Exists(path)) File.Delete(path); }
+            catch (IOException error) { Diagnostics.Write("Word.LineVerify.Cleanup",error); }
+        }
+    }
     private void ApplyLinePackage(IReadOnlyList<Issue> plan, string before)
     {
         string candidate = Path.Combine(folder, Guid.NewGuid() + ".candidate.docx");
@@ -287,7 +327,11 @@ public sealed class WordSession : IDisposable
                 Connect();
                 if (ReadStoryText() != expectedText)
                     throw new InvalidOperationException("Nội dung chữ thay đổi sau khi mở candidate; phải khôi phục bản trước.");
-                if (verifyLines) VerifyPackageLines(plan);
+                if (verifyLines)
+                {
+                    VerifyPackageLines(plan);
+                    VerifyRenderedLines(plan);
+                }
             });
             snapshotCurrent = true;
             undoCheckpoints.Push(before);
@@ -398,10 +442,10 @@ public sealed class WordSession : IDisposable
     {
         anchors.Clear();
         // Export the unmodified document once. Selection highlighting belongs exclusively to WPF.
-        document!.Repaginate();
+        // CheckCore has already paginated before collecting page metadata.
         // Read the story once; do not navigate Word's invisible window with Document.GoTo.
         // Each issue retains its absolute source offset plus the physical page number.
-        dynamic content = document.Content;
+        dynamic content = document!.Content;
         int contentStart;
         string text;
         try { contentStart = (int)content.Start; text = (string)content.Text; }

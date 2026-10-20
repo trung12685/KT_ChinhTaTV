@@ -56,7 +56,23 @@ public static class DocxLineEditor
                 int ownerIndex = Array.IndexOf(paragraphs, owner);
                 if (!verified.Any(pair => pair.Value == ownerIndex && pair.Key >= target.RegionStart && pair.Key < target.RegionEnd))
                     throw new InvalidOperationException("Marked Line anchor outside verified region");
+                var run = marked[0].Ancestors(W + "r").First();
+                var pict = marked[0].Parent?.Name == W + "pict" ? marked[0].Parent : null;
                 marked[0].Remove();
+                if (pict is not null && !pict.Elements().Any()) pict.Remove();
+                if (!run.Elements().Any(e => e.Name != W + "rPr")) run.Remove();
+            }
+            if (marked.Length == 1)
+            {
+                // Older app versions left empty pict shells when replacing an owned Line.
+                // Clean only empty shells in the same verified reference paragraph.
+                foreach (var empty in paragraphs[index].Descendants(W + "pict")
+                    .Where(p => !p.HasElements && string.IsNullOrWhiteSpace(p.Value)).ToArray())
+                {
+                    var run = empty.Parent?.Name == W + "r" ? empty.Parent : null;
+                    empty.Remove();
+                    if (run is not null && !run.HasElements && string.IsNullOrWhiteSpace(run.Value)) run.Remove();
+                }
             }
             int number = 1025;
             while (shapeIds.Contains("_x0000_s" + number)) number++;
@@ -65,9 +81,12 @@ public static class DocxLineEditor
             // VML v:line is a native floating Word Shape, not a border or underscore text.
             var line = new XElement(V + "line",
                 new XAttribute("id", id), new XAttribute(O + "spid", id), new XAttribute("alt", marker),
-                new XAttribute("style", "position:absolute;z-index:251659264;mso-position-horizontal-relative:page;mso-position-vertical-relative:page"),
-                new XAttribute("from", Pt(fix.Left) + "," + Pt(fix.Top)),
-                new XAttribute("to", Pt(fix.Left + fix.Width) + "," + Pt(fix.Top)),
+                new XAttribute("style", "position:absolute;margin-left:" + Pt(fix.Left) + ";margin-top:" + Pt(fix.Top) +
+                    ";width:" + Pt(fix.Width) + ";height:0pt;z-index:251659264;" +
+                    "mso-position-horizontal:absolute;mso-position-horizontal-relative:page;" +
+                    "mso-position-vertical:absolute;mso-position-vertical-relative:page"),
+                new XAttribute("from", "0,0"),
+                new XAttribute("to", Pt(fix.Width) + ",0"),
                 new XAttribute(O + "allowincell", "f"), new XAttribute("strokecolor", "#000000"),
                 new XAttribute("strokeweight", "0.5pt"),
                 new XElement(V + "stroke", new XAttribute("endcap", "flat")),

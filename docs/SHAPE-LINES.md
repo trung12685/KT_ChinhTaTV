@@ -1,4 +1,4 @@
-# Ba Shape Line — bản thử 0.1.16
+# Ba Shape Line — bản thử 0.1.17
 
 ## Phạm vi
 
@@ -85,3 +85,9 @@ Mỗi lượt sửa lưu một snapshot trước đó. Nút Hoàn tác phục h�
 Nguồn đọc ZIP là snapshot `.undo.docx` đã sao chép ngay trước lượt sửa, không phải `working.docx` còn mở trong Word. Word giữ handle ghi; ZipFile.OpenRead mặc định FileShare.Read không tương thích với handle này trên Windows, dẫn đến 0x80070020 trước khi tạo candidate. Luồng: Save → File.Copy snapshot → đọc/sửa ZIP của snapshot thành candidate → Close tài liệu làm việc → thay file → Open/xác minh → chấp nhận hoặc rollback.
 
 Kiểm thử độc lập giữ khóa file làm việc và xác minh chỉ bản sao được đọc. Bài kiểm tra qua menu chạy trên Word thật của máy Windows, sử dụng cùng WordSession/FixMany với mẫu riêng. Kết quả PASS chỉ cho các thao tác ghi/mở/lưu/XPS/Undo trên mẫu; không phải chứng nhận mọi file hoặc tọa độ thể thức. Cloud chưa chạy bài kiểm tra Office này.
+
+## Vị trí và kiểm chứng từ 0.1.17
+
+VML đặt hộp theo trang bằng margin-left/top, width và height=0; from=(0,0), to=(width,0) là đầu mút cục bộ. Không ghi tọa độ toàn trang vào đầu mút. Khi thay Line của ứng dụng, dọn pict rỗng trong đoạn tham chiếu đã xác minh.
+
+Căn giữa cấu trúc dùng để duyệt toàn khối trích yếu độc lập với điều kiện đo an toàn của dòng cuối. Dấu cách cuối đoạn trước không làm mất mốc cuối. Mỗi vai trò chưa nhận diện có cảnh báo riêng. Trước chấp nhận candidate, so nét XPS với vị trí đề xuất: hai đầu và cao độ phải lệch không quá 1pt. Thiếu nét hoặc sai vị trí gây rollback, không chỉ kiểm marker/số Shape. Chưa xác minh thực tế trên Office 2021.

@@ -241,8 +241,8 @@ var unrelatedTable = lineParagraphs.Select(p => p with { TableStart = p.CellStar
 Assert(!ShapeLineRules.Identify(unrelatedTable,DocumentProfile.State).Any(t=>t.Role==LineRole.Agency),
     "Không lấy cơ quan từ bảng khác làm vùng bên trái tiêu ngữ");
 XmlTableMapChecks.Run(Assert);
-DocxLineEditorChecks.Run(Assert, args.Length == 1 ? args[0] : null);
-if (args.Length == 1)
+DocxLineEditorChecks.Run(Assert, args.Length >= 1 ? args[0] : null);
+if (args.Length >= 1)
 {
     var fixtureTargets = ShapeLineRules.Identify(DocxLineFixture.Read(args[0]), DocumentProfile.State);
     var mappedTargets = ShapeLineRules.Identify(DocxLineFixture.ReadThroughXmlMap(args[0]), DocumentProfile.State);
@@ -251,4 +251,25 @@ if (args.Length == 1)
     Assert(fixtureTargets.Select(t=>t.Role).Distinct().Count()==3,
         "File DOCX được cung cấp nhận diện đủ ba vùng qua XML (chưa kiểm Word/XPS)");
 }
+if (args.Length >= 2) DocxLineEditorChecks.CheckSavedRepair(Assert,args[1]);
+var trailingSubtitle = lineParagraphs.Select(p => p.Start==215 ? p with {Text="Trích yếu dòng đầu \r",Centered=false,ParagraphCentered=true} : p).ToArray();
+Assert(ShapeLineRules.Identify(trailingSubtitle,DocumentProfile.State).Single(t=>t.Role==LineRole.Subject).Start==240,
+    "Dấu cách cuối đoạn đầu trích yếu không làm mất nhận diện đoạn cuối");
+var unsafeLastSubtitle = trailingSubtitle.Select(p=>p.Start==240 ? p with {Centered=false,ParagraphCentered=true}:p).ToArray();
+Assert(!ShapeLineRules.Identify(unsafeLastSubtitle,DocumentProfile.State).Single(t=>t.Role==LineRole.Subject).Centered,
+    "Khớp cấu trúc căn giữa không tự xác nhận tâm dòng cuối khi chưa đủ điều kiện đo");
+var expectedRendered = new ChinhTa.Core.LineGeometry(100,120,80);
+Assert(RenderedLineVerifier.Find(expectedRendered,[new(100,220,80)]) is null,
+    "Line có cùng độ dài nhưng nằm cạnh Báo cáo không được coi là đã đặt đúng");
+Assert(RenderedLineVerifier.Find(expectedRendered,[]) is null,
+    "Không tìm thấy nét trên trang không được coi là sửa Line thành công");
+Assert(RenderedLineVerifier.Find(expectedRendered,[new(100.25,120.25,79.75)]) is not null,
+    "Nét đúng vị trí được chấp nhận trong dung sai xuất trang");
+Assert(RenderedLineVerifier.Find(expectedRendered,[new(100,120,160)]) is null,
+    "Đầu trái đúng nhưng độ dài sai không được coi là đúng");
+Assert(ShapeLineRules.UnidentifiedRoles(lineTargets).Count==0 &&
+    ShapeLineRules.UnidentifiedRoles(lineTargets.Where(t=>t.Role!=LineRole.Subject).ToArray()).SequenceEqual([LineRole.Subject]),
+    "Trích yếu chưa nhận diện phải có cảnh báo chưa kiểm tra, không im lặng bỏ qua");
+Assert(ShapeLineRules.UnidentifiedRoles([]).Count==3,
+    "Không nhận diện được mốc nào phải nêu rõ ba vùng chưa được kiểm tra");
 Console.WriteLine($"{checks} checks passed.");

@@ -13,13 +13,14 @@ public static class LineInspection
         var result = new List<(Issue, PreviewAnchor)>();
         foreach (var target in targets)
         {
-            if (!anchors.TryGetValue(target.Probe, out var anchor)) continue;
+            bool hasAnchor = anchors.TryGetValue(target.Probe, out var anchor);
+            anchor ??= new PreviewAnchor(1, target.Text, 0, target.Text.Length);
             string citation = ShapeLineRules.Citation(target.Role) +
                 (target.Role == LineRole.Motto ? " Độ dài bằng dòng tiêu ngữ (dung sai đo 5% và 1 pt)." : " Độ dài theo NĐ30.") +
                 " Khoảng cách và dung sai đo/tâm theo cấu hình người dùng.";
             Issue Notice(string message, ShapeLineFix? fix = null) => target.Probe with
             { Message = message, Citation = citation, CanFix = fix is not null, LineFix = fix };
-            var boxes = preview.Measure(document, anchor);
+            var boxes = hasAnchor ? preview.Measure(document, anchor) : [];
             if (boxes.Count == 0 || !target.Centered)
             {
                 result.Add((Notice("Chưa đo/nhận diện chắc chắn dòng tham chiếu hoặc dòng chưa căn giữa vùng đặt. Kiểm tra thủ công trước khi thêm Shape Line."), anchor));
@@ -41,7 +42,16 @@ public static class LineInspection
             }
             else if (!hasGroupedShapes && own.Length == 1 && own[0].Geometry is LineGeometry measured)
             {
-                (fix, errors) = ShapeLineRules.Evaluate(target, reference, measured, own[0].Id, policy);
+                var actual = RenderedLineVerifier.Find(measured, preview.HorizontalLines(document, anchor.Page));
+                if (actual is null)
+                {
+                    bool overlapping = otherIssues.Any(i => i.CanFix && i.Start < target.Start + target.Text.Length && (long)i.Start + i.Length > target.Start);
+                    var correction = ShapeLineRules.Evaluate(target, reference, null, own[0].Id, policy).Fix;
+                    result.Add((Notice("Shape đã tồn tại nhưng nét trên trang chưa khớp tọa độ khai báo hoặc chưa hiển thị. Cần đặt lại vị trí theo dòng mốc; chưa coi là đúng thể thức.",
+                        overlapping ? null : correction), anchor));
+                    continue;
+                }
+                (fix, errors) = ShapeLineRules.Evaluate(target, reference, actual, own[0].Id, policy);
             }
             else
             {

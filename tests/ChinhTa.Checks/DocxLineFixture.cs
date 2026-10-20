@@ -13,7 +13,7 @@ public static class DocxLineFixture
         // Test-only positions from the fixture; production always uses live Word ranges.
         var snapshots = Read(path).Select(p => new WordParagraphSnapshot(p.Start,
             p.Start + p.Text.Length + (p.InTable && p.CellEnd == p.Start + p.Text.Length + 1 ? 1 : 0),
-            p.Text, p.Page, p.InTable, p.Centered)).ToArray();
+            p.Text, p.Page, p.InTable, p.Centered, p.ParagraphCentered)).ToArray();
         var package = new XElement("fixture", XDocument.Load(docStream).Root, styleStream is null ? null : XDocument.Load(styleStream).Root);
         return WordXmlTableMap.Read(package.ToString(), snapshots);
     }
@@ -38,11 +38,12 @@ public static class DocxLineFixture
             var cellParagraphs = cell?.Descendants(w + "p").Where(offsets.ContainsKey).ToArray();
             int start = cellParagraphs is { Length: > 0 } ? offsets[cellParagraphs[0]].Start : 0;
             int end = cellParagraphs is { Length: > 0 } ? offsets[cellParagraphs[^1]].Start + offsets[cellParagraphs[^1]].Text.Length + 1 : 0;
-            bool center = (string?)p.Element(w + "pPr")?.Element(w + "jc")?.Attribute(w + "val") == "center";
+            bool aligned = (string?)p.Element(w + "pPr")?.Element(w + "jc")?.Attribute(w + "val") == "center";
+            bool center = aligned && !item.Text.Contains('\t') && item.Text.TrimEnd('\r','\a','\n') == item.Text.TrimEnd('\r','\a','\n').Trim();
             var table = p.Ancestors(w + "tbl").FirstOrDefault();
             var firstTableParagraph = table?.Descendants(w + "p").FirstOrDefault();
             int tableStart = firstTableParagraph is not null ? offsets[firstTableParagraph].Start : -1;
-            return new LayoutParagraph(item.Start, item.Text, 1, cell is not null, start, end, center, tableStart);
+            return new LayoutParagraph(item.Start, item.Text, 1, cell is not null, start, end, center, tableStart, aligned);
         }).ToArray();
     }
 }
