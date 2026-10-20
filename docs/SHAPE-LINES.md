@@ -15,7 +15,7 @@ Word chỉ xuất XPS một lần cho lượt quét. Đo các glyph của dòng 
 
 Chỉ dùng mốc để sửa khi đoạn căn giữa, không tab/indent, không khoảng trắng đầu/cuối và padding trái/phải ô cân bằng trong 1pt. Với điều kiện này, tâm dòng chữ đại diện tâm vùng đặt. Nếu chưa chắc chắn, chỉ cảnh báo, không tự chèn hoặc suy đoán tâm cột.
 
-Đọc `Document.Shapes`, chỉ xét loại Office msoLine (9). Phân vùng dựa vào Anchor trong ô/khối trích yếu. Với Line hiện hữu, đối chiếu các đoạn ngang/nét chữ nhật mảnh trong XPS với số Shape Line của trang. Chỉ ghép khi có đúng một Line neo trong vùng, đúng một đường gần mốc và số đường render khớp số Line. Khi không ghép được (group/canvas, nhiều đường, neo ngoài vùng, borders, đường chéo hoặc nét quá dày), báo thủ công; không nhận đường bất kỳ là đường đúng và không chèn trùng.
+Đọc `Document.Shapes`, chỉ xét loại Office msoLine (9). Phân vùng dựa vào Anchor trong ô/khối trích yếu. Với Line do ứng dụng tạo có marker riêng, hai tọa độ đều relative-page, nét đang hiện và Height gần 0, đọc trực tiếp Left/Top/Width theo pt để kiểm lại sau tạo hoặc kéo dịch. Với các Line hiện hữu khác, đối chiếu các đoạn ngang/nét chữ nhật mảnh trong XPS với số Shape Line của trang. Chỉ ghép khi có đúng một Line neo trong vùng, đúng một đường gần mốc và số đường render khớp số Line. Khi không ghép được (group/canvas, nhiều đường, neo ngoài vùng, borders, đường chéo hoặc nét quá dày), báo thủ công; không nhận đường bất kỳ là đường đúng và không chèn trùng.
 
 Khi không có Line trong vùng, chỉ báo thiếu chắc chắn nếu toàn bộ Shape Line ở trang đã được phân về các vùng đã nhận diện và không có group/canvas. Line bị ẩn hoặc khó ghép sẽ không được tự coi là thiếu.
 

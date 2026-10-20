@@ -178,8 +178,20 @@ public sealed class WordSession : IDisposable
                     int type = (int)shape.Type;
                     if (type is 6 or 20) HasGroupedShapes = true;
                     if (type != 9) continue; // Office msoLine
+                    LineGeometry? geometry = null;
+                    if (((string?)shape.AlternativeText ?? "").StartsWith("ChinhTaViet.ShapeLine.", StringComparison.Ordinal) &&
+                        (int)shape.RelativeHorizontalPosition == 1 && (int)shape.RelativeVerticalPosition == 1 &&
+                        Math.Abs((float)shape.Height) <= .5f && Math.Abs((float)shape.Rotation) < .01f && (int)shape.Visible != 0)
+                    {
+                        dynamic line = shape.Line;
+                        try
+                        {
+                            if ((int)line.Visible != 0) geometry = new((float)shape.Left, (float)shape.Top, (float)shape.Width);
+                        }
+                        finally { Release(line); }
+                    }
                     dynamic anchor = shape.Anchor;
-                    try { result.Add(new((int)shape.ID, (int)anchor.Start, (int)anchor.Information[3])); }
+                    try { result.Add(new((int)shape.ID, (int)anchor.Start, (int)anchor.Information[3], geometry)); }
                     finally { Release(anchor); }
                 }
                 finally { Release(shape); }
@@ -218,10 +230,11 @@ public sealed class WordSession : IDisposable
         {
             shape.RelativeHorizontalPosition = 1; // Page
             shape.RelativeVerticalPosition = 1;   // Page
-            shape.LayoutInCell = false;
-            shape.LockAnchor = true;
+            shape.LayoutInCell = 0; // Word exposes this flag as an integer.
+            shape.LockAnchor = -1;
             dynamic wrap = shape.WrapFormat;
             try { wrap.Type = 3; } finally { Release(wrap); } // no text reflow
+            shape.Rotation = 0f;
             shape.Left = (float)fix.Left; shape.Top = (float)fix.Top;
             shape.Width = (float)fix.Width; shape.Height = 0f;
             dynamic line = shape.Line; dynamic color = line.ForeColor;

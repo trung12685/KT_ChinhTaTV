@@ -2,7 +2,7 @@ using System.Windows.Documents;
 using ChinhTa.Core;
 
 namespace ChinhTa.Desktop;
-public record WordLineShape(int Id, int AnchorStart, int Page);
+public record WordLineShape(int Id, int AnchorStart, int Page, LineGeometry? Geometry = null);
 
 public static class LineInspection
 {
@@ -38,6 +38,10 @@ public static class LineInspection
             if (own.Length == 0 && allAssigned)
             {
                 (fix, errors) = ShapeLineRules.Evaluate(target, reference, null, null, policy);
+            }
+            else if (!hasGroupedShapes && own.Length == 1 && own[0].Geometry is LineGeometry measured)
+            {
+                (fix, errors) = ShapeLineRules.Evaluate(target, reference, measured, own[0].Id, policy);
             }
             else
             {
