@@ -17,7 +17,7 @@ Bản 0.1.2 xuất XPS không có highlight từ tài liệu làm việc một l
 
 Khi ánh xạ không chắc chắn (thứ tự vẽ phức tạp, nội dung mơ hồ, glyph thiếu chữ Unicode hoặc lỗi qua ranh giới trang), ứng dụng đến trang và báo **chưa ánh xạ chắc chắn**, không đoán vị trí. Cần xác minh tọa độ thực tế trên Windows với nhiều font/zoom/bảng. Các thao tác mở, quét và xuất Word vẫn đồng bộ; lần mở và sau mỗi sửa/hoàn tác có thể làm giao diện chờ. Thanh trạng thái ghi thời gian quét/dựng trang, và thời gian đánh dấu khi chọn lỗi. Chưa có số đo trên Windows.
 
-## Phạm vi hiện có — 0.1.10
+## Phạm vi hiện có — 0.1.11
 
 Chọn **Loại văn bản** ở phía trên: Nhà nước, Đảng hoặc cá nhân. Đổi loại khi đang mở tài liệu sẽ quét và dựng lại bản xem trước; các ô tích cũ được đặt lại. Mặc định là Nhà nước. Không tự đoán loại tài liệu từ vài từ trong nội dung.
 
@@ -102,3 +102,9 @@ Thử `samples/BaDuongKeThieu.docx` (dữ liệu giả) hoặc bản sao tài li
 ## Bản 0.1.10 — sửa lỗi đọc bảng 5941
 
 Sửa cách đọc bảng chứa đoạn văn: thu gọn bản sao range về đầu đoạn rồi mở rộng tới bảng, không truy cập `paragraph.Range.Tables[1]` vốn có thể rỗng trong Word. Nếu Word vẫn không cung cấp phần tử bảng (0x800A1735), bộ kiểm chính tả tiếp tục và hiện cảnh báo chưa kiểm được đường kẻ; không tự thêm Line khi chưa đủ thông tin. Giữ khoảng độ dài 1/3–1/2 từ bản 0.1.9.
+
+## Bản 0.1.11 — nhận diện bảng qua XML
+
+Thay cách đọc ô/bảng bằng cấu trúc XML của bản Word đang mở (`Content.WordOpenXML`), đối chiếu từng đoạn với text, Start/End, trạng thái trong bảng và căn giữa do Word cung cấp. Không dùng `Range.Tables/Cells` để nhận diện ba mốc đường kẻ. Vẫn dùng glyph XPS để đo dòng chữ, danh sách Shape để xác định thiếu Line và `Shapes.AddLine` để tạo khi người dùng bấm sửa. Giữ tỷ lệ 1/3–1/2. Không đoán vị trí ký tự từ XML.
+
+Bảng khác chưa đọc đủ trong 40 đoạn đầu không làm tắt kiểm tra bảng đầu. Ô gộp/lồng, padding không chắc chắn hoặc XML không khớp Word vẫn cần kiểm thủ công. Đã kiểm riêng cấu trúc file người dùng để nhận diện ba vùng; chưa thử COM/XPS và chèn Line thực tế trên Office 2021.

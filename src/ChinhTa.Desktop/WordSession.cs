@@ -73,7 +73,8 @@ public sealed class WordSession : IDisposable
     private IReadOnlyList<Issue> CheckCore()
     {
         var paragraphs = new List<Paragraph>();
-        var headerLayout = new List<LayoutParagraph>();
+        IReadOnlyList<LayoutParagraph> headerLayout = [];
+        var liveLayout = new List<WordParagraphSnapshot>();
         bool lineLayoutUnavailable = false;
         dynamic ps = document!.Paragraphs;
         try
@@ -88,12 +89,7 @@ public sealed class WordSession : IDisposable
                     int start = (int)r.Start;
                     if (Profile == DocumentProfile.State && i <= 40)
                     {
-                        try { headerLayout.Add(ReadLayout(r, start, text)); }
-                        catch (COMException ex) when (ex.HResult == unchecked((int)0x800A1735))
-                        {
-                            Diagnostics.Write("Word.ReadLayout.Unavailable", ex);
-                            lineLayoutUnavailable = true;
-                        }
+                        liveLayout.Add(ReadLayout(r, start, text));
                     }
                     if (HeadingRules.IsCandidate(text, Profile) ||
                         Profile == DocumentProfile.Personal && System.Text.RegularExpressions.Regex.IsMatch(text, @"^[ \t]+\S"))
@@ -110,6 +106,23 @@ public sealed class WordSession : IDisposable
             }
         }
         finally { Release(ps); }
+        if (liveLayout.Count > 0)
+        {
+            dynamic content = document!.Content;
+            try
+            {
+                // Current in-memory document, including unsaved edits; no per-paragraph Tables/Cells calls.
+                string xml = (string)content.WordOpenXML;
+                headerLayout = WordXmlTableMap.Read(xml, liveLayout);
+            }
+            catch (Exception ex) when (ex is InvalidOperationException or System.Xml.XmlException ||
+                ex is COMException ce && ce.HResult == unchecked((int)0x800A1735))
+            {
+                Diagnostics.Write("Word.XmlTableMap.Unavailable", ex);
+                lineLayoutUnavailable = true;
+            }
+            finally { if (Marshal.IsComObject(content)) Marshal.ReleaseComObject(content); }
+        }
         LineTargets = lineLayoutUnavailable ? [] : ShapeLineRules.Identify(headerLayout, Profile);
         LineShapes = ReadLineShapes();
         var issues = Checker.Check(paragraphs, Profile).ToList();
@@ -145,31 +158,17 @@ public sealed class WordSession : IDisposable
         }
         return issues.OrderBy(x => x.Start).ToArray();
     }
-    private static LayoutParagraph ReadLayout(dynamic range, int start, string text)
+    private static WordParagraphSnapshot ReadLayout(dynamic range, int start, string text)
     {
         int page = (int)range.Information[3];
         bool inTable = (bool)range.Information[12];
-        int cellStart = 0, cellEnd = 0, tableStart = -1;
-        bool balancedPadding = true;
-        if (inTable)
-        {
-            var location = WordTableLocation.Read((object)range, value =>
-            {
-                // Duplicates/cell ranges can share RCWs with live paragraph ranges.
-                if (value is not null && Marshal.IsComObject(value)) Marshal.ReleaseComObject(value);
-            });
-            cellStart = location.CellStart;
-            cellEnd = location.CellEnd;
-            tableStart = location.TableStart;
-            balancedPadding = location.BalancedPadding;
-        }
         dynamic format = range.ParagraphFormat;
         bool centered;
         try { centered = (int)format.Alignment == 1 && Math.Abs((float)format.LeftIndent) < .1 &&
-            Math.Abs((float)format.RightIndent) < .1 && Math.Abs((float)format.FirstLineIndent) < .1 && !text.Contains('\t') && balancedPadding &&
+            Math.Abs((float)format.RightIndent) < .1 && Math.Abs((float)format.FirstLineIndent) < .1 && !text.Contains('\t') &&
             text.TrimEnd('\r', '\a', '\n') == text.TrimEnd('\r', '\a', '\n').Trim(); }
         finally { Release(format); }
-        return new(start, text, page, inTable, cellStart, cellEnd, centered, tableStart);
+        return new(start, (int)range.End, text, page, inTable, centered);
     }
     private IReadOnlyList<WordLineShape> ReadLineShapes()
     {

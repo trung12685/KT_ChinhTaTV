@@ -1,4 +1,4 @@
-# Ba Shape Line — bản thử 0.1.10
+# Ba Shape Line — bản thử 0.1.11
 
 ## Phạm vi
 
@@ -45,3 +45,9 @@ Không trộn sửa chữ/định dạng và sửa Line trong cùng lượt vì 
 Giới hạn khác: chưa nhận diện mọi cấu trúc header, nested/merged tables, nhóm Shape, mọi cách neo, ký tự underline thay Line hoặc mọi mẫu pháp lý. Khi căn giữa/mốc/ghép không chắc chắn, chỉ cảnh báo. Không tự xử lý Shape của văn bản Đảng hoặc cá nhân bằng bộ này.
 
 Bản 0.1.10 đọc vị trí ô từ bản sao range thu gọn và mở rộng tới bảng (wdTable), tránh collection Tables rỗng của đoạn văn. Khi Word trả lỗi 5941, tắt tự kiểm/sửa Line cho lượt quét và hiển thị cảnh báo thủ công; vẫn chạy kiểm chính tả.
+
+## Thay thế cách đọc bảng từ 0.1.11
+
+Không dùng phương pháp COM của bản 0.1.10 nữa. Mỗi lượt quét đọc XML từ `Document.Content.WordOpenXML` đang mở, gồm nội dung/style, rồi ghép 40 đoạn đầu theo thứ tự và text với các range Word hiện tại. CellStart/CellEnd/TableStart lấy từ Start/End thật của các đoạn đã khớp, không dùng độ dài XML để đoán CP. Có kiểm trạng thái trong bảng, padding trực tiếp và style kế thừa; ô chưa xác minh đủ, ô gộp/lồng không có mốc tự sửa. Bảng sau không đầy đủ không vô hiệu hóa bảng đầu.
+
+Việc đọc XML xác định cấu trúc, không thay phép đo XPS. Khi không có Line neo trong vùng và mọi Shape của trang được phân vùng chắc chắn, ứng dụng đề xuất tạo Shape Line mới. Lưu/mở và quét lại vẫn cần kiểm không chèn trùng trên Office 2021.
