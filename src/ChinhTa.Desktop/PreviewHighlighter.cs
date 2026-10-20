@@ -5,6 +5,7 @@ using System.Windows.Media;
 using System.Windows.Media.TextFormatting;
 using System.Windows.Shapes;
 using ChinhTa.Core;
+using LineGeometry = ChinhTa.Core.LineGeometry;
 
 namespace ChinhTa.Desktop;
 
@@ -28,15 +29,14 @@ public sealed class PreviewHighlighter
         for (int i = 0; i < VisualTreeHelper.GetChildrenCount(root); i++)
             foreach (var child in Descendants<T>(VisualTreeHelper.GetChild(root, i))) yield return child;
     }
-    public bool Show(FixedDocumentSequence document, PreviewAnchor anchor)
+    private PageIndex? GetIndex(FixedDocumentSequence document, int pageNumber)
     {
-        Clear();
-        if (!pages.TryGetValue(anchor.Page, out var index))
+        if (!pages.TryGetValue(pageNumber, out var index))
         {
-            var visual = document.DocumentPaginator.GetPage(anchor.Page - 1).Visual;
-            if (visual is null) return false;
+            var visual = document.DocumentPaginator.GetPage(pageNumber - 1).Visual;
+            if (visual is null) return null;
             var page = Descendants<FixedPage>(visual).FirstOrDefault();
-            if (page is null) return false;
+            if (page is null) return null;
             var runs = new List<Run>();
             var text = new System.Text.StringBuilder();
             foreach (var glyph in Descendants<Glyphs>(page))
@@ -46,13 +46,19 @@ public sealed class PreviewHighlighter
                 text.Append(value);
             }
             index = new(page, text.ToString(), runs);
-            pages[anchor.Page] = index;
+            pages[pageNumber] = index;
         }
+        return index;
+    }
+    public IReadOnlyList<Rect> Measure(FixedDocumentSequence document, PreviewAnchor anchor)
+    {
+        var index = GetIndex(document, anchor.Page);
+        if (index is null) return [];
         var span = PreviewLocator.Locate(anchor, index.Text);
-        if (span is null) return false;
+        if (span is null) return [];
+        var boxes = new List<Rect>();
         try
         {
-            Rect selectedBounds = Rect.Empty;
             foreach (var run in index.Runs)
             {
                 int start = Math.Max(span.Start, run.Start) - run.Start;
@@ -66,23 +72,62 @@ public sealed class PreviewHighlighter
                     glyphRun.BaselineOrigin.Y + alignment.Y,
                     Math.Max(2, Math.Abs(x2 - x1)), Math.Max(2, alignment.Height));
                 bounds = run.Glyph.TransformToAncestor(index.Page).TransformBounds(bounds);
-                if (bounds.IsEmpty || !double.IsFinite(bounds.X) || !double.IsFinite(bounds.Y)) continue;
-                var shape = new Rectangle
-                {
-                    Width = bounds.Width, Height = bounds.Height,
-                    Fill = new SolidColorBrush(Color.FromArgb(85, 255, 215, 0)),
-                    Stroke = Brushes.DarkOrange, StrokeThickness = 0.8,
-                    IsHitTestVisible = false
-                };
-                FixedPage.SetLeft(shape, bounds.Left); FixedPage.SetTop(shape, bounds.Top);
-                selectedBounds.Union(bounds);
-                index.Page.Children.Add(shape);
-                marks.Add((index.Page, shape));
+                if (!bounds.IsEmpty && double.IsFinite(bounds.X) && double.IsFinite(bounds.Y)) boxes.Add(bounds);
             }
-            if (!selectedBounds.IsEmpty) index.Page.BringIntoView(selectedBounds);
-            return marks.Count > 0;
         }
-        catch (ArgumentException) { Clear(); return false; }
-        catch (InvalidOperationException) { Clear(); return false; }
+        catch (ArgumentException) { return []; }
+        catch (InvalidOperationException) { return []; }
+        return boxes;
+    }
+    public IReadOnlyList<LineGeometry> HorizontalLines(FixedDocumentSequence document, int pageNumber)
+    {
+        var index = GetIndex(document, pageNumber);
+        if (index is null) return [];
+        var lines = new List<LineGeometry>();
+        foreach (var path in Descendants<System.Windows.Shapes.Path>(index.Page))
+        {
+            if (path.Data is null || path.Stroke is null && path.Fill is null) continue;
+            var geometry = path.Data.GetFlattenedPathGeometry();
+            foreach (var figure in geometry.Figures)
+            {
+                var piece = new PathGeometry([figure]) { Transform = geometry.Transform };
+                var rect = path.TransformToAncestor(index.Page).TransformBounds(piece.Bounds);
+                // Word may render Line as a stroke or a thin filled rectangle. Ignore ordinary boxes.
+                if (rect.Width >= 6 && rect.Height <= 2)
+                    lines.Add(new(rect.Left * .75, (rect.Top + rect.Height / 2) * .75, rect.Width * .75));
+            }
+        }
+        return lines;
+    }
+    public void ShowLineSuggestion(FixedDocumentSequence document, int pageNumber, ShapeLineFix fix)
+    {
+        var index = GetIndex(document, pageNumber);
+        if (index is null) return;
+        var box = new Rect(fix.Left / .75, fix.Top / .75 - 1, fix.Width / .75, 2);
+        var shape = new Rectangle { Width=box.Width, Height=box.Height, Fill=Brushes.DarkOrange, IsHitTestVisible=false };
+        FixedPage.SetLeft(shape,box.Left); FixedPage.SetTop(shape,box.Top);
+        index.Page.Children.Add(shape); marks.Add((index.Page,shape));
+        index.Page.BringIntoView(box);
+    }
+    public bool Show(FixedDocumentSequence document, PreviewAnchor anchor)
+    {
+        Clear();
+        var index = GetIndex(document, anchor.Page);
+        if (index is null) return false;
+        Rect selectedBounds = Rect.Empty;
+        foreach (var bounds in Measure(document, anchor))
+        {
+            var shape = new Rectangle
+            {
+                Width = bounds.Width, Height = bounds.Height,
+                Fill = new SolidColorBrush(Color.FromArgb(85, 255, 215, 0)),
+                Stroke = Brushes.DarkOrange, StrokeThickness = .8, IsHitTestVisible = false
+            };
+            FixedPage.SetLeft(shape, bounds.Left); FixedPage.SetTop(shape, bounds.Top);
+            selectedBounds.Union(bounds);
+            index.Page.Children.Add(shape); marks.Add((index.Page, shape));
+        }
+        if (!selectedBounds.IsEmpty) index.Page.BringIntoView(selectedBounds);
+        return marks.Count > 0;
     }
 }

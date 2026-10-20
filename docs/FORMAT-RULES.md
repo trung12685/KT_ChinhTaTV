@@ -1,4 +1,4 @@
-# Quy tắc thể thức — bản 0.1.7
+# Quy tắc thể thức — bản 0.1.8
 
 ## Nguồn đã đối chiếu
 
@@ -56,3 +56,7 @@ Không áp quốc hiệu/tiêu ngữ, khổ giấy hay lề hành chính. Giữ 
 ## Bản 0.1.7 — tương đương dấu trong tiêu ngữ
 
 Theo yêu cầu người dùng, chấp nhận cả hyphen `-` và en dash `–` trong tiêu ngữ, kể cả hai dấu phân cách khác loại do Word AutoCorrect. Không coi riêng khác biệt này là lỗi. Khi sửa font/cỡ/kiểu chữ, giữ nguyên toàn bộ nội dung nếu không có lỗi nội dung khác; khi sửa hoa thường/khoảng trắng trong tiêu ngữ, giữ đúng từng dấu phân cách ban đầu. Đây là chính sách tương thích ứng dụng được người dùng xác định, không diễn giải thêm một quy định pháp lý mới.
+
+## Bổ sung 0.1.8 — ba Shape Line
+
+Đã bổ sung bộ kiểm/thêm/đặt lại ba Line ở mức thử nghiệm; mục “Đường kẻ và vị trí” nêu chưa kiểm bên trên mô tả phạm vi trước 0.1.8. Phạm vi/định nghĩa đo/ngoại lệ và hai cấu hình được ghi trong SHAPE-LINES.md. NĐ30 mặc định dùng 1/3–1/2; 4/7 chỉ thuộc cấu hình đơn vị theo yêu cầu. Chưa thể tuyên bố kiểm toàn bộ đường kẻ hay mọi vị trí.

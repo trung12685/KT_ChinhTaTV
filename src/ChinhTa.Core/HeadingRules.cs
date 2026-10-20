@@ -47,7 +47,7 @@ public static class HeadingRules
         yield return new(p.Start, text.Length, text, expected,
             $"{label}: Times New Roman, chữ đứng, đậm, màu đen, cỡ {sizeLabel}. " +
             (align is not null ? "Căn giữa trong ô. " : "") +
-            "Chưa kiểm tra tọa độ vùng đặt hoặc đường kẻ ngang.", false,
+            "Chưa kiểm tra tọa độ vùng đặt; đường kẻ được đánh giá riêng khi nhận diện/đo được.", false,
             party ? FixKind.PartyHeading : motto ? FixKind.StateMotto : FixKind.NationalHeading,
             Citation: citation, Format: new(validSize ? p.Size : min, align));
     }

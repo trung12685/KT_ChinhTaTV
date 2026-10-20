@@ -1,0 +1,63 @@
+using System.Windows.Documents;
+using ChinhTa.Core;
+
+namespace ChinhTa.Desktop;
+public record WordLineShape(int Id, int AnchorStart, int Page);
+
+public static class LineInspection
+{
+    public static IReadOnlyList<(Issue Issue, PreviewAnchor Anchor)> Inspect(FixedDocumentSequence document,
+        PreviewHighlighter preview, IReadOnlyList<LineTarget> targets, IReadOnlyList<WordLineShape> shapes,
+        IReadOnlyDictionary<Issue, PreviewAnchor> anchors, IReadOnlyList<Issue> otherIssues, LinePolicy policy, bool hasGroupedShapes)
+    {
+        var result = new List<(Issue, PreviewAnchor)>();
+        foreach (var target in targets)
+        {
+            if (!anchors.TryGetValue(target.Probe, out var anchor)) continue;
+            string citation = ShapeLineRules.Citation(target.Role) +
+                (target.Role == LineRole.Motto ? " Độ dài bằng dòng tiêu ngữ (dung sai đo 5% và 1 pt)." : policy == LinePolicy.OfficePreference ? " Độ dài theo cấu hình đơn vị 1/3–2/3, đích 4/7 (khác khoảng NĐ30)." : " Độ dài theo NĐ30.") +
+                " Khoảng cách và dung sai đo/tâm theo cấu hình người dùng.";
+            Issue Notice(string message, ShapeLineFix? fix = null) => target.Probe with
+            { Message = message, Citation = citation, CanFix = fix is not null, LineFix = fix };
+            var boxes = preview.Measure(document, anchor);
+            if (boxes.Count == 0 || !target.Centered)
+            {
+                result.Add((Notice("Chưa đo/nhận diện chắc chắn dòng tham chiếu hoặc dòng chưa căn giữa vùng đặt. Kiểm tra thủ công trước khi thêm Shape Line."), anchor));
+                continue;
+            }
+            double bottom = boxes.Max(b => b.Bottom);
+            var last = boxes.Where(b => Math.Abs(b.Bottom - bottom) <= 3).ToArray();
+            double left = last.Min(b => b.Left), right = last.Max(b => b.Right);
+            var reference = new LineReference(left * .75, bottom * .75, (right - left) * .75);
+            bool IsInRegion(WordLineShape shape, LineTarget region) => shape.AnchorStart >= region.RegionStart && shape.AnchorStart < region.RegionEnd;
+            var pageShapes = shapes.Where(s => s.Page == anchor.Page).ToArray();
+            var own = pageShapes.Where(s => IsInRegion(s, target)).ToArray();
+            bool allAssigned = !hasGroupedShapes && pageShapes.All(s => targets.Count(t => IsInRegion(s,t)) == 1);
+            ShapeLineFix? fix;
+            string[] errors;
+            if (own.Length == 0 && allAssigned)
+            {
+                (fix, errors) = ShapeLineRules.Evaluate(target, reference, null, null, policy);
+            }
+            else
+            {
+                var rendered = preview.HorizontalLines(document, anchor.Page);
+                var near = rendered.Where(l => l.Y >= reference.Bottom - 2 && l.Y <= reference.Bottom + 80 &&
+                    Math.Abs(l.Left + l.Width / 2 - (reference.Left + reference.Width / 2)) < Math.Max(40, reference.Width / 2)).ToArray();
+                if (hasGroupedShapes || own.Length != 1 || rendered.Count != pageShapes.Length || near.Length != 1)
+                {
+                    result.Add((Notice("Có đường/đối tượng nhưng chưa ghép chắc chắn Shape Line với vùng này (có thể nhóm shape, neo xa, border hoặc đường chồng). Kiểm tra thủ công; không tự tạo thêm để tránh trùng."), anchor));
+                    continue;
+                }
+                (fix, errors) = ShapeLineRules.Evaluate(target, reference, near[0], own[0].Id, policy);
+            }
+            if (errors.Length == 0) continue;
+            bool blocked = otherIssues.Any(i => i.CanFix && i.Start < target.Start + target.Text.Length && (long)i.Start + i.Length > target.Start);
+            string message = string.Join(" ", errors) + $" Dòng cuối rộng {reference.Width:F1} pt; " +
+                $"đề xuất dài {fix.Width:F1} pt, cách dưới {fix.Top - reference.Bottom:F1} pt. " +
+                (blocked ? "Sửa nội dung/định dạng trong vùng trước rồi quét lại để đo đúng." : "Có thể tạo/đặt lại Line mà không thay nội dung chữ.");
+            result.Add((Notice(message, blocked ? null : fix), anchor));
+        }
+        return result;
+    }
+}

@@ -25,6 +25,7 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         ProfilePicker.SelectedIndex = 0;
+        LinePolicyPicker.SelectedIndex = 0;
         hover.Tick += (_, _) => { hover.Stop(); if (pending is not null) Run(() => ShowPreview(pending)); };
     }
     private void ProfileChanged(object sender, SelectionChangedEventArgs e)
@@ -32,6 +33,13 @@ public partial class MainWindow : Window
         if (ProfilePicker.SelectedIndex < 0) return;
         session.Profile = (DocumentProfile)ProfilePicker.SelectedIndex;
         if (ProfileInfo is not null) ProfileInfo.Text = DocumentProfiles.Description(session.Profile);
+        if (session.IsOpen) Run(Scan);
+    }
+    private void LinePolicyChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (LinePolicyInfo is not null) LinePolicyInfo.Text = LinePolicyPicker.SelectedIndex == 1
+            ? "Độ dài theo đơn vị: 1/3–2/3, đích 4/7; khác khoảng 1/3–1/2 của NĐ30. Khoảng cách/tâm là dung sai người dùng."
+            : "Độ dài theo NĐ30: 1/3–1/2. Khoảng cách/tâm là dung sai người dùng.";
         if (session.IsOpen) Run(Scan);
     }
     private void Run(Action action)
@@ -71,14 +79,21 @@ public partial class MainWindow : Window
     {
         pending = displayed = null;
         var timer = Stopwatch.StartNew();
-        var found = session.Check();
+        var found = session.Check().ToList();
         double checkSeconds = timer.Elapsed.TotalSeconds;
         ClosePreview();
         anchors.Clear();
-        xpsPath = session.ExportPreview(found, anchors);
+        xpsPath = session.ExportPreview(found.Concat(session.LineTargets.Select(t => t.Probe)).ToArray(), anchors);
         xps = new XpsDocument(xpsPath, FileAccess.Read);
         Preview.Document = xps.GetFixedDocumentSequence();
-        choices = found.Select(issue => new IssueChoice(issue)).ToArray();
+        if (Preview.Document is System.Windows.Documents.FixedDocumentSequence sequence)
+        {
+            var policy = LinePolicyPicker.SelectedIndex == 1 ? LinePolicy.OfficePreference : LinePolicy.Decree30;
+            foreach (var entry in LineInspection.Inspect(sequence, highlighter, session.LineTargets, session.LineShapes,
+                anchors, found, policy, session.HasGroupedShapes))
+            { found.Add(entry.Issue); anchors[entry.Issue] = entry.Anchor; }
+        }
+        choices = found.OrderBy(i => i.Start).Select(issue => new IssueChoice(issue)).ToArray();
         Issues.ItemsSource = choices;
         UpdateCheckedCount();
         Status.Text = $"{Path.GetFileName(session.Source)} — {found.Count} cảnh báo. " +
@@ -102,10 +117,11 @@ public partial class MainWindow : Window
         bool pageWarning = issue.Kind == FixKind.PageLayout;
         if (pageWarning) highlighter.Clear();
         bool marked = !pageWarning && highlighter.Show(document, anchor);
+        if (issue.LineFix is ShapeLineFix lineFix) highlighter.ShowLineSuggestion(document,anchor.Page,lineFix);
         displayed = issue;
         Status.Text = $"Trang {anchor.Page} — {issue.Message} Gợi ý: {issue.Suggestion}. " +
             (pageWarning ? "Cảnh báo thiết lập trang, không đánh dấu ký tự. " : marked ? $"Đánh dấu: {timer.Elapsed.TotalMilliseconds:F0} ms." :
-            "Chưa ánh xạ chắc chắn được vị trí trên trang này; không đánh dấu để tránh nhầm.") + " " + issue.Citation;
+            "Chưa ánh xạ chắc chắn được vị trí trên trang này; không đánh dấu để tránh nhầm.") + " " + issue.Citation + (issue.LineFix is not null ? " Vạch cam là vị trí đề xuất, chưa ghi vào Word." : "");
     }
     private void Queue(Issue issue) { pending = issue; hover.Stop(); hover.Start(); }
     private void IssueHover(object sender, MouseEventArgs e)
@@ -128,14 +144,28 @@ public partial class MainWindow : Window
     }
     private void FixCheckedClick(object sender, RoutedEventArgs e) =>
         ConfirmFix(choices.Where(x => x.IsChecked).Select(x => x.Issue).ToArray());
-    private void FixAllClick(object sender, RoutedEventArgs e) =>
-        ConfirmFix(choices.Where(x => x.Issue.CanFix).Select(x => x.Issue).ToArray());
+    private void FixAllClick(object sender, RoutedEventArgs e)
+    {
+        var all = choices.Where(x => x.Issue.CanFix).Select(x => x.Issue).ToArray();
+        bool staged = all.Any(x => x.LineFix is not null) && all.Any(x => x.LineFix is null);
+        if (staged)
+        {
+            MessageBox.Show(this, "Lượt này sẽ sửa chữ/định dạng trước. Sau khi trang được dựng lại, bấm Sửa tất cả lần nữa để sửa Shape Line theo số đo mới.", "Cập nhật số đo");
+            all = all.Where(x => x.LineFix is null).ToArray();
+        }
+        ConfirmFix(all);
+    }
     private void ConfirmFix(IReadOnlyList<Issue> selected)
     {
         hover.Stop();
         if (selected.Count == 0)
         {
             MessageBox.Show(this, "Chưa chọn lỗi nào. Tích ô bên cạnh các lỗi cần sửa.", "Chọn lỗi");
+            return;
+        }
+        if (selected.Any(i => i.LineFix is not null) && selected.Any(i => i.LineFix is null))
+        {
+            MessageBox.Show(this, "Chọn nhóm chữ/định dạng để sửa trước, rồi quét lại và chọn riêng nhóm Shape Line. Không gộp hai nhóm vì số đo trang có thể thay đổi.", "Sửa theo hai lượt");
             return;
         }
         string examples = string.Join("\n", selected.Take(8).Select(x =>

@@ -5,14 +5,15 @@ namespace ChinhTa.Core;
 public record Paragraph(int Start, string Text, bool Bold = false, float Size = 13,
     int Alignment = 1, string Font = "Times New Roman", bool Italic = false,
     int Color = 0, bool InTable = false, int Page = 1);
-public enum FixKind { Text, NationalHeading, StateMotto, PartyHeading, Advisory, PageLayout }
+public enum FixKind { Text, NationalHeading, StateMotto, PartyHeading, Advisory, PageLayout, ShapeLine }
 public record HeadingFormat(float Size, int? Alignment = null);
 public record Issue(int Start, int Length, string Original, string Replacement,
     string Message, bool BatchSafe, FixKind Kind = FixKind.Text,
-    bool CanFix = true, string? Citation = null, HeadingFormat? Format = null, string? Title = null)
+    bool CanFix = true, string? Citation = null, HeadingFormat? Format = null, string? Title = null, ShapeLineFix? LineFix = null)
 {
     public string DisplayText => Title ?? Original;
     public string Suggestion => !CanFix ? "Kiểm tra thủ công; không tự sửa."
+        : LineFix is not null ? "Tạo/đặt lại Shape Line theo số đo và cấu hình đã chọn."
         : Format is null ? Replacement
         : Original == Replacement ? "Sửa định dạng theo mô tả." : Replacement + " — sửa định dạng theo mô tả.";
 }

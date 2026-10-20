@@ -17,7 +17,7 @@ Bản 0.1.2 xuất XPS không có highlight từ tài liệu làm việc một l
 
 Khi ánh xạ không chắc chắn (thứ tự vẽ phức tạp, nội dung mơ hồ, glyph thiếu chữ Unicode hoặc lỗi qua ranh giới trang), ứng dụng đến trang và báo **chưa ánh xạ chắc chắn**, không đoán vị trí. Cần xác minh tọa độ thực tế trên Windows với nhiều font/zoom/bảng. Các thao tác mở, quét và xuất Word vẫn đồng bộ; lần mở và sau mỗi sửa/hoàn tác có thể làm giao diện chờ. Thanh trạng thái ghi thời gian quét/dựng trang, và thời gian đánh dấu khi chọn lỗi. Chưa có số đo trên Windows.
 
-## Phạm vi hiện có — 0.1.7
+## Phạm vi hiện có — 0.1.8
 
 Chọn **Loại văn bản** ở phía trên: Nhà nước, Đảng hoặc cá nhân. Đổi loại khi đang mở tài liệu sẽ quét và dựng lại bản xem trước; các ô tích cũ được đặt lại. Mặc định là Nhà nước. Không tự đoán loại tài liệu từ vài từ trong nội dung.
 
@@ -26,7 +26,7 @@ Chọn **Loại văn bản** ở phía trên: Nhà nước, Đảng hoặc cá n
 - **Cá nhân:** không ép bố cục hành chính; giữ ngôn ngữ minh họa/khoảng trắng, thêm gợi ý kiểm tra tab liên tiếp và đoạn căn giữa có tab/khoảng trắng đầu dòng; không tự xóa tab.
 - Mỗi cảnh báo thể thức có căn cứ mục/phụ lục và số trang PDF. Những mục chỉ kiểm tra thủ công không tích được; **Sửa tất cả** bỏ qua chúng. Có thể sửa định dạng các dòng đã nhận diện, giữ cỡ chữ đang hợp lệ thay vì ép mọi quốc hiệu về 13.
 - Kiểm tra ngôn ngữ vẫn chỉ là khoảng trắng và quy tắc minh họa `con đo` → `con đò`, chưa có từ điển hoặc mô hình AI. Không coi việc hết cảnh báo là đạt toàn bộ NĐ30/HD05.
-- Chưa kiểm đủ tên cơ quan, số/ký hiệu, ngày tháng, thân bài, chữ ký/nơi nhận, số trang, đường kẻ, thiếu tiêu đề, toàn bộ các mẫu và ngoại lệ; chưa quét header/footer/textbox. Không hỗ trợ tài liệu bảo vệ/Track Changes.
+- Chưa kiểm đủ tên cơ quan, số/ký hiệu, ngày tháng, thân bài, chữ ký/nơi nhận, số trang, đường kẻ ngoài ba vùng được nhận diện, thiếu tiêu đề, toàn bộ các mẫu và ngoại lệ; chưa quét header/footer/textbox. Không hỗ trợ tài liệu bảo vệ/Track Changes.
 
 Căn cứ và giới hạn chi tiết: [FORMAT-RULES.md](docs/FORMAT-RULES.md). Nguồn là hai PDF đính kèm của người dùng, chưa xác minh độc lập mọi văn bản sửa đổi sau đó.
 
@@ -90,3 +90,11 @@ Nếu Word lỗi giữa lượt sửa, có thể đã áp dụng một phần; �
 ## Bản 0.1.7 — giữ dấu tiêu ngữ do Word tự đổi
 
 Tiêu ngữ chấp nhận cả `Độc lập - Tự do - Hạnh phúc` và `Độc lập – Tự do – Hạnh phúc`, kể cả trộn hai dấu. Không cảnh báo chỉ vì khác dấu. Sửa định dạng hoặc hoa thường không tự đổi dấu đang dùng. Phạm vi thể thức/ngôn ngữ còn lại giữ như 0.1.6.
+
+## Bản 0.1.8 — ba đường kẻ Shape Line
+
+Chế độ Nhà nước có kiểm tra/thêm/đặt lại ba Line khi nhận diện và đo chắc chắn: dưới cơ quan trong ô trái, dưới tiêu ngữ và dưới dòng hiển thị cuối của trích yếu. Có hai cấu hình độ dài: NĐ30 (1/3–1/2, đích 5/12) hoặc đơn vị (1/3–2/3, đích 4/7). Khoảng cách theo yêu cầu người dùng: 6–15pt cho cơ quan/trích yếu, 3–13pt cho tiêu ngữ; mặc định tạo cách 6pt. Không gán thông số riêng thành quy định pháp lý.
+
+Chọn cảnh báo để thấy dòng mốc và vạch cam vị trí đề xuất; vạch cam chưa phải Shape đã lưu. Duyệt sửa để tạo/đặt lại Line. Nếu có cả lỗi chữ và Line, sửa chữ trước rồi sửa Line theo số đo mới; Sửa tất cả sẽ thông báo cách chạy hai lượt. Không ghép chắc chắn thì chỉ cảnh báo, không tự chèn trùng. Chi tiết: docs/SHAPE-LINES.md.
+
+Thử `samples/BaDuongKeThieu.docx` (dữ liệu giả) hoặc bản sao tài liệu của bạn. Cloud Linux chưa chạy Office2021, nên cần kiểm thử tạo/neo/căn Line và Undo trên Windows. File thực tế người dùng cung cấp không được đưa vào gói tải hoặc kho GitHub.

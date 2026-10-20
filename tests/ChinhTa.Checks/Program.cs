@@ -190,4 +190,61 @@ Assert(mixedCaseFix.Replacement == mixedDashMotto,
     "Sửa hoa thường giữ đúng từng dấu phân cách ban đầu");
 Assert(Checker.Check([new(0, Checker.Heading, true, 13), new(100, enDashMotto, true, 14)], DocumentProfile.State).Count == 0,
     "Cặp quốc hiệu/tiêu ngữ không báo sai do en dash");
+var lineParagraphs = new LayoutParagraph[]
+{
+    new(0,"CƠ QUAN CHỦ QUẢN\r",1,true,0,100,true),
+    new(25,"CƠ QUAN BAN HÀNH\r",1,true,0,100,true),
+    new(50,"Số: 01/BC\r",1,true,0,100,true),
+    new(100, Checker.Heading + "\r",1,true,100,200,true),
+    new(140,HeadingRules.Motto + "\r",1,true,100,200,true),
+    new(200,"BÁO CÁO\r",1,false,0,0,true),
+    new(215,"Trích yếu dòng đầu\r",1,false,0,0,true),
+    new(240,"Dòng cuối trích yếu\r",1,false,0,0,true),
+    new(265,"\r",1,false,0,0,false),
+    new(266,"Kính gửi: cơ quan\r",1,false,0,0,false)
+};
+var lineTargets = ShapeLineRules.Identify(lineParagraphs,DocumentProfile.State);
+Assert(lineTargets.Count == 3 && lineTargets.Single(t=>t.Role==LineRole.Agency).Start==25,
+    "Nhận diện ba đường kẻ và cơ quan dưới cùng, không lấy cơ quan chủ quản");
+var subjectTarget = lineTargets.Single(t=>t.Role==LineRole.Subject);
+Assert(subjectTarget.Start==240 && subjectTarget.Text=="Dòng cuối trích yếu",
+    "Chọn đoạn cuối của trích yếu, không lấy Kính gửi");
+Assert(!ShapeLineRules.Identify(lineParagraphs,DocumentProfile.Party).Any() &&
+       !ShapeLineRules.Identify(lineParagraphs,DocumentProfile.Personal).Any(),
+    "Bộ ba Shape Line chỉ áp dụng Nhà nước");
+var agencyTarget = lineTargets.Single(t=>t.Role==LineRole.Agency);
+var referenceLine = new LineReference(100,100,210);
+var missingLine = ShapeLineRules.Evaluate(agencyTarget, referenceLine,null,null,LinePolicy.Decree30);
+Assert(missingLine.Errors.Length==1 && Math.Abs(missingLine.Fix.Width-87.5)<.01 && missingLine.Fix.Top==106,
+    "Thiếu line đề xuất đích 5/12 và khoảng cách 6pt theo cấu hình");
+var correctGeometry = new ChinhTa.Core.LineGeometry(missingLine.Fix.Left,109,87.5);
+Assert(ShapeLineRules.Evaluate(agencyTarget,referenceLine,correctGeometry,42,LinePolicy.Decree30).Errors.Length==0,
+    "Line đúng độ dài/tâm/khoảng cách không bị cảnh báo");
+Assert(ShapeLineRules.Evaluate(agencyTarget,referenceLine,correctGeometry with {Left=190},42,LinePolicy.Decree30).Errors.Any(e=>e.Contains("lệch")),
+    "Báo lệch tâm khi dịch line quá dung sai");
+Assert(ShapeLineRules.Evaluate(agencyTarget,referenceLine,correctGeometry with {Y=120},42,LinePolicy.Decree30).Errors.Any(e=>e.Contains("Khoảng cách")),
+    "Báo line cách dưới quá xa");
+var customLine = ShapeLineRules.Evaluate(agencyTarget,referenceLine,null,null,LinePolicy.OfficePreference);
+Assert(Math.Abs(customLine.Fix.Width-120)<.01,
+    "Cấu hình đơn vị dùng đích 4/7 thay vì gán nó là NĐ30");
+Assert(ShapeLineRules.Evaluate(agencyTarget,referenceLine,new(145,109,120),42,LinePolicy.Decree30).Errors.Any(e=>e.Contains("Độ dài")),
+    "Độ dài 4/7 vượt khoảng NĐ30");
+Assert(ShapeLineRules.Evaluate(agencyTarget,referenceLine,new(145,109,120),42,LinePolicy.OfficePreference).Errors.Length==0,
+    "Độ dài 4/7 đúng cấu hình đơn vị");
+var mottoTarget = lineTargets.Single(t=>t.Role==LineRole.Motto);
+var mottoLine = ShapeLineRules.Evaluate(mottoTarget,referenceLine,null,null,LinePolicy.Decree30);
+Assert(mottoLine.Fix.Width==210 && mottoLine.Fix.Top==106,
+    "Line dưới tiêu ngữ bằng dòng chữ, mặc định cách 6pt");
+Assert(ShapeLineRules.Evaluate(mottoTarget,referenceLine,new(100,103,210),42,LinePolicy.Decree30).Errors.Length==0 &&
+       ShapeLineRules.Evaluate(mottoTarget,referenceLine,new(100,113,210),42,LinePolicy.Decree30).Errors.Length==0,
+    "Tiêu ngữ chấp nhận hai cận khoảng cách 3 và 13pt");
+var unrelatedTable = lineParagraphs.Select(p => p with { TableStart = p.CellStart==100 ? 100 : 0 }).ToArray();
+Assert(!ShapeLineRules.Identify(unrelatedTable,DocumentProfile.State).Any(t=>t.Role==LineRole.Agency),
+    "Không lấy cơ quan từ bảng khác làm vùng bên trái tiêu ngữ");
+if (args.Length == 1)
+{
+    var fixtureTargets = ShapeLineRules.Identify(DocxLineFixture.Read(args[0]), DocumentProfile.State);
+    Assert(fixtureTargets.Select(t=>t.Role).Distinct().Count()==3,
+        "File DOCX được cung cấp nhận diện đủ ba vùng qua XML (chưa kiểm Word/XPS)");
+}
 Console.WriteLine($"{checks} checks passed.");
