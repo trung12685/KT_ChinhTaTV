@@ -3,7 +3,7 @@
 1. Chạy core checks và mở giao diện bằng các lệnh trong README. Nếu chưa cài Word, khi mở file phải hiển thị thông báo dễ hiểu.
 2. Sao chép file mẫu, tính SHA256 trước thử: `Get-FileHash samples/VanBanMau.docx`.
 3. Mở file mẫu. Kỳ vọng 5 cảnh báo: quốc hiệu, khoảng trắng và ba vị trí `đo` (đoạn, bảng, trang hai). Câu `Tôi đo chiều dài` và `con đò` không bị cảnh báo.
-4. Rê chuột lên từng lỗi; xác minh đúng trang và đúng từ được tô vàng, bao gồm hai từ giống nhau trong các vị trí khác nhau. Đổi zoom và kiểm tra lại. Xuất XPS lại có độ trễ là giới hạn bản thử.
+4. Xác minh cả 5 vị trí đều được tô vàng từ đầu. Chọn/rê chuột từng lỗi phải chuyển đúng trang, không dựng lại tài liệu; các lỗi trên cùng trang đều có màu vàng. Chuyển qua lại ít nhất 20 lần, gồm lỗi trong bảng và trang hai; ghi thời gian phản hồi, không được lặp độ trễ xuất Word. Đổi zoom và kiểm tra lại. Sau sửa/hoàn tác, xác minh vị trí và số trang cache được cập nhật. Ghi thời gian quét/dựng trang ở thanh trạng thái và so sánh bản 0.1.0 trên cùng file/máy.
 5. Sửa `đo` ở trang hai; kiểm tra hai vị trí còn lại chưa thay đổi. Hoàn tác phải phục hồi đúng từ và số cảnh báo.
 6. Sửa quốc hiệu: kiểm tra hoa, đậm, cỡ 13, font và căn giữa trong Word. Hoàn tác một lần phải phục hồi cả nội dung và định dạng.
 7. Sửa khoảng trắng, lưu tên mới. Mở bản mới bằng Word, xác nhận không có màu highlight phát sinh; bảng, ngắt trang và các định dạng không liên quan còn nguyên. Kiểm tra SHA256 file gốc không thay đổi.

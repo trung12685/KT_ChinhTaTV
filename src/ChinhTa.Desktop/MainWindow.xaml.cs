@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.ComponentModel;
 using System.IO;
 using System.Windows;
@@ -12,11 +13,12 @@ namespace ChinhTa.Desktop;
 public partial class MainWindow : Window
 {
     private readonly WordSession session = new();
-    private readonly DispatcherTimer hover = new() { Interval = TimeSpan.FromMilliseconds(500) };
+    private readonly DispatcherTimer hover = new() { Interval = TimeSpan.FromMilliseconds(100) };
     private XpsDocument? xps;
     private string? xpsPath;
     private Issue? pending;
     private Issue? displayed;
+    private readonly Dictionary<Issue, int> pages = new();
     public MainWindow()
     {
         InitializeComponent();
@@ -43,10 +45,18 @@ public partial class MainWindow : Window
     private void Scan()
     {
         pending = displayed = null;
+        var timer = Stopwatch.StartNew();
         var found = session.Check();
+        double checkSeconds = timer.Elapsed.TotalSeconds;
+        ClosePreview();
+        pages.Clear();
+        xpsPath = session.ExportPreview(found, pages);
+        xps = new XpsDocument(xpsPath, FileAccess.Read);
+        Preview.Document = xps.GetFixedDocumentSequence();
         Issues.ItemsSource = found;
-        ShowPreview(null);
-        Status.Text = $"{Path.GetFileName(session.Source)} — {found.Count} cảnh báo. Bản thử dùng quy tắc, chưa tích hợp AI.";
+        Status.Text = $"{Path.GetFileName(session.Source)} — {found.Count} cảnh báo. " +
+            $"Quét: {checkSeconds:F1}s; dựng trang: {timer.Elapsed.TotalSeconds - checkSeconds:F1}s. " +
+            "Tất cả lỗi được tô vàng; chọn lỗi để đến trang, không xuất lại Word.";
     }
     private void ClosePreview()
     {
@@ -56,13 +66,12 @@ public partial class MainWindow : Window
     }
     private void ShowPreview(Issue? issue)
     {
-        if (issue is not null && issue == displayed) return;
-        ClosePreview();
-        xpsPath = session.ExportPreview(issue);
-        xps = new XpsDocument(xpsPath, FileAccess.Read);
-        Preview.Document = xps.GetFixedDocumentSequence();
+        if (issue is null || issue == displayed || !pages.TryGetValue(issue, out int page)) return;
+        // Navigation uses the existing XPS and cached page number: no Word COM or disk export.
+        Preview.GoToPage(page);
         displayed = issue;
-        if (issue is not null) Preview.GoToPage(session.Page(issue));
+        Status.Text = $"Trang {page} — {issue.Message} Gợi ý: {issue.Replacement}. " +
+            "Các lỗi trên trang được tô vàng; nút sửa chỉ áp dụng lỗi đã chọn bên phải.";
     }
     private void Queue(Issue issue) { pending = issue; hover.Stop(); hover.Start(); }
     private void IssueHover(object sender, MouseEventArgs e)

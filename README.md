@@ -11,9 +11,9 @@ dotnet run --project tests/ChinhTa.Checks
 dotnet run --project src/ChinhTa.Desktop
 ```
 
-Mở `samples/VanBanMau.docx`. Chọn hoặc rê chuột lên một lỗi khoảng nửa giây để tô vàng vị trí trong bản xem trước; chọn lỗi rồi nhấn **Sửa lỗi đã chọn**. Mỗi lần sửa sẽ quét lại và dựng lại trang. Có **Hoàn tác** và **Lưu bản sao**. Không thể lưu đè đường dẫn tài liệu gốc.
+Mở `samples/VanBanMau.docx`. Các lỗi được tô vàng cùng lúc khi dựng bản xem trước. Chọn hoặc rê chuột lên lỗi để chuyển đến trang tương ứng bằng số trang đã lưu, không gọi Word hoặc xuất XPS lại; chọn lỗi rồi nhấn **Sửa lỗi đã chọn**. Mỗi lần sửa sẽ quét lại và dựng lại trang. Có **Hoàn tác** và **Lưu bản sao**. Không thể lưu đè đường dẫn tài liệu gốc.
 
-XPS được Word xuất trên một bản sao tạm riêng: màu highlight không được ghi vào file kết quả. File gốc không được Word mở để chỉnh sửa. Bản thử dùng một phiên Word riêng, không đóng các cửa sổ Word của người dùng. Các thao tác Word hiện chạy đồng bộ nên xuất tài liệu lớn có thể làm giao diện chờ; không rê chuột liên tục khi thử tài liệu lớn.
+XPS được Word xuất trên một bản sao tạm riêng: màu highlight không được ghi vào file kết quả. File gốc không được Word mở để chỉnh sửa. Bản thử dùng một phiên Word riêng, không đóng các cửa sổ Word của người dùng. Các thao tác mở, quét và xuất Word hiện vẫn chạy đồng bộ nên lần mở và sau mỗi lần sửa/hoàn tác có thể làm giao diện chờ. Việc chuyển lỗi dùng XPS có sẵn. Dòng trạng thái sau quét ghi riêng thời gian quét và dựng trang; chưa có số đo tốc độ trên Windows. Khi có nhiều lỗi trên cùng trang, tất cả được tô vàng, chưa có màu riêng cho lỗi đang chọn.
 
 ## Phạm vi hiện có
 
@@ -42,3 +42,7 @@ Sau restore/publish, thư mục kết quả chạy offline; máy đích vẫn c�
 - `src/ChinhTa.Core`: quy tắc độc lập với Word, có thể mở rộng bằng bộ kiểm tra AI.
 - `src/ChinhTa.Desktop`: giao diện và phiên Word COM, bản xem trước XPS.
 - `samples/VanBanMau.docx`: dữ liệu giả có đoạn, bảng và hai trang; tạo lại bằng `python scripts/create_sample.py`.
+
+## Bản 0.1.1 — tối ưu chuyển lỗi
+
+Chỉ xuất XPS một lần khi quét hoặc sau sửa/hoàn tác; cache số trang của từng lỗi. Không xuất lại khi hover/chọn lỗi. Giảm lời gọi COM đọc font bằng cách chỉ đọc định dạng quốc hiệu. Chưa tối ưu dựng trang sau từng sửa hoặc tích hợp AI; mở Word lần đầu vẫn có chi phí khởi động.
