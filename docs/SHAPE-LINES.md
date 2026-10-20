@@ -1,4 +1,4 @@
-# Ba Shape Line — bản thử 0.1.9
+# Ba Shape Line — bản thử 0.1.10
 
 ## Phạm vi
 
@@ -43,3 +43,5 @@ Không trộn sửa chữ/định dạng và sửa Line trong cùng lượt vì 
 Đã kiểm thử logic nhận diện/độ dài/tâm/khoảng cách, biên dịch chéo và kiểm nhận diện XML của file người dùng; chưa chạy đo XPS thực tế, `Shapes.AddLine`, neo trong bảng, đặt lại Line/Undo hoặc lưu/mở qua Office2021 trong cloud Linux. Không khẳng định đã sửa chính xác file người dùng. Cần thử trên bản sao theo WINDOWS-VALIDATION.md trước khi dùng thực tế.
 
 Giới hạn khác: chưa nhận diện mọi cấu trúc header, nested/merged tables, nhóm Shape, mọi cách neo, ký tự underline thay Line hoặc mọi mẫu pháp lý. Khi căn giữa/mốc/ghép không chắc chắn, chỉ cảnh báo. Không tự xử lý Shape của văn bản Đảng hoặc cá nhân bằng bộ này.
+
+Bản 0.1.10 đọc vị trí ô từ bản sao range thu gọn và mở rộng tới bảng (wdTable), tránh collection Tables rỗng của đoạn văn. Khi Word trả lỗi 5941, tắt tự kiểm/sửa Line cho lượt quét và hiển thị cảnh báo thủ công; vẫn chạy kiểm chính tả.

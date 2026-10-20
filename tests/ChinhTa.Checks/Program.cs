@@ -240,6 +240,27 @@ Assert(ShapeLineRules.Evaluate(mottoTarget,referenceLine,new(100,103,210),42,Lin
 var unrelatedTable = lineParagraphs.Select(p => p with { TableStart = p.CellStart==100 ? 100 : 0 }).ToArray();
 Assert(!ShapeLineRules.Identify(unrelatedTable,DocumentProfile.State).Any(t=>t.Role==LineRole.Agency),
     "Không lấy cơ quan từ bảng khác làm vùng bên trái tiêu ngữ");
+var tableProbe = new FakeTableRange();
+var releasedTableObjects = new List<object?>();
+var tableLocation = ChinhTa.Desktop.WordTableLocation.Read(tableProbe, releasedTableObjects.Add);
+Assert(tableLocation.CellStart == 120 && tableLocation.CellEnd == 200 && tableLocation.TableStart == 100 && tableLocation.BalancedPadding,
+    "Đọc đúng ô/bảng khi paragraph.Tables không có phần tử");
+Assert(tableProbe.Start == 130 && tableProbe.End == 170 && tableProbe.LastDuplicate!.Collapsed,
+    "Đọc bảng bằng bản sao, không làm đổi range đoạn văn");
+Assert(releasedTableObjects.Count == 4 && releasedTableObjects.Distinct().Count() == 4 &&
+    !releasedTableObjects.Contains(tableProbe), "Giải phóng đủ tham chiếu bảng, giữ nguyên range gốc");
+var failingProbe = new FakeTableRange { ThrowOnExpand = true };
+releasedTableObjects.Clear();
+try
+{
+    ChinhTa.Desktop.WordTableLocation.Read(failingProbe, releasedTableObjects.Add);
+    Assert(false, "Phải chuyển tiếp lỗi không xác định được bảng");
+}
+catch (System.Runtime.InteropServices.COMException ex)
+{
+    Assert(ex.HResult == unchecked((int)0x800A1735) && releasedTableObjects.Count == 4,
+        "Giữ mã lỗi 5941 và giải phóng đủ tham chiếu khi đọc bảng thất bại");
+}
 if (args.Length == 1)
 {
     var fixtureTargets = ShapeLineRules.Identify(DocxLineFixture.Read(args[0]), DocumentProfile.State);

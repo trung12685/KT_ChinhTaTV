@@ -74,6 +74,7 @@ public sealed class WordSession : IDisposable
     {
         var paragraphs = new List<Paragraph>();
         var headerLayout = new List<LayoutParagraph>();
+        bool lineLayoutUnavailable = false;
         dynamic ps = document!.Paragraphs;
         try
         {
@@ -85,7 +86,15 @@ public sealed class WordSession : IDisposable
                 {
                     string text = (string)r.Text;
                     int start = (int)r.Start;
-                    if (Profile == DocumentProfile.State && i <= 40) headerLayout.Add(ReadLayout(r, start, text));
+                    if (Profile == DocumentProfile.State && i <= 40)
+                    {
+                        try { headerLayout.Add(ReadLayout(r, start, text)); }
+                        catch (COMException ex) when (ex.HResult == unchecked((int)0x800A1735))
+                        {
+                            Diagnostics.Write("Word.ReadLayout.Unavailable", ex);
+                            lineLayoutUnavailable = true;
+                        }
+                    }
                     if (HeadingRules.IsCandidate(text, Profile) ||
                         Profile == DocumentProfile.Personal && System.Text.RegularExpressions.Regex.IsMatch(text, @"^[ \t]+\S"))
                     {
@@ -101,9 +110,13 @@ public sealed class WordSession : IDisposable
             }
         }
         finally { Release(ps); }
-        LineTargets = ShapeLineRules.Identify(headerLayout, Profile);
+        LineTargets = lineLayoutUnavailable ? [] : ShapeLineRules.Identify(headerLayout, Profile);
         LineShapes = ReadLineShapes();
         var issues = Checker.Check(paragraphs, Profile).ToList();
+        if (lineLayoutUnavailable && paragraphs.FirstOrDefault(p => p.Text.Length > 0) is Paragraph first)
+            issues.Add(new(first.Start, first.Text.Length, first.Text, first.Text,
+                "Word chưa cung cấp đủ thông tin bảng. Chưa kiểm tra ba đường kẻ Shape Line; cần kiểm tra thủ công. Các lỗi chính tả vẫn được kiểm tra.",
+                false, FixKind.ShapeLine, CanFix: false, Title: "Chưa kiểm tra được đường kẻ"));
         if (Profile != DocumentProfile.Personal)
         {
             dynamic sections = document.Sections;
@@ -140,18 +153,15 @@ public sealed class WordSession : IDisposable
         bool balancedPadding = true;
         if (inTable)
         {
-            dynamic tables = range.Tables; dynamic table = tables[1]; dynamic tableRange = table.Range;
-            try { tableStart = (int)tableRange.Start; }
-            finally { if (Marshal.IsComObject(tableRange)) Marshal.ReleaseComObject(tableRange); Release(table); Release(tables); }
-            dynamic cells = range.Cells; dynamic cell = cells[1]; dynamic cellRange = cell.Range;
-            try { cellStart = (int)cellRange.Start; cellEnd = (int)cellRange.End;
-                balancedPadding = Math.Abs((float)cell.LeftPadding - (float)cell.RightPadding) <= 1; }
-            finally
+            var location = WordTableLocation.Read((object)range, value =>
             {
-                // Cell and paragraph ranges may share RCW identity: balance this reference only.
-                if (Marshal.IsComObject(cellRange)) Marshal.ReleaseComObject(cellRange);
-                Release(cell); Release(cells);
-            }
+                // Duplicates/cell ranges can share RCWs with live paragraph ranges.
+                if (value is not null && Marshal.IsComObject(value)) Marshal.ReleaseComObject(value);
+            });
+            cellStart = location.CellStart;
+            cellEnd = location.CellEnd;
+            tableStart = location.TableStart;
+            balancedPadding = location.BalancedPadding;
         }
         dynamic format = range.ParagraphFormat;
         bool centered;

@@ -17,7 +17,7 @@ Bản 0.1.2 xuất XPS không có highlight từ tài liệu làm việc một l
 
 Khi ánh xạ không chắc chắn (thứ tự vẽ phức tạp, nội dung mơ hồ, glyph thiếu chữ Unicode hoặc lỗi qua ranh giới trang), ứng dụng đến trang và báo **chưa ánh xạ chắc chắn**, không đoán vị trí. Cần xác minh tọa độ thực tế trên Windows với nhiều font/zoom/bảng. Các thao tác mở, quét và xuất Word vẫn đồng bộ; lần mở và sau mỗi sửa/hoàn tác có thể làm giao diện chờ. Thanh trạng thái ghi thời gian quét/dựng trang, và thời gian đánh dấu khi chọn lỗi. Chưa có số đo trên Windows.
 
-## Phạm vi hiện có — 0.1.9
+## Phạm vi hiện có — 0.1.10
 
 Chọn **Loại văn bản** ở phía trên: Nhà nước, Đảng hoặc cá nhân. Đổi loại khi đang mở tài liệu sẽ quét và dựng lại bản xem trước; các ô tích cũ được đặt lại. Mặc định là Nhà nước. Không tự đoán loại tài liệu từ vài từ trong nội dung.
 
@@ -98,3 +98,7 @@ Chế độ Nhà nước có kiểm tra/thêm/đặt lại ba Line khi nhận di
 Chọn cảnh báo để thấy dòng mốc và vạch cam vị trí đề xuất; vạch cam chưa phải Shape đã lưu. Duyệt sửa để tạo/đặt lại Line. Nếu có cả lỗi chữ và Line, sửa chữ trước rồi sửa Line theo số đo mới; Sửa tất cả sẽ thông báo cách chạy hai lượt. Không ghép chắc chắn thì chỉ cảnh báo, không tự chèn trùng. Chi tiết: docs/SHAPE-LINES.md.
 
 Thử `samples/BaDuongKeThieu.docx` (dữ liệu giả) hoặc bản sao tài liệu của bạn. Cloud Linux chưa chạy Office2021, nên cần kiểm thử tạo/neo/căn Line và Undo trên Windows. File thực tế người dùng cung cấp không được đưa vào gói tải hoặc kho GitHub.
+
+## Bản 0.1.10 — sửa lỗi đọc bảng 5941
+
+Sửa cách đọc bảng chứa đoạn văn: thu gọn bản sao range về đầu đoạn rồi mở rộng tới bảng, không truy cập `paragraph.Range.Tables[1]` vốn có thể rỗng trong Word. Nếu Word vẫn không cung cấp phần tử bảng (0x800A1735), bộ kiểm chính tả tiếp tục và hiện cảnh báo chưa kiểm được đường kẻ; không tự thêm Line khi chưa đủ thông tin. Giữ khoảng độ dài 1/3–1/2 từ bản 0.1.9.
