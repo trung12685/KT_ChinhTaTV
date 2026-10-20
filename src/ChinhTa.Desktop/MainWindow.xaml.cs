@@ -172,6 +172,24 @@ public partial class MainWindow : Window
             MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes) return;
         Run(() => { session.FixMany(selected); Scan(); Status.Text = $"Đã áp dụng {selected.Count} gợi ý. " + Status.Text; });
     }
+    private void OfficeCheckClick(object sender, RoutedEventArgs e) => Run(() =>
+    {
+        Status.Text = "Đang kiểm tra Word bằng tài liệu mẫu riêng: mở, ghi Line, xuất trang, lưu và hoàn tác…";
+        var result = OfficeIntegrationCheck.Run();
+        Status.Text = result.Passed ? "Kiểm tra Word tự động: ĐẠT." : "Kiểm tra Word tự động: CHƯA ĐẠT; xem office-check.txt.";
+        MessageBox.Show(this, (result.Passed ? "Đã đạt các bước kiểm tra Word trên mẫu riêng." :
+            "Kiểm tra Word chưa đạt ở bước: " + result.Stage) +
+            "\n\nKết quả và file mẫu đã sửa lưu tại:\n" + result.Folder +
+            "\n\nMẫu chỉ kiểm thao tác ghi/lưu Line, không đánh giá vị trí thể thức.",
+            "Kiểm tra Word", MessageBoxButton.OK, result.Passed ? MessageBoxImage.Information : MessageBoxImage.Warning);
+        Process.Start(new ProcessStartInfo { FileName = result.Folder, UseShellExecute = true });
+    });
+    private void DiagnosticsFolderClick(object sender, RoutedEventArgs e)
+    {
+        string folder = Path.GetDirectoryName(Diagnostics.LogPath)!;
+        Directory.CreateDirectory(folder);
+        Process.Start(new ProcessStartInfo { FileName = folder, UseShellExecute = true });
+    }
     private void UpdateCheckedCount()
     {
         if (CheckedCount is not null) CheckedCount.Text = $"Đã tích: {choices.Count(x => x.IsChecked)}/{choices.Count(x => x.Issue.CanFix)} mục sửa được; {choices.Count(x => !x.Issue.CanFix)} cảnh báo thủ công";

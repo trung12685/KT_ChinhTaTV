@@ -17,7 +17,7 @@ Bản 0.1.2 xuất XPS không có highlight từ tài liệu làm việc một l
 
 Khi ánh xạ không chắc chắn (thứ tự vẽ phức tạp, nội dung mơ hồ, glyph thiếu chữ Unicode hoặc lỗi qua ranh giới trang), ứng dụng đến trang và báo **chưa ánh xạ chắc chắn**, không đoán vị trí. Cần xác minh tọa độ thực tế trên Windows với nhiều font/zoom/bảng. Các thao tác mở, quét và xuất Word vẫn đồng bộ; lần mở và sau mỗi sửa/hoàn tác có thể làm giao diện chờ. Thanh trạng thái ghi thời gian quét/dựng trang, và thời gian đánh dấu khi chọn lỗi. Chưa có số đo trên Windows.
 
-## Phạm vi hiện có — 0.1.15
+## Phạm vi hiện có — 0.1.16
 
 Chọn **Loại văn bản** ở phía trên: Nhà nước, Đảng hoặc cá nhân. Đổi loại khi đang mở tài liệu sẽ quét và dựng lại bản xem trước; các ô tích cũ được đặt lại. Mặc định là Nhà nước. Không tự đoán loại tài liệu từ vài từ trong nội dung.
 
@@ -130,3 +130,9 @@ Không dùng đường ghi COM AddLine/LineFormat/Delete của các bản trư�
 Nút Hoàn tác dùng snapshot theo từng lượt cho cả sửa chữ/định dạng và Line, nên vẫn hoạt động sau lượt Line cần mở lại Word. Lịch sử chỉ trong phiên đang mở, không có Redo. Chọn nhiều Line chỉ mở lại một lần, nhưng lượt sửa có thể chờ lâu hơn thao tác COM trực tiếp. Rê chuột vẫn dùng preview cache.
 
 Chỉ tự đặt lại Line có marker của ứng dụng trong vùng đã xác minh; Line có sẵn khác cần chỉnh thủ công. Bộ kiểm thử ghi DOCX thật từ tài liệu đã cung cấp và mẫu độc lập, dùng OpenXML SDK kiểm chuẩn Line/toàn gói, đối chiếu giữ nguyên XML chữ/định dạng và byte của các part khác, thử rollback khi mở thất bại. Chưa xác minh Word/Office 2021 thực tế hoặc độ chính xác dựng trang của VML trong môi trường Windows.
+
+## Bản 0.1.16 — nguồn DOCX không bị khóa và kiểm tra Office tự động
+
+Nhật ký 0.1.15 xác định IOException 0x80070020 khi ZipFile.OpenRead mở RecoveryPath đang được Word giữ handle ghi. File.Copy checkpoint đã thành công trước bước đó; dùng chính bản `.undo.docx` riêng làm đầu vào ZIP thay vì RecoveryPath. Không thay cơ chế VML/rollback đã có. Kiểm thử mới giữ khóa độc quyền trên file làm việc và vẫn ghi được candidate từ bản sao.
+
+Menu **Kiểm tra → Kiểm tra Word tự động…** mở một WordSession riêng với mẫu giả đi kèm ZIP, nhận diện mốc, chạy đúng FixMany/ghi gói/mở lại/xác minh, xuất XPS, lưu bản sao, Undo nhóm, rồi mở lại bản đã lưu để kiểm ba Line còn tồn tại. Báo cáo `office-check.txt`, XPS và DOCX mẫu ở thư mục OfficeCheck-* trong thư mục diagnostics; Explorer tự mở sau kiểm tra. Không dùng tài liệu người dùng đang mở. Tọa độ mẫu cố định chỉ kiểm thao tác ghi/lưu, không chứng minh vị trí thể thức hay pipeline đo XPS. Chưa chạy bài kiểm tra Windows này trong cloud Linux.

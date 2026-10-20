@@ -1,4 +1,4 @@
-# Ba Shape Line — bản thử 0.1.15
+# Ba Shape Line — bản thử 0.1.16
 
 ## Phạm vi
 
@@ -79,3 +79,9 @@ Các mục 0.1.13/0.1.14 bên trên là lịch sử, không còn là đường g
 Mỗi lượt sửa lưu một snapshot trước đó. Nút Hoàn tác phục hồi snapshot theo thứ tự (kể cả các lượt sửa chữ), không dựa vào native Word Undo mất sau khi mở lại. Snapshot chỉ tồn tại trong phiên; app vẫn giữ backup khi rollback thất bại. Chưa có Redo.
 
 Đã kiểm chuẩn bằng OpenXML SDK cho ba Line và không phát sinh lỗi chuẩn mới trên toàn gói từ bản sao tài liệu riêng tư; chữ/định dạng XML và byte các part khác giữ nguyên. Kiểm thử này không xác minh render hoặc COM mở/Save/XPS trên Office 2021.
+
+## Khóa tệp từ 0.1.16
+
+Nguồn đọc ZIP là snapshot `.undo.docx` đã sao chép ngay trước lượt sửa, không phải `working.docx` còn mở trong Word. Word giữ handle ghi; ZipFile.OpenRead mặc định FileShare.Read không tương thích với handle này trên Windows, dẫn đến 0x80070020 trước khi tạo candidate. Luồng: Save → File.Copy snapshot → đọc/sửa ZIP của snapshot thành candidate → Close tài liệu làm việc → thay file → Open/xác minh → chấp nhận hoặc rollback.
+
+Kiểm thử độc lập giữ khóa file làm việc và xác minh chỉ bản sao được đọc. Bài kiểm tra qua menu chạy trên Word thật của máy Windows, sử dụng cùng WordSession/FixMany với mẫu riêng. Kết quả PASS chỉ cho các thao tác ghi/mở/lưu/XPS/Undo trên mẫu; không phải chứng nhận mọi file hoặc tọa độ thể thức. Cloud chưa chạy bài kiểm tra Office này.

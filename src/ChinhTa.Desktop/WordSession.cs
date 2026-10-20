@@ -22,6 +22,8 @@ public sealed class WordSession : IDisposable
     public string Source { get; private set; } = "";
     public bool Changed { get; private set; }
     public bool IsOpen => document is not null;
+    public string OfficeDescription => app is null ? "Word chưa mở" :
+        $"Word {app.Version}; Build {app.Build}; App64={Environment.Is64BitProcess}; OS64={Environment.Is64BitOperatingSystem}";
     public WordSession() => Directory.CreateDirectory(folder);
     // Balance this acquisition only; child and parent COM wrappers can share identity.
     private static void Release(object? value)
@@ -240,14 +242,29 @@ public sealed class WordSession : IDisposable
             foreach (var item in plan)
             {
                 string marker = "ChinhTaViet.ShapeLine." + item.LineFix!.Role;
-                int matches = 0;
+                int matches = 0, named = 0;
+                var types = new HashSet<int>();
                 for (int i = 1; i <= (int)shapes.Count; i++)
                 {
                     dynamic shape = shapes[i];
-                    try { if ((string?)shape.AlternativeText == marker && (int)shape.Type == 9) matches++; }
+                    try
+                    {
+                        if ((string?)shape.AlternativeText == marker)
+                        {
+                            named++;
+                            int type = (int)shape.Type; types.Add(type);
+                            if (type == 9) matches++;
+                        }
+                    }
                     finally { Release(shape); }
                 }
-                if (matches != 1) throw new InvalidOperationException("Word chưa nhận diện đúng một Shape Line sau khi mở candidate.");
+                if (matches != 1)
+                {
+                    var failure = new InvalidOperationException("Word chưa nhận diện đúng một Shape Line sau khi mở candidate.");
+                    failure.Data["ChinhTa.LineVerification"] = $"Role={item.LineFix.Role}; Named={named}; Types={string.Join(",",types)}; Total={shapes.Count}";
+                    Diagnostics.Write("Word.LinePackage.Verify", failure);
+                    throw failure;
+                }
             }
         }
         finally { Release(shapes); }
@@ -259,7 +276,9 @@ public sealed class WordSession : IDisposable
         try
         {
             string expectedText = ReadStoryText();
-            DocxLineEditor.Write(RecoveryPath, candidate, lastLayout, LineTargets, plan);
+            // Word owns RecoveryPath with a write handle. ZIP's FileShare.Read conflicts with that handle.
+            // The checkpoint copy was made by File.Copy and is not open in Word.
+            DocxLineEditor.Write(before, candidate, lastLayout, LineTargets, plan);
             snapshotCurrent = false;
             int openAttempts = 0;
             CheckpointSwap.Apply(RecoveryPath, candidate, CloseDocumentOnly, () =>

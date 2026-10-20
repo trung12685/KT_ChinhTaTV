@@ -14,6 +14,7 @@ public static class Diagnostics
             var version = typeof(Diagnostics).Assembly.GetName().Version;
             string entry = $"{DateTimeOffset.Now:O} v{version} {operation} " +
                 (error is null ? "event" : $"{error.GetType().Name} HRESULT=0x{error.HResult:X8}\n{error.StackTrace}");
+            if (error?.Data["ChinhTa.LineVerification"] is string details) entry += "\n" + details;
             File.AppendAllText(LogPath, entry + Environment.NewLine);
         }
         catch (IOException) { }

@@ -25,6 +25,15 @@ public static class DocxLineEditorChecks
             string edited = Path.Combine(folder,"edited.docx");
             DocxLineEditor.Write(source,edited,live,targets,issues);
             assert(File.ReadAllBytes(source).SequenceEqual(original), "Ghi ba Line vào candidate, nguồn giữ nguyên từng byte");
+            string active=Path.Combine(folder,"active-in-word.docx"),before=Path.Combine(folder,"before-unlocked.docx");
+            File.Copy(source,active); File.Copy(active,before);
+            using(var locked=new FileStream(active,FileMode.Open,FileAccess.ReadWrite,FileShare.None))
+            {
+                string lockedCandidate=Path.Combine(folder,"from-unlocked-backup.docx");
+                DocxLineEditor.Write(before,lockedCandidate,live,targets,issues);
+                assert(File.Exists(lockedCandidate) && locked.Length==original.Length,
+                    "Tệp làm việc đang khóa: ghi từ checkpoint riêng, không mở ZIP trên tệp đang dùng");
+            }
             XNamespace w="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
             XNamespace v="urn:schemas-microsoft-com:vml";
             XNamespace o="urn:schemas-microsoft-com:office:office";
