@@ -1,4 +1,4 @@
-# Quy tắc thể thức — bản 0.1.6
+# Quy tắc thể thức — bản 0.1.7
 
 ## Nguồn đã đối chiếu
 
@@ -52,3 +52,7 @@ Không áp quốc hiệu/tiêu ngữ, khổ giấy hay lề hành chính. Giữ 
 - Sửa font/cỡ/chữ trên dòng nhận diện giữ nguyên cỡ đang nằm trong khoảng hợp lệ. Nếu cỡ sai, chọn cận dưới hợp lệ; các quan hệ với thành phần khác vẫn có thể cần cảnh báo thủ công.
 - Lề, khổ giấy, ngoại lệ trang ngang/hai mặt, tính thống nhất cỡ và gợi ý tab là **chỉ cảnh báo**; ô tích bị vô hiệu và Sửa tất cả bỏ qua. Lượt sửa vẫn có xác nhận, kiểm tra chồng lấn, undo nhóm và checkpoint như bản trước.
 - Chưa kiểm thử Word COM/WPF trên Windows với các quy tắc mới; cần chạy checklist Office 2021 trong WINDOWS-VALIDATION.md.
+
+## Bản 0.1.7 — tương đương dấu trong tiêu ngữ
+
+Theo yêu cầu người dùng, chấp nhận cả hyphen `-` và en dash `–` trong tiêu ngữ, kể cả hai dấu phân cách khác loại do Word AutoCorrect. Không coi riêng khác biệt này là lỗi. Khi sửa font/cỡ/kiểu chữ, giữ nguyên toàn bộ nội dung nếu không có lỗi nội dung khác; khi sửa hoa thường/khoảng trắng trong tiêu ngữ, giữ đúng từng dấu phân cách ban đầu. Đây là chính sách tương thích ứng dụng được người dùng xác định, không diễn giải thêm một quy định pháp lý mới.

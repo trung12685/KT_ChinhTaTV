@@ -173,4 +173,21 @@ var pair = Checker.Check([new(0, Checker.Heading, true, 12), new(100, HeadingRul
 Assert(pair.Count == 1 && !pair[0].CanFix, "Cỡ quốc hiệu/tiêu ngữ cần thống nhất theo chú thích phụ lục");
 Assert(Checker.Check([new(0, Checker.Heading, true, 13), new(100, HeadingRules.Motto, true, 14)], DocumentProfile.State).Count == 0,
     "Cặp quốc hiệu 13 và tiêu ngữ 14 hợp lệ");
+var enDashMotto = HeadingRules.Motto.Replace("-", "–");
+Assert(Checker.Check([new(0, enDashMotto, true, 13)], DocumentProfile.State).Count == 0,
+    "Tiêu ngữ dùng en dash do Word tự đổi không bị báo lỗi");
+var mixedDashMotto = "Độc lập - Tự do – Hạnh phúc";
+Assert(Checker.Check([new(0, mixedDashMotto, true, 14)], DocumentProfile.State).Count == 0,
+    "Tiêu ngữ trộn hyphen và en dash vẫn hợp lệ");
+var enDashFontFix = Checker.Check([new(0, enDashMotto, true, 13, Font: "Arial")], DocumentProfile.State).Single();
+Assert(enDashFontFix.Kind == FixKind.StateMotto && enDashFontFix.Replacement == enDashMotto,
+    "Sửa font tiêu ngữ giữ nguyên en dash, không thay nội dung");
+var enDashSizeFix = Checker.Check([new(0, enDashMotto, true, 12)], DocumentProfile.State).Single();
+Assert(enDashSizeFix.Replacement == enDashMotto && enDashSizeFix.Format?.Size == 13,
+    "Sửa cỡ chữ vẫn giữ nguyên dấu Word đang dùng");
+var mixedCaseFix = Checker.Check([new(0, mixedDashMotto.ToLowerInvariant(), true, 13)], DocumentProfile.State).Single();
+Assert(mixedCaseFix.Replacement == mixedDashMotto,
+    "Sửa hoa thường giữ đúng từng dấu phân cách ban đầu");
+Assert(Checker.Check([new(0, Checker.Heading, true, 13), new(100, enDashMotto, true, 14)], DocumentProfile.State).Count == 0,
+    "Cặp quốc hiệu/tiêu ngữ không báo sai do en dash");
 Console.WriteLine($"{checks} checks passed.");

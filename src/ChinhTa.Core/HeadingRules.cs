@@ -7,6 +7,12 @@ public static class HeadingRules
     private static string Canonical(string text) => System.Text.RegularExpressions.Regex.Replace(
         System.Text.RegularExpressions.Regex.Replace(text.TrimEnd('\r', '\a', '\n').Trim(), @"\s+", " "),
         @"\s*[-–—]\s*", " - ");
+    private static string MottoWithOriginalDashes(string text)
+    {
+        var separators = System.Text.RegularExpressions.Regex.Matches(text, "[-–—]")
+            .Select(match => match.Value is "-" or "–" ? match.Value : "-").ToArray();
+        return separators.Length == 2 ? $"Độc lập {separators[0]} Tự do {separators[1]} Hạnh phúc" : Motto;
+    }
     private static bool National(string text) => text.Equals(Checker.Heading, StringComparison.OrdinalIgnoreCase)
         || text.Equals(Checker.Heading.Replace("HÒA", "HOÀ"), StringComparison.OrdinalIgnoreCase);
     public static bool IsCandidate(string text, DocumentProfile profile)
@@ -22,7 +28,7 @@ public static class HeadingRules
         string text = p.Text.TrimEnd('\r', '\a', '\n');
         bool party = profile == DocumentProfile.Party;
         bool motto = Canonical(text).Equals(Motto, StringComparison.OrdinalIgnoreCase);
-        string expected = party ? PartyTitle : motto ? Motto :
+        string expected = party ? PartyTitle : motto ? MottoWithOriginalDashes(text) :
             text.Contains("HOÀ", StringComparison.OrdinalIgnoreCase) ? Checker.Heading.Replace("HÒA", "HOÀ") : Checker.Heading;
         float min = party ? 15 : motto ? 13 : 12;
         float max = party ? 15 : motto ? 14 : 13;

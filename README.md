@@ -17,7 +17,7 @@ Bản 0.1.2 xuất XPS không có highlight từ tài liệu làm việc một l
 
 Khi ánh xạ không chắc chắn (thứ tự vẽ phức tạp, nội dung mơ hồ, glyph thiếu chữ Unicode hoặc lỗi qua ranh giới trang), ứng dụng đến trang và báo **chưa ánh xạ chắc chắn**, không đoán vị trí. Cần xác minh tọa độ thực tế trên Windows với nhiều font/zoom/bảng. Các thao tác mở, quét và xuất Word vẫn đồng bộ; lần mở và sau mỗi sửa/hoàn tác có thể làm giao diện chờ. Thanh trạng thái ghi thời gian quét/dựng trang, và thời gian đánh dấu khi chọn lỗi. Chưa có số đo trên Windows.
 
-## Phạm vi hiện có — 0.1.6
+## Phạm vi hiện có — 0.1.7
 
 Chọn **Loại văn bản** ở phía trên: Nhà nước, Đảng hoặc cá nhân. Đổi loại khi đang mở tài liệu sẽ quét và dựng lại bản xem trước; các ô tích cũ được đặt lại. Mặc định là Nhà nước. Không tự đoán loại tài liệu từ vài từ trong nội dung.
 
@@ -86,3 +86,7 @@ Nếu Word lỗi giữa lượt sửa, có thể đã áp dụng một phần; �
 ## Bản 0.1.6 — ba loại văn bản và quy tắc thể thức đầu tiên
 
 Đã đối chiếu NĐ30 Phụ lục I (PDF trang 21, 32) và HD05 Phần II/Phụ lục 2 (PDF trang 2, 28, 31). Không còn ép quốc hiệu về cỡ 13; cỡ 12 cũng hợp lệ. Mẫu quốc hiệu chấp nhận HÒA/HOÀ, không tự đổi cách đặt dấu. Các ngoại lệ cần phân loại đúng được giữ ở mức cảnh báo thủ công. Chưa phải bộ chứng nhận tuân thủ pháp luật hoặc bộ kiểm đủ mọi mẫu.
+
+## Bản 0.1.7 — giữ dấu tiêu ngữ do Word tự đổi
+
+Tiêu ngữ chấp nhận cả `Độc lập - Tự do - Hạnh phúc` và `Độc lập – Tự do – Hạnh phúc`, kể cả trộn hai dấu. Không cảnh báo chỉ vì khác dấu. Sửa định dạng hoặc hoa thường không tự đổi dấu đang dùng. Phạm vi thể thức/ngôn ngữ còn lại giữ như 0.1.6.
