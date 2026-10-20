@@ -24,7 +24,15 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        ProfilePicker.SelectedIndex = 0;
         hover.Tick += (_, _) => { hover.Stop(); if (pending is not null) Run(() => ShowPreview(pending)); };
+    }
+    private void ProfileChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (ProfilePicker.SelectedIndex < 0) return;
+        session.Profile = (DocumentProfile)ProfilePicker.SelectedIndex;
+        if (ProfileInfo is not null) ProfileInfo.Text = DocumentProfiles.Description(session.Profile);
+        if (session.IsOpen) Run(Scan);
     }
     private void Run(Action action)
     {

@@ -107,4 +107,13 @@ try { BatchPlan.Create([new(0, 3, "abc", "x", "", false), new(2, 2, "cd", "y", "
 catch (InvalidOperationException) { overlapRejected = true; }
 Assert(overlapRejected, "Từ chối lỗi chồng lấn trước khi sửa");
 Assert(BatchPlan.Create([]).Count == 0, "Danh sách rỗng không tạo thao tác sửa");
+var badHeading = new Paragraph(0, Checker.Heading.ToLowerInvariant(), false, 12, 0);
+Assert(Checker.Check([badHeading], DocumentProfile.Personal).Count == 0,
+    "Cá nhân không bị bắt buộc quốc hiệu hành chính");
+Assert(Checker.Check([badHeading], DocumentProfile.Party).Count == 0,
+    "Văn bản Đảng không dùng quy tắc quốc hiệu Nhà nước");
+Assert(Checker.Check([badHeading], DocumentProfile.State).Count == 1,
+    "Nhà nước giữ quy tắc quốc hiệu thử nghiệm riêng");
+Assert(Enum.GetValues<DocumentProfile>().All(profile => Checker.Check([new(0, "con đo. Đây  là mẫu")], profile).Count == 2),
+    "Các chế độ cùng kiểm tra ngữ cảnh minh họa và khoảng trắng");
 Console.WriteLine($"{checks} checks passed.");

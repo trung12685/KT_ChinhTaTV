@@ -72,3 +72,7 @@ Mỗi dòng lỗi có ô **Chọn để sửa hàng loạt**, độc lập với
 Trước khi sửa, kiểm tra mọi đoạn gốc còn khớp; từ chối lỗi chồng lấn. Áp dụng từ vị trí cuối lên đầu để việc thay độ dài không làm lệch lỗi trước đó. Một lượt thành công dùng chung một Word Undo record, một checkpoint và một lần quét/xuất preview. Nút Hoàn tác dự kiến bỏ cả lượt sửa; cần xác minh thực tế trên Office 2021. Sau quét, các ô tích được đặt lại để không giữ lựa chọn cũ trên vị trí đã thay đổi.
 
 Nếu Word lỗi giữa lượt sửa, có thể đã áp dụng một phần; ứng dụng báo và không tự phát lại sửa. Nếu còn kết nối, dùng Hoàn tác hoặc lưu bản sao để kiểm tra. Checkpoint trước lượt sửa vẫn còn nếu chưa lưu lượt mới. Đây không phải giao dịch nguyên tử khi tiến trình Word gặp sự cố. Tính năng sửa tất cả chỉ áp dụng các gợi ý mà bản thử hiện phát hiện, chưa bổ sung từ điển hoặc AI.
+
+## Đang phát triển: ba loại văn bản
+
+Đã thêm lựa chọn Nhà nước/Đảng/cá nhân trong mã nguồn, tách quy tắc quốc hiệu khỏi chế độ Đảng và cá nhân. Mỗi chế độ hiển thị rõ phần đã có/chưa có. Đây là khung chuẩn bị, chưa phát hành gói mới hoặc công bố tuân thủ NĐ30/HD05. Xem docs/FORMAT-RULES.md; cần bản gốc để xác minh và triển khai các quy tắc chi tiết.

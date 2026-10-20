@@ -11,6 +11,7 @@ public sealed class WordSession : IDisposable
     private dynamic? document;
     private readonly string folder = Path.Combine(Path.GetTempPath(), "ChinhTa-" + Guid.NewGuid());
     private bool snapshotCurrent = true;
+    public DocumentProfile Profile { get; set; } = DocumentProfile.State;
     public bool Recovered { get; private set; }
     public string RecoveryPath => Path.Combine(folder, "working.docx");
     public string Source { get; private set; } = "";
@@ -81,7 +82,7 @@ public sealed class WordSession : IDisposable
                     string text = (string)r.Text;
                     int start = (int)r.Start;
                     // Only the national heading rule needs font/paragraph COM calls.
-                    if (text.TrimEnd('\r', '\a', '\n').Trim().Equals(
+                    if (Profile == DocumentProfile.State && text.TrimEnd('\r', '\a', '\n').Trim().Equals(
                         Checker.Heading, StringComparison.OrdinalIgnoreCase))
                     {
                         dynamic f = r.Font; dynamic format = r.ParagraphFormat;
@@ -95,7 +96,7 @@ public sealed class WordSession : IDisposable
             }
         }
         finally { Release(ps); }
-        return Checker.Check(paragraphs);
+        return Checker.Check(paragraphs, Profile);
     }
     public void Fix(Issue issue) => FixMany([issue]);
     public void FixMany(IEnumerable<Issue> issues)

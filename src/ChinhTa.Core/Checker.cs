@@ -11,7 +11,7 @@ public record Issue(int Start, int Length, string Original, string Replacement,
 public static class Checker
 {
     public const string Heading = "CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM";
-    public static IReadOnlyList<Issue> Check(IEnumerable<Paragraph> paragraphs)
+    public static IReadOnlyList<Issue> Check(IEnumerable<Paragraph> paragraphs, DocumentProfile profile = DocumentProfile.State)
     {
         var result = new List<Issue>();
         foreach (var p in paragraphs)
@@ -27,7 +27,7 @@ public static class Checker
                     "Có thể là ‘con đò’. Đây là quy tắc minh họa, cần người dùng xác nhận.", false));
             }
             var text = p.Text.TrimEnd('\r', '\a', '\n');
-            if (text.Trim().Equals(Heading, StringComparison.OrdinalIgnoreCase) &&
+            if (profile == DocumentProfile.State && text.Trim().Equals(Heading, StringComparison.OrdinalIgnoreCase) &&
                 (text != Heading || !p.Bold || p.Size is < 12.99f or > 13.01f ||
                  p.Alignment != 1 || p.Font != "Times New Roman"))
                 result.Add(new(p.Start, text.Length, text, Heading,
