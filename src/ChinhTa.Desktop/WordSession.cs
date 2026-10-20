@@ -141,32 +141,19 @@ public sealed class WordSession : IDisposable
         anchors.Clear();
         // Export the unmodified document once. Selection highlighting belongs exclusively to WPF.
         document!.Repaginate();
-        var pageTexts = new Dictionary<int, (int Start, string Text)>();
+        // Read the story once; do not navigate Word's invisible window with Document.GoTo.
+        // Each issue retains its absolute source offset plus the physical page number.
         dynamic content = document.Content;
-        int contentEnd;
-        try { contentEnd = (int)content.End; } finally { Release(content); }
+        int contentStart;
+        string text;
+        try { contentStart = (int)content.Start; text = (string)content.Text; }
+        finally { Release(content); }
         foreach (var issue in issues)
         {
             dynamic point = document.Range(issue.Start, issue.Start);
             int page;
             try { page = (int)point.Information[3]; } finally { Release(point); }
-            if (!pageTexts.TryGetValue(page, out var snapshot))
-            {
-                dynamic start = document.GoTo(1, 1, page); // wdGoToPage, wdGoToAbsolute
-                dynamic next = document.GoTo(1, 1, page + 1);
-                try
-                {
-                    int begin = (int)start.Start;
-                    int end = (int)next.Start;
-                    if (end <= begin) end = contentEnd;
-                    dynamic range = document.Range(begin, end);
-                    try { snapshot = (begin, (string)range.Text); }
-                    finally { Release(range); }
-                }
-                finally { Release(next); Release(start); }
-                pageTexts[page] = snapshot;
-            }
-            anchors[issue] = new(page, snapshot.Text, issue.Start - snapshot.Start, issue.Length);
+            anchors[issue] = new(page, text, issue.Start - contentStart, issue.Length);
         }
         string output = Path.Combine(folder, Guid.NewGuid() + ".xps");
         document.ExportAsFixedFormat(output, 18, OpenAfterExport: false);

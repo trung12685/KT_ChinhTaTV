@@ -17,3 +17,5 @@ Ghi kết quả cùng phiên bản Windows, Word, .NET và cấu hình máy. Ch�
 12. Bản 0.1.3: mở/đóng/chuyển giữa hai tài liệu ít nhất 10 lần. Xác minh tiến trình Word riêng cũ kết thúc và các phiên Word có sẵn của người dùng vẫn hoạt động.
 13. Trên máy thử nghiệm, với file giả, xác định đúng PID Word do ứng dụng tạo (không chọn Word người dùng), kết thúc PID đó rồi chọn Quét lại. Kiểm tra khôi phục nội dung đã checkpoint, thông báo mất lịch sử Undo và highlight mới; không tự lặp sửa. Nếu Word không khởi động được sau một lần thử, hiển thị thông báo dễ hiểu và đường dẫn nhật ký, không thử vô hạn.
 14. Sửa rồi hoàn tác, lưu bản sao và so sánh nội dung/định dạng để xác minh checkpoint không phá Undo. Thử lỗi quyền lưu bản làm việc: phải báo, không tự khôi phục rồi âm thầm bỏ thay đổi. Kiểm tra nhật ký không chứa nội dung tài liệu.
+
+15. Bản 0.1.4: mở lại đúng file từng gây lỗi 0x800706BE ở bước lấy trang. Thử lặp 10 lần, kiểm tra highlight đầu/cuối trang và cụm lặp. Nhật ký mới phải có `v0.1.4.0`; nếu còn lỗi, gửi các dòng mới cùng stack để xác định điểm lỗi mới. Không kết luận Office đã ổn định chỉ từ kiểm thử core trên Linux.

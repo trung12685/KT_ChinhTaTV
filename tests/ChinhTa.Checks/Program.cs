@@ -71,4 +71,15 @@ attempts = 0;
 try { WordConnectionPolicy.ReadWithRecovery<int>(() => { attempts++; throw rpc; }, () => throw new InvalidOperationException("unsaved")); }
 catch (InvalidOperationException) { }
 Assert(attempts == 1, "Không đọc lại khi khôi phục từ chối vì thay đổi chưa lưu");
+var rpcCallFailed = new System.Runtime.InteropServices.COMException("RPC call failed", unchecked((int)0x800706BE));
+Assert(WordConnectionPolicy.IsDisconnected(rpcCallFailed), "Nhận diện đúng mã 0x800706BE trong nhật ký Office 2021");
+attempts = recoveries = 0;
+WordConnectionPolicy.ReadWithRecovery(() => { if (++attempts == 1) throw rpcCallFailed; return true; }, () => recoveries++);
+Assert(attempts == 2 && recoveries == 1, "Lỗi 0x800706BE được khôi phục một lần");
+var story = "Đây là nội dung ở trang trước rất dài." + new string('x', 60) + "Từduynhất" + "Phần sau ở trang khác";
+var edge = PreviewLocator.Locate(new(2, story, story.IndexOf("Từduynhất", StringComparison.Ordinal), 9), "Từduynhất");
+Assert(edge is not null && edge.Start == 0, "Ánh xạ đầu trang không cần Word GoTo");
+var ambiguousStory = "con đo" + new string('x', 100) + "con đo";
+Assert(PreviewLocator.Locate(new(1, ambiguousStory, 4, 2), "con đo") is null,
+    "Không thu ngắn ngữ cảnh rồi đánh dấu nhầm cụm lặp");
 Console.WriteLine($"{checks} checks passed.");

@@ -31,10 +31,17 @@ public static class PreviewLocator
         int match = Unique(target.Text, source.Text);
         if (match < 0)
         {
-            // Page headers, footers or drawing order can differ: require unique surrounding context.
-            sourceBase = Math.Max(0, begin - 48);
-            int contextEnd = Math.Min(source.Text.Length, finish + 48);
-            match = Unique(target.Text, source.Text[sourceBase..contextEnd]);
+            // Source may cover the whole story. Try smaller unique contexts at page boundaries.
+            // Uniqueness in both texts prevents a shorter anchor matching a different repeated phrase.
+            foreach (int context in new[] { 48, 24, 12, 6, 0 })
+            {
+                sourceBase = Math.Max(0, begin - context);
+                int contextEnd = Math.Min(source.Text.Length, finish + context);
+                string pattern = source.Text[sourceBase..contextEnd];
+                if (Unique(source.Text, pattern) != sourceBase) continue;
+                match = Unique(target.Text, pattern);
+                if (match >= 0) break;
+            }
         }
         if (match < 0) return null;
         int first = match + begin - sourceBase;

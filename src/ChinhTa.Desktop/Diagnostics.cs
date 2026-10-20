@@ -11,8 +11,9 @@ public static class Diagnostics
         {
             Directory.CreateDirectory(Path.GetDirectoryName(LogPath)!);
             // No document text, names, paths or credentials in diagnostic entries.
-            string entry = $"{DateTimeOffset.Now:O} {operation} " +
-                (error is null ? "reconnect" : $"{error.GetType().Name} HRESULT=0x{error.HResult:X8}\n{error.StackTrace}");
+            var version = typeof(Diagnostics).Assembly.GetName().Version;
+            string entry = $"{DateTimeOffset.Now:O} v{version} {operation} " +
+                (error is null ? "event" : $"{error.GetType().Name} HRESULT=0x{error.HResult:X8}\n{error.StackTrace}");
             File.AppendAllText(LogPath, entry + Environment.NewLine);
         }
         catch (IOException) { }
