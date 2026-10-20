@@ -52,18 +52,20 @@ public static class ShapeLineRules
         {
             var (type, index) = types[0];
             LayoutParagraph? last = null;
+            bool bounded = false;
             int end = type.Start + type.Text.Length;
             foreach (var p in first.Skip(index + 1))
             {
                 if (string.IsNullOrWhiteSpace(Clean(p.Text)))
                 {
-                    if (last is not null) { end = p.Start + p.Text.Length; continue; }
+                    if (last is not null) { bounded = true; end = p.Start + p.Text.Length; continue; }
                     break;
                 }
-                if (p.InTable || !p.Centered || last is not null && end > last.Start + last.Text.Length) break;
+                if (p.InTable || !p.Centered || last is not null && end > last.Start + last.Text.Length)
+                { bounded = last is not null; break; }
                 last = p; end = p.Start + p.Text.Length;
             }
-            if (last is not null) targets.Add(new(LineRole.Subject, last.Start, Clean(last.Text), type.Start, end + 1, last.Centered));
+            if (last is not null && bounded) targets.Add(new(LineRole.Subject, last.Start, Clean(last.Text), type.Start, end + 1, last.Centered));
         }
         return targets.OrderBy(t => t.Start).ToArray();
     }

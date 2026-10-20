@@ -28,7 +28,7 @@ public static class DocxLineFixture
         int offset = 0;
         foreach (var p in all)
         {
-            string text = string.Concat(p.Descendants().Select(e => e.Name == w + "t" ? e.Value : e.Name == w + "tab" ? "\t" : e.Name == w + "br" ? "\n" : "")) + "\r";
+            string text = string.Concat(p.Descendants().Where(e => e.Parent?.Name == w + "r" && e.Ancestors(w + "p").FirstOrDefault() == p).Select(e => e.Name == w + "t" ? e.Value : e.Name == w + "tab" ? "\t" : e.Name == w + "br" ? "\n" : "")) + "\r";
             offsets[p] = (offset, text); offset += text.Length;
             if (p.Parent?.Name == w + "tc" && p == p.Parent.Elements(w + "p").Last()) offset++;
         }

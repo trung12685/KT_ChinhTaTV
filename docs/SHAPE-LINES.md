@@ -1,4 +1,4 @@
-# Ba Shape Line — bản thử 0.1.11
+# Ba Shape Line — bản thử 0.1.12
 
 ## Phạm vi
 
@@ -51,3 +51,9 @@ Bản 0.1.10 đọc vị trí ô từ bản sao range thu gọn và mở rộng 
 Không dùng phương pháp COM của bản 0.1.10 nữa. Mỗi lượt quét đọc XML từ `Document.Content.WordOpenXML` đang mở, gồm nội dung/style, rồi ghép 40 đoạn đầu theo thứ tự và text với các range Word hiện tại. CellStart/CellEnd/TableStart lấy từ Start/End thật của các đoạn đã khớp, không dùng độ dài XML để đoán CP. Có kiểm trạng thái trong bảng, padding trực tiếp và style kế thừa; ô chưa xác minh đủ, ô gộp/lồng không có mốc tự sửa. Bảng sau không đầy đủ không vô hiệu hóa bảng đầu.
 
 Việc đọc XML xác định cấu trúc, không thay phép đo XPS. Khi không có Line neo trong vùng và mọi Shape của trang được phân vùng chắc chắn, ứng dụng đề xuất tạo Shape Line mới. Lưu/mở và quét lại vẫn cần kiểm không chèn trùng trên Office 2021.
+
+## Đối chiếu từ 0.1.12
+
+Sau khi khớp text theo thứ tự, trạng thái trong bảng lấy từ XML; không chặn vì cờ COM tại ranh giới ô. Chỉ lấy ký tự thuộc run, không tính tab stop trong pPr là text. Ánh xạ ngắt trang/cột/dòng và gạch nối không ngắt/tùy chọn theo mã Word. Giữ phần đầu đã khớp nếu lỗi ở đoạn sau; ô chỉ có mốc tự sửa khi toàn ô đã khớp và trích yếu phải có mốc kết thúc khối. Mã XML-TEXT/XML-CONTENT/XML-COUNT cùng số đoạn và độ dài được ghi trong nhật ký, không ghi text. Thông báo thiếu mốc có mã cụ thể, không khẳng định Word không cung cấp thông tin bảng.
+
+Nhật ký thực tế xác định điều kiện so sánh gộp của 0.1.11 thất bại, chưa phân biệt text hay cờ COM. Các kiểm thử mới bao phủ riêng những trường hợp này; chưa xác minh bản sửa trên Office 2021.

@@ -4,36 +4,57 @@ namespace ChinhTa.Core;
 
 // Positions come from live Word ranges, never from guessed XML character counts.
 public record WordParagraphSnapshot(int Start, int End, string Text, int Page, bool InTable, bool Centered);
+public sealed class WordXmlMappingException(string code, int paragraph, int xmlLength, int wordLength)
+    : InvalidOperationException(code)
+{
+    // Only fixed codes and numbers: safe for logs without document contents.
+    public string DiagnosticCode { get; } = $"{code}.P{paragraph}.XML{xmlLength}.Word{wordLength}";
+}
 public static class WordXmlTableMap
 {
     private static readonly XNamespace W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
-    private static string Clean(string text) => text.TrimEnd('\r', '\a');
-    public static IReadOnlyList<LayoutParagraph> Read(string wordOpenXml, IReadOnlyList<WordParagraphSnapshot> live)
+    private static string Clean(string text) => text.TrimEnd('\r', '\a').Replace('\u2011', '\u001e').Replace('\u00ad', '\u001f');
+    public static IReadOnlyList<LayoutParagraph> Read(string wordOpenXml, IReadOnlyList<WordParagraphSnapshot> live, Action<WordXmlMappingException>? onMismatch = null)
     {
         var xml = XDocument.Parse(wordOpenXml);
         var body = xml.Descendants(W + "document").Single().Element(W + "body")
             ?? throw new InvalidOperationException("Missing document body");
         var paragraphs = body.Descendants(W + "p").Where(p => !p.Ancestors(W + "txbxContent").Any()).ToArray();
-        if (paragraphs.Length < live.Count) throw new InvalidOperationException("Paragraph count mismatch");
+        int verified = Math.Min(paragraphs.Length, live.Count);
         var index = paragraphs.Select((p, i) => (p, i)).ToDictionary(x => x.p, x => x.i);
         var styles = xml.Descendants(W + "styles").FirstOrDefault();
         var result = new List<LayoutParagraph>();
         // Validate the entire prefix before allowing any cell/shape operation.
-        for (int i = 0; i < live.Count; i++)
+        for (int i = 0; i < verified; i++)
         {
             var p = paragraphs[i];
             if (p.Descendants().Any(e => e.Name == W + "fldChar" || e.Name == W + "instrText" ||
                 e.Name == W + "ins" || e.Name == W + "del" || e.Name == W + "footnoteReference"))
-                throw new InvalidOperationException("Unsupported paragraph content");
-            string text = string.Concat(p.Descendants().Where(e => e.Ancestors(W + "p").FirstOrDefault() == p)
+            {
+                var error = new WordXmlMappingException("XML-CONTENT", i + 1, 0, live[i].Text.Length);
+                if (onMismatch is null) throw error;
+                onMismatch(error); verified = i; break;
+            }
+            string text = string.Concat(p.Descendants().Where(e => e.Parent?.Name == W + "r" &&
+                e.Ancestors(W + "p").FirstOrDefault() == p)
                 .Select(e => e.Name == W + "t" ? e.Value : e.Name == W + "tab" ? "\t" :
-                    e.Name == W + "br" || e.Name == W + "cr" ? "\v" :
+                    e.Name == W + "br" ? (string?)e.Attribute(W + "type") switch
+                    { "page" => "\f", "column" => "\u000e", _ => "\v" } : e.Name == W + "cr" ? "\v" :
                     e.Name == W + "noBreakHyphen" ? "\u2011" : e.Name == W + "softHyphen" ? "\u00ad" : ""));
-            bool inTable = p.Ancestors(W + "tc").Any();
-            if (text != Clean(live[i].Text) || inTable != live[i].InTable)
-                throw new InvalidOperationException("Live Word/XML paragraph mismatch");
+            if (Clean(text) != Clean(live[i].Text))
+            {
+                var error = new WordXmlMappingException("XML-TEXT", i + 1, Clean(text).Length, Clean(live[i].Text).Length);
+                if (onMismatch is null) throw error;
+                onMismatch(error); verified = i; break;
+            }
         }
-        for (int i = 0; i < live.Count; i++)
+        if (verified == paragraphs.Length && paragraphs.Length < live.Count)
+        {
+            var error = new WordXmlMappingException("XML-COUNT", verified + 1, paragraphs.Length, live.Count);
+            if (onMismatch is null) throw error;
+            onMismatch(error);
+        }
+        for (int i = 0; i < verified; i++)
         {
             var p = paragraphs[i]; var item = live[i];
             var cell = p.Ancestors(W + "tc").FirstOrDefault();
@@ -48,7 +69,7 @@ public static class WordXmlTableMap
                 var cellPs = cell.Descendants(W + "p").Where(index.ContainsKey).ToArray();
                 int first = index[cellPs.First()], last = index[cellPs.Last()];
                 int tableFirst = index[table.Descendants(W + "p").First()];
-                if (complex || last >= live.Count)
+                if (complex || last >= verified)
                 {
                     // An unrelated later table must not disable the valid header table.
                     // Unverified cells carry no usable region or center for automatic fixes.
@@ -58,7 +79,7 @@ public static class WordXmlTableMap
                 cellStart = live[first].Start; cellEnd = live[last].End; tableStart = live[tableFirst].Start;
                 balanced = BalancedMargins(cell, table, styles);
             }
-            result.Add(new(item.Start, item.Text, item.Page, item.InTable, cellStart, cellEnd,
+            result.Add(new(item.Start, item.Text, item.Page, cell is not null, cellStart, cellEnd,
                 item.Centered && balanced, tableStart));
         }
         return result;

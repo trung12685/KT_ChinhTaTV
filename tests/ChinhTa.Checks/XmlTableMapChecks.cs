@@ -35,9 +35,41 @@ public static class XmlTableMapChecks
         }
         assert(Reject(xml,live.Select((p,i)=>i==0?p with {Text="Nội dung khác\\r"}:p).ToArray()),
             "Không ghép XML cũ/sai nội dung với range Word hiện tại");
-        assert(Reject(xml,live.Select((p,i)=>i==0?p with {InTable=false}:p).ToArray()),
-            "Không ghép khi trạng thái trong bảng khác Word");
+        var boundaryFlags = WordXmlTableMap.Read(xml,live.Select(p=>p with {InTable=false}).ToArray());
+        assert(boundaryFlags[0].InTable && boundaryFlags[2].InTable && !boundaryFlags[4].InTable &&
+            ShapeLineRules.Identify(boundaryFlags,DocumentProfile.State).Count == 3,
+            "Lấy cấu trúc ô từ XML đã khớp text, không chặn vì cờ COM ở ranh giới bảng");
         assert(!WordXmlTableMap.Read(xml,live.Take(1).ToArray())[0].Centered, "Không đoán vùng ô khi chưa đối chiếu hết các đoạn trong ô");
+        var tabStopXml = XDocument.Parse(xml);
+        tabStopXml.Descendants(w+"p").First().AddFirst(new XElement(w+"pPr",new XElement(w+"tabs",
+            new XElement(w+"tab",new XAttribute(w+"val","center"),new XAttribute(w+"pos","1000")))));
+        assert(WordXmlTableMap.Read(tabStopXml.ToString(),live).Count == live.Length,
+            "Tab stop trong pPr là định dạng, không bị cộng nhầm thành ký tự tab nội dung");
+        var realTabXml = XDocument.Parse(xml);
+        realTabXml.Descendants(w+"r").First().AddFirst(new XElement(w+"tab"));
+        assert(Reject(realTabXml.ToString(),live), "Tab thật trong run vẫn phải khớp nội dung Word");
+        var breakXml = XDocument.Parse(xml);
+        breakXml.Descendants(w+"r").First().Add(new XElement(w+"br",new XAttribute(w+"type","page")),
+            new XElement(w+"br",new XAttribute(w+"type","column")),new XElement(w+"br"),
+            new XElement(w+"noBreakHyphen"),new XElement(w+"softHyphen"));
+        var breaksLive = live.Select((p,i)=>i==0?p with {Text="CƠ QUAN BAN HÀNH\f\u000e\v\u001e\u001f\r"}:p).ToArray();
+        assert(WordXmlTableMap.Read(breakXml.ToString(),breaksLive).Count == live.Length,
+            "Đối chiếu đúng mã Word cho ngắt trang/cột/dòng và gạch nối đặc biệt");
+        var laterXml = XDocument.Parse(xml);
+        laterXml.Descendants(w+"body").Single().Add(new XElement(w+"p",new XElement(w+"r",new XElement(w+"t","Đoạn sau"))));
+        WordXmlMappingException? warning = null;
+        var partial = WordXmlTableMap.Read(laterXml.ToString(),[..live,new(775,790,"Khác nội dung\r",1,false,false)],e=>warning=e);
+        assert(warning is not null && warning.DiagnosticCode.StartsWith("XML-TEXT.P8.") &&
+            ShapeLineRules.Identify(partial,DocumentProfile.State).Count==3,
+            "Đoạn sau không khớp không vô hiệu hóa ba vùng đầu đã khớp");
+        assert(warning is not null && !warning.DiagnosticCode.Contains("Khác") && !warning.DiagnosticCode.Contains("Đoạn"),
+            "Mã chẩn đoán chỉ có mã/số, không có nội dung tài liệu");
+        var truncatedTitle = WordXmlTableMap.Read(xml,live.Select((p,i)=>i==6?p with {Text="Không khớp\r"}:p).ToArray(),_=>{});
+        assert(!ShapeLineRules.Identify(truncatedTitle,DocumentProfile.State).Any(t=>t.Role==LineRole.Subject),
+            "Không tạo Line trích yếu khi phần đối chiếu dừng trước khi biết khối trích yếu đã kết thúc");
+        var partialCell = WordXmlTableMap.Read(xml,live.Select((p,i)=>i==1?p with {Text="Khác\r"}:p).ToArray(),_=>{});
+        assert(partialCell.Count==1 && !partialCell[0].Centered && partialCell[0].CellEnd==0,
+            "Lỗi đối chiếu giữa ô không cho phép tạo Line trên vùng ô chưa khớp đủ");
         var doc = XDocument.Parse(xml);
         doc.Descendants(w+"tc").First().AddFirst(new XElement(w+"tcPr",new XElement(w+"tcMar",
             new XElement(w+"left",new XAttribute(w+"type","dxa"),new XAttribute(w+"w",0)),

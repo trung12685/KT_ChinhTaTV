@@ -76,6 +76,7 @@ public sealed class WordSession : IDisposable
         IReadOnlyList<LayoutParagraph> headerLayout = [];
         var liveLayout = new List<WordParagraphSnapshot>();
         bool lineLayoutUnavailable = false;
+        WordXmlMappingException? mappingWarning = null;
         dynamic ps = document!.Paragraphs;
         try
         {
@@ -113,7 +114,12 @@ public sealed class WordSession : IDisposable
             {
                 // Current in-memory document, including unsaved edits; no per-paragraph Tables/Cells calls.
                 string xml = (string)content.WordOpenXML;
-                headerLayout = WordXmlTableMap.Read(xml, liveLayout);
+                headerLayout = WordXmlTableMap.Read(xml, liveLayout, warning =>
+                {
+                    mappingWarning = warning;
+                    Diagnostics.Write("Word.XmlTableMap." + warning.DiagnosticCode, warning);
+                });
+                lineLayoutUnavailable = headerLayout.Count == 0;
             }
             catch (Exception ex) when (ex is InvalidOperationException or System.Xml.XmlException ||
                 ex is COMException ce && ce.HResult == unchecked((int)0x800A1735))
@@ -126,9 +132,11 @@ public sealed class WordSession : IDisposable
         LineTargets = lineLayoutUnavailable ? [] : ShapeLineRules.Identify(headerLayout, Profile);
         LineShapes = ReadLineShapes();
         var issues = Checker.Check(paragraphs, Profile).ToList();
-        if (lineLayoutUnavailable && paragraphs.FirstOrDefault(p => p.Text.Length > 0) is Paragraph first)
+        if ((lineLayoutUnavailable || mappingWarning is not null && LineTargets.Count < 3) && paragraphs.FirstOrDefault(p => p.Text.Length > 0) is Paragraph first)
             issues.Add(new(first.Start, first.Text.Length, first.Text, first.Text,
-                "Word chưa cung cấp đủ thông tin bảng. Chưa kiểm tra ba đường kẻ Shape Line; cần kiểm tra thủ công. Các lỗi chính tả vẫn được kiểm tra.",
+                "Chưa đối chiếu đủ các mốc đường kẻ. " +
+                (mappingWarning is null ? "Không đọc được cấu trúc XML của tài liệu." : "Mã kiểm tra: " + mappingWarning.DiagnosticCode + ".") +
+                " Các vùng đã xác minh vẫn được kiểm tra; vùng chưa xác minh cần kiểm tra thủ công.",
                 false, FixKind.ShapeLine, CanFix: false, Title: "Chưa kiểm tra được đường kẻ"));
         if (Profile != DocumentProfile.Personal)
         {
