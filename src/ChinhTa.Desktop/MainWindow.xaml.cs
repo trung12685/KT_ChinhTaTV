@@ -20,6 +20,7 @@ public partial class MainWindow : Window
     private Issue? displayed;
     private readonly Dictionary<Issue, PreviewAnchor> anchors = new();
     private readonly PreviewHighlighter highlighter = new();
+    private IReadOnlyList<IssueChoice> choices = [];
     public MainWindow()
     {
         InitializeComponent();
@@ -36,7 +37,9 @@ public partial class MainWindow : Window
             pending = displayed = null;
             anchors.Clear();
             highlighter.Clear();
+            choices = [];
             Issues.ItemsSource = null;
+            UpdateCheckedCount();
             string message = WordConnectionPolicy.IsDisconnected(ex)
                 ? "Ứng dụng mất kết nối với Microsoft Word. Hãy chọn Kiểm tra → Quét lại để thử khôi phục bản lưu gần nhất. " +
                   "Không cần đóng các cửa sổ Word khác. Nếu lỗi xảy ra ngay khi mở, hãy mở lại file."
@@ -67,7 +70,9 @@ public partial class MainWindow : Window
         xpsPath = session.ExportPreview(found, anchors);
         xps = new XpsDocument(xpsPath, FileAccess.Read);
         Preview.Document = xps.GetFixedDocumentSequence();
-        Issues.ItemsSource = found;
+        choices = found.Select(issue => new IssueChoice(issue)).ToArray();
+        Issues.ItemsSource = choices;
+        UpdateCheckedCount();
         Status.Text = $"{Path.GetFileName(session.Source)} — {found.Count} cảnh báo. " +
             $"Quét: {checkSeconds:F1}s; dựng trang: {timer.Elapsed.TotalSeconds - checkSeconds:F1}s. " +
             "Chọn hoặc rê chuột lên lỗi để đánh dấu riêng, không xuất lại Word." +
@@ -95,17 +100,49 @@ public partial class MainWindow : Window
     private void Queue(Issue issue) { pending = issue; hover.Stop(); hover.Start(); }
     private void IssueHover(object sender, MouseEventArgs e)
     {
-        if (sender is FrameworkElement { DataContext: Issue issue })
-        { Issues.SelectedItem = issue; Queue(issue); }
+        if (sender is FrameworkElement { DataContext: IssueChoice choice })
+        { Issues.SelectedItem = choice; Queue(choice.Issue); }
     }
     private void IssueSelected(object sender, SelectionChangedEventArgs e)
-    { if (Issues.SelectedItem is Issue issue) Queue(issue); }
+    { if (Issues.SelectedItem is IssueChoice choice) Queue(choice.Issue); }
     private void FixClick(object sender, RoutedEventArgs e)
     {
-        if (Issues.SelectedItem is not Issue issue) return;
-        if (MessageBox.Show(this, $"{issue.Message}\n\nThay bằng: {issue.Replacement}?", "Duyệt sửa",
-            MessageBoxButton.YesNo) != MessageBoxResult.Yes) return;
-        Run(() => { session.Fix(issue); Scan(); });
+        if (Issues.SelectedItem is IssueChoice choice) ConfirmFix([choice.Issue]);
+    }
+    private void FixCheckedClick(object sender, RoutedEventArgs e) =>
+        ConfirmFix(choices.Where(x => x.IsChecked).Select(x => x.Issue).ToArray());
+    private void FixAllClick(object sender, RoutedEventArgs e) =>
+        ConfirmFix(choices.Select(x => x.Issue).ToArray());
+    private void ConfirmFix(IReadOnlyList<Issue> selected)
+    {
+        hover.Stop();
+        if (selected.Count == 0)
+        {
+            MessageBox.Show(this, "Chưa chọn lỗi nào. Tích ô bên cạnh các lỗi cần sửa.", "Chọn lỗi");
+            return;
+        }
+        string examples = string.Join("\n", selected.Take(8).Select(x =>
+            $"• {x.Original.Replace("\r", " ")} → {x.Replacement}"));
+        string more = selected.Count > 8 ? $"\n… và {selected.Count - 8} lỗi khác." : "";
+        string caution = selected.Any(x => !x.BatchSafe)
+            ? "\nCó gợi ý cần bạn duyệt (ngữ cảnh, dàn trang hoặc thể thức); có thể cảnh báo nhầm." : "";
+        if (MessageBox.Show(this, $"Áp dụng {selected.Count} gợi ý sửa?\n\n{examples}{more}{caution}\n\n" +
+            "Hoàn tác một lần để bỏ cả lượt sửa. Tài liệu gốc được giữ nguyên.", "Duyệt lượt sửa",
+            MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes) return;
+        Run(() => { session.FixMany(selected); Scan(); Status.Text = $"Đã áp dụng {selected.Count} gợi ý. " + Status.Text; });
+    }
+    private void UpdateCheckedCount()
+    {
+        if (CheckedCount is not null) CheckedCount.Text = $"Đã tích: {choices.Count(x => x.IsChecked)}/{choices.Count} lỗi";
+    }
+    private void CheckChanged(object sender, RoutedEventArgs e) =>
+        Dispatcher.BeginInvoke(new Action(UpdateCheckedCount));
+    private void CheckAllClick(object sender, RoutedEventArgs e) => SetChecked(true);
+    private void UncheckAllClick(object sender, RoutedEventArgs e) => SetChecked(false);
+    private void SetChecked(bool value)
+    {
+        foreach (var choice in choices) choice.IsChecked = value;
+        UpdateCheckedCount();
     }
     private void UndoClick(object sender, RoutedEventArgs e)
     { if (session.IsOpen) Run(() => { session.Undo(); Scan(); }); }

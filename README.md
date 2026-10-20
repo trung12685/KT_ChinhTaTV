@@ -11,7 +11,7 @@ dotnet run --project tests/ChinhTa.Checks
 dotnet run --project src/ChinhTa.Desktop
 ```
 
-Mở `samples/VanBanMau.docx`. Rê chuột hoặc chọn một lỗi để đến vị trí và vẽ khung vàng riêng lỗi đó trên bản xem trước. Rê chuột cũng chọn lỗi bên phải để nút sửa khớp với vị trí đang đánh dấu. Chọn **Sửa lỗi đã chọn** để duyệt; có **Hoàn tác** và **Lưu bản sao**, không lưu đè đường dẫn tài liệu gốc.
+Mở `samples/VanBanMau.docx`. Rê chuột hoặc chọn một lỗi để đến vị trí và vẽ khung vàng riêng lỗi đó trên bản xem trước. Rê chuột cũng chọn lỗi bên phải để nút sửa khớp với vị trí đang đánh dấu. Chọn **Sửa lỗi đang xem** để duyệt một lỗi; có **Hoàn tác** và **Lưu bản sao**, không lưu đè đường dẫn tài liệu gốc.
 
 Bản 0.1.2 xuất XPS không có highlight từ tài liệu làm việc một lần mỗi lần quét. Lớp WPF đọc các glyph XPS, ánh xạ nội dung trang/ngữ cảnh duy nhất về vị trí ký tự Word, rồi vẽ các hình chữ nhật tạm thời. Chuyển lỗi chỉ dùng trang và glyph đã cache, không gọi Word, không xuất XPS. Màu đánh dấu không được lưu vào Word hoặc XPS trên đĩa. Không sửa định dạng Word để highlight, không mở thêm bản Word chỉ để xem trước.
 
@@ -64,3 +64,11 @@ Thông báo lỗi có đường dẫn bản làm việc và nhật ký `%LOCALAP
 Nhật ký thực tế ghi `0x800706BE` tại `Document.GoTo` trong bước ánh xạ preview, trước khi xuất XPS. Bỏ hoàn toàn Word.GoTo và việc tìm đầu/cuối trang bằng điều hướng cửa sổ Word; thay bằng một lần đọc nội dung chính, giữ offset gốc và số trang của từng lỗi. Khi đối chiếu XPS, thử ngữ cảnh ngắn hơn tại biên trang, chỉ dùng khi duy nhất trong cả nội dung nguồn và trang XPS; không đoán vị trí nếu cụm lặp còn mơ hồ. Bổ sung `0x800706BE/0x800706BF` vào cơ chế khôi phục đọc đúng một lần. Nhật ký mới có phiên bản ứng dụng để phân biệt các bản thử.
 
 Đã chạy 28 kiểm thử core và đóng gói Windows x64; chưa tái hiện/kiểm thử Office 2021 trực tiếp. Việc bỏ lệnh trùng với điểm lỗi trong log là điều chỉnh có căn cứ, không chứng minh mọi nguyên nhân RPC đã được giải quyết.
+
+## Bản 0.1.5 — sửa nhiều lỗi
+
+Mỗi dòng lỗi có ô **Chọn để sửa hàng loạt**, độc lập với lỗi đang xem/highlight. Tích các lỗi rồi nhấn **Sửa các lỗi đã tích**; hoặc nhấn **Sửa tất cả lỗi** để áp dụng toàn bộ gợi ý hiện tại, kể cả lỗi chưa tích. Có Tích tất cả/Bỏ tích và số lượng đã tích. Rê chuột không thay đổi trạng thái ô tích. Hộp xác nhận hiển thị số lượng, tối đa 8 gợi ý mẫu và cảnh báo với gợi ý ngữ cảnh/thể thức; chọn Không sẽ không sửa.
+
+Trước khi sửa, kiểm tra mọi đoạn gốc còn khớp; từ chối lỗi chồng lấn. Áp dụng từ vị trí cuối lên đầu để việc thay độ dài không làm lệch lỗi trước đó. Một lượt thành công dùng chung một Word Undo record, một checkpoint và một lần quét/xuất preview. Nút Hoàn tác dự kiến bỏ cả lượt sửa; cần xác minh thực tế trên Office 2021. Sau quét, các ô tích được đặt lại để không giữ lựa chọn cũ trên vị trí đã thay đổi.
+
+Nếu Word lỗi giữa lượt sửa, có thể đã áp dụng một phần; ứng dụng báo và không tự phát lại sửa. Nếu còn kết nối, dùng Hoàn tác hoặc lưu bản sao để kiểm tra. Checkpoint trước lượt sửa vẫn còn nếu chưa lưu lượt mới. Đây không phải giao dịch nguyên tử khi tiến trình Word gặp sự cố. Tính năng sửa tất cả chỉ áp dụng các gợi ý mà bản thử hiện phát hiện, chưa bổ sung từ điển hoặc AI.

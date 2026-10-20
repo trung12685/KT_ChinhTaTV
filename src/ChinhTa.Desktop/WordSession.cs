@@ -97,30 +97,52 @@ public sealed class WordSession : IDisposable
         finally { Release(ps); }
         return Checker.Check(paragraphs);
     }
-    public void Fix(Issue issue)
+    public void Fix(Issue issue) => FixMany([issue]);
+    public void FixMany(IEnumerable<Issue> issues)
     {
-        dynamic r = document!.Range(issue.Start, issue.Start + issue.Length);
+        var plan = BatchPlan.Create(issues);
+        if (plan.Count == 0) return;
+        // Validate every original before making any changes, not halfway through the batch.
+        BatchPlan.Validate(plan, issue =>
+        {
+            dynamic range = document!.Range(issue.Start, issue.Start + issue.Length);
+            try { return (string)range.Text; } finally { Release(range); }
+        });
         dynamic undo = app!.UndoRecord;
         try
         {
-            if ((string)r.Text != issue.Original) throw new InvalidOperationException("Vị trí lỗi đã thay đổi. Hãy quét lại.");
+            undo.StartCustomRecord($"Sửa {plan.Count} lỗi");
             snapshotCurrent = false;
             Changed = true;
-            undo.StartCustomRecord("Sửa lỗi chính tả");
             try
             {
-                if ((string)r.Text != issue.Replacement) r.Text = issue.Replacement;
-                if (issue.Kind == FixKind.NationalHeading)
+                foreach (var issue in plan)
                 {
-                    dynamic f = r.Font; dynamic format = r.ParagraphFormat;
-                    try { f.Bold = -1; f.Size = 13; f.Name = "Times New Roman"; format.Alignment = 1; }
-                    finally { Release(f); Release(format); }
+                    dynamic r = document!.Range(issue.Start, issue.Start + issue.Length);
+                    try
+                    {
+                        if ((string)r.Text != issue.Replacement) r.Text = issue.Replacement;
+                        if (issue.Kind == FixKind.NationalHeading)
+                        {
+                            dynamic f = r.Font; dynamic format = r.ParagraphFormat;
+                            try { f.Bold = -1; f.Size = 13; f.Name = "Times New Roman"; format.Alignment = 1; }
+                            finally { Release(f); Release(format); }
+                        }
+                    }
+                    finally { Release(r); }
                 }
-                Changed = true;
             }
             finally { undo.EndCustomRecord(); }
         }
-        finally { Release(undo); Release(r); }
+        catch (Exception error)
+        {
+            Diagnostics.Write("Word.FixMany", error);
+            throw new InvalidOperationException("Lượt sửa bị gián đoạn; có thể mới áp dụng một phần. " +
+                "Không tự thử lại. Nếu Word vẫn kết nối, dùng Hoàn tác để bỏ lượt sửa hoặc lưu bản sao để kiểm tra. " +
+                "Bản checkpoint trước lượt sửa: " + RecoveryPath, error);
+        }
+        finally { Release(undo); }
+        // One checkpoint, one UI rescan/export for the entire successful batch.
         Checkpoint();
     }
     private void Checkpoint()

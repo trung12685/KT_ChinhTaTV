@@ -19,3 +19,8 @@ Ghi kết quả cùng phiên bản Windows, Word, .NET và cấu hình máy. Ch�
 14. Sửa rồi hoàn tác, lưu bản sao và so sánh nội dung/định dạng để xác minh checkpoint không phá Undo. Thử lỗi quyền lưu bản làm việc: phải báo, không tự khôi phục rồi âm thầm bỏ thay đổi. Kiểm tra nhật ký không chứa nội dung tài liệu.
 
 15. Bản 0.1.4: mở lại đúng file từng gây lỗi 0x800706BE ở bước lấy trang. Thử lặp 10 lần, kiểm tra highlight đầu/cuối trang và cụm lặp. Nhật ký mới phải có `v0.1.4.0`; nếu còn lỗi, gửi các dòng mới cùng stack để xác định điểm lỗi mới. Không kết luận Office đã ổn định chỉ từ kiểm thử core trên Linux.
+
+16. Bản 0.1.5: mở file mẫu có 5 cảnh báo, tích hai lỗi ở hai trang khác nhau. Rê chuột qua lỗi khác: highlight đổi nhưng hai ô tích không mất. Sửa các lỗi đã tích, xác nhận chỉ hai lỗi đổi, lỗi không tích giữ nguyên. Hoàn tác một lần phải phục hồi cả hai (nội dung, định dạng nếu có).
+17. Bỏ tích tất cả rồi bấm sửa các lỗi đã tích: phải báo chưa chọn và không sửa. Tích tất cả/bỏ tích phải cập nhật số lượng và ô tích; cuộn danh sách ra/vào không mất trạng thái. Hủy hộp xác nhận không thay đổi tài liệu.
+18. Sửa tất cả lỗi khi chưa tích mục nào: phải liệt kê số gợi ý, có cảnh báo gợi ý cần duyệt; xác nhận sửa toàn bộ và chỉ dựng lại preview một lần. Hoàn tác một lần phục hồi toàn bộ; lưu bản sao kiểm tra file gốc nguyên vẹn. Kiểm tra hai lỗi khoảng trắng gây đổi độ dài và lỗi ngữ cảnh phía sau không bị sửa sai vị trí. Sau quét các ô tích phải đặt lại.
+19. Thử lỗi giữa lượt sửa trên file giả: thông báo có thể sửa một phần, không tự chạy lại lượt sửa; không tuyên bố toàn bộ thành công. Kiểm tra Hoàn tác khi Word còn hoạt động, và checkpoint gần nhất nếu Word đã mất kết nối.

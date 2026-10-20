@@ -82,4 +82,29 @@ Assert(edge is not null && edge.Start == 0, "Ánh xạ đầu trang không cần
 var ambiguousStory = "con đo" + new string('x', 100) + "con đo";
 Assert(PreviewLocator.Locate(new(1, ambiguousStory, 4, 2), "con đo") is null,
     "Không thu ngắn ngữ cảnh rồi đánh dấu nhầm cụm lặp");
+var batchText = "Đây  là con đo. Một  lần.";
+var allBatchIssues = Checker.Check([new(0, batchText)]);
+var selectedBatchIssues = allBatchIssues.Where(x => x.Replacement != "đò").ToArray();
+var plan = BatchPlan.Create(selectedBatchIssues);
+BatchPlan.Validate(plan, x => batchText.Substring(x.Start, x.Length));
+var fixedBatch = batchText;
+foreach (var issue in plan)
+    fixedBatch = fixedBatch.Remove(issue.Start, issue.Length).Insert(issue.Start, issue.Replacement);
+Assert(fixedBatch == "Đây là con đo. Một lần.", "Sửa nhiều khoảng trắng không lệch vị trí và giữ lỗi chưa chọn");
+var allPlan = BatchPlan.Create(allBatchIssues);
+fixedBatch = batchText;
+BatchPlan.Validate(allPlan, x => fixedBatch.Substring(x.Start, x.Length));
+foreach (var issue in allPlan)
+    fixedBatch = fixedBatch.Remove(issue.Start, issue.Length).Insert(issue.Start, issue.Replacement);
+Assert(fixedBatch == "Đây là con đò. Một lần.", "Sửa toàn bộ gợi ý tiếng Việt theo thứ tự từ cuối");
+Assert(BatchPlan.Create([allBatchIssues[0], allBatchIssues[0]]).Count == 1, "Không sửa trùng một lỗi hai lần");
+bool staleRejected = false;
+try { BatchPlan.Validate(allPlan, _ => "đã thay đổi"); }
+catch (InvalidOperationException) { staleRejected = true; }
+Assert(staleRejected, "Kiểm tra nội dung cũ trước khi áp dụng lượt sửa");
+bool overlapRejected = false;
+try { BatchPlan.Create([new(0, 3, "abc", "x", "", false), new(2, 2, "cd", "y", "", false)]); }
+catch (InvalidOperationException) { overlapRejected = true; }
+Assert(overlapRejected, "Từ chối lỗi chồng lấn trước khi sửa");
+Assert(BatchPlan.Create([]).Count == 0, "Danh sách rỗng không tạo thao tác sửa");
 Console.WriteLine($"{checks} checks passed.");
