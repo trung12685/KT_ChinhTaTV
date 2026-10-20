@@ -17,7 +17,7 @@ Bản 0.1.2 xuất XPS không có highlight từ tài liệu làm việc một l
 
 Khi ánh xạ không chắc chắn (thứ tự vẽ phức tạp, nội dung mơ hồ, glyph thiếu chữ Unicode hoặc lỗi qua ranh giới trang), ứng dụng đến trang và báo **chưa ánh xạ chắc chắn**, không đoán vị trí. Cần xác minh tọa độ thực tế trên Windows với nhiều font/zoom/bảng. Các thao tác mở, quét và xuất Word vẫn đồng bộ; lần mở và sau mỗi sửa/hoàn tác có thể làm giao diện chờ. Thanh trạng thái ghi thời gian quét/dựng trang, và thời gian đánh dấu khi chọn lỗi. Chưa có số đo trên Windows.
 
-## Phạm vi hiện có — 0.1.8
+## Phạm vi hiện có — 0.1.9
 
 Chọn **Loại văn bản** ở phía trên: Nhà nước, Đảng hoặc cá nhân. Đổi loại khi đang mở tài liệu sẽ quét và dựng lại bản xem trước; các ô tích cũ được đặt lại. Mặc định là Nhà nước. Không tự đoán loại tài liệu từ vài từ trong nội dung.
 
@@ -93,7 +93,7 @@ Tiêu ngữ chấp nhận cả `Độc lập - Tự do - Hạnh phúc` và `Đ�
 
 ## Bản 0.1.8 — ba đường kẻ Shape Line
 
-Chế độ Nhà nước có kiểm tra/thêm/đặt lại ba Line khi nhận diện và đo chắc chắn: dưới cơ quan trong ô trái, dưới tiêu ngữ và dưới dòng hiển thị cuối của trích yếu. Có hai cấu hình độ dài: NĐ30 (1/3–1/2, đích 5/12) hoặc đơn vị (1/3–2/3, đích 4/7). Khoảng cách theo yêu cầu người dùng: 6–15pt cho cơ quan/trích yếu, 3–13pt cho tiêu ngữ; mặc định tạo cách 6pt. Không gán thông số riêng thành quy định pháp lý.
+Chế độ Nhà nước có kiểm tra/thêm/đặt lại ba Line khi nhận diện và đo chắc chắn: dưới cơ quan trong ô trái, dưới tiêu ngữ và dưới dòng hiển thị cuối của trích yếu. Bản 0.1.9 chỉ dùng độ dài theo NĐ30 (1/3–1/2, đích 5/12); đã bỏ tùy chọn 4/7 khỏi giao diện và bộ kiểm. Khoảng cách theo yêu cầu người dùng: 6–15pt cho cơ quan/trích yếu, 3–13pt cho tiêu ngữ; mặc định tạo cách 6pt. Không gán thông số riêng thành quy định pháp lý.
 
 Chọn cảnh báo để thấy dòng mốc và vạch cam vị trí đề xuất; vạch cam chưa phải Shape đã lưu. Duyệt sửa để tạo/đặt lại Line. Nếu có cả lỗi chữ và Line, sửa chữ trước rồi sửa Line theo số đo mới; Sửa tất cả sẽ thông báo cách chạy hai lượt. Không ghép chắc chắn thì chỉ cảnh báo, không tự chèn trùng. Chi tiết: docs/SHAPE-LINES.md.
 

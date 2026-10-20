@@ -224,13 +224,12 @@ Assert(ShapeLineRules.Evaluate(agencyTarget,referenceLine,correctGeometry with {
     "Báo lệch tâm khi dịch line quá dung sai");
 Assert(ShapeLineRules.Evaluate(agencyTarget,referenceLine,correctGeometry with {Y=120},42,LinePolicy.Decree30).Errors.Any(e=>e.Contains("Khoảng cách")),
     "Báo line cách dưới quá xa");
-var customLine = ShapeLineRules.Evaluate(agencyTarget,referenceLine,null,null,LinePolicy.OfficePreference);
-Assert(Math.Abs(customLine.Fix.Width-120)<.01,
-    "Cấu hình đơn vị dùng đích 4/7 thay vì gán nó là NĐ30");
 Assert(ShapeLineRules.Evaluate(agencyTarget,referenceLine,new(145,109,120),42,LinePolicy.Decree30).Errors.Any(e=>e.Contains("Độ dài")),
-    "Độ dài 4/7 vượt khoảng NĐ30");
-Assert(ShapeLineRules.Evaluate(agencyTarget,referenceLine,new(145,109,120),42,LinePolicy.OfficePreference).Errors.Length==0,
-    "Độ dài 4/7 đúng cấu hình đơn vị");
+    "Độ dài vượt 1/2 phải cảnh báo");
+Assert(ShapeLineRules.Evaluate(agencyTarget,referenceLine,new(170,109,70),42,LinePolicy.Decree30).Errors.Length==0,
+    "Độ dài đúng cận 1/3 được chấp nhận");
+Assert(ShapeLineRules.Evaluate(agencyTarget,referenceLine,new(152.5,109,105),42,LinePolicy.Decree30).Errors.Length==0,
+    "Độ dài đúng cận 1/2 được chấp nhận");
 var mottoTarget = lineTargets.Single(t=>t.Role==LineRole.Motto);
 var mottoLine = ShapeLineRules.Evaluate(mottoTarget,referenceLine,null,null,LinePolicy.Decree30);
 Assert(mottoLine.Fix.Width==210 && mottoLine.Fix.Top==106,

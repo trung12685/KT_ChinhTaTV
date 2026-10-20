@@ -25,7 +25,6 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         ProfilePicker.SelectedIndex = 0;
-        LinePolicyPicker.SelectedIndex = 0;
         hover.Tick += (_, _) => { hover.Stop(); if (pending is not null) Run(() => ShowPreview(pending)); };
     }
     private void ProfileChanged(object sender, SelectionChangedEventArgs e)
@@ -33,13 +32,6 @@ public partial class MainWindow : Window
         if (ProfilePicker.SelectedIndex < 0) return;
         session.Profile = (DocumentProfile)ProfilePicker.SelectedIndex;
         if (ProfileInfo is not null) ProfileInfo.Text = DocumentProfiles.Description(session.Profile);
-        if (session.IsOpen) Run(Scan);
-    }
-    private void LinePolicyChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (LinePolicyInfo is not null) LinePolicyInfo.Text = LinePolicyPicker.SelectedIndex == 1
-            ? "Độ dài theo đơn vị: 1/3–2/3, đích 4/7; khác khoảng 1/3–1/2 của NĐ30. Khoảng cách/tâm là dung sai người dùng."
-            : "Độ dài theo NĐ30: 1/3–1/2. Khoảng cách/tâm là dung sai người dùng.";
         if (session.IsOpen) Run(Scan);
     }
     private void Run(Action action)
@@ -88,7 +80,7 @@ public partial class MainWindow : Window
         Preview.Document = xps.GetFixedDocumentSequence();
         if (Preview.Document is System.Windows.Documents.FixedDocumentSequence sequence)
         {
-            var policy = LinePolicyPicker.SelectedIndex == 1 ? LinePolicy.OfficePreference : LinePolicy.Decree30;
+            var policy = LinePolicy.Decree30;
             foreach (var entry in LineInspection.Inspect(sequence, highlighter, session.LineTargets, session.LineShapes,
                 anchors, found, policy, session.HasGroupedShapes))
             { found.Add(entry.Issue); anchors[entry.Issue] = entry.Anchor; }

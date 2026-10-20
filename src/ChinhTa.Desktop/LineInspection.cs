@@ -15,7 +15,7 @@ public static class LineInspection
         {
             if (!anchors.TryGetValue(target.Probe, out var anchor)) continue;
             string citation = ShapeLineRules.Citation(target.Role) +
-                (target.Role == LineRole.Motto ? " Độ dài bằng dòng tiêu ngữ (dung sai đo 5% và 1 pt)." : policy == LinePolicy.OfficePreference ? " Độ dài theo cấu hình đơn vị 1/3–2/3, đích 4/7 (khác khoảng NĐ30)." : " Độ dài theo NĐ30.") +
+                (target.Role == LineRole.Motto ? " Độ dài bằng dòng tiêu ngữ (dung sai đo 5% và 1 pt)." : " Độ dài theo NĐ30.") +
                 " Khoảng cách và dung sai đo/tâm theo cấu hình người dùng.";
             Issue Notice(string message, ShapeLineFix? fix = null) => target.Probe with
             { Message = message, Citation = citation, CanFix = fix is not null, LineFix = fix };

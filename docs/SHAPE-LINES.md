@@ -1,4 +1,4 @@
-# Ba Shape Line — bản thử 0.1.8
+# Ba Shape Line — bản thử 0.1.9
 
 ## Phạm vi
 
@@ -19,16 +19,18 @@ Chỉ dùng mốc để sửa khi đoạn căn giữa, không tab/indent, không
 
 Khi không có Line trong vùng, chỉ báo thiếu chắc chắn nếu toàn bộ Shape Line ở trang đã được phân về các vùng đã nhận diện và không có group/canvas. Line bị ẩn hoặc khó ghép sẽ không được tự coi là thiếu.
 
-## Hai cấu hình độ dài
+## Độ dài theo NĐ30
 
-| Vùng | NĐ30 mặc định | Cấu hình đơn vị theo yêu cầu |
-|---|---|---|
-| Cơ quan/trích yếu | 1/3–1/2 dòng cuối; khi tạo chọn 5/12 | 1/3–2/3; khi tạo chọn 4/7 (khác khoảng NĐ30) |
-| Tiêu ngữ | Bằng độ dài dòng tiêu ngữ | Như mặc định |
+| Vùng | Độ dài |
+|---|---|
+| Cơ quan/trích yếu | 1/3–1/2 dòng cuối; khi tạo chọn 5/12 |
+| Tiêu ngữ | Bằng độ dài dòng tiêu ngữ |
+
+Chỉ sử dụng khoảng theo NĐ30; đã bỏ lựa chọn riêng 4/7 khỏi giao diện và bộ kiểm từ bản 0.1.9.
 
 Căn cứ độ dài: NĐ30 PL I, Phần I.II.2.b (cơ quan, PDF22); II.1.b (tiêu ngữ, PDF21); II.5.b (trích yếu, PDF24), theo PDF đã cung cấp. Việc dùng dòng hiển thị cuối ở trích yếu, khoảng cách và dung sai bên dưới là quy ước được người dùng xác định, không trích thành con số bắt buộc của NĐ30.
 
-Thông số hiện cố định trong mã: cơ quan/trích yếu cách 6–15pt, tiêu ngữ 3–13pt; khi tạo chọn 6pt. Tâm lệch quá 3pt thì cảnh báo. Dung sai đo chiều dài 1pt; riêng tiêu ngữ chấp nhận thêm 5%; khoảng cách có dung sai đo 0,5pt. Hai chế độ lựa chọn được ghi rõ trong UI và căn cứ cảnh báo.
+Thông số hiện cố định trong mã: cơ quan/trích yếu cách 6–15pt, tiêu ngữ 3–13pt; khi tạo chọn 6pt. Tâm lệch quá 3pt thì cảnh báo. Dung sai đo chiều dài 1pt; riêng tiêu ngữ chấp nhận thêm 5%; khoảng cách có dung sai đo 0,5pt. Khoảng độ dài được ghi rõ trong UI và căn cứ cảnh báo.
 
 ## Sửa
 

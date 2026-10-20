@@ -1,4 +1,4 @@
-# Quy tắc thể thức — bản 0.1.8
+# Quy tắc thể thức — bản 0.1.9
 
 ## Nguồn đã đối chiếu
 
@@ -59,4 +59,4 @@ Theo yêu cầu người dùng, chấp nhận cả hyphen `-` và en dash `–` 
 
 ## Bổ sung 0.1.8 — ba Shape Line
 
-Đã bổ sung bộ kiểm/thêm/đặt lại ba Line ở mức thử nghiệm; mục “Đường kẻ và vị trí” nêu chưa kiểm bên trên mô tả phạm vi trước 0.1.8. Phạm vi/định nghĩa đo/ngoại lệ và hai cấu hình được ghi trong SHAPE-LINES.md. NĐ30 mặc định dùng 1/3–1/2; 4/7 chỉ thuộc cấu hình đơn vị theo yêu cầu. Chưa thể tuyên bố kiểm toàn bộ đường kẻ hay mọi vị trí.
+Đã bổ sung bộ kiểm/thêm/đặt lại ba Line ở mức thử nghiệm; mục “Đường kẻ và vị trí” nêu chưa kiểm bên trên mô tả phạm vi trước 0.1.8. Phạm vi/định nghĩa đo/ngoại lệ được ghi trong SHAPE-LINES.md. Từ bản 0.1.9 chỉ dùng khoảng NĐ30 1/3–1/2; đã bỏ tùy chọn 4/7 theo yêu cầu cập nhật. Chưa thể tuyên bố kiểm toàn bộ đường kẻ hay mọi vị trí.
