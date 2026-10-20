@@ -17,13 +17,23 @@ Bản 0.1.2 xuất XPS không có highlight từ tài liệu làm việc một l
 
 Khi ánh xạ không chắc chắn (thứ tự vẽ phức tạp, nội dung mơ hồ, glyph thiếu chữ Unicode hoặc lỗi qua ranh giới trang), ứng dụng đến trang và báo **chưa ánh xạ chắc chắn**, không đoán vị trí. Cần xác minh tọa độ thực tế trên Windows với nhiều font/zoom/bảng. Các thao tác mở, quét và xuất Word vẫn đồng bộ; lần mở và sau mỗi sửa/hoàn tác có thể làm giao diện chờ. Thanh trạng thái ghi thời gian quét/dựng trang, và thời gian đánh dấu khi chọn lỗi. Chưa có số đo trên Windows.
 
-## Phạm vi hiện có
+## Phạm vi hiện có — 0.1.6
 
-- Cảnh báo nhiều dấu cách giữa nội dung; không tự xóa dấu cách đầu dòng.
-- Gợi ý minh họa `con đo` → `con đò`, luôn cần duyệt. Đây **không phải mô hình AI**, có thể cảnh báo nhầm.
-- Kiểm tra quốc hiệu theo mẫu thử: chữ hoa, đậm, Times New Roman 13, căn giữa. Chỉ nhận diện khi nội dung khớp quốc hiệu không phân biệt hoa/thường. Chưa kiểm tra thiếu quốc hiệu, lỗi chính tả trong quốc hiệu hoặc quy định thể thức đầy đủ; không xem đây là kết luận tuân thủ pháp luật.
-- Quét các đoạn trong phần nội dung chính, bao gồm bảng. Chưa hỗ trợ đầu/chân trang, textbox, chú thích, Track Changes và tài liệu được bảo vệ.
-- Chưa có sửa tất cả, từ điển tiếng Việt, bộ cài hay sửa trực tiếp trên trang. Muốn tự sửa: lưu bản sao, sửa bằng Word rồi mở lại để quét.
+Chọn **Loại văn bản** ở phía trên: Nhà nước, Đảng hoặc cá nhân. Đổi loại khi đang mở tài liệu sẽ quét và dựng lại bản xem trước; các ô tích cũ được đặt lại. Mặc định là Nhà nước. Không tự đoán loại tài liệu từ vài từ trong nội dung.
+
+- **Nhà nước:** theo hai nguồn PDF người dùng cung cấp, bước đầu nhận diện quốc hiệu/tiêu ngữ trên trang đầu, kiểm tra font, màu, chữ hoa/thường, đậm/nghiêng, khoảng cỡ chữ hợp lệ và căn giữa cục bộ trong ô. Lề/khổ giấy từng vùng thiết lập và tính thống nhất cỡ chữ là cảnh báo thủ công.
+- **Đảng:** theo Hướng dẫn 05-HD/VPTW ngày 27/5/2026; bước đầu kiểm tiêu đề Đảng cỡ 15 trên trang đầu, font/màu/đậm/nghiêng; lề/khổ giấy và ngoại lệ là cảnh báo thủ công. Không áp quốc hiệu/tiêu ngữ Nhà nước.
+- **Cá nhân:** không ép bố cục hành chính; giữ ngôn ngữ minh họa/khoảng trắng, thêm gợi ý kiểm tra tab liên tiếp và đoạn căn giữa có tab/khoảng trắng đầu dòng; không tự xóa tab.
+- Mỗi cảnh báo thể thức có căn cứ mục/phụ lục và số trang PDF. Những mục chỉ kiểm tra thủ công không tích được; **Sửa tất cả** bỏ qua chúng. Có thể sửa định dạng các dòng đã nhận diện, giữ cỡ chữ đang hợp lệ thay vì ép mọi quốc hiệu về 13.
+- Kiểm tra ngôn ngữ vẫn chỉ là khoảng trắng và quy tắc minh họa `con đo` → `con đò`, chưa có từ điển hoặc mô hình AI. Không coi việc hết cảnh báo là đạt toàn bộ NĐ30/HD05.
+- Chưa kiểm đủ tên cơ quan, số/ký hiệu, ngày tháng, thân bài, chữ ký/nơi nhận, số trang, đường kẻ, thiếu tiêu đề, toàn bộ các mẫu và ngoại lệ; chưa quét header/footer/textbox. Không hỗ trợ tài liệu bảo vệ/Track Changes.
+
+Căn cứ và giới hạn chi tiết: [FORMAT-RULES.md](docs/FORMAT-RULES.md). Nguồn là hai PDF đính kèm của người dùng, chưa xác minh độc lập mọi văn bản sửa đổi sau đó.
+
+File thử:
+- `samples/VanBanMau.docx`: chọn Nhà nước; mẫu giả ban đầu.
+- `samples/VanBanDangMau.docx`: chọn Đảng; tiêu đề cỡ 14/chữ thường và hai lỗi ngôn ngữ minh họa, dự kiến 3 cảnh báo.
+- `samples/VanBanCaNhanMau.docx`: chọn cá nhân; A5 không bị ép A4, có tab/căn giữa và hai lỗi ngôn ngữ minh họa, dự kiến 4 cảnh báo (2 thủ công).
 
 ## Kiểm thử
 
@@ -73,6 +83,6 @@ Trước khi sửa, kiểm tra mọi đoạn gốc còn khớp; từ chối lỗ
 
 Nếu Word lỗi giữa lượt sửa, có thể đã áp dụng một phần; ứng dụng báo và không tự phát lại sửa. Nếu còn kết nối, dùng Hoàn tác hoặc lưu bản sao để kiểm tra. Checkpoint trước lượt sửa vẫn còn nếu chưa lưu lượt mới. Đây không phải giao dịch nguyên tử khi tiến trình Word gặp sự cố. Tính năng sửa tất cả chỉ áp dụng các gợi ý mà bản thử hiện phát hiện, chưa bổ sung từ điển hoặc AI.
 
-## Đang phát triển: ba loại văn bản
+## Bản 0.1.6 — ba loại văn bản và quy tắc thể thức đầu tiên
 
-Đã thêm lựa chọn Nhà nước/Đảng/cá nhân trong mã nguồn, tách quy tắc quốc hiệu khỏi chế độ Đảng và cá nhân. Mỗi chế độ hiển thị rõ phần đã có/chưa có. Đây là khung chuẩn bị, chưa phát hành gói mới hoặc công bố tuân thủ NĐ30/HD05. Xem docs/FORMAT-RULES.md; cần bản gốc để xác minh và triển khai các quy tắc chi tiết.
+Đã đối chiếu NĐ30 Phụ lục I (PDF trang 21, 32) và HD05 Phần II/Phụ lục 2 (PDF trang 2, 28, 31). Không còn ép quốc hiệu về cỡ 13; cỡ 12 cũng hợp lệ. Mẫu quốc hiệu chấp nhận HÒA/HOÀ, không tự đổi cách đặt dấu. Các ngoại lệ cần phân loại đúng được giữ ở mức cảnh báo thủ công. Chưa phải bộ chứng nhận tuân thủ pháp luật hoặc bộ kiểm đủ mọi mẫu.

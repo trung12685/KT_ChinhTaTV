@@ -11,6 +11,7 @@ public sealed class IssueChoice(Issue issue) : INotifyPropertyChanged
         get => isChecked;
         set
         {
+            if (value && !Issue.CanFix) return;
             if (isChecked == value) return;
             isChecked = value;
             PropertyChanged?.Invoke(this, new(nameof(IsChecked)));

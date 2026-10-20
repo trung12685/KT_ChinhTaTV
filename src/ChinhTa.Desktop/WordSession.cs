@@ -81,13 +81,13 @@ public sealed class WordSession : IDisposable
                 {
                     string text = (string)r.Text;
                     int start = (int)r.Start;
-                    // Only the national heading rule needs font/paragraph COM calls.
-                    if (Profile == DocumentProfile.State && text.TrimEnd('\r', '\a', '\n').Trim().Equals(
-                        Checker.Heading, StringComparison.OrdinalIgnoreCase))
+                    if (HeadingRules.IsCandidate(text, Profile) ||
+                        Profile == DocumentProfile.Personal && System.Text.RegularExpressions.Regex.IsMatch(text, @"^[ \t]+\S"))
                     {
                         dynamic f = r.Font; dynamic format = r.ParagraphFormat;
                         try { paragraphs.Add(new(start, text, (int)f.Bold == -1,
-                            (float)f.Size, (int)format.Alignment, (string?)f.Name ?? "")); }
+                            (float)f.Size, (int)format.Alignment, (string?)f.Name ?? "",
+                            (int)f.Italic != 0, (int)f.Color, (bool)r.Information[12], (int)r.Information[3])); }
                         finally { Release(format); Release(f); }
                     }
                     else paragraphs.Add(new(start, text));
@@ -96,7 +96,34 @@ public sealed class WordSession : IDisposable
             }
         }
         finally { Release(ps); }
-        return Checker.Check(paragraphs, Profile);
+        var issues = Checker.Check(paragraphs, Profile).ToList();
+        if (Profile != DocumentProfile.Personal)
+        {
+            dynamic sections = document.Sections;
+            try
+            {
+                int count = (int)sections.Count;
+                for (int i = 1; i <= count; i++)
+                {
+                    dynamic section = sections[i]; dynamic setup = section.PageSetup; dynamic range = section.Range;
+                    try
+                    {
+                        string text = (string)range.Text;
+                        if (text.Length == 0) continue;
+                        const double mmPerPoint = 25.4 / 72;
+                        var layout = new SectionLayout(i, (int)range.Start, text[..1],
+                            (double)setup.PageWidth * mmPerPoint, (double)setup.PageHeight * mmPerPoint,
+                            (double)setup.TopMargin * mmPerPoint, (double)setup.BottomMargin * mmPerPoint,
+                            (double)setup.LeftMargin * mmPerPoint, (double)setup.RightMargin * mmPerPoint,
+                            (int)setup.MirrorMargins != 0);
+                        issues.AddRange(PageRules.Check(layout, Profile));
+                    }
+                    finally { Release(range); Release(setup); Release(section); }
+                }
+            }
+            finally { Release(sections); }
+        }
+        return issues.OrderBy(x => x.Start).ToArray();
     }
     public void Fix(Issue issue) => FixMany([issue]);
     public void FixMany(IEnumerable<Issue> issues)
@@ -123,10 +150,15 @@ public sealed class WordSession : IDisposable
                     try
                     {
                         if ((string)r.Text != issue.Replacement) r.Text = issue.Replacement;
-                        if (issue.Kind == FixKind.NationalHeading)
+                        if (issue.Format is HeadingFormat heading)
                         {
                             dynamic f = r.Font; dynamic format = r.ParagraphFormat;
-                            try { f.Bold = -1; f.Size = 13; f.Name = "Times New Roman"; format.Alignment = 1; }
+                            try
+                            {
+                                f.Bold = -1; f.Italic = 0; f.Color = 0;
+                                f.Size = heading.Size; f.Name = "Times New Roman";
+                                if (heading.Alignment is int alignment) format.Alignment = alignment;
+                            }
                             finally { Release(f); Release(format); }
                         }
                     }

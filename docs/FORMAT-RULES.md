@@ -1,32 +1,54 @@
-# Phân loại văn bản và kế hoạch kiểm tra thể thức
+# Quy tắc thể thức — bản 0.1.6
 
-Trạng thái: khung lựa chọn đã lập trình, chưa phát hành bộ kiểm thể thức mới. Chưa truy cập được văn bản gốc do chính sách mạng. Không dùng tài liệu này như kết luận về quy định hiện hành.
+## Nguồn đã đối chiếu
 
-## Tài liệu cần đối chiếu
+Dùng đúng hai PDF do người dùng cung cấp. Đây là kiểm tra theo các phiên bản đính kèm, chưa phải xác nhận độc lập rằng không có văn bản sửa đổi/thay thế khác. Không kiểm định chữ ký số PDF. Với NĐ30 dạng scan, OCR chỉ hỗ trợ tra cứu; các giá trị được đưa vào mã đã đối chiếu ảnh trang PDF. Số trang dưới đây là số trang vật lý trong PDF.
 
-- Nhà nước: Nghị định 30/2020/NĐ-CP và các phụ lục về thể thức, kỹ thuật trình bày, viết hoa và mẫu văn bản. Cần kiểm tra toàn văn, phụ lục, hiệu lực và văn bản sửa đổi/thay thế trước khi chốt quy tắc.
-- Đảng: Hướng dẫn 05-HD/VPTW ngày 27/5/2026 của Văn phòng Trung ương Đảng (số/ngày do người dùng xác định). Cần bản gốc kèm phụ lục/mẫu để xác minh; không thay bằng hướng dẫn khác theo suy đoán.
-- Cá nhân: chính sách trình bày của người dùng, không suy ra nghĩa vụ theo hai văn bản trên.
+| Nguồn | Dung lượng trang | SHA256 |
+|---|---:|---|
+| `30.signed.pdf` — Nghị định 30/2020/NĐ-CP ngày 05/3/2020 | 76 | `be2514460c953141923579e4a0ddd0249c611643a59514976790dc1d90589178` |
+| `HD_05_VPTW_e1550.pdf` — Hướng dẫn 05-HD/VPTW ngày 27/5/2026 | 36 | `53bb4bc543cd1f19e0f60c861364ceab9c425bc54325c04be6a3ac99108650c5` |
 
-Các trang dự kiến tham khảo: https://vanban.chinhphu.vn/ , https://datafiles.chinhphu.vn/ , https://tulieuvankien.dangcongsan.vn/ . Đây là địa chỉ cổng nguồn, chưa phải liên kết văn bản đã đọc.
+HD05 Phần III (PDF trang 29) nêu thay thế Hướng dẫn 36-HD/VPTW ngày 04/3/2018. Bộ Đảng này không lấy thông số của HD36 thay cho HD05.
 
-## Các lớp quy tắc cần xây
+## Những quy tắc đã triển khai
 
-| Lớp | Nhà nước | Đảng | Cá nhân |
+| Thành phần | Nhà nước — NĐ30 | Đảng — HD05 | Phạm vi ứng dụng |
 |---|---|---|---|
-| Ngôn ngữ | Kiểm tra chính tả/ngữ cảnh chung | Kiểm tra chính tả/ngữ cảnh chung | Kiểm tra chính tả/ngữ cảnh chung |
-| Thành phần đầu văn bản | Nhận diện theo đúng loại/mẫu trong NĐ30 | Nhận diện theo đúng loại/mẫu HD05 | Không bắt buộc thành phần hành chính |
-| Trang/section | Quy tắc khổ giấy, lề, hướng trang và ngoại lệ có căn cứ | Bộ quy tắc riêng từ HD05 | Khuyến nghị và cấu hình người dùng |
-| Định dạng theo vai trò | Font, cỡ, đậm/nghiêng, căn đoạn theo từng thành phần | Font, cỡ, đậm/nghiêng, căn đoạn theo từng thành phần | Chỉ gợi ý, không ép một mẫu chung |
-| Tab, khoảng trắng, xuống dòng | Phân biệt dàn trang có chủ đích và lỗi kỹ thuật | Phân biệt dàn trang có chủ đích và lỗi kỹ thuật | Gợi ý nhẹ; không tự xóa tab hoặc căn giữa mọi đoạn |
-| Bảng, phụ lục, chữ ký, nơi nhận | Xử lý riêng, không áp quy tắc thân bài đại trà | Xử lý riêng theo quy định Đảng | Không đánh giá tính đầy đủ pháp lý |
+| Khổ giấy | A4 210 × 297 mm; PL I, Phần I.I.1, PDF 21 | A4; giấy tờ hành chính có thể A4/A5 hoặc mẫu in sẵn; Phần II.IV.3, PDF 28 | Đọc từng section; ngoài A4 chỉ cảnh báo, không kết luận mọi trường hợp đều sai |
+| Lề trang dọc | Trên/dưới 20–25, trái 30–35, phải 15–20 mm; PL I, Phần I.I.3, PDF 21 | Trên/dưới 20, trái 30, phải 15 mm; Phần II.IV.4, PDF 28 | Chỉ cảnh báo, dung sai đọc Word 0,25 mm; không tự sửa |
+| Hai mặt/trang ngang | Trang ngang có điều kiện cho bảng/biểu, PL I, Phần I.I.2 | Mặt sau hai mặt trái 15/phải 30 mm; có ngoại lệ bảng/biểu trang ngang, II.IV.4.2–4.3 | Không tự đổi hướng trang; lề đối xứng Nhà nước yêu cầu xem thủ công, Đảng kiểm tra lề trong/ngoài; section đảo lề riêng mặt sau được nhắc kiểm tra ngoại lệ |
+| Quốc hiệu | In hoa, đứng, đậm, cỡ 12–13; PL I, Phần I.II.1.a, PDF 21 | Không áp dụng quốc hiệu Nhà nước | Dòng khớp nội dung trên trang đầu; có thể sửa chữ/font/cỡ/đậm/nghiêng/màu |
+| Tiêu ngữ | “Độc lập - Tự do - Hạnh phúc”, đứng, đậm, cỡ 13–14, căn giữa dưới quốc hiệu; PL I, Phần I.II.1.b, PDF 21 | Không dùng tiêu ngữ Nhà nước | Sửa định dạng dòng nhận diện được; chỉ kiểm tra căn giữa cục bộ khi ở trong ô bảng |
+| Tiêu đề Đảng | Không áp quy tắc Đảng | “ĐẢNG CỘNG SẢN VIỆT NAM”, in hoa, đứng, đậm, cỡ 15; II.I.1 và PL2 mục 1, PDF 2, 31 | Dòng khớp nội dung trên trang đầu, sửa được; chưa kiểm tra tọa độ góc phải/đường kẻ |
+| Phông/màu | Times New Roman, Unicode, màu đen; PL I, Phần I.I.4 | Times New Roman, Unicode, màu đen; II.IV.1 | Hiện chỉ kiểm font/màu các dòng tiêu đề nhận diện được; DOCX lưu Unicode không đồng nghĩa đã kiểm hết lỗi font/mã tiếng Việt |
+| Thống nhất cỡ chữ | Chú thích 1, PL I, Phần I.V, PDF 32 minh họa quốc hiệu/tiêu ngữ 12/13 hoặc 13/14 | Bộ thông số riêng theo PL2 | Khi chỉ có một cặp trên trang đầu và cỡ không thống nhất, cảnh báo thủ công; không tự chọn cặp |
 
-Đây là phạm vi nghiên cứu, chưa phải khẳng định các giá trị pháp lý cụ thể.
+Căn giữa **quốc hiệu trong ô bảng** là lựa chọn trình bày theo yêu cầu người dùng từ bản thử, được ghi riêng trong căn cứ của cảnh báo; không quy nó thành câu chữ trực tiếp của NĐ30. Căn giữa toàn trang không tương đương với việc đặt thành phần ở vùng trên bên phải, nên không ép căn giữa mọi dòng tiêu đề ngoài bảng.
 
-## Cách biểu diễn và triển khai sau khi có nguồn
+Quốc hiệu chấp nhận cả `HÒA` và `HOÀ` (mẫu bảng PDF trang 32 dùng HOÀ), không tự đổi vị trí dấu khi chỉ vì khác cách đặt dấu. Nhận diện có chuẩn hóa khoảng trắng/gạch nối để gom lỗi toàn thành phần, tránh chồng lấn với lỗi khoảng trắng nhỏ. Không tự nhận diện mọi câu sai chính tả trong tiêu đề và không suy ra một dòng vắng trong nội dung chính là thành phần bị thiếu (nó có thể nằm ở đầu trang/textbox chưa quét).
 
-Mỗi quy tắc cần mã, loại văn bản, vai trò đoạn/section, giá trị hoặc khoảng cho phép, điều kiện ngoại lệ, căn cứ cụ thể (điểm/mục/phụ lục/trang), phiên bản nguồn và cách sửa. Phân loại kết quả thành sửa được, chỉ cảnh báo, chưa xác định. Không tự ép mọi đoạn về cùng font/cỡ/căn lề. Tài liệu nhiều section, bảng rộng, phụ lục và biểu mẫu cần kiểm tra ngoại lệ trước.
+## Đã nghiên cứu nhưng chưa tự kiểm tra trong bản này
 
-Lỗi bố cục chưa đủ căn cứ chỉ cảnh báo, không đưa vào Sửa tất cả như một thay đổi chắc chắn. Các gợi ý sửa vẫn cần giữ offset, kiểm tra chồng lấn, bảo toàn nội dung, hoàn tác và giữ bản gốc.
+| Nhóm | Căn cứ và khác biệt đáng chú ý |
+|---|---|
+| Nội dung chính Nhà nước | NĐ30 PL I, Phần I.II.6.e, PDF 25: chữ thường, đứng, cỡ 13–14, căn đều; đầu dòng 1 cm hoặc 1,27 cm; khoảng đoạn tối thiểu 6pt; giãn dòng đơn đến 1,5 lines |
+| Nội dung chính Đảng | HD05 II.I.6.2.2, PDF 12 và PL2, PDF 32: cỡ 14–15, căn đều; đầu dòng khoảng 10 mm; khoảng đoạn tối thiểu 6pt; giãn dòng Exactly 18–22pt |
+| Tên cơ quan, số/ký hiệu, địa danh/ngày tháng, tên loại/trích yếu, nơi nhận, chức vụ/chữ ký | Phải phân loại đúng vai trò đoạn; không dùng một font/cỡ/kiểu chữ chung cho mọi thành phần. Ví dụ HD05 “Nơi nhận” cỡ 14 đứng/gạch chân, danh sách nơi nhận cỡ 12; khác NĐ30. Chưa tự kiểm các thành phần này |
+| Đường kẻ và vị trí | Độ dài đường kẻ, vùng đặt tiêu đề/quốc hiệu, quan hệ căn giữa tương đối cần hình học trang và đối chiếu mẫu. Chưa tự kiểm |
+| Số trang | NĐ30 PL I.I.7: cỡ 13–14, giữa lề trên, không hiện trang đầu; HD05 II.IV.5 và PL2 mục15: giữa phía trên, cách mép trên 10 mm, cỡ 14 theo bảng mẫu, không hiện trang đầu. Chưa quét header/footer và trường PAGE |
+| Mẫu hành chính | NĐ30 PL III, PDF 40–57, gồm bảng viết tắt và mẫu nghị quyết cá biệt, quyết định trực tiếp/gián tiếp, văn bản có tên loại, công văn, công điện, giấy mời, giấy giới thiệu, biên bản, giấy nghỉ phép, phụ lục và bản sao. Chưa phải chức năng tạo mẫu hoặc kiểm mọi mẫu |
+| Viết hoa | NĐ30 PL II, PDF 37–39: danh từ riêng/tên tổ chức/chức danh… cần phân tích ngữ cảnh. Chưa triển khai bộ kiểm viết hoa đầy đủ |
+| Bản sao, dấu/chữ ký số và quy trình văn thư | Không thể kết luận đầy đủ chỉ từ file DOCX hoặc suy luận từ một vài đoạn văn. Ngoài phạm vi bộ kiểm trình bày ban đầu |
 
-Khung hiện có chỉ tách profile: Nhà nước giữ mẫu quốc hiệu thử nghiệm cũ; Đảng không dùng mẫu quốc hiệu Nhà nước; cá nhân không bắt buộc quốc hiệu. Chưa thêm quy tắc HD05, tab, căn giữa hay lề trang. Bộ kiểm ngôn ngữ cũng vẫn chỉ là các quy tắc minh họa trước đây, chưa phải từ điển/AI hoàn chỉnh.
+## Chế độ cá nhân
+
+Không áp quốc hiệu/tiêu ngữ, khổ giấy hay lề hành chính. Giữ các quy tắc ngôn ngữ minh họa hiện có, cảnh báo khoảng trắng; thêm gợi ý thủ công cho tab liên tiếp và đoạn căn giữa có tab/khoảng trắng đầu dòng. Không tự xóa tab/căn giữa toàn văn bản vì có thể phá bố cục. Đây chưa phải bộ từ điển/AI chính tả hoàn chỉnh.
+
+## Giới hạn và cơ chế sửa
+
+- Không tuyên bố “đạt NĐ30/HD05” khi không có cảnh báo; chỉ báo kết quả các mục đã kiểm.
+- Dòng nhận diện tiêu đề có thể nằm trong bảng. Chưa quét header/footer/textbox, chưa tự kiểm thiếu tiêu đề, phạm vi văn bản chuyên ngành/mẫu in sẵn hoặc cơ quan có hướng dẫn riêng.
+- Sửa font/cỡ/chữ trên dòng nhận diện giữ nguyên cỡ đang nằm trong khoảng hợp lệ. Nếu cỡ sai, chọn cận dưới hợp lệ; các quan hệ với thành phần khác vẫn có thể cần cảnh báo thủ công.
+- Lề, khổ giấy, ngoại lệ trang ngang/hai mặt, tính thống nhất cỡ và gợi ý tab là **chỉ cảnh báo**; ô tích bị vô hiệu và Sửa tất cả bỏ qua. Lượt sửa vẫn có xác nhận, kiểm tra chồng lấn, undo nhóm và checkpoint như bản trước.
+- Chưa kiểm thử Word COM/WPF trên Windows với các quy tắc mới; cần chạy checklist Office 2021 trong WINDOWS-VALIDATION.md.

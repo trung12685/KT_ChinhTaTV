@@ -8,6 +8,8 @@ public static class BatchPlan
         for (int i = 0; i < ordered.Length; i++)
         {
             var current = ordered[i];
+            if (!current.CanFix)
+                throw new InvalidOperationException("Có cảnh báo chỉ kiểm tra thủ công, không thể sửa tự động.");
             if (current.Start < 0 || current.Length <= 0 || current.Original.Length != current.Length)
                 throw new InvalidOperationException("Vị trí lỗi không hợp lệ. Hãy quét lại.");
             if (i > 0 && (long)ordered[i - 1].Start + ordered[i - 1].Length > current.Start)

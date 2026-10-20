@@ -16,3 +16,36 @@ with ZipFile(root / 'samples' / 'VanBanMau.docx', 'w', ZIP_DEFLATED) as z:
 <w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="850" w:bottom="1134" w:left="1701"/></w:sectPr>
 </w:body></w:document>''')
 print('Created samples/VanBanMau.docx')
+
+# Additional fictional examples for the profile selector.
+import xml.etree.ElementTree as ET
+W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'
+ET.register_namespace('w', W)
+def tag(name): return '{' + W + '}' + name
+def profile_sample(filename, paragraphs, *, width=11906, height=16838):
+    doc = ET.Element(tag('document')); body = ET.SubElement(doc, tag('body'))
+    for text, size, bold, center in paragraphs:
+        p = ET.SubElement(body, tag('p'))
+        if center:
+            pr = ET.SubElement(p, tag('pPr')); ET.SubElement(pr, tag('jc'), {tag('val'): 'center'})
+        r = ET.SubElement(p, tag('r')); pr = ET.SubElement(r, tag('rPr'))
+        ET.SubElement(pr, tag('rFonts'), {tag('ascii'): 'Times New Roman', tag('hAnsi'): 'Times New Roman'})
+        ET.SubElement(pr, tag('sz'), {tag('val'): str(size * 2)})
+        if bold: ET.SubElement(pr, tag('b'))
+        parts = text.split('\t')
+        for i, part in enumerate(parts):
+            if i: ET.SubElement(r, tag('tab'))
+            t = ET.SubElement(r, tag('t'), {'{http://www.w3.org/XML/1998/namespace}space': 'preserve'}); t.text = part
+    section = ET.SubElement(body, tag('sectPr'))
+    ET.SubElement(section, tag('pgSz'), {tag('w'): str(width), tag('h'): str(height)})
+    ET.SubElement(section, tag('pgMar'), {tag('top'): '1134', tag('bottom'): '1134', tag('left'): '1701', tag('right'): '850'})
+    with ZipFile(root / 'samples' / filename, 'w', ZIP_DEFLATED) as z, ZipFile(root / 'samples' / 'VanBanMau.docx') as template:
+        for name in ['[Content_Types].xml', '_rels/.rels']: z.writestr(name, template.read(name))
+        z.writestr('word/document.xml', ET.tostring(doc, encoding='utf-8', xml_declaration=True))
+profile_sample('VanBanDangMau.docx', [
+    ('Đảng cộng sản Việt Nam', 14, False, True),
+    ('TÀI LIỆU GIẢ ĐỂ THỬ — KHÔNG CÓ GIÁ TRỊ PHÁP LÝ', 14, True, True),
+    ('Tôi đi trên một con đo. Đây  là ví dụ.', 14, False, False)])
+profile_sample('VanBanCaNhanMau.docx', [
+    ('\t\tTiêu đề cá nhân', 16, True, True),
+    ('Tôi đi trên một con đo. Đây  là ví dụ.', 12, False, False)], width=8391, height=11906)

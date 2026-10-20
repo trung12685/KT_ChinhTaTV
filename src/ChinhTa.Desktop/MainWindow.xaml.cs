@@ -99,11 +99,13 @@ public partial class MainWindow : Window
         if (Preview.Document is not System.Windows.Documents.FixedDocumentSequence document) return;
         var timer = Stopwatch.StartNew();
         Preview.GoToPage(anchor.Page);
-        bool marked = highlighter.Show(document, anchor);
+        bool pageWarning = issue.Kind == FixKind.PageLayout;
+        if (pageWarning) highlighter.Clear();
+        bool marked = !pageWarning && highlighter.Show(document, anchor);
         displayed = issue;
-        Status.Text = $"Trang {anchor.Page} — {issue.Message} Gợi ý: {issue.Replacement}. " +
-            (marked ? $"Đánh dấu: {timer.Elapsed.TotalMilliseconds:F0} ms." :
-            "Chưa ánh xạ chắc chắn được vị trí trên trang này; không đánh dấu để tránh nhầm.");
+        Status.Text = $"Trang {anchor.Page} — {issue.Message} Gợi ý: {issue.Suggestion}. " +
+            (pageWarning ? "Cảnh báo thiết lập trang, không đánh dấu ký tự. " : marked ? $"Đánh dấu: {timer.Elapsed.TotalMilliseconds:F0} ms." :
+            "Chưa ánh xạ chắc chắn được vị trí trên trang này; không đánh dấu để tránh nhầm.") + " " + issue.Citation;
     }
     private void Queue(Issue issue) { pending = issue; hover.Stop(); hover.Start(); }
     private void IssueHover(object sender, MouseEventArgs e)
@@ -115,12 +117,19 @@ public partial class MainWindow : Window
     { if (Issues.SelectedItem is IssueChoice choice) Queue(choice.Issue); }
     private void FixClick(object sender, RoutedEventArgs e)
     {
-        if (Issues.SelectedItem is IssueChoice choice) ConfirmFix([choice.Issue]);
+        if (Issues.SelectedItem is not IssueChoice choice) return;
+        if (!choice.Issue.CanFix)
+        {
+            MessageBox.Show(this, "Mục này chỉ cảnh báo để kiểm tra thủ công.\n\n" + choice.Issue.Message + "\n" + choice.Issue.Citation,
+                "Kiểm tra thể thức");
+            return;
+        }
+        ConfirmFix([choice.Issue]);
     }
     private void FixCheckedClick(object sender, RoutedEventArgs e) =>
         ConfirmFix(choices.Where(x => x.IsChecked).Select(x => x.Issue).ToArray());
     private void FixAllClick(object sender, RoutedEventArgs e) =>
-        ConfirmFix(choices.Select(x => x.Issue).ToArray());
+        ConfirmFix(choices.Where(x => x.Issue.CanFix).Select(x => x.Issue).ToArray());
     private void ConfirmFix(IReadOnlyList<Issue> selected)
     {
         hover.Stop();
@@ -130,18 +139,20 @@ public partial class MainWindow : Window
             return;
         }
         string examples = string.Join("\n", selected.Take(8).Select(x =>
-            $"• {x.Original.Replace("\r", " ")} → {x.Replacement}"));
+            $"• {x.Original.Replace("\r", " ")} → {x.Suggestion}"));
         string more = selected.Count > 8 ? $"\n… và {selected.Count - 8} lỗi khác." : "";
+        int manual = choices.Count(x => !x.Issue.CanFix);
+        string manualNote = manual > 0 ? $"\n{manual} cảnh báo thủ công sẽ không bị sửa." : "";
         string caution = selected.Any(x => !x.BatchSafe)
             ? "\nCó gợi ý cần bạn duyệt (ngữ cảnh, dàn trang hoặc thể thức); có thể cảnh báo nhầm." : "";
-        if (MessageBox.Show(this, $"Áp dụng {selected.Count} gợi ý sửa?\n\n{examples}{more}{caution}\n\n" +
+        if (MessageBox.Show(this, $"Áp dụng {selected.Count} gợi ý sửa?\n\n{examples}{more}{caution}{manualNote}\n\n" +
             "Hoàn tác một lần để bỏ cả lượt sửa. Tài liệu gốc được giữ nguyên.", "Duyệt lượt sửa",
             MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes) return;
         Run(() => { session.FixMany(selected); Scan(); Status.Text = $"Đã áp dụng {selected.Count} gợi ý. " + Status.Text; });
     }
     private void UpdateCheckedCount()
     {
-        if (CheckedCount is not null) CheckedCount.Text = $"Đã tích: {choices.Count(x => x.IsChecked)}/{choices.Count} lỗi";
+        if (CheckedCount is not null) CheckedCount.Text = $"Đã tích: {choices.Count(x => x.IsChecked)}/{choices.Count(x => x.Issue.CanFix)} mục sửa được; {choices.Count(x => !x.Issue.CanFix)} cảnh báo thủ công";
     }
     private void CheckChanged(object sender, RoutedEventArgs e) =>
         Dispatcher.BeginInvoke(new Action(UpdateCheckedCount));

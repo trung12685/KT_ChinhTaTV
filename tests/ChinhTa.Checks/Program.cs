@@ -113,7 +113,64 @@ Assert(Checker.Check([badHeading], DocumentProfile.Personal).Count == 0,
 Assert(Checker.Check([badHeading], DocumentProfile.Party).Count == 0,
     "Văn bản Đảng không dùng quy tắc quốc hiệu Nhà nước");
 Assert(Checker.Check([badHeading], DocumentProfile.State).Count == 1,
-    "Nhà nước giữ quy tắc quốc hiệu thử nghiệm riêng");
+    "Nhà nước dùng quy tắc quốc hiệu riêng");
 Assert(Enum.GetValues<DocumentProfile>().All(profile => Checker.Check([new(0, "con đo. Đây  là mẫu")], profile).Count == 2),
     "Các chế độ cùng kiểm tra ngữ cảnh minh họa và khoảng trắng");
+Assert(Checker.Check([new(0, Checker.Heading, true, 12)], DocumentProfile.State).Count == 0,
+    "NĐ30 chấp nhận quốc hiệu cỡ 12, không ép mọi văn bản về 13");
+Assert(Checker.Check([new(0, Checker.Heading, true, 13)], DocumentProfile.State).Count == 0,
+    "NĐ30 chấp nhận quốc hiệu cỡ 13");
+var wrongFontHeading = Checker.Check([new(0, Checker.Heading, true, 13, Font: "Arial")], DocumentProfile.State).Single();
+Assert(wrongFontHeading.Format?.Size == 13 && wrongFontHeading.Citation?.Contains("trang 21") == true,
+    "Sửa font giữ cỡ hợp lệ và có căn cứ PDF");
+Assert(Checker.Check([new(0, HeadingRules.Motto, true, 14)], DocumentProfile.State).Count == 0,
+    "Tiêu ngữ cỡ 14 hợp lệ");
+Assert(Checker.Check([new(0, HeadingRules.Motto, true, 12)], DocumentProfile.State).Single().Format?.Size == 13,
+    "Tiêu ngữ cỡ 12 được gợi ý sửa về 13");
+Assert(Checker.Check([new(0, HeadingRules.PartyTitle, true, 15)], DocumentProfile.Party).Count == 0,
+    "HD05 tiêu đề Đảng cỡ 15 hợp lệ");
+Assert(Checker.Check([new(0, HeadingRules.PartyTitle, true, 14)], DocumentProfile.Party).Single().Format?.Size == 15,
+    "Tiêu đề Đảng cỡ 14 phải sửa theo Phụ lục 2");
+Assert(Checker.Check([new(0, HeadingRules.PartyTitle, true, 14)], DocumentProfile.State).Count == 0,
+    "Không áp tiêu đề Đảng trong chế độ Nhà nước");
+Assert(Checker.Check([new(0, Checker.Heading, true, 12, Italic: true)], DocumentProfile.State).Count == 1,
+    "Quốc hiệu nghiêng bị cảnh báo");
+Assert(Checker.Check([new(0, Checker.Heading, true, 12, Color: 255)], DocumentProfile.State).Count == 1,
+    "Quốc hiệu màu đỏ bị cảnh báo");
+Assert(Checker.Check([new(0, Checker.Heading, true, 12, Color: -16777216)], DocumentProfile.State).Count == 0,
+    "Màu Automatic không bị gán nhầm là màu đỏ");
+Assert(Checker.Check([new(0, HeadingRules.Motto, true, 13, 0, InTable: true)], DocumentProfile.State).Single().Format?.Alignment == 1,
+    "Tiêu ngữ trong ô cần căn giữa");
+Assert(Checker.Check([new(0, Checker.Heading.ToLowerInvariant(), Page: 3)], DocumentProfile.State).Count == 0,
+    "Không coi dòng trích dẫn ở trang sau là quốc hiệu trang đầu");
+var standardLayout = new SectionLayout(1, 0, "A", 210, 297, 20, 20, 30, 15);
+Assert(!PageRules.Check(standardLayout, DocumentProfile.State).Any(), "Lề Nhà nước ở cận dưới hợp lệ");
+Assert(!PageRules.Check(standardLayout with { TopMm=25, BottomMm=25, LeftMm=35, RightMm=20 }, DocumentProfile.State).Any(),
+    "Lề Nhà nước ở cận trên hợp lệ");
+Assert(!PageRules.Check(standardLayout, DocumentProfile.Party).Any(), "Lề Đảng 20/20/30/15 hợp lệ");
+var partyMarginWarning = PageRules.Check(standardLayout with { TopMm=25 }, DocumentProfile.Party).Single();
+Assert(!partyMarginWarning.CanFix && partyMarginWarning.Citation?.Contains("28") == true,
+    "Lề Đảng sai là cảnh báo thủ công có căn cứ");
+Assert(!PageRules.Check(standardLayout with { WidthMm=148, HeightMm=210, TopMm=50 }, DocumentProfile.Personal).Any(),
+    "Văn bản cá nhân không bị ép khổ giấy/lề hành chính");
+Assert(PageRules.Check(standardLayout with { WidthMm=297, HeightMm=210 }, DocumentProfile.State).All(x => !x.CanFix),
+    "Trang ngang được yêu cầu kiểm tra ngoại lệ, không tự sửa");
+Assert(PageRules.Check(standardLayout with { WidthMm=148, HeightMm=210 }, DocumentProfile.Party).Single().Message.Contains("A5"),
+    "Có nhắc ngoại lệ giấy tờ hành chính A5 của Đảng");
+Assert(!PageRules.Check(standardLayout with { MirrorMargins=true }, DocumentProfile.Party).Any(),
+    "Lề trong/ngoài đúng của Đảng không bị cảnh báo nhầm");
+Assert(Checker.Check([new(0, "\t\tNội dung", Alignment: 0)], DocumentProfile.Personal).Single().CanFix == false,
+    "Tab liên tiếp cá nhân chỉ gợi ý, không tự xóa");
+bool manualRejected = false;
+try { BatchPlan.Create([partyMarginWarning]); } catch (InvalidOperationException) { manualRejected=true; }
+Assert(manualRejected, "Cảnh báo thủ công không lọt vào động cơ sửa tất cả");
+Assert(Checker.Check([new(0, Checker.Heading.Replace("HÒA", "HOÀ"), true, 12)], DocumentProfile.State).Count == 0,
+    "Chấp nhận biến thể HOÀ trong mẫu phụ lục, không tự đổi vị trí dấu");
+var headingSpaces = Checker.Check([new(0, Checker.Heading.Replace("XÃ HỘI", "XÃ  HỘI"), true, 12)], DocumentProfile.State);
+Assert(headingSpaces.Count == 1 && headingSpaces[0].Kind == FixKind.NationalHeading,
+    "Lỗi khoảng trắng trong quốc hiệu gộp vào sửa thành phần, không chồng lấn");
+var pair = Checker.Check([new(0, Checker.Heading, true, 12), new(100, HeadingRules.Motto, true, 14)], DocumentProfile.State);
+Assert(pair.Count == 1 && !pair[0].CanFix, "Cỡ quốc hiệu/tiêu ngữ cần thống nhất theo chú thích phụ lục");
+Assert(Checker.Check([new(0, Checker.Heading, true, 13), new(100, HeadingRules.Motto, true, 14)], DocumentProfile.State).Count == 0,
+    "Cặp quốc hiệu 13 và tiêu ngữ 14 hợp lệ");
 Console.WriteLine($"{checks} checks passed.");
