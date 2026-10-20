@@ -45,3 +45,5 @@ Ghi kết quả cùng phiên bản Windows, Word, .NET và cấu hình máy. Ch�
 32. Bản 0.1.12: mở lại tài liệu gây Word.XmlTableMap.Unavailable ở 0.1.11. Kiểm tra có ba vùng thiếu Line khi XPS đo được; sửa nhóm Line, lưu/mở bản sao và quét lại không chèn trùng. Nếu thiếu mốc, ghi lại mã XML-* và gửi diagnostics.log; mã phải có số đoạn/độ dài, không có nội dung. Kiểm không có Line trích yếu nếu đối chiếu dừng giữa khối trích yếu.
 
 33. Bản 0.1.13: mở file gốc chưa lưu đường kẻ của lượt sửa lỗi; hover xác minh vạch đề xuất rồi bấm sửa từng Line, sau đó thử nhóm ba Line trên bản sao mới. Lưu/mở lại trong Office 2021: Line ngang, đúng độ dài/vị trí, chữ không dịch; quét lại không tạo trùng. Thử Undo nhóm. Nếu lỗi, nhật ký phải chỉ rõ Word.ApplyLine.<bước>; kiểm không còn Line mới dang dở (nếu dọn dẹp cũng thất bại, Undo cả lượt).
+
+34. Bản 0.1.14: mở bản gốc mới, sửa một Line rồi nhóm Line; xác minh lưu/mở lại trong Word và quét không trùng. Lặp mở/sửa/Undo/đóng vài lần để kiểm không có E_FAIL tại Style.Line hoặc Cleanup, không mất kết nối và không sót Word riêng của ứng dụng sau đóng. Chưa xác minh kiểm thử COM thực tế trong cloud.

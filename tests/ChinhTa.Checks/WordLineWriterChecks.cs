@@ -19,6 +19,32 @@ public static class WordLineWriterChecks
             "Line mới giữ marker, nét, wrap và vị trí ngoài ô");
         assert(released.Count==4 && released.Distinct().Count()==4,
             "Giải phóng đủ shape/wrap/line/color sau khi tạo Line");
+        var aliased = new FakeWordLine();
+        var aliasReleases = new List<object?>();
+        void ReleaseAliased(object? value)
+        {
+            aliasReleases.Add(value);
+            if (ReferenceEquals(value,aliased.WrapFormat)) aliased.DependencyReleased=true;
+        }
+        WordLineWriter.Apply(null,()=>aliased,fix,ReleaseAliased,Report);
+        assert(aliased.AlternativeText=="ChinhTaViet.ShapeLine.Agency" && aliasReleases.Count==4 &&
+            ReferenceEquals(aliasReleases[^1],aliased),
+            "Giữ RCW của WrapFormat đến hết cấu hình Line, giải phóng Shape sau cùng");
+        var aliasedBroken = new FakeWordLine { FailWidth=true };
+        bool failedAliasCleanup=false;
+        try
+        {
+            WordLineWriter.Apply(null,()=>aliasedBroken,fix,value=>
+            { if(ReferenceEquals(value,aliasedBroken.WrapFormat)) aliasedBroken.DependencyReleased=true; },Report);
+        }
+        catch(COMException) { failedAliasCleanup=true; }
+        assert(failedAliasCleanup && aliasedBroken.Deleted,
+            "Dọn Line lỗi trước khi giải phóng RCW phụ thuộc, tránh lỗi xóa tiếp nối");
+        var anchorSensitive = new FakeWordLine { RequireStyleBeforeMove=true };
+        WordLineWriter.Apply(null,()=>anchorSensitive,fix,_=>{},Report);
+        assert(anchorSensitive.StyleRequested && anchorSensitive.PositionChanged &&
+            anchorSensitive.AlternativeText=="ChinhTaViet.ShapeLine.Agency",
+            "Lấy và đặt nét trước khi thay đổi chế độ neo/vị trí của Shape");
         var broken = new FakeWordLine { FailWidth = true };
         errors.Clear(); released.Clear();
         bool failed = false;
@@ -47,7 +73,11 @@ public sealed class FakeWordLine
     public float Height { get=>CurrentHeight; set=>throw new COMException("Unsupported height",unchecked((int)0x80004005)); }
     public bool FailWidth { get; set; }
     public bool Deleted { get; private set; }
-    public int RelativeHorizontalPosition { get; set; }
+    public bool RequireStyleBeforeMove { get; set; }
+    public bool PositionChanged { get; private set; }
+    public bool StyleRequested { get; private set; }
+    private int horizontal;
+    public int RelativeHorizontalPosition { get=>horizontal; set { horizontal=value; PositionChanged=true; } }
     public int RelativeVerticalPosition { get; set; }
     public int LayoutInCell { get; set; }
     public int LockAnchor { get; set; }
@@ -57,8 +87,23 @@ public sealed class FakeWordLine
     public float Width { get=>width; set { if(FailWidth)throw new COMException("Width failed",unchecked((int)0x80004005)); width=value; } }
     public string AlternativeText { get; set; } = "";
     public FakeWordWrap WrapFormat { get; } = new();
-    public FakeWordStroke Line { get; } = new();
-    public void Delete() => Deleted=true;
+    public bool DependencyReleased { get; set; }
+    private readonly FakeWordStroke stroke = new();
+    public FakeWordStroke Line
+    {
+        get
+        {
+            if(DependencyReleased || RequireStyleBeforeMove && PositionChanged)
+                throw new COMException("Shape state changed",unchecked((int)0x80004005));
+            StyleRequested=true;
+            return stroke;
+        }
+    }
+    public void Delete()
+    {
+        if(DependencyReleased)throw new COMException("Dependency released",unchecked((int)0x80004005));
+        Deleted=true;
+    }
 }
 public sealed class FakeWordWrap { public int Type { get; set; } }
 public sealed class FakeWordColor { public int RGB { get; set; } }

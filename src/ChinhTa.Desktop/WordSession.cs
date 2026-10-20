@@ -21,9 +21,10 @@ public sealed class WordSession : IDisposable
     public bool Changed { get; private set; }
     public bool IsOpen => document is not null;
     public WordSession() => Directory.CreateDirectory(folder);
+    // Balance this acquisition only; child and parent COM wrappers can share identity.
     private static void Release(object? value)
     {
-        if (value is not null && Marshal.IsComObject(value)) Marshal.FinalReleaseComObject(value);
+        if (value is not null && Marshal.IsComObject(value)) Marshal.ReleaseComObject(value);
     }
     public void Open(string path)
     {
@@ -235,14 +236,15 @@ public sealed class WordSession : IDisposable
     }
     private void ApplyLine(ShapeLineFix fix, dynamic anchor)
     {
-        object? existing = fix.ShapeId is int id ? (object)FindLine(id) : null;
-        WordLineWriter.Apply(existing, () =>
+        // Keep the owning collection alive until all Shape operations and cleanup finish.
+        dynamic shapes = document!.Shapes;
+        try
         {
-            dynamic shapes = document!.Shapes;
-            try { return (object)shapes.AddLine((float)fix.Left, (float)fix.Top,
-                (float)(fix.Left + fix.Width), (float)fix.Top, Anchor: anchor); }
-            finally { Release(shapes); }
-        }, fix, Release, Diagnostics.Write);
+            object? existing = fix.ShapeId is int id ? (object)FindLine(id) : null;
+            WordLineWriter.Apply(existing, () => (object)shapes.AddLine((float)fix.Left, (float)fix.Top,
+                (float)(fix.Left + fix.Width), (float)fix.Top, Anchor: anchor), fix, Release, Diagnostics.Write);
+        }
+        finally { Release(shapes); }
     }
     public void Fix(Issue issue) => FixMany([issue]);
     public void FixMany(IEnumerable<Issue> issues)

@@ -17,7 +17,7 @@ Bản 0.1.2 xuất XPS không có highlight từ tài liệu làm việc một l
 
 Khi ánh xạ không chắc chắn (thứ tự vẽ phức tạp, nội dung mơ hồ, glyph thiếu chữ Unicode hoặc lỗi qua ranh giới trang), ứng dụng đến trang và báo **chưa ánh xạ chắc chắn**, không đoán vị trí. Cần xác minh tọa độ thực tế trên Windows với nhiều font/zoom/bảng. Các thao tác mở, quét và xuất Word vẫn đồng bộ; lần mở và sau mỗi sửa/hoàn tác có thể làm giao diện chờ. Thanh trạng thái ghi thời gian quét/dựng trang, và thời gian đánh dấu khi chọn lỗi. Chưa có số đo trên Windows.
 
-## Phạm vi hiện có — 0.1.13
+## Phạm vi hiện có — 0.1.14
 
 Chọn **Loại văn bản** ở phía trên: Nhà nước, Đảng hoặc cá nhân. Đổi loại khi đang mở tài liệu sẽ quét và dựng lại bản xem trước; các ô tích cũ được đặt lại. Mặc định là Nhà nước. Không tự đoán loại tài liệu từ vài từ trong nội dung.
 
@@ -118,3 +118,7 @@ Nhật ký 0.1.11 cho thấy lỗi ở điều kiện so sánh nội dung/cờ t
 Nhật ký thực tế xác định E_FAIL (0x80004005) tại setter Shape.Rotation. Bỏ setter Rotation và Height cho Line đã tạo nằm ngang bằng hai điểm AddLine; chỉ đặt vị trí, độ dài và nét. Nếu cấu hình thất bại, xóa riêng Line mới tạo và ghi bước lỗi; không xóa Line có sẵn. Nhóm sửa vẫn có thể áp dụng một phần nếu lỗi sau các mục đã thành công: dùng Undo để bỏ cả lượt.
 
 Bổ sung căn khớp đoạn Word rỗng ngoài bảng khi XML không có đoạn tương ứng, sau phần đã khớp; giữ CP thật và không bỏ qua đoạn trong ô hay sau lỗi khác. Chưa xác minh trực tiếp Office 2021.
+
+## Bản 0.1.14 — giữ vòng đời COM trong lượt tạo Line
+
+Nhật ký 0.1.13 có E_FAIL lúc đọc Shape.Line và lúc Delete. Bản mới giữ collection Shapes cùng WrapFormat/LineFormat/Color tới hết cấu hình và dọn dẹp; không FinalReleaseComObject các RCW có thể dùng chung. Lấy/đặt nét trước khi thay đổi chế độ neo/vị trí, ghi rõ từng bước Style.Line/Visible/Weight/Dash/Arrows/Color. Đây là sửa quản lý vòng đời/thứ tự gọi theo điểm lỗi; chưa đủ bằng chứng kết luận duy nhất nguyên nhân trên Office 2021. Cần thử lại trên bản sao.

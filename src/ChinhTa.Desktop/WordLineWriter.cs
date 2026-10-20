@@ -9,6 +9,7 @@ internal static class WordLineWriter
         Action<object?> release, Action<string, Exception> report)
     {
         dynamic? shape = existing;
+        dynamic? wrap = null, line = null, color = null;
         bool created = existing is null;
         string stage = "Create";
         try
@@ -17,32 +18,37 @@ internal static class WordLineWriter
             stage = "HorizontalCheck";
             if (Math.Abs((float)shape.Height) > .5)
                 throw new InvalidOperationException("Line không nằm ngang. Hãy quét lại và kiểm tra thủ công trước khi sửa.");
+            // Configure appearance while the new Shape is still in its original anchor state.
+            stage = "Style.Line";
+            line = shape.Line;
+            stage = "Style.Visible";
+            line.Visible = -1;
+            stage = "Style.Weight";
+            line.Weight = .5f;
+            stage = "Style.Dash";
+            line.DashStyle = 1;
+            stage = "Style.Arrows";
+            line.BeginArrowheadStyle = 1; line.EndArrowheadStyle = 1;
+            stage = "Style.Color";
+            color = line.ForeColor;
+            color.RGB = 0;
+            stage = "Marker";
+            if (created) shape.AlternativeText = "ChinhTaViet.ShapeLine." + fix.Role;
             stage = "PositionMode";
             shape.RelativeHorizontalPosition = 1;
             shape.RelativeVerticalPosition = 1;
             shape.LayoutInCell = 0;
             shape.LockAnchor = -1;
             stage = "Wrap";
-            dynamic wrap = shape.WrapFormat;
-            try { wrap.Type = 3; } finally { release(wrap); }
+            wrap = shape.WrapFormat;
+            wrap.Type = 3;
             stage = "Geometry";
             // Word can reject Rotation=0 and Height=0 on msoLine (E_FAIL).
             // Preserve the horizontal geometry created by AddLine; change position/width only.
             shape.Left = (float)fix.Left;
             shape.Top = (float)fix.Top;
             shape.Width = (float)fix.Width;
-            stage = "Style";
-            dynamic line = shape.Line;
-            try
-            {
-                line.Visible = -1; line.Weight = .5f; line.DashStyle = 1;
-                line.BeginArrowheadStyle = 1; line.EndArrowheadStyle = 1;
-                dynamic color = line.ForeColor;
-                try { color.RGB = 0; } finally { release(color); }
-            }
-            finally { release(line); }
-            stage = "Marker";
-            if (created) shape.AlternativeText = "ChinhTaViet.ShapeLine." + fix.Role;
+
         }
         catch (Exception error)
         {
@@ -54,6 +60,13 @@ internal static class WordLineWriter
             }
             throw;
         }
-        finally { if (shape is not null) release(shape); }
+        finally
+        {
+            // Retain all child RCWs through configuration and any failed-line cleanup.
+            if (color is not null) release(color);
+            if (line is not null) release(line);
+            if (wrap is not null) release(wrap);
+            if (shape is not null) release(shape);
+        }
     }
 }

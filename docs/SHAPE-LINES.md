@@ -1,4 +1,4 @@
-# Ba Shape Line — bản thử 0.1.13
+# Ba Shape Line — bản thử 0.1.14
 
 ## Phạm vi
 
@@ -63,3 +63,9 @@ Nhật ký thực tế xác định điều kiện so sánh gộp của 0.1.11 t
 Line mới có hai điểm đầu/cuối ngang bằng nhau từ AddLine; không gọi setter Rotation hoặc Height. Trước đặt lại Line có sẵn, yêu cầu Height trong 0,5pt; không cố xoay Line chéo. Nếu lỗi sau khi tạo, cố xóa Line mới; lỗi dọn dẹp cũng được ghi và người dùng vẫn cần Undo/kiểm tra nhóm sửa bị gián đoạn. Các bước Create/HorizontalCheck/PositionMode/Wrap/Geometry/Style/Marker có tên riêng trong nhật ký.
 
 Đối chiếu XML có thể bỏ qua đoạn Word rỗng bổ sung ngoài bảng sau một đoạn ngoài bảng đã khớp; không bỏ qua marker cuối ô, đoạn trong ô hoặc bước sau sai nội dung. Không thay đổi Word text/CP. Có kiểm thử giả lập setter Rotation/Height trả E_FAIL và lỗi geometry để xác minh dọn Line mới.
+
+## Vòng đời COM từ 0.1.14
+
+Collection Shapes còn sống suốt thao tác; WrapFormat/LineFormat/Color chỉ giải phóng sau cấu hình hoặc dọn Line lỗi. Thứ tự giải phóng Color, LineFormat, WrapFormat, Shape, Shapes. Mỗi acquisition dùng ReleaseComObject cân bằng một tham chiếu, không FinalReleaseComObject. Cấu hình nét/marker khi Shape còn ở trạng thái neo ban đầu, rồi mới đặt chế độ vị trí/wrap/số đo.
+
+Kiểm thử giả lập bao phủ phụ thuộc bị vô hiệu hóa khi giải phóng WrapFormat sớm, thứ tự cấu hình nét trước đổi neo và Delete trước giải phóng các RCW. Mô hình này kiểm thứ tự/lifetime, chưa chứng minh nguyên nhân E_FAIL trong Word thực tế. Nhật ký xác nhận getter Line và Delete thất bại; Office 2021 cần thử riêng.
