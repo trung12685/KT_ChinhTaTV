@@ -18,7 +18,8 @@ public partial class MainWindow : Window
     private string? xpsPath;
     private Issue? pending;
     private Issue? displayed;
-    private readonly Dictionary<Issue, int> pages = new();
+    private readonly Dictionary<Issue, PreviewAnchor> anchors = new();
+    private readonly PreviewHighlighter highlighter = new();
     public MainWindow()
     {
         InitializeComponent();
@@ -39,7 +40,7 @@ public partial class MainWindow : Window
     {
         var dialog = new OpenFileDialog { Filter = "Word (*.docx)|*.docx" };
         if (dialog.ShowDialog(this) != true || !CanDiscard()) return;
-        Run(() => { ClosePreview(); Issues.ItemsSource = null; session.Open(dialog.FileName); Scan(); });
+        Run(() => { pending = displayed = null; anchors.Clear(); ClosePreview(); Issues.ItemsSource = null; session.Open(dialog.FileName); Scan(); });
     }
     private void ScanClick(object sender, RoutedEventArgs e) { if (session.IsOpen) Run(Scan); }
     private void Scan()
@@ -49,33 +50,40 @@ public partial class MainWindow : Window
         var found = session.Check();
         double checkSeconds = timer.Elapsed.TotalSeconds;
         ClosePreview();
-        pages.Clear();
-        xpsPath = session.ExportPreview(found, pages);
+        anchors.Clear();
+        xpsPath = session.ExportPreview(found, anchors);
         xps = new XpsDocument(xpsPath, FileAccess.Read);
         Preview.Document = xps.GetFixedDocumentSequence();
         Issues.ItemsSource = found;
         Status.Text = $"{Path.GetFileName(session.Source)} — {found.Count} cảnh báo. " +
             $"Quét: {checkSeconds:F1}s; dựng trang: {timer.Elapsed.TotalSeconds - checkSeconds:F1}s. " +
-            "Tất cả lỗi được tô vàng; chọn lỗi để đến trang, không xuất lại Word.";
+            "Chọn hoặc rê chuột lên lỗi để đánh dấu riêng, không xuất lại Word.";
     }
     private void ClosePreview()
     {
+        highlighter.Reset();
         Preview.Document = null;
         xps?.Close(); xps = null;
         if (xpsPath is not null) { File.Delete(xpsPath); xpsPath = null; }
     }
     private void ShowPreview(Issue? issue)
     {
-        if (issue is null || issue == displayed || !pages.TryGetValue(issue, out int page)) return;
-        // Navigation uses the existing XPS and cached page number: no Word COM or disk export.
-        Preview.GoToPage(page);
+        if (issue is null || issue == displayed || !anchors.TryGetValue(issue, out var anchor)) return;
+        if (Preview.Document is not System.Windows.Documents.FixedDocumentSequence document) return;
+        var timer = Stopwatch.StartNew();
+        Preview.GoToPage(anchor.Page);
+        bool marked = highlighter.Show(document, anchor);
         displayed = issue;
-        Status.Text = $"Trang {page} — {issue.Message} Gợi ý: {issue.Replacement}. " +
-            "Các lỗi trên trang được tô vàng; nút sửa chỉ áp dụng lỗi đã chọn bên phải.";
+        Status.Text = $"Trang {anchor.Page} — {issue.Message} Gợi ý: {issue.Replacement}. " +
+            (marked ? $"Đánh dấu: {timer.Elapsed.TotalMilliseconds:F0} ms." :
+            "Chưa ánh xạ chắc chắn được vị trí trên trang này; không đánh dấu để tránh nhầm.");
     }
     private void Queue(Issue issue) { pending = issue; hover.Stop(); hover.Start(); }
     private void IssueHover(object sender, MouseEventArgs e)
-    { if (sender is FrameworkElement { DataContext: Issue issue }) Queue(issue); }
+    {
+        if (sender is FrameworkElement { DataContext: Issue issue })
+        { Issues.SelectedItem = issue; Queue(issue); }
+    }
     private void IssueSelected(object sender, SelectionChangedEventArgs e)
     { if (Issues.SelectedItem is Issue issue) Queue(issue); }
     private void FixClick(object sender, RoutedEventArgs e)

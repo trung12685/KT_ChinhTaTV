@@ -11,9 +11,11 @@ dotnet run --project tests/ChinhTa.Checks
 dotnet run --project src/ChinhTa.Desktop
 ```
 
-Mở `samples/VanBanMau.docx`. Các lỗi được tô vàng cùng lúc khi dựng bản xem trước. Chọn hoặc rê chuột lên lỗi để chuyển đến trang tương ứng bằng số trang đã lưu, không gọi Word hoặc xuất XPS lại; chọn lỗi rồi nhấn **Sửa lỗi đã chọn**. Mỗi lần sửa sẽ quét lại và dựng lại trang. Có **Hoàn tác** và **Lưu bản sao**. Không thể lưu đè đường dẫn tài liệu gốc.
+Mở `samples/VanBanMau.docx`. Rê chuột hoặc chọn một lỗi để đến vị trí và vẽ khung vàng riêng lỗi đó trên bản xem trước. Rê chuột cũng chọn lỗi bên phải để nút sửa khớp với vị trí đang đánh dấu. Chọn **Sửa lỗi đã chọn** để duyệt; có **Hoàn tác** và **Lưu bản sao**, không lưu đè đường dẫn tài liệu gốc.
 
-XPS được Word xuất trên một bản sao tạm riêng: màu highlight không được ghi vào file kết quả. File gốc không được Word mở để chỉnh sửa. Bản thử dùng một phiên Word riêng, không đóng các cửa sổ Word của người dùng. Các thao tác mở, quét và xuất Word hiện vẫn chạy đồng bộ nên lần mở và sau mỗi lần sửa/hoàn tác có thể làm giao diện chờ. Việc chuyển lỗi dùng XPS có sẵn. Dòng trạng thái sau quét ghi riêng thời gian quét và dựng trang; chưa có số đo tốc độ trên Windows. Khi có nhiều lỗi trên cùng trang, tất cả được tô vàng, chưa có màu riêng cho lỗi đang chọn.
+Bản 0.1.2 xuất XPS không có highlight từ tài liệu làm việc một lần mỗi lần quét. Lớp WPF đọc các glyph XPS, ánh xạ nội dung trang/ngữ cảnh duy nhất về vị trí ký tự Word, rồi vẽ các hình chữ nhật tạm thời. Chuyển lỗi chỉ dùng trang và glyph đã cache, không gọi Word, không xuất XPS. Màu đánh dấu không được lưu vào Word hoặc XPS trên đĩa. Không sửa định dạng Word để highlight, không mở thêm bản Word chỉ để xem trước.
+
+Khi ánh xạ không chắc chắn (thứ tự vẽ phức tạp, nội dung mơ hồ, glyph thiếu chữ Unicode hoặc lỗi qua ranh giới trang), ứng dụng đến trang và báo **chưa ánh xạ chắc chắn**, không đoán vị trí. Cần xác minh tọa độ thực tế trên Windows với nhiều font/zoom/bảng. Các thao tác mở, quét và xuất Word vẫn đồng bộ; lần mở và sau mỗi sửa/hoàn tác có thể làm giao diện chờ. Thanh trạng thái ghi thời gian quét/dựng trang, và thời gian đánh dấu khi chọn lỗi. Chưa có số đo trên Windows.
 
 ## Phạm vi hiện có
 
@@ -46,3 +48,7 @@ Sau restore/publish, thư mục kết quả chạy offline; máy đích vẫn c�
 ## Bản 0.1.1 — tối ưu chuyển lỗi
 
 Chỉ xuất XPS một lần khi quét hoặc sau sửa/hoàn tác; cache số trang của từng lỗi. Không xuất lại khi hover/chọn lỗi. Giảm lời gọi COM đọc font bằng cách chỉ đọc định dạng quốc hiệu. Chưa tối ưu dựng trang sau từng sửa hoặc tích hợp AI; mở Word lần đầu vẫn có chi phí khởi động.
+
+## Bản 0.1.2 — chỉ đánh dấu lỗi đang chọn
+
+Thay highlight hàng loạt của 0.1.1 bằng lớp hình vẽ trên trang XPS. Phân biệt lỗi trùng từ bằng offset trong nội dung trang hoặc ngữ cảnh duy nhất; từ chối ánh xạ mơ hồ. Khôi phục chỉ highlight một lỗi, giữ điều hướng không xuất lại Word. Bỏ mở/lưu bản Word thứ hai cho việc xuất preview. Chưa triển khai dựng trang nền hoặc giảm số lần dựng sau sửa.

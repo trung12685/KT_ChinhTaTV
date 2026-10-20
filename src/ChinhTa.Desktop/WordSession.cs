@@ -95,37 +95,40 @@ public sealed class WordSession : IDisposable
         finally { Release(undo); Release(r); }
     }
     public void Undo() { if ((bool)document!.Undo()) Changed = true; }
-    public string ExportPreview(IReadOnlyList<Issue> issues, IDictionary<Issue, int> pages)
+    public string ExportPreview(IReadOnlyList<Issue> issues, IDictionary<Issue, PreviewAnchor> anchors)
     {
-        // Highlight a separate throwaway document, never the editable working document.
-        document!.Save();
-        string copy = Path.Combine(folder, "preview.docx");
-        File.Copy(Path.Combine(folder, "working.docx"), copy, true);
-        dynamic docs = app!.Documents;
-        dynamic? preview = null;
-        try
+        // Export the unmodified document once. Selection highlighting belongs exclusively to WPF.
+        document!.Repaginate();
+        var pageTexts = new Dictionary<int, (int Start, string Text)>();
+        dynamic content = document.Content;
+        int contentEnd;
+        try { contentEnd = (int)content.End; } finally { Release(content); }
+        foreach (var issue in issues)
         {
-            preview = docs.Open(copy, ReadOnly: false, AddToRecentFiles: false, Visible: false);
-            preview.Repaginate();
-            foreach (var issue in issues)
+            dynamic point = document.Range(issue.Start, issue.Start);
+            int page;
+            try { page = (int)point.Information[3]; } finally { Release(point); }
+            if (!pageTexts.TryGetValue(page, out var snapshot))
             {
-                dynamic r = preview.Range(issue.Start, issue.Start + issue.Length);
+                dynamic start = document.GoTo(1, 1, page); // wdGoToPage, wdGoToAbsolute
+                dynamic next = document.GoTo(1, 1, page + 1);
                 try
                 {
-                    pages[issue] = (int)r.Information[3];
-                    r.HighlightColorIndex = 7;
+                    int begin = (int)start.Start;
+                    int end = (int)next.Start;
+                    if (end <= begin) end = contentEnd;
+                    dynamic range = document.Range(begin, end);
+                    try { snapshot = (begin, (string)range.Text); }
+                    finally { Release(range); }
                 }
-                finally { Release(r); }
+                finally { Release(next); Release(start); }
+                pageTexts[page] = snapshot;
             }
-            string output = Path.Combine(folder, Guid.NewGuid() + ".xps");
-            preview.ExportAsFixedFormat(output, 18, OpenAfterExport: false);
-            return output;
+            anchors[issue] = new(page, snapshot.Text, issue.Start - snapshot.Start, issue.Length);
         }
-        finally
-        {
-            if (preview is not null) { try { preview.Close(0); } finally { Release(preview); } }
-            Release(docs);
-        }
+        string output = Path.Combine(folder, Guid.NewGuid() + ".xps");
+        document.ExportAsFixedFormat(output, 18, OpenAfterExport: false);
+        return output;
     }
     public void SaveCopy(string path)
     {

@@ -19,4 +19,35 @@ Assert(heading.Kind == FixKind.NationalHeading && heading.Length == Checker.Head
 Assert(Checker.Check([new(0, "    Nội dung\r")]).Count == 0, "Không xóa thụt đầu dòng");
 Assert(Checker.Check([new(0, "con đo; con đo")]).Count == 2, "Phân biệt nhiều vị trí giống nhau");
 Assert(Checker.Check([new(0, "con đò")]).Count == 0, "Văn bản đã sửa không còn lỗi mẫu");
+var body = "Đầu trang\rMột con đo.\rTrong bảng: con đo.\r";
+int second = body.LastIndexOf("đo", StringComparison.Ordinal);
+var anchor = new PreviewAnchor(1, body, second, 2);
+var rendered = "TIÊU ĐỀĐầu trangMột con đo.Trong bảng: con đo.CHÂN TRANG";
+var located = PreviewLocator.Locate(anchor, rendered);
+Assert(located is not null && located.Start == rendered.LastIndexOf("đo", StringComparison.Ordinal),
+    "Ngữ cảnh phân biệt từ giống nhau trong bảng");
+var page = "Một con đo. Lại một con đo.";
+int pos = page.LastIndexOf("đo", StringComparison.Ordinal);
+var repeated = PreviewLocator.Locate(new(1, page, pos, 2), page);
+Assert(repeated?.Start == pos, "Offset phân biệt hai lỗi trong cùng trang");
+Assert(PreviewLocator.Locate(new(1, "con đo", 4, 2), "con đocon đo") is null,
+    "Không chọn lần xuất hiện đầu khi ánh xạ mơ hồ");
+var spaced = PreviewLocator.Locate(new(1, "Đây  là mẫu", 3, 2), "Đây  là mẫu");
+Assert(spaced == new TextSpan(3, 2), "Khoảng trắng được đánh dấu riêng");
+Assert(PreviewLocator.Locate(new(1, "Đây  là mẫu", 3, 2), "Đâylàmẫu") is null,
+    "Không tô từ bên cạnh khi XPS không có ký tự khoảng trắng");
+var split = PreviewLocator.Locate(new(1, "Tôi đi con đo", 11, 2), "Tôi đi\ncon đo");
+Assert(split is not null && "Tôi đi\ncon đo".Substring(split.Start, split.Length) == "đo",
+    "Xuống dòng không làm lệch vị trí tiếng Việt");
+Assert(PreviewLocator.Locate(new(1, "con đo", 4, 2), "con đò") is null,
+    "Nội dung cũ không được ánh xạ lên bản sửa");
+Assert(PreviewLocator.Locate(new(1, "con đo", -1, 2), "con đo") is null,
+    "Từ chối vị trí ngoài trang");
+Assert(PreviewLocator.Locate(new(1, "con đo", 4, 8), "con đo") is null,
+    "Từ chối lỗi vượt ranh giới trang");
+var longBody = "Nội dung đầu khác" + new string('a', 60) + "con đo" + new string('b', 60) + "Cuối";
+var changedOrder = "Đầu trang XPS" + new string('a', 60) + "con đo" + new string('b', 60) + "Chân trang";
+var contextual = PreviewLocator.Locate(new(1, longBody, longBody.IndexOf("đo", StringComparison.Ordinal), 2), changedOrder);
+Assert(contextual?.Start == changedOrder.IndexOf("đo", StringComparison.Ordinal),
+    "Ngữ cảnh duy nhất khi thứ tự nội dung ngoài vùng lỗi khác nhau");
 Console.WriteLine($"{checks} checks passed.");
