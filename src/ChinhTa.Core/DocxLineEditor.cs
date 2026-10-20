@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.IO.Compression;
 using System.Xml.Linq;
 
@@ -9,9 +8,9 @@ public static class DocxLineEditor
 {
     private static readonly XNamespace W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
     private static readonly XNamespace V = "urn:schemas-microsoft-com:vml";
-    private static readonly XNamespace O = "urn:schemas-microsoft-com:office:office";
-    private static readonly XNamespace W10 = "urn:schemas-microsoft-com:office:word";
     private static readonly XNamespace WP = "http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing";
+    private static readonly XNamespace A = "http://schemas.openxmlformats.org/drawingml/2006/main";
+    private static readonly XNamespace WPS = "http://schemas.microsoft.com/office/word/2010/wordprocessingShape";
     public static void Write(string source, string candidate, IReadOnlyList<WordParagraphSnapshot> live,
         IReadOnlyList<LineTarget> targets, IReadOnlyList<Issue> issues)
     {
@@ -31,8 +30,7 @@ public static class DocxLineEditor
         var verified = new Dictionary<int, int>();
         var wrapper = new XElement("package", new XElement(document.Root!), new XElement(styles.Root!));
         WordXmlTableMap.Read(wrapper.ToString(), live, _ => { }, (start, index) => verified.Add(start, index));
-        var shapeIds = document.Descendants().Attributes().Where(a => a.Name.LocalName is "id" or "spid")
-            .Select(a => a.Value).ToHashSet(StringComparer.Ordinal);
+        var drawingIds = document.Descendants(WP + "docPr").Select(p => (uint?)p.Attribute("id") ?? 0).ToHashSet();
         var roles = new HashSet<LineRole>();
         foreach (var issue in issues)
         {
@@ -74,25 +72,11 @@ public static class DocxLineEditor
                     if (run is not null && !run.HasElements && string.IsNullOrWhiteSpace(run.Value)) run.Remove();
                 }
             }
-            int number = 1025;
-            while (shapeIds.Contains("_x0000_s" + number)) number++;
-            string id = "_x0000_s" + number; shapeIds.Add(id);
-            string Pt(double value) => value.ToString("0.###", CultureInfo.InvariantCulture) + "pt";
-            // VML v:line is a native floating Word Shape, not a border or underscore text.
-            var line = new XElement(V + "line",
-                new XAttribute("id", id), new XAttribute(O + "spid", id), new XAttribute("alt", marker),
-                new XAttribute("style", "position:absolute;margin-left:" + Pt(fix.Left) + ";margin-top:" + Pt(fix.Top) +
-                    ";width:" + Pt(fix.Width) + ";height:0pt;z-index:251659264;" +
-                    "mso-position-horizontal:absolute;mso-position-horizontal-relative:page;" +
-                    "mso-position-vertical:absolute;mso-position-vertical-relative:page"),
-                new XAttribute("from", "0,0"),
-                new XAttribute("to", Pt(fix.Width) + ",0"),
-                new XAttribute(O + "allowincell", "f"), new XAttribute("strokecolor", "#000000"),
-                new XAttribute("strokeweight", "0.5pt"),
-                new XElement(V + "stroke", new XAttribute("endcap", "flat")),
-                new XElement(W10 + "wrap", new XAttribute("type", "none"), new XAttribute("anchorx", "page"), new XAttribute("anchory", "page")),
-                new XElement(W10 + "anchorlock"));
-            paragraphs[index].Add(new XElement(W + "r", new XElement(W + "pict", line)));
+            uint number = 1;
+            while (drawingIds.Contains(number)) number++;
+            drawingIds.Add(number);
+            paragraphs[index].Add(new XElement(W + "r", CreateDrawing(fix, marker, number)));
+
         }
         File.Copy(source, candidate);
         try
@@ -104,4 +88,43 @@ public static class DocxLineEditor
         }
         catch { File.Delete(candidate); throw; }
     }
+    // A page-relative DrawingML connector, supported by Word 2010 and later.
+    // No VML coordinate interpretation and no COM AddLine/LineFormat setters.
+    private static XElement CreateDrawing(ShapeLineFix fix, string marker, uint id)
+    {
+        long Emu(double points) => checked((long)Math.Round(points * 12700));
+        long width = Emu(fix.Width);
+        if (width <= 0) throw new InvalidOperationException("Line too short");
+        return new XElement(W + "drawing",
+            new XElement(WP + "anchor",
+                new XAttribute("distT", 0), new XAttribute("distB", 0),
+                new XAttribute("distL", 0), new XAttribute("distR", 0),
+                new XAttribute("simplePos", 0), new XAttribute("relativeHeight", 251659264),
+                new XAttribute("behindDoc", 0), new XAttribute("locked", 0),
+                new XAttribute("layoutInCell", 0), new XAttribute("allowOverlap", 1),
+                new XElement(WP + "simplePos", new XAttribute("x", 0), new XAttribute("y", 0)),
+                new XElement(WP + "positionH", new XAttribute("relativeFrom", "page"), new XElement(WP + "posOffset", Emu(fix.Left))),
+                new XElement(WP + "positionV", new XAttribute("relativeFrom", "page"), new XElement(WP + "posOffset", Emu(fix.Top))),
+                new XElement(WP + "extent", new XAttribute("cx", width), new XAttribute("cy", 0)),
+                new XElement(WP + "effectExtent", new XAttribute("l", 0), new XAttribute("t", 0), new XAttribute("r", 0), new XAttribute("b", 0)),
+                new XElement(WP + "wrapNone"),
+                new XElement(WP + "docPr", new XAttribute("id", id), new XAttribute("name", "ChinhTaViet Line " + id), new XAttribute("descr", marker)),
+                new XElement(WP + "cNvGraphicFramePr"),
+                new XElement(A + "graphic", new XElement(A + "graphicData", new XAttribute("uri", WPS.NamespaceName),
+                    new XElement(WPS + "wsp",
+                        new XElement(WPS + "cNvCnPr"),
+                        new XElement(WPS + "spPr",
+                            new XElement(A + "xfrm",
+                                new XElement(A + "off", new XAttribute("x", 0), new XAttribute("y", 0)),
+                                new XElement(A + "ext", new XAttribute("cx", width), new XAttribute("cy", 0))),
+                            new XElement(A + "prstGeom", new XAttribute("prst", "line"), new XElement(A + "avLst")),
+                            new XElement(A + "noFill"),
+                            new XElement(A + "ln", new XAttribute("w", 6350), new XAttribute("cap", "flat"),
+                                new XElement(A + "solidFill", new XElement(A + "srgbClr", new XAttribute("val", "000000"))),
+                                new XElement(A + "prstDash", new XAttribute("val", "solid")),
+                                new XElement(A + "headEnd", new XAttribute("type", "none")),
+                                new XElement(A + "tailEnd", new XAttribute("type", "none")))),
+                        new XElement(WPS + "bodyPr"))))));
+    }
+
 }

@@ -25,7 +25,16 @@ public sealed class WordSession : IDisposable
     public bool IsOpen => document is not null;
     public string OfficeDescription => app is null ? "Word chưa mở" :
         $"Word {app.Version}; Build {app.Build}; App64={Environment.Is64BitProcess}; OS64={Environment.Is64BitOperatingSystem}";
+    internal string? LineCheckArtifactFolder { get; init; }
     public WordSession() => Directory.CreateDirectory(folder);
+    private void CaptureCheckArtifact(string path, string name)
+    {
+        // Enabled only by the isolated Office check, which uses the public synthetic sample.
+        if (LineCheckArtifactFolder is null || !File.Exists(path)) return;
+        try { File.Copy(path, Path.Combine(LineCheckArtifactFolder, name), true); }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+        { Diagnostics.Write("OfficeCheck.Capture", error); }
+    }
     // Balance this acquisition only; child and parent COM wrappers can share identity.
     private static void Release(object? value)
     {
@@ -299,15 +308,46 @@ public sealed class WordSession : IDisposable
                 if (RenderedLineVerifier.Find(new(fix.Left, fix.Top, fix.Width), rendered) is not null) continue;
                 var failure = new InvalidOperationException("Word chưa hiển thị Line đúng tọa độ đề xuất; phải khôi phục bản trước.");
                 failure.Data["ChinhTa.LineVerification"] = FormattableString.Invariant(
-                    $"Role={fix.Role}; ExpectedLeft={fix.Left:F2}; ExpectedTop={fix.Top:F2}; ExpectedWidth={fix.Width:F2}; RenderedCount={rendered.Count}");
+                    $"Role={fix.Role}; ExpectedLeft={fix.Left:F2}; ExpectedTop={fix.Top:F2}; ExpectedWidth={fix.Width:F2}; RenderedCount={rendered.Count}") +
+                    "; Rendered=" + string.Join("|", rendered.Take(40).Select(line => FormattableString.Invariant(
+                        $"L={line.Left:F2},Y={line.Y:F2},W={line.Width:F2}"))) + "; " + ReadOwnedLinePositions();
                 throw failure;
             }
+        }
+        catch
+        {
+            CaptureCheckArtifact(path, "failed-line-preview.xps");
+            throw;
         }
         finally
         {
             try { if (File.Exists(path)) File.Delete(path); }
             catch (IOException error) { Diagnostics.Write("Word.LineVerify.Cleanup",error); }
         }
+    }
+    private string ReadOwnedLinePositions()
+    {
+        // Numeric geometry only: never include document text or arbitrary alternative text.
+        var positions = new List<string>();
+        dynamic shapes = document!.Shapes;
+        try
+        {
+            for (int i = 1; i <= (int)shapes.Count; i++)
+            {
+                dynamic shape = shapes[i];
+                try
+                {
+                    string marker = (string?)shape.AlternativeText ?? "";
+                    if (!Enum.GetValues<LineRole>().Any(role => marker == "ChinhTaViet.ShapeLine." + role)) continue;
+                    positions.Add(FormattableString.Invariant($"ID={(int)shape.ID},Type={(int)shape.Type},L={(float)shape.Left:F2},Y={(float)shape.Top:F2},W={(float)shape.Width:F2},H={(float)shape.Height:F2},RH={(int)shape.RelativeHorizontalPosition},RV={(int)shape.RelativeVerticalPosition}"));
+                }
+                finally { Release(shape); }
+            }
+        }
+        catch (Exception error) when (error is COMException or Microsoft.CSharp.RuntimeBinder.RuntimeBinderException)
+        { positions.Add($"MetadataUnavailable=0x{error.HResult:X8}"); }
+        finally { Release(shapes); }
+        return "Native=" + string.Join("|", positions);
     }
     private void ApplyLinePackage(IReadOnlyList<Issue> plan, string before)
     {
@@ -339,6 +379,7 @@ public sealed class WordSession : IDisposable
         }
         catch (Exception error)
         {
+            CaptureCheckArtifact(candidate, "failed-line-candidate.docx");
             Diagnostics.Write("Word.LinePackage", error);
             // A failed candidate open is rolled back by CheckpointSwap. Keep backups if rollback fails.
             snapshotCurrent = error is not AggregateException;

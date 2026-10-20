@@ -33,7 +33,14 @@ public sealed class PreviewHighlighter
     {
         if (!pages.TryGetValue(pageNumber, out var index))
         {
-            var visual = document.DocumentPaginator.GetPage(pageNumber - 1).Visual;
+            var paginator = document.DocumentPaginator;
+            if (pageNumber < 1) return null;
+            if (!paginator.IsPageCountValid) paginator.ComputePageCount();
+            if (pageNumber > paginator.PageCount) return null;
+            DocumentPage renderedPage;
+            try { renderedPage = paginator.GetPage(pageNumber - 1); }
+            catch (ArgumentOutOfRangeException) { return null; }
+            var visual = renderedPage.Visual;
             if (visual is null) return null;
             var page = Descendants<FixedPage>(visual).FirstOrDefault();
             if (page is null) return null;

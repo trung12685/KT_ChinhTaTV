@@ -19,7 +19,7 @@ public static class OfficeIntegrationCheck
         {
             string sample = Path.Combine(AppContext.BaseDirectory,"samples","BaDuongKeThieu.docx");
             if (!File.Exists(sample)) throw new FileNotFoundException("Thiếu mẫu đi kèm bản giải nén");
-            using var test = new WordSession {Profile=DocumentProfile.State};
+            using var test = new WordSession {Profile=DocumentProfile.State, LineCheckArtifactFolder=folder};
             stage="Mở Word và mẫu";
             test.Open(sample);
             office=test.OfficeDescription;

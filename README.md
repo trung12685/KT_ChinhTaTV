@@ -17,7 +17,7 @@ Bản 0.1.2 xuất XPS không có highlight từ tài liệu làm việc một l
 
 Khi ánh xạ không chắc chắn (thứ tự vẽ phức tạp, nội dung mơ hồ, glyph thiếu chữ Unicode hoặc lỗi qua ranh giới trang), ứng dụng đến trang và báo **chưa ánh xạ chắc chắn**, không đoán vị trí. Cần xác minh tọa độ thực tế trên Windows với nhiều font/zoom/bảng. Các thao tác mở, quét và xuất Word vẫn đồng bộ; lần mở và sau mỗi sửa/hoàn tác có thể làm giao diện chờ. Thanh trạng thái ghi thời gian quét/dựng trang, và thời gian đánh dấu khi chọn lỗi. Chưa có số đo trên Windows.
 
-## Phạm vi hiện có — 0.1.17
+## Phạm vi hiện có — 0.1.18
 
 Chọn **Loại văn bản** ở phía trên: Nhà nước, Đảng hoặc cá nhân. Đổi loại khi đang mở tài liệu sẽ quét và dựng lại bản xem trước; các ô tích cũ được đặt lại. Mặc định là Nhà nước. Không tự đoán loại tài liệu từ vài từ trong nội dung.
 
@@ -142,3 +142,11 @@ Menu **Kiểm tra → Kiểm tra Word tự động…** mở một WordSession r
 So sánh DOCX gốc và bản sau sửa xác định hai vấn đề: VML dùng tọa độ trang trong đầu mút cục bộ nhưng thiếu vị trí hộp; dấu cách cuối đoạn trích yếu đầu làm ngắt nhận diện cả khối. Nay ghi margin-left/top theo trang với đầu mút cục bộ, tách căn giữa cấu trúc khỏi điều kiện đo chữ và dọn khung pict rỗng khi thay Line của ứng dụng.
 
 Phân trang trước khi đọc metadata. Vai trò chưa nhận diện phải có cảnh báo. Trước chấp nhận sửa, xuất XPS và kiểm đầu/cuối/cao độ nét thực tế trong dung sai 1pt; nếu thiếu hoặc lệch, khôi phục bản trước. Menu kiểm tra Word tự động cũng chạy bước xác minh nét này. 139 kiểm tra đạt với cả cặp tài liệu riêng tư, build Windows thành công; chưa chạy Office 2021 trong cloud Linux. Tài liệu riêng tư không được đưa vào Git hoặc ZIP.
+
+## Bản 0.1.18 — thay VML bằng DrawingML
+
+Nhật ký 0.1.17 xác nhận kiểm nét thất bại ở Agency: mong đợi Left=145,17pt, Top=92,68pt, Width=70,90pt; bộ đọc XPS chỉ tìm một nét và không khớp. Candidate đã bị từ chối/rollback. Nhật ký cũ không ghi tọa độ nét thực tế nên chưa đủ kết luận Word đặt sai hay bộ đọc bỏ sót.
+
+Thay đường ghi VML bằng DrawingML WordprocessingShape connector (`prstGeom=line`) với wp:anchor/positionH/positionV theo trang bằng EMU, layoutInCell=false, wrapNone; vẫn là Shape Line và giữ nguyên chữ. Đặt lại được VML cũ có marker hoặc DrawingML của ứng dụng. Không bỏ kiểm marker/type/nét XPS hoặc rollback. Nhật ký bổ sung tọa độ nét và metadata hình học native, không ghi nội dung. Chặn số trang ngoài phạm vi khi rê chuột sau dựng lại preview.
+
+Kiểm tra Word tự động trên mẫu giả sẽ giữ candidate và XPS thất bại ngay trong OfficeCheck-* để phân biệt lỗi dựng trang với lỗi đọc nét. Không tự lưu các hiện vật này khi xử lý tài liệu thật. 129 kiểm tra mẫu và 139 kiểm tra với cặp DOCX riêng tư đã đạt; gói DrawingML qua kiểm chuẩn OpenXML SDK và build Windows. Cloud chưa chạy Office2021, nên đây vẫn là bản thử cần xác nhận bằng menu kiểm tra Word trước.

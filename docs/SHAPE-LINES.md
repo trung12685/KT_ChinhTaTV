@@ -1,4 +1,4 @@
-# Ba Shape Line — bản thử 0.1.17
+# Ba Shape Line — bản thử 0.1.18
 
 ## Phạm vi
 
@@ -34,13 +34,13 @@ Thông số hiện cố định trong mã: cơ quan/trích yếu cách 6–15pt,
 
 ## Sửa
 
-Từ bản 0.1.15, sau khi duyệt, ghi Shape Line VML vào candidate DOCX rồi mở lại Word; không gọi COM AddLine/LineFormat/Delete. Chỉ đặt lại Line có marker của ứng dụng trong vùng đã xác minh. Line nằm ngang, đen, nét liền 0,5pt, không mũi tên. Vị trí theo trang; neo vào đoạn mốc, không wrap/reflow chữ, không thay nội dung. Màu cam trên preview chỉ là vị trí đề xuất, chưa ghi Word. Sửa/chọn lỗi vẫn dùng XPS cache như trước.
+Từ bản 0.1.18, sau khi duyệt, ghi Shape Line DrawingML vào candidate DOCX rồi mở lại Word (0.1.15–0.1.17 dùng VML); không gọi COM AddLine/LineFormat/Delete. Chỉ đặt lại Line có marker của ứng dụng trong vùng đã xác minh. Line nằm ngang, đen, nét liền 0,5pt, không mũi tên. Vị trí theo trang; neo vào đoạn mốc, không wrap/reflow chữ, không thay nội dung. Màu cam trên preview chỉ là vị trí đề xuất, chưa ghi Word. Sửa/chọn lỗi vẫn dùng XPS cache như trước.
 
 Không trộn sửa chữ/định dạng và sửa Line trong cùng lượt vì chúng có thể làm đổi số đo trang. Nếu Sửa tất cả có cả hai nhóm, ứng dụng thông báo và sửa chữ trước; sau khi dựng lại, bấm Sửa tất cả lần nữa để sửa Line. Chọn ô thủ công cũng cần chọn riêng từng nhóm. Mỗi lượt Line dùng một snapshot trước sửa, một lần mở lại Word và một lượt quét/xuất lại. Nút Hoàn tác phục hồi snapshot của cả lượt; sửa chữ/định dạng cũng ghi snapshot để giữ thứ tự hoàn tác. Nếu tham chiếu có lỗi định dạng/nội dung chồng lấn chưa sửa, Line chỉ cảnh báo để sửa tham chiếu trước.
 
 ## Chưa xác minh trên Windows
 
-Đã kiểm thử logic nhận diện/độ dài/tâm/khoảng cách, biên dịch chéo và kiểm nhận diện XML của file người dùng; chưa chạy đo XPS thực tế, dựng VML Line, neo trong bảng, đặt lại Line/Undo hoặc lưu/mở qua Office2021 trong cloud Linux. Không khẳng định đã sửa chính xác file người dùng. Cần thử trên bản sao theo WINDOWS-VALIDATION.md trước khi dùng thực tế.
+Đã kiểm thử logic nhận diện/độ dài/tâm/khoảng cách, biên dịch chéo và kiểm nhận diện XML của file người dùng; chưa chạy đo XPS thực tế, dựng DrawingML Line, neo trong bảng, đặt lại Line/Undo hoặc lưu/mở qua Office2021 trong cloud Linux. Không khẳng định đã sửa chính xác file người dùng. Cần thử trên bản sao theo WINDOWS-VALIDATION.md trước khi dùng thực tế.
 
 Giới hạn khác: chưa nhận diện mọi cấu trúc header, nested/merged tables, nhóm Shape, mọi cách neo, ký tự underline thay Line hoặc mọi mẫu pháp lý. Khi căn giữa/mốc/ghép không chắc chắn, chỉ cảnh báo. Không tự xử lý Shape của văn bản Đảng hoặc cá nhân bằng bộ này.
 
@@ -91,3 +91,9 @@ Kiểm thử độc lập giữ khóa file làm việc và xác minh chỉ bản
 VML đặt hộp theo trang bằng margin-left/top, width và height=0; from=(0,0), to=(width,0) là đầu mút cục bộ. Không ghi tọa độ toàn trang vào đầu mút. Khi thay Line của ứng dụng, dọn pict rỗng trong đoạn tham chiếu đã xác minh.
 
 Căn giữa cấu trúc dùng để duyệt toàn khối trích yếu độc lập với điều kiện đo an toàn của dòng cuối. Dấu cách cuối đoạn trước không làm mất mốc cuối. Mỗi vai trò chưa nhận diện có cảnh báo riêng. Trước chấp nhận candidate, so nét XPS với vị trí đề xuất: hai đầu và cao độ phải lệch không quá 1pt. Thiếu nét hoặc sai vị trí gây rollback, không chỉ kiểm marker/số Shape. Chưa xác minh thực tế trên Office 2021.
+
+## Thay encoder từ 0.1.18
+
+Nhật ký mới xác nhận 0.1.17 bị chặn ở kiểm nét; không đủ tọa độ thực tế để phân biệt Word đặt sai với reader bỏ sót. Thay VML bằng w:drawing/wp:anchor/a:graphic/wps:wsp connector, preset line. positionH/V relativeFrom=page dùng EMU (12700/pt); extent cy=0, transform cục bộ off=(0,0); layoutInCell=0, wrapNone, nét đen 0,5pt, không mũi tên. Không sửa font/chữ hoặc gọi setter LineFormat COM. Thay được Line có marker từ cả hai encoder.
+
+Giữ kiểm XPS 1pt và rollback. Nhật ký chứa các nét thực tế (giới hạn 40) và native Left/Top/Width/Height/relative-position, không chứa chữ. Bài kiểm tra Office riêng trên mẫu giả giữ failed-line-candidate.docx và failed-line-preview.xps nếu có lỗi; tài liệu người dùng không được tự sao chép vào thư mục kiểm tra. Chưa xác nhận Office2021 trong cloud.

@@ -36,34 +36,34 @@ public static class DocxLineEditorChecks
             }
             XNamespace w="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
             XNamespace v="urn:schemas-microsoft-com:vml";
-            XNamespace o="urn:schemas-microsoft-com:office:office";
-            XNamespace w10="urn:schemas-microsoft-com:office:word";
+            XNamespace wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing";
+            XNamespace drawing="http://schemas.openxmlformats.org/drawingml/2006/main";
             XDocument ReadDoc(string path)
             {
                 using var zip=ZipFile.OpenRead(path); using var stream=zip.GetEntry("word/document.xml")!.Open();
                 return XDocument.Load(stream,LoadOptions.PreserveWhitespace);
             }
-            var result=ReadDoc(edited); var lines=result.Descendants(v+"line").ToArray();
-            assert(lines.Length==3 && lines.Select(l=>(string?)l.Attribute("id")).Distinct().Count()==3,
-                "Gói DOCX chứa ba Shape Line có ID khác nhau");
-            assert(lines.All(l=>(string?)l.Attribute(o+"allowincell")=="f" &&
-                (string?)l.Element(w10+"wrap")?.Attribute("type")=="none" &&
-                ((string?)l.Attribute("style"))!.Contains("relative:page")),
-                "Line neo theo trang, không wrap và không bị giới hạn trong ô");
-            assert(lines.All(l=>l.Attribute("from")!.Value.Split(',')[1]==l.Attribute("to")!.Value.Split(',')[1]),
-                "Hai điểm đầu cuối đồng mức, không cần COM Rotation/Height");
-            assert(lines.All(l=>(string?)l.Attribute("from")=="0,0" &&
-                ((string?)l.Attribute("style"))!.Contains("margin-left:") &&
-                ((string?)l.Attribute("style"))!.Contains("margin-top:") &&
-                ((string?)l.Attribute("style"))!.Contains("mso-position-vertical:absolute")),
-                "Vị trí trang ghi ở style, đầu–cuối là tọa độ cục bộ thay vì cộng thêm vị trí neo");
+            var result=ReadDoc(edited); var lines=result.Descendants(w+"drawing").ToArray();
+            assert(lines.Length==3 && lines.Descendants(wp+"docPr").Select(l=>(string?)l.Attribute("id")).Distinct().Count()==3,
+                "Gói DOCX chứa ba DrawingML Line có ID khác nhau");
+            assert(lines.All(l=>l.Element(wp+"anchor")?.Attribute("layoutInCell")?.Value=="0" &&
+                l.Descendants(wp+"wrapNone").Any() && l.Descendants(wp+"positionH").Single().Attribute("relativeFrom")?.Value=="page" &&
+                l.Descendants(wp+"positionV").Single().Attribute("relativeFrom")?.Value=="page"),
+                "DrawingML neo theo trang, không wrap và không bị giới hạn trong ô");
+            assert(lines.All(l=>l.Descendants(drawing+"prstGeom").Single().Attribute("prst")?.Value=="line" &&
+                l.Descendants(wp+"extent").Single().Attribute("cy")?.Value=="0"),
+                "Line ngang, không cần COM Rotation/Height");
+            assert(lines.Select((l,i)=>(l,i)).All(pair=>pair.l.Descendants(drawing+"off").Single().Attribute("x")?.Value=="0" &&
+                pair.l.Descendants(drawing+"off").Single().Attribute("y")?.Value=="0" &&
+                pair.l.Descendants(wp+"posOffset").Select(x=>long.Parse(x.Value)).SequenceEqual(new[]{(long)Math.Round(issues[pair.i].LineFix!.Left*12700),(long)Math.Round(issues[pair.i].LineFix!.Top*12700)})),
+                "Tọa độ trang bằng EMU và transform cục bộ gốc 0");
             var validator=new OpenXmlValidator(FileFormatVersions.Office2019);
             foreach(var node in lines)
             {
-                var errors=validator.Validate(new DocumentFormat.OpenXml.Vml.Line(node.ToString())).ToArray();
+                var errors=validator.Validate(new DocumentFormat.OpenXml.Wordprocessing.Drawing(node.ToString())).ToArray();
                 if(errors.Length>0)throw new InvalidOperationException(string.Join("\n",errors.Select(e=>e.Description)));
             }
-            assert(true, "Ba VML Shape Line hợp lệ theo bộ kiểm chuẩn OpenXML SDK");
+            assert(true, "Ba DrawingML Line hợp lệ theo bộ kiểm chuẩn OpenXML SDK");
             var originalDoc=ReadDoc(source);
             foreach(var line in lines)line.Ancestors(w+"r").First().Remove();
             assert(XNode.DeepEquals(originalDoc.Root,result.Root), "Nội dung chữ, paragraph/table formatting và XML cũ giữ nguyên");
@@ -91,9 +91,9 @@ public static class DocxLineEditorChecks
             assert(true,"Thêm Line không tạo lỗi chuẩn mới cho toàn bộ gói DOCX");
             string editedAgain=Path.Combine(folder,"edited-again.docx");
             DocxLineEditor.Write(edited,editedAgain,live,targets,issues.Select(i=>i with {LineFix=i.LineFix! with {ShapeId=42,Width=80}}).ToArray());
-            assert(ReadDoc(editedAgain).Descendants(v+"line").Count()==3 &&
-                ReadDoc(editedAgain).Descendants(w+"pict").Count()==3,
-                "Sửa lại ba Line không tạo trùng hoặc để lại pict rỗng");
+            assert(ReadDoc(editedAgain).Descendants(w+"drawing").Count()==3 &&
+                !ReadDoc(editedAgain).Descendants(w+"pict").Any(),
+                "Sửa lại ba DrawingML Line không tạo trùng hoặc để lại pict rỗng");
             bool rejected=false;
             try { DocxLineEditor.Write(source,Path.Combine(folder,"foreign.docx"),live,targets,
                 [issues[0] with {LineFix=issues[0].LineFix! with {ShapeId=42}}]); }
@@ -144,18 +144,19 @@ public static class DocxLineEditorChecks
             }).ToArray();
             string candidate=Path.Combine(folder,"repaired.docx");
             DocxLineEditor.Write(saved,candidate,live,targets,plan);
-            var result=Read(candidate);var lines=result.Descendants(v+"line").ToArray();
-            assert(lines.Length==3 && result.Descendants(w+"pict").Count()==3,
-                "Đặt lại hai Line cũ và thêm Line trích yếu thành ba Shape, không tạo rác pict");
+            XNamespace wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing";
+            var result=Read(candidate);var lines=result.Descendants(w+"drawing").ToArray();
+            assert(lines.Length==3 && !result.Descendants(w+"pict").Any() && !result.Descendants(v+"line").Any(),
+                "Chuyển hai VML Line cũ và thêm Line trích yếu thành ba DrawingML, không tạo rác pict");
             foreach(var issue in plan)
             {
                 var fix=issue.LineFix!;
-                var line=lines.Single(l=>(string?)l.Attribute("alt")=="ChinhTaViet.ShapeLine."+fix.Role);
-                var style=line.Attribute("style")!.Value.Split(';').Where(s=>s.Contains(':')).Select(s=>s.Split(':',2)).ToDictionary(s=>s[0],s=>s[1]);
-                double Pt(string key)=>double.Parse(style[key].Replace("pt",""),System.Globalization.CultureInfo.InvariantCulture);
-                assert(Math.Abs(Pt("margin-left")-fix.Left)<.0011 && Math.Abs(Pt("margin-top")-fix.Top)<.0011 &&
-                    Math.Abs(Pt("width")-fix.Width)<.0011 && (string?)line.Attribute("from")=="0,0",
-                    "Bản sửa giữ tọa độ đề xuất bằng vị trí trang, không cộng tọa độ neo: "+fix.Role);
+                var line=lines.Single(l=>(string?)l.Descendants(wp+"docPr").Single().Attribute("descr")=="ChinhTaViet.ShapeLine."+fix.Role);
+                double Offset(string position)=>long.Parse(line.Descendants(wp+position).Single().Element(wp+"posOffset")!.Value)/12700d;
+                double width=long.Parse(line.Descendants(wp+"extent").Single().Attribute("cx")!.Value)/12700d;
+                assert(Math.Abs(Offset("positionH")-fix.Left)<.0001 && Math.Abs(Offset("positionV")-fix.Top)<.0001 &&
+                    Math.Abs(width-fix.Width)<.0001,
+                    "Bản sửa giữ tọa độ đề xuất bằng vị trí trang EMU: "+fix.Role);
             }
             assert(old.Descendants(w+"t").Select(t=>t.Value).SequenceEqual(result.Descendants(w+"t").Select(t=>t.Value)) &&
                 File.ReadAllBytes(saved).SequenceEqual(unchanged),"Sửa legacy không đổi chữ và không ghi đè tệp người dùng");
