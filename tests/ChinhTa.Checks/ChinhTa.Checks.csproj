@@ -1,1 +1,3 @@
-<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework></PropertyGroup><ItemGroup><ProjectReference Include="../../src/ChinhTa.Core/ChinhTa.Core.csproj" /><Compile Include="../../src/ChinhTa.Desktop/WordLineWriter.cs" Link="WordLineWriter.cs" /></ItemGroup></Project>
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework></PropertyGroup><ItemGroup><ProjectReference Include="../../src/ChinhTa.Core/ChinhTa.Core.csproj" /></ItemGroup><ItemGroup>
+  <PackageReference Include="DocumentFormat.OpenXml" Version="3.3.0" />
+</ItemGroup></Project>

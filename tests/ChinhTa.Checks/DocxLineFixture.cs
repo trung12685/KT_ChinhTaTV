@@ -9,12 +9,12 @@ public static class DocxLineFixture
     {
         using var zip = ZipFile.OpenRead(path);
         using var docStream = zip.GetEntry("word/document.xml")!.Open();
-        using var styleStream = zip.GetEntry("word/styles.xml")!.Open();
+        using var styleStream = zip.GetEntry("word/styles.xml")?.Open();
         // Test-only positions from the fixture; production always uses live Word ranges.
         var snapshots = Read(path).Select(p => new WordParagraphSnapshot(p.Start,
             p.Start + p.Text.Length + (p.InTable && p.CellEnd == p.Start + p.Text.Length + 1 ? 1 : 0),
             p.Text, p.Page, p.InTable, p.Centered)).ToArray();
-        var package = new XElement("fixture", XDocument.Load(docStream).Root, XDocument.Load(styleStream).Root);
+        var package = new XElement("fixture", XDocument.Load(docStream).Root, styleStream is null ? null : XDocument.Load(styleStream).Root);
         return WordXmlTableMap.Read(package.ToString(), snapshots);
     }
     public static IReadOnlyList<LayoutParagraph> Read(string path)

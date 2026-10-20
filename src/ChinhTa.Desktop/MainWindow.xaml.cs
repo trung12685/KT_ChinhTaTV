@@ -91,7 +91,7 @@ public partial class MainWindow : Window
         Status.Text = $"{Path.GetFileName(session.Source)} — {found.Count} cảnh báo. " +
             $"Quét: {checkSeconds:F1}s; dựng trang: {timer.Elapsed.TotalSeconds - checkSeconds:F1}s. " +
             "Chọn hoặc rê chuột lên lỗi để đánh dấu riêng, không xuất lại Word." +
-            (session.Recovered ? " Đã khôi phục kết nối Word; lịch sử hoàn tác trước khôi phục không còn." : "");
+            (session.Recovered ? " Đã khôi phục kết nối Word từ bản lưu gần nhất." : "");
     }
     private void ClosePreview()
     {

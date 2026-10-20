@@ -2,7 +2,7 @@ using System.Windows.Documents;
 using ChinhTa.Core;
 
 namespace ChinhTa.Desktop;
-public record WordLineShape(int Id, int AnchorStart, int Page, LineGeometry? Geometry = null);
+public record WordLineShape(int Id, int AnchorStart, int Page, LineGeometry? Geometry = null, bool AppOwned = false);
 
 public static class LineInspection
 {
@@ -56,10 +56,12 @@ public static class LineInspection
                 (fix, errors) = ShapeLineRules.Evaluate(target, reference, near[0], own[0].Id, policy);
             }
             if (errors.Length == 0) continue;
-            bool blocked = otherIssues.Any(i => i.CanFix && i.Start < target.Start + target.Text.Length && (long)i.Start + i.Length > target.Start);
+            bool foreign = own.Length == 1 && !own[0].AppOwned;
+            bool blocked = foreign || otherIssues.Any(i => i.CanFix && i.Start < target.Start + target.Text.Length && (long)i.Start + i.Length > target.Start);
             string message = string.Join(" ", errors) + $" Dòng cuối rộng {reference.Width:F1} pt; " +
                 $"đề xuất dài {fix.Width:F1} pt, cách dưới {fix.Top - reference.Bottom:F1} pt. " +
-                (blocked ? "Sửa nội dung/định dạng trong vùng trước rồi quét lại để đo đúng." : "Có thể tạo/đặt lại Line mà không thay nội dung chữ.");
+                (foreign ? "Line có sẵn không có dấu nhận diện của ứng dụng; cần chỉnh thủ công trong Word." :
+                    blocked ? "Sửa nội dung/định dạng trong vùng trước rồi quét lại để đo đúng." : "Có thể tạo/đặt lại Line mà không thay nội dung chữ.");
             result.Add((Notice(message, blocked ? null : fix), anchor));
         }
         return result;

@@ -241,7 +241,7 @@ var unrelatedTable = lineParagraphs.Select(p => p with { TableStart = p.CellStar
 Assert(!ShapeLineRules.Identify(unrelatedTable,DocumentProfile.State).Any(t=>t.Role==LineRole.Agency),
     "Không lấy cơ quan từ bảng khác làm vùng bên trái tiêu ngữ");
 XmlTableMapChecks.Run(Assert);
-WordLineWriterChecks.Run(Assert);
+DocxLineEditorChecks.Run(Assert, args.Length == 1 ? args[0] : null);
 if (args.Length == 1)
 {
     var fixtureTargets = ShapeLineRules.Identify(DocxLineFixture.Read(args[0]), DocumentProfile.State);

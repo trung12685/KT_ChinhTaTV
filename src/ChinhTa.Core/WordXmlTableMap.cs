@@ -14,7 +14,7 @@ public static class WordXmlTableMap
 {
     private static readonly XNamespace W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
     private static string Clean(string text) => text.TrimEnd('\r', '\a').Replace('\u2011', '\u001e').Replace('\u00ad', '\u001f');
-    public static IReadOnlyList<LayoutParagraph> Read(string wordOpenXml, IReadOnlyList<WordParagraphSnapshot> live, Action<WordXmlMappingException>? onMismatch = null)
+    public static IReadOnlyList<LayoutParagraph> Read(string wordOpenXml, IReadOnlyList<WordParagraphSnapshot> live, Action<WordXmlMappingException>? onMismatch = null, Action<int, int>? onParagraphMatched = null)
     {
         var xml = XDocument.Parse(wordOpenXml);
         var body = xml.Descendants(W + "document").Single().Element(W + "body")
@@ -43,6 +43,7 @@ public static class WordXmlTableMap
                 if (onMismatch is null) throw error;
                 onMismatch(error); verified = i; break;
             }
+            onParagraphMatched?.Invoke(live[i].Start, i);
         }
         if (verified == paragraphs.Length && paragraphs.Length < live.Count)
         {

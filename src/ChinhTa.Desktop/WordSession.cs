@@ -11,6 +11,8 @@ public sealed class WordSession : IDisposable
     private dynamic? document;
     private readonly string folder = Path.Combine(Path.GetTempPath(), "ChinhTa-" + Guid.NewGuid());
     private bool snapshotCurrent = true;
+    private readonly Stack<string> undoCheckpoints = new();
+    private IReadOnlyList<WordParagraphSnapshot> lastLayout = [];
     public IReadOnlyList<LineTarget> LineTargets { get; private set; } = [];
     public IReadOnlyList<WordLineShape> LineShapes { get; private set; } = [];
     public bool HasGroupedShapes { get; private set; }
@@ -30,6 +32,8 @@ public sealed class WordSession : IDisposable
     {
         // Do not reuse an RCW from a Word process that has already exited.
         CloseConnection();
+        undoCheckpoints.Clear();
+        lastLayout = [];
         Source = Path.GetFullPath(path);
         Changed = false;
         Recovered = false;
@@ -130,6 +134,7 @@ public sealed class WordSession : IDisposable
             }
             finally { if (Marshal.IsComObject(content)) Marshal.ReleaseComObject(content); }
         }
+        lastLayout = liveLayout.ToArray();
         LineTargets = lineLayoutUnavailable ? [] : ShapeLineRules.Identify(headerLayout, Profile);
         LineShapes = ReadLineShapes();
         var issues = Checker.Check(paragraphs, Profile).ToList();
@@ -197,19 +202,15 @@ public sealed class WordSession : IDisposable
                     if (type is 6 or 20) HasGroupedShapes = true;
                     if (type != 9) continue; // Office msoLine
                     LineGeometry? geometry = null;
-                    if (((string?)shape.AlternativeText ?? "").StartsWith("ChinhTaViet.ShapeLine.", StringComparison.Ordinal) &&
+                    bool owned = ((string?)shape.AlternativeText ?? "").StartsWith("ChinhTaViet.ShapeLine.", StringComparison.Ordinal);
+                    if (owned &&
                         (int)shape.RelativeHorizontalPosition == 1 && (int)shape.RelativeVerticalPosition == 1 &&
                         Math.Abs((float)shape.Height) <= .5f && Math.Abs((float)shape.Rotation) < .01f && (int)shape.Visible != 0)
                     {
-                        dynamic line = shape.Line;
-                        try
-                        {
-                            if ((int)line.Visible != 0) geometry = new((float)shape.Left, (float)shape.Top, (float)shape.Width);
-                        }
-                        finally { Release(line); }
+                        geometry = new((float)shape.Left, (float)shape.Top, (float)shape.Width);
                     }
                     dynamic anchor = shape.Anchor;
-                    try { result.Add(new((int)shape.ID, (int)anchor.Start, (int)anchor.Information[3], geometry)); }
+                    try { result.Add(new((int)shape.ID, (int)anchor.Start, (int)anchor.Information[3], geometry, owned)); }
                     finally { Release(anchor); }
                 }
                 finally { Release(shape); }
@@ -218,33 +219,71 @@ public sealed class WordSession : IDisposable
         finally { Release(shapes); }
         return result;
     }
-    private dynamic FindLine(int id)
+    private void CloseDocumentOnly()
+    {
+        if (document is null) return;
+        document.Close(0);
+        Release(document);
+        document = null;
+    }
+    private string ReadStoryText()
+    {
+        dynamic content = document!.Content;
+        try { return (string)content.Text; }
+        finally { Release(content); }
+    }
+    private void VerifyPackageLines(IReadOnlyList<Issue> plan)
     {
         dynamic shapes = document!.Shapes;
         try
         {
-            int count = (int)shapes.Count;
-            for (int i = 1; i <= count; i++)
+            foreach (var item in plan)
             {
-                dynamic shape = shapes[i];
-                if ((int)shape.ID == id && (int)shape.Type == 9) return shape;
-                Release(shape);
+                string marker = "ChinhTaViet.ShapeLine." + item.LineFix!.Role;
+                int matches = 0;
+                for (int i = 1; i <= (int)shapes.Count; i++)
+                {
+                    dynamic shape = shapes[i];
+                    try { if ((string?)shape.AlternativeText == marker && (int)shape.Type == 9) matches++; }
+                    finally { Release(shape); }
+                }
+                if (matches != 1) throw new InvalidOperationException("Word chưa nhận diện đúng một Shape Line sau khi mở candidate.");
             }
         }
         finally { Release(shapes); }
-        throw new InvalidOperationException("Shape Line đã thay đổi hoặc bị xóa. Hãy quét lại.");
     }
-    private void ApplyLine(ShapeLineFix fix, dynamic anchor)
+    private void ApplyLinePackage(IReadOnlyList<Issue> plan, string before)
     {
-        // Keep the owning collection alive until all Shape operations and cleanup finish.
-        dynamic shapes = document!.Shapes;
+        string candidate = Path.Combine(folder, Guid.NewGuid() + ".candidate.docx");
+        bool previousChanged = Changed;
         try
         {
-            object? existing = fix.ShapeId is int id ? (object)FindLine(id) : null;
-            WordLineWriter.Apply(existing, () => (object)shapes.AddLine((float)fix.Left, (float)fix.Top,
-                (float)(fix.Left + fix.Width), (float)fix.Top, Anchor: anchor), fix, Release, Diagnostics.Write);
+            string expectedText = ReadStoryText();
+            DocxLineEditor.Write(RecoveryPath, candidate, lastLayout, LineTargets, plan);
+            snapshotCurrent = false;
+            int openAttempts = 0;
+            CheckpointSwap.Apply(RecoveryPath, candidate, CloseDocumentOnly, () =>
+            {
+                bool verifyLines = ++openAttempts == 1;
+                Connect();
+                if (ReadStoryText() != expectedText)
+                    throw new InvalidOperationException("Nội dung chữ thay đổi sau khi mở candidate; phải khôi phục bản trước.");
+                if (verifyLines) VerifyPackageLines(plan);
+            });
+            snapshotCurrent = true;
+            undoCheckpoints.Push(before);
+            Changed = true;
         }
-        finally { Release(shapes); }
+        catch (Exception error)
+        {
+            Diagnostics.Write("Word.LinePackage", error);
+            // A failed candidate open is rolled back by CheckpointSwap. Keep backups if rollback fails.
+            snapshotCurrent = error is not AggregateException;
+            Changed = previousChanged;
+            throw new InvalidOperationException("Chưa áp dụng được nhóm đường kẻ. " +
+                "Bản trước lượt sửa được giữ tại: " + before, error);
+        }
+        finally { if (File.Exists(candidate)) File.Delete(candidate); }
     }
     public void Fix(Issue issue) => FixMany([issue]);
     public void FixMany(IEnumerable<Issue> issues)
@@ -253,14 +292,21 @@ public sealed class WordSession : IDisposable
         if (plan.Count == 0) return;
         if (plan.Any(i => i.LineFix is not null) && plan.Any(i => i.LineFix is null))
             throw new InvalidOperationException("Sửa chữ/định dạng trước, quét lại rồi sửa nhóm Shape Line để dùng số đo mới.");
-        foreach (var item in plan)
-            if (item.LineFix?.ShapeId is int id) { dynamic existing = FindLine(id); Release(existing); }
         // Validate every original before making any changes, not halfway through the batch.
         BatchPlan.Validate(plan, issue =>
         {
             dynamic range = document!.Range(issue.Start, issue.Start + issue.Length);
             try { return (string)range.Text; } finally { Release(range); }
         });
+        Checkpoint();
+        string before = Path.Combine(folder, Guid.NewGuid() + ".undo.docx");
+        File.Copy(RecoveryPath, before);
+        if (plan.All(i => i.LineFix is not null))
+        {
+            ApplyLinePackage(plan, before);
+            return;
+        }
+        undoCheckpoints.Push(before);
         dynamic undo = app!.UndoRecord;
         try
         {
@@ -274,7 +320,6 @@ public sealed class WordSession : IDisposable
                     dynamic r = document!.Range(issue.Start, issue.Start + issue.Length);
                     try
                     {
-                        if (issue.LineFix is ShapeLineFix lineFix) { ApplyLine(lineFix, r); continue; }
                         if ((string)r.Text != issue.Replacement) r.Text = issue.Replacement;
                         if (issue.Format is HeadingFormat heading)
                         {
@@ -311,9 +356,22 @@ public sealed class WordSession : IDisposable
     }
     public void Undo()
     {
+        if (undoCheckpoints.Count == 0) return;
+        string before = undoCheckpoints.Peek();
         snapshotCurrent = false;
-        if ((bool)document!.Undo()) Changed = true;
-        Checkpoint();
+        try
+        {
+            CheckpointSwap.Apply(RecoveryPath, before, CloseDocumentOnly, Connect);
+            undoCheckpoints.Pop();
+            Changed = true;
+            snapshotCurrent = true;
+        }
+        catch (Exception error)
+        {
+            Diagnostics.Write("Word.UndoCheckpoint", error);
+            snapshotCurrent = error is not AggregateException;
+            throw;
+        }
     }
     public string ExportPreview(IReadOnlyList<Issue> issues, IDictionary<Issue, PreviewAnchor> anchors)
         => ReadWithRecovery("Word.ExportPreview", () => ExportPreviewCore(issues, anchors));

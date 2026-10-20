@@ -1,4 +1,4 @@
-# Ba Shape Line — bản thử 0.1.14
+# Ba Shape Line — bản thử 0.1.15
 
 ## Phạm vi
 
@@ -34,13 +34,13 @@ Thông số hiện cố định trong mã: cơ quan/trích yếu cách 6–15pt,
 
 ## Sửa
 
-Sau khi người dùng duyệt, tạo `Shapes.AddLine` hoặc đặt lại Shape ID đã ghép. Line nằm ngang, đen, nét liền 0,5pt, không mũi tên. Vị trí theo trang; neo vào đoạn mốc, không wrap/reflow chữ, không thay nội dung. Màu cam trên preview chỉ là vị trí đề xuất, chưa ghi Word. Sửa/chọn lỗi vẫn dùng XPS cache như trước.
+Từ bản 0.1.15, sau khi duyệt, ghi Shape Line VML vào candidate DOCX rồi mở lại Word; không gọi COM AddLine/LineFormat/Delete. Chỉ đặt lại Line có marker của ứng dụng trong vùng đã xác minh. Line nằm ngang, đen, nét liền 0,5pt, không mũi tên. Vị trí theo trang; neo vào đoạn mốc, không wrap/reflow chữ, không thay nội dung. Màu cam trên preview chỉ là vị trí đề xuất, chưa ghi Word. Sửa/chọn lỗi vẫn dùng XPS cache như trước.
 
-Không trộn sửa chữ/định dạng và sửa Line trong cùng lượt vì chúng có thể làm đổi số đo trang. Nếu Sửa tất cả có cả hai nhóm, ứng dụng thông báo và sửa chữ trước; sau khi dựng lại, bấm Sửa tất cả lần nữa để sửa Line. Chọn ô thủ công cũng cần chọn riêng từng nhóm. Mỗi lượt Line dùng một Undo record/checkpoint, rồi quét/xuất lại một lần. Nếu tham chiếu có lỗi định dạng/nội dung chồng lấn chưa sửa, Line chỉ cảnh báo để sửa tham chiếu trước.
+Không trộn sửa chữ/định dạng và sửa Line trong cùng lượt vì chúng có thể làm đổi số đo trang. Nếu Sửa tất cả có cả hai nhóm, ứng dụng thông báo và sửa chữ trước; sau khi dựng lại, bấm Sửa tất cả lần nữa để sửa Line. Chọn ô thủ công cũng cần chọn riêng từng nhóm. Mỗi lượt Line dùng một snapshot trước sửa, một lần mở lại Word và một lượt quét/xuất lại. Nút Hoàn tác phục hồi snapshot của cả lượt; sửa chữ/định dạng cũng ghi snapshot để giữ thứ tự hoàn tác. Nếu tham chiếu có lỗi định dạng/nội dung chồng lấn chưa sửa, Line chỉ cảnh báo để sửa tham chiếu trước.
 
 ## Chưa xác minh trên Windows
 
-Đã kiểm thử logic nhận diện/độ dài/tâm/khoảng cách, biên dịch chéo và kiểm nhận diện XML của file người dùng; chưa chạy đo XPS thực tế, `Shapes.AddLine`, neo trong bảng, đặt lại Line/Undo hoặc lưu/mở qua Office2021 trong cloud Linux. Không khẳng định đã sửa chính xác file người dùng. Cần thử trên bản sao theo WINDOWS-VALIDATION.md trước khi dùng thực tế.
+Đã kiểm thử logic nhận diện/độ dài/tâm/khoảng cách, biên dịch chéo và kiểm nhận diện XML của file người dùng; chưa chạy đo XPS thực tế, dựng VML Line, neo trong bảng, đặt lại Line/Undo hoặc lưu/mở qua Office2021 trong cloud Linux. Không khẳng định đã sửa chính xác file người dùng. Cần thử trên bản sao theo WINDOWS-VALIDATION.md trước khi dùng thực tế.
 
 Giới hạn khác: chưa nhận diện mọi cấu trúc header, nested/merged tables, nhóm Shape, mọi cách neo, ký tự underline thay Line hoặc mọi mẫu pháp lý. Khi căn giữa/mốc/ghép không chắc chắn, chỉ cảnh báo. Không tự xử lý Shape của văn bản Đảng hoặc cá nhân bằng bộ này.
 
@@ -69,3 +69,13 @@ Line mới có hai điểm đầu/cuối ngang bằng nhau từ AddLine; không 
 Collection Shapes còn sống suốt thao tác; WrapFormat/LineFormat/Color chỉ giải phóng sau cấu hình hoặc dọn Line lỗi. Thứ tự giải phóng Color, LineFormat, WrapFormat, Shape, Shapes. Mỗi acquisition dùng ReleaseComObject cân bằng một tham chiếu, không FinalReleaseComObject. Cấu hình nét/marker khi Shape còn ở trạng thái neo ban đầu, rồi mới đặt chế độ vị trí/wrap/số đo.
 
 Kiểm thử giả lập bao phủ phụ thuộc bị vô hiệu hóa khi giải phóng WrapFormat sớm, thứ tự cấu hình nét trước đổi neo và Delete trước giải phóng các RCW. Mô hình này kiểm thứ tự/lifetime, chưa chứng minh nguyên nhân E_FAIL trong Word thực tế. Nhật ký xác nhận getter Line và Delete thất bại; Office 2021 cần thử riêng.
+
+## Cơ chế thay thế từ 0.1.15
+
+Các mục 0.1.13/0.1.14 bên trên là lịch sử, không còn là đường ghi hiện tại. `DocxLineEditor` đọc checkpoint đã lưu, đối chiếu text/range của từng đoạn với XML gói, thêm w:r/w:pict/v:line vào mốc đã xác minh. Line có from/to theo pt cùng cao độ, relative-page, stroke đen 0,5pt, không wrap, allowincell=false, anchorlock, marker theo vai trò. Không sửa part nào khác document.xml. Không đoán Word CP từ chiều dài XML.
+
+`CheckpointSwap` đóng tài liệu làm việc rồi thay file và mở lại. Sau mở, xác minh Word story text giữ nguyên và mỗi marker vừa sửa được nhận là một msoLine. Nếu lỗi mở/kiểm, đóng candidate và mở lại checkpoint trước; nếu cả phục hồi cũng lỗi, giữ file rollback trong thư mục làm việc và báo đường dẫn. Không tự thử lại thao tác chỉnh Shape.
+
+Mỗi lượt sửa lưu một snapshot trước đó. Nút Hoàn tác phục hồi snapshot theo thứ tự (kể cả các lượt sửa chữ), không dựa vào native Word Undo mất sau khi mở lại. Snapshot chỉ tồn tại trong phiên; app vẫn giữ backup khi rollback thất bại. Chưa có Redo.
+
+Đã kiểm chuẩn bằng OpenXML SDK cho ba Line và không phát sinh lỗi chuẩn mới trên toàn gói từ bản sao tài liệu riêng tư; chữ/định dạng XML và byte các part khác giữ nguyên. Kiểm thử này không xác minh render hoặc COM mở/Save/XPS trên Office 2021.

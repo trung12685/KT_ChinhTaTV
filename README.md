@@ -17,7 +17,7 @@ Bản 0.1.2 xuất XPS không có highlight từ tài liệu làm việc một l
 
 Khi ánh xạ không chắc chắn (thứ tự vẽ phức tạp, nội dung mơ hồ, glyph thiếu chữ Unicode hoặc lỗi qua ranh giới trang), ứng dụng đến trang và báo **chưa ánh xạ chắc chắn**, không đoán vị trí. Cần xác minh tọa độ thực tế trên Windows với nhiều font/zoom/bảng. Các thao tác mở, quét và xuất Word vẫn đồng bộ; lần mở và sau mỗi sửa/hoàn tác có thể làm giao diện chờ. Thanh trạng thái ghi thời gian quét/dựng trang, và thời gian đánh dấu khi chọn lỗi. Chưa có số đo trên Windows.
 
-## Phạm vi hiện có — 0.1.14
+## Phạm vi hiện có — 0.1.15
 
 Chọn **Loại văn bản** ở phía trên: Nhà nước, Đảng hoặc cá nhân. Đổi loại khi đang mở tài liệu sẽ quét và dựng lại bản xem trước; các ô tích cũ được đặt lại. Mặc định là Nhà nước. Không tự đoán loại tài liệu từ vài từ trong nội dung.
 
@@ -122,3 +122,11 @@ Bổ sung căn khớp đoạn Word rỗng ngoài bảng khi XML không có đo�
 ## Bản 0.1.14 — giữ vòng đời COM trong lượt tạo Line
 
 Nhật ký 0.1.13 có E_FAIL lúc đọc Shape.Line và lúc Delete. Bản mới giữ collection Shapes cùng WrapFormat/LineFormat/Color tới hết cấu hình và dọn dẹp; không FinalReleaseComObject các RCW có thể dùng chung. Lấy/đặt nét trước khi thay đổi chế độ neo/vị trí, ghi rõ từng bước Style.Line/Visible/Weight/Dash/Arrows/Color. Đây là sửa quản lý vòng đời/thứ tự gọi theo điểm lỗi; chưa đủ bằng chứng kết luận duy nhất nguyên nhân trên Office 2021. Cần thử lại trên bản sao.
+
+## Bản 0.1.15 — ghi Shape Line vào gói DOCX
+
+Không dùng đường ghi COM AddLine/LineFormat/Delete của các bản trước nữa. Sau khi duyệt, lưu checkpoint, tạo candidate DOCX riêng, thêm `v:line` (Shape Line Word, không phải border) vào đoạn đã đối chiếu, đóng tài liệu làm việc và mở candidate. Kiểm nội dung Word không đổi và đúng một Shape Line cho mỗi vai trò vừa sửa trước khi chấp nhận; nếu mở/kiểm thất bại, khôi phục checkpoint trước. File gốc không bị thay đổi.
+
+Nút Hoàn tác dùng snapshot theo từng lượt cho cả sửa chữ/định dạng và Line, nên vẫn hoạt động sau lượt Line cần mở lại Word. Lịch sử chỉ trong phiên đang mở, không có Redo. Chọn nhiều Line chỉ mở lại một lần, nhưng lượt sửa có thể chờ lâu hơn thao tác COM trực tiếp. Rê chuột vẫn dùng preview cache.
+
+Chỉ tự đặt lại Line có marker của ứng dụng trong vùng đã xác minh; Line có sẵn khác cần chỉnh thủ công. Bộ kiểm thử ghi DOCX thật từ tài liệu đã cung cấp và mẫu độc lập, dùng OpenXML SDK kiểm chuẩn Line/toàn gói, đối chiếu giữ nguyên XML chữ/định dạng và byte của các part khác, thử rollback khi mở thất bại. Chưa xác minh Word/Office 2021 thực tế hoặc độ chính xác dựng trang của VML trong môi trường Windows.
