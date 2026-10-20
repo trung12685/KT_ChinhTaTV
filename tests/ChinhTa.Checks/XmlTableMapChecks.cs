@@ -40,6 +40,14 @@ public static class XmlTableMapChecks
             ShapeLineRules.Identify(boundaryFlags,DocumentProfile.State).Count == 3,
             "Lấy cấu trúc ô từ XML đã khớp text, không chặn vì cờ COM ở ranh giới bảng");
         assert(!WordXmlTableMap.Read(xml,live.Take(1).ToArray())[0].Centered, "Không đoán vùng ô khi chưa đối chiếu hết các đoạn trong ô");
+        var extraBodyBlank = live.Take(5).Concat(new[] { new WordParagraphSnapshot(754,755,"\r",1,false,true) })
+            .Concat(live.Skip(5).Select(p=>p with {Start=p.Start+1,End=p.End+1})).ToArray();
+        var alignedBlank = WordXmlTableMap.Read(xml,extraBodyBlank);
+        assert(alignedBlank[5].Start==755 && ShapeLineRules.Identify(alignedBlank,DocumentProfile.State).Count==3,
+            "Bỏ qua đoạn Word rỗng bổ sung ngoài bảng, giữ CP thật của trích yếu");
+        var extraCellBlank = live.Take(2).Concat(new[] {new WordParagraphSnapshot(718,719,"\r",1,true,true)})
+            .Concat(live.Skip(2).Select(p=>p with {Start=p.Start+1,End=p.End+1})).ToArray();
+        assert(Reject(xml,extraCellBlank), "Không bỏ qua đoạn rỗng khác biệt bên trong ô bảng");
         var tabStopXml = XDocument.Parse(xml);
         tabStopXml.Descendants(w+"p").First().AddFirst(new XElement(w+"pPr",new XElement(w+"tabs",
             new XElement(w+"tab",new XAttribute(w+"val","center"),new XAttribute(w+"pos","1000")))));

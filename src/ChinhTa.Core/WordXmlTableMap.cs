@@ -20,6 +20,7 @@ public static class WordXmlTableMap
         var body = xml.Descendants(W + "document").Single().Element(W + "body")
             ?? throw new InvalidOperationException("Missing document body");
         var paragraphs = body.Descendants(W + "p").Where(p => !p.Ancestors(W + "txbxContent").Any()).ToArray();
+        live = AlignBodyBlanks(paragraphs, live);
         int verified = Math.Min(paragraphs.Length, live.Count);
         var index = paragraphs.Select((p, i) => (p, i)).ToDictionary(x => x.p, x => x.i);
         var styles = xml.Descendants(W + "styles").FirstOrDefault();
@@ -35,12 +36,7 @@ public static class WordXmlTableMap
                 if (onMismatch is null) throw error;
                 onMismatch(error); verified = i; break;
             }
-            string text = string.Concat(p.Descendants().Where(e => e.Parent?.Name == W + "r" &&
-                e.Ancestors(W + "p").FirstOrDefault() == p)
-                .Select(e => e.Name == W + "t" ? e.Value : e.Name == W + "tab" ? "\t" :
-                    e.Name == W + "br" ? (string?)e.Attribute(W + "type") switch
-                    { "page" => "\f", "column" => "\u000e", _ => "\v" } : e.Name == W + "cr" ? "\v" :
-                    e.Name == W + "noBreakHyphen" ? "\u2011" : e.Name == W + "softHyphen" ? "\u00ad" : ""));
+            string text = TextOf(p);
             if (Clean(text) != Clean(live[i].Text))
             {
                 var error = new WordXmlMappingException("XML-TEXT", i + 1, Clean(text).Length, Clean(live[i].Text).Length);
@@ -83,6 +79,37 @@ public static class WordXmlTableMap
                 item.Centered && balanced, tableStart));
         }
         return result;
+    }
+    private static string TextOf(XElement p)
+    {
+        return string.Concat(p.Descendants().Where(e => e.Parent?.Name == W + "r" &&
+                e.Ancestors(W + "p").FirstOrDefault() == p)
+                .Select(e => e.Name == W + "t" ? e.Value : e.Name == W + "tab" ? "\t" :
+                    e.Name == W + "br" ? (string?)e.Attribute(W + "type") switch
+                    { "page" => "\f", "column" => "\u000e", _ => "\v" } : e.Name == W + "cr" ? "\v" :
+                    e.Name == W + "noBreakHyphen" ? "\u2011" : e.Name == W + "softHyphen" ? "\u00ad" : ""));
+    }
+    private static IReadOnlyList<WordParagraphSnapshot> AlignBodyBlanks(XElement[] paragraphs, IReadOnlyList<WordParagraphSnapshot> live)
+    {
+        var aligned = new List<WordParagraphSnapshot>();
+        bool precedingMatched = true;
+        int x = 0, y = 0;
+        while (y < live.Count)
+        {
+            if (x >= paragraphs.Length) { aligned.AddRange(live.Skip(y)); break; }
+            string expected = Clean(TextOf(paragraphs[x]));
+            // Word can enumerate an additional empty body paragraph after a table.
+            // Skip only after an already matched body paragraph, never inside a cell,
+            // at the start of the story, or past a text mismatch. Real Word CPs stay intact.
+            if (precedingMatched && x > 0 && !paragraphs[x].Ancestors(W + "tc").Any() &&
+                !paragraphs[x - 1].Ancestors(W + "tc").Any() && expected.Length > 0)
+                while (y < live.Count && Clean(live[y].Text).Length == 0 &&
+                    !live[y].Text.EndsWith('\a') && (y == 0 || live[y].Start >= live[y - 1].End)) y++;
+            if (y >= live.Count) break;
+            precedingMatched &= expected == Clean(live[y].Text);
+            aligned.Add(live[y++]); x++;
+        }
+        return aligned;
     }
     private static bool BalancedMargins(XElement cell, XElement table, XElement? styles)
     {

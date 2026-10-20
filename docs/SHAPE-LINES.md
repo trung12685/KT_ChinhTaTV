@@ -1,4 +1,4 @@
-# Ba Shape Line — bản thử 0.1.12
+# Ba Shape Line — bản thử 0.1.13
 
 ## Phạm vi
 
@@ -57,3 +57,9 @@ Việc đọc XML xác định cấu trúc, không thay phép đo XPS. Khi khôn
 Sau khi khớp text theo thứ tự, trạng thái trong bảng lấy từ XML; không chặn vì cờ COM tại ranh giới ô. Chỉ lấy ký tự thuộc run, không tính tab stop trong pPr là text. Ánh xạ ngắt trang/cột/dòng và gạch nối không ngắt/tùy chọn theo mã Word. Giữ phần đầu đã khớp nếu lỗi ở đoạn sau; ô chỉ có mốc tự sửa khi toàn ô đã khớp và trích yếu phải có mốc kết thúc khối. Mã XML-TEXT/XML-CONTENT/XML-COUNT cùng số đoạn và độ dài được ghi trong nhật ký, không ghi text. Thông báo thiếu mốc có mã cụ thể, không khẳng định Word không cung cấp thông tin bảng.
 
 Nhật ký thực tế xác định điều kiện so sánh gộp của 0.1.11 thất bại, chưa phân biệt text hay cờ COM. Các kiểm thử mới bao phủ riêng những trường hợp này; chưa xác minh bản sửa trên Office 2021.
+
+## Tạo Line từ 0.1.13
+
+Line mới có hai điểm đầu/cuối ngang bằng nhau từ AddLine; không gọi setter Rotation hoặc Height. Trước đặt lại Line có sẵn, yêu cầu Height trong 0,5pt; không cố xoay Line chéo. Nếu lỗi sau khi tạo, cố xóa Line mới; lỗi dọn dẹp cũng được ghi và người dùng vẫn cần Undo/kiểm tra nhóm sửa bị gián đoạn. Các bước Create/HorizontalCheck/PositionMode/Wrap/Geometry/Style/Marker có tên riêng trong nhật ký.
+
+Đối chiếu XML có thể bỏ qua đoạn Word rỗng bổ sung ngoài bảng sau một đoạn ngoài bảng đã khớp; không bỏ qua marker cuối ô, đoạn trong ô hoặc bước sau sai nội dung. Không thay đổi Word text/CP. Có kiểm thử giả lập setter Rotation/Height trả E_FAIL và lỗi geometry để xác minh dọn Line mới.

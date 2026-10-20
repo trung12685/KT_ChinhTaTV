@@ -235,35 +235,14 @@ public sealed class WordSession : IDisposable
     }
     private void ApplyLine(ShapeLineFix fix, dynamic anchor)
     {
-        dynamic shape;
-        if (fix.ShapeId is int id) shape = FindLine(id);
-        else
+        object? existing = fix.ShapeId is int id ? (object)FindLine(id) : null;
+        WordLineWriter.Apply(existing, () =>
         {
             dynamic shapes = document!.Shapes;
-            try { shape = shapes.AddLine((float)fix.Left, (float)fix.Top, (float)(fix.Left + fix.Width), (float)fix.Top, Anchor: anchor); }
+            try { return (object)shapes.AddLine((float)fix.Left, (float)fix.Top,
+                (float)(fix.Left + fix.Width), (float)fix.Top, Anchor: anchor); }
             finally { Release(shapes); }
-        }
-        try
-        {
-            shape.RelativeHorizontalPosition = 1; // Page
-            shape.RelativeVerticalPosition = 1;   // Page
-            shape.LayoutInCell = 0; // Word exposes this flag as an integer.
-            shape.LockAnchor = -1;
-            dynamic wrap = shape.WrapFormat;
-            try { wrap.Type = 3; } finally { Release(wrap); } // no text reflow
-            shape.Rotation = 0f;
-            shape.Left = (float)fix.Left; shape.Top = (float)fix.Top;
-            shape.Width = (float)fix.Width; shape.Height = 0f;
-            dynamic line = shape.Line; dynamic color = line.ForeColor;
-            try
-            {
-                line.Visible = -1; line.Weight = .5f; line.DashStyle = 1;
-                line.BeginArrowheadStyle = 1; line.EndArrowheadStyle = 1; color.RGB = 0;
-            }
-            finally { Release(color); Release(line); }
-            if (fix.ShapeId is null) shape.AlternativeText = "ChinhTaViet.ShapeLine." + fix.Role;
-        }
-        finally { Release(shape); }
+        }, fix, Release, Diagnostics.Write);
     }
     public void Fix(Issue issue) => FixMany([issue]);
     public void FixMany(IEnumerable<Issue> issues)
