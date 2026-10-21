@@ -237,12 +237,12 @@ public sealed class WordSession : IDisposable
         // Package identity is only the first gate. VerifyRenderedLines must still pass.
         // Office 2021 can fail even on Shape.ID / Shape.Type; never enumerate Shapes here.
     }
-    internal void VerifyLineResult(IReadOnlyList<Issue> plan)
+    internal void VerifyLineResult(IReadOnlyList<Issue> plan, IReadOnlyList<LineGeometry>? preserve = null)
     {
         VerifyPackageLines(plan);
-        VerifyRenderedLines(plan);
+        VerifyRenderedLines(plan, preserve);
     }
-    private void VerifyRenderedLines(IReadOnlyList<Issue> plan)
+    private void VerifyRenderedLines(IReadOnlyList<Issue> plan, IReadOnlyList<LineGeometry>? preserve)
     {
         document!.Repaginate();
         string path = Path.Combine(folder, Guid.NewGuid() + ".verify.xps");
@@ -252,6 +252,8 @@ public sealed class WordSession : IDisposable
             using var xps = new XpsDocument(path, FileAccess.Read);
             var sequence = xps.GetFixedDocumentSequence();
             var rendered = new PreviewHighlighter().HorizontalLines(sequence, 1);
+            if(preserve is not null && preserve.Any(line=>RenderedLineVerifier.Find(line,rendered) is null))
+                throw new InvalidOperationException("Nét đã có thay đổi sau khi thêm Line; phải khôi phục bản trước.");
             foreach (var item in plan)
             {
                 var fix = item.LineFix!;
@@ -275,17 +277,22 @@ public sealed class WordSession : IDisposable
             catch (IOException error) { Diagnostics.Write("Word.LineVerify.Cleanup",error); }
         }
     }
-    private IReadOnlyList<LineGeometry> ReadRenderedLines()
+    private (IReadOnlyList<LineGeometry> Lines, LineAnchorFrame? MottoFrame) ReadPlacementBaseline(IReadOnlyList<Issue> plan)
     {
-        document!.Repaginate();
-        string path = Path.Combine(folder, Guid.NewGuid() + ".baseline.xps");
+        var anchors=new Dictionary<Issue,PreviewAnchor>();
+        string path=ExportPreview(plan,anchors);
         try
         {
-            document.ExportAsFixedFormat(path, 18, OpenAfterExport:false);
-            using var xps = new XpsDocument(path, FileAccess.Read);
-            return new PreviewHighlighter().HorizontalLines(xps.GetFixedDocumentSequence(), 1);
+            using var xps=new XpsDocument(path,FileAccess.Read);
+            var sequence=xps.GetFixedDocumentSequence();
+            var preview=new PreviewHighlighter();
+            LineAnchorFrame? frame=null;
+            if(plan.Count==1 && plan[0].LineFix?.Role==LineRole.Motto &&
+                lastLayout.Any(p=>p.Start==plan[0].Start && p.InTable) && anchors.TryGetValue(plan[0],out var anchor))
+                frame=preview.TableFrame(sequence,anchor);
+            return (preview.HorizontalLines(sequence,1),frame);
         }
-        finally { if (File.Exists(path)) File.Delete(path); }
+        finally {if(File.Exists(path))File.Delete(path);}
     }
     private void ApplyLinePackage(IReadOnlyList<Issue> plan, string before)
     {
@@ -298,7 +305,7 @@ public sealed class WordSession : IDisposable
             // The checkpoint copy was made by File.Copy and is not open in Word.
             DocxLineEditor.Write(before, candidate, lastLayout, LineTargets, plan);
             snapshotCurrent = false;
-            IReadOnlyList<LineGeometry> baseline = ReadRenderedLines();
+            var baseline = ReadPlacementBaseline(plan);
             void ApplyCandidate()
             {
                 int openAttempts = 0;
@@ -308,21 +315,26 @@ public sealed class WordSession : IDisposable
                     Connect();
                     if (ReadStoryText() != expectedText)
                         throw new InvalidOperationException("Nội dung chữ thay đổi sau khi mở candidate; phải khôi phục bản trước.");
-                    if (verifyLines) VerifyLineResult(plan);
+                    if (verifyLines) VerifyLineResult(plan, plan.All(i=>i.LineFix!.ShapeId is null) ? baseline.Lines : null);
                 });
             }
             try { ApplyCandidate(); }
             catch (RenderedLineMismatchException mismatch)
             {
                 // CheckpointSwap has already restored and reopened the original working document.
-                var corrected = LinePlacementFeedback.Correct(plan, baseline, mismatch.Rendered);
+                var corrected = LinePlacementFeedback.Correct(plan, baseline.Lines, mismatch.Rendered);
+                bool frameCorrection=corrected is null;
+                corrected ??= LinePlacementFeedback.CorrectHiddenMotto(plan,baseline.Lines,mismatch.Rendered,baseline.MottoFrame);
                 if (corrected is null) throw;
-                Diagnostics.Write("Word.LinePackage.MeasuredCorrection", mismatch);
+                if(frameCorrection && baseline.MottoFrame is LineAnchorFrame frame)
+                    mismatch.Data["ChinhTa.LineVerification"] += FormattableString.Invariant(
+                        $"; CellLeft={frame.Left:F2}; CellTop={frame.Top:F2}; CellWidth={frame.Width:F2}; PageWidth={frame.PageWidth:F2}");
+                Diagnostics.Write(frameCorrection ? "Word.LinePackage.TableFrameCorrection" : "Word.LinePackage.MeasuredCorrection", mismatch);
                 File.Delete(candidate);
                 DocxLineEditor.Write(before, candidate, lastLayout, LineTargets, corrected, plan);
                 // Exactly one retry. Use the original intended plan for the full verification.
                 ApplyCandidate();
-                Diagnostics.Write("Word.LinePackage.MeasuredCorrection.Verified", null);
+                Diagnostics.Write(frameCorrection ? "Word.LinePackage.TableFrameCorrection.Verified" : "Word.LinePackage.MeasuredCorrection.Verified", null);
             }
             snapshotCurrent = true;
             undoCheckpoints.Push(before);

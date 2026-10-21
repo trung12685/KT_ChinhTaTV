@@ -8,6 +8,8 @@ public sealed class RenderedLineMismatchException(IReadOnlyList<LineGeometry> re
     public IReadOnlyList<LineGeometry> Rendered { get; } = rendered;
 }
 
+public sealed record LineAnchorFrame(double Left, double Top, double Width, double Height, double PageWidth);
+
 // A single measured correction, followed by the same mandatory rendered verification.
 public static class LinePlacementFeedback
 {
@@ -39,6 +41,27 @@ public static class LinePlacementFeedback
             return item with {LineFix = f with {Left = 2 * f.Left - actual[i].Left, Top = 2 * f.Top - actual[i].Y}};
         }).ToArray();
     }
+    // Only a new, invisible Motto in a verified right-hand table frame qualifies.
+    public static IReadOnlyList<Issue>? CorrectHiddenMotto(IReadOnlyList<Issue> plan,
+        IReadOnlyList<LineGeometry> before, IReadOnlyList<LineGeometry> after, LineAnchorFrame? frame)
+    {
+        if(plan.Count!=1 || plan[0].LineFix is not {Role:LineRole.Motto, ShapeId:null} fix || frame is null ||
+            new[]{frame.Left,frame.Top,frame.Width,frame.Height,frame.PageWidth,fix.Left,fix.Top,fix.Width}.Any(v=>!double.IsFinite(v)) ||
+            frame.Left<=0 || frame.Top<0 || frame.Width<=0 || frame.Height<=0 || frame.PageWidth<=0 || fix.Width<=0 ||
+            frame.Width>=frame.PageWidth*.9 || fix.Left<frame.Left-1 || fix.Left+fix.Width>frame.Left+frame.Width+1 ||
+            fix.Top<frame.Top || fix.Top>frame.Top+frame.Height || fix.Left+frame.Left<frame.PageWidth-1 || before.Count!=after.Count)
+            return null;
+        var remaining=after.ToList();
+        foreach(var old in before)
+        {
+            var matches=remaining.Where(l=>RenderedLineVerifier.Find(old,[l]) is not null).ToArray();
+            if(matches.Length!=1)return null;
+            remaining.Remove(matches[0]);
+        }
+        if(remaining.Count!=0)return null;
+        return [plan[0] with {LineFix=fix with {Left=fix.Left-frame.Left,Top=fix.Top-frame.Top}}];
+    }
+
 }
 
 // Stored in the standard accessibility title attribute, on application-created Lines only.

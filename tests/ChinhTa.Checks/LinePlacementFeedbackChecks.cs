@@ -36,6 +36,30 @@ public static class LinePlacementFeedbackChecks
         bool invalid=false;
         try{LinePageIntent.Read("ChinhTaViet.PageLine.v1;NaN;0;70");}catch(InvalidDataException){invalid=true;}
         assert(invalid,"Malformed reserved intent metadata fails closed");
+        var motto=new[]{Make(LineRole.Motto,333.67,93.76,175.94)};
+        var existing=new[]{new LineGeometry(145.15,92.70,70.85),new LineGeometry(254.95,206.45,92.25)};
+        var frame=new LineAnchorFrame(276.2,56.67,290.55,104,595.35);
+        var hidden=LinePlacementFeedback.CorrectHiddenMotto(motto,existing,existing,frame)!;
+        assert(hidden.Count==1 && Math.Abs(hidden[0].LineFix!.Left-57.47)<.001 && Math.Abs(hidden[0].LineFix!.Top-37.09)<.001,
+            "Invisible right-column Motto uses measured cell origin when its initial point lies off page");
+        var moved=hidden[0].LineFix!;
+        assert(RenderedLineVerifier.Find(new(333.67,93.76,175.94),[new(moved.Left+frame.Left,moved.Top+frame.Top,moved.Width)]) is not null,
+            "Cell-origin renderer reaches the original Motto target after the bounded correction");
+        assert(LinePlacementFeedback.CorrectHiddenMotto(motto,existing,[existing[0]],frame) is null,
+            "Missing old Line prevents hidden-Motto correction");
+        assert(LinePlacementFeedback.CorrectHiddenMotto(motto,existing,[..existing,new(600,150,175.94)],frame) is null,
+            "Extra visible stroke prevents treating a Motto as invisible");
+        assert(LinePlacementFeedback.CorrectHiddenMotto(plan,existing,existing,frame) is null,
+            "Hidden-Motto fallback does not change Agency behavior");
+        assert(LinePlacementFeedback.CorrectHiddenMotto(motto,existing,existing,null) is null &&
+            LinePlacementFeedback.CorrectHiddenMotto(motto,existing,existing,frame with {Width=600}) is null,
+            "No hidden-Motto correction without a verified table frame");
+        assert(LinePlacementFeedback.CorrectHiddenMotto(motto,existing,existing,frame with {PageWidth=1000}) is null,
+            "No hidden-Motto correction when shifted starting point is still on page");
+        assert(LinePlacementFeedback.CorrectHiddenMotto([motto[0] with{LineFix=motto[0].LineFix! with{ShapeId=2}}],existing,existing,frame) is null,
+            "Hidden-Motto fallback cannot replace an existing shape");
+        assert(LinePlacementFeedback.CorrectHiddenMotto(motto,[existing[0],existing[0]],[existing[0],existing[0]],frame) is null,
+            "Ambiguous overlapping baseline strokes block the hidden-Motto fallback");
         string folder=Path.Combine(Path.GetTempPath(),Guid.NewGuid().ToString());Directory.CreateDirectory(folder);
         try
         {

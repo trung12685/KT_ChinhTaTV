@@ -1,3 +1,7 @@
+## Bản thử 0.1.22 — Line tiêu ngữ ở ô phải
+
+Giữ phép bù nét của 0.1.21. Bổ sung một candidate cho Motto không hiển thị, dùng khung ô thực đo từ XPS và bắt buộc kiểm lại nét mới cùng các nét đã có; sai thì rollback. Xem [phân tích và điều kiện áp dụng](docs/OFFICE2021-0.1.22.md).
+
 ## Bản thử 0.1.21 — bù theo nét XPS và xác minh lại
 
 0.1.20 đã chạy đạt bài kiểm tra mẫu trên Word người dùng, nhưng tài liệu riêng vẫn có nét lệch 30/20 mm. Bản này cho phép đúng một lần bù candidate dựa trên nét XPS ghép chắc chắn; bắt buộc kiểm lại đích ban đầu và rollback nếu sai. Xem [bằng chứng và giới hạn](docs/OFFICE2021-0.1.21.md).

@@ -73,16 +73,22 @@ public static class OfficeIntegrationCheck
                     .Select(pair=>pair.Issue).ToArray();
             if(measured.Length!=3 || measured.Any(i=>!i.CanFix || i.LineFix is null))
                 throw new InvalidOperationException("Chưa đo được ba Line trên mẫu tương thích hiện đại");
-            test.FixMany(measured);
-            test.Check();
+            // Reproduce sequential creation: the two existing Lines must survive the missing-Motto case.
+            foreach(var role in new[]{LineRole.Agency,LineRole.Subject,LineRole.Motto})
+            {
+                stage="Đo và sửa mẫu Word 2013: " + role;
+                test.FixMany([measured.Single(i=>i.LineFix!.Role==role)]);
+                test.Check();
+                Pass(stage);
+            }
             test.VerifyLineResult(measured);
-            Pass(stage);
             stage="Lưu/mở lại và kiểm nét đã đo trên mẫu Word 2013";
             string modernSaved=Path.Combine(folder,"modern-three-lines.docx");
             test.SaveCopy(modernSaved);
             string modernPreview=test.ExportPreview([],new Dictionary<Issue,PreviewAnchor>());
             File.Copy(modernPreview,Path.Combine(folder,"modern-line-preview.xps"));
-            test.Undo();test.Check();
+            for(int step=0;step<3;step++)test.Undo();
+            test.Check();
             if(test.LineShapes.Count!=0)throw new InvalidOperationException("Hoàn tác mẫu hiện đại chưa phục hồi");
             test.Open(modernSaved);test.Check();test.VerifyLineResult(measured);
             Pass(stage);
