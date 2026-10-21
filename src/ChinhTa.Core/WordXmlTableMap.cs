@@ -47,7 +47,8 @@ public static class WordXmlTableMap
             if(onTextEditable is not null)
             {
                 var unsafeNames=new HashSet<XName>{W+"sdt",W+"fldSimple",W+"hyperlink",W+"drawing",W+"pict",W+"object",W+"smartTag",W+"tab",W+"br",W+"cr"};
-                bool editable=!p.Ancestors(W+"sdt").Any() && !p.Descendants().Any(e=>unsafeNames.Contains(e.Name) ||
+                bool editable=!p.Ancestors(W+"sdt").Any() && !p.Descendants().Any(e=>
+                    unsafeNames.Contains(e.Name) && (e.Name!=W+"tab" || e.Parent?.Name==W+"r") ||
                     e.Name.NamespaceName=="http://schemas.openxmlformats.org/officeDocument/2006/math");
                 onTextEditable(live[i].Start,editable);
             }
