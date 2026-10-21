@@ -170,6 +170,33 @@ public static class OfficeIntegrationCheck
                 !test.ReadCheckText().Contains("Địa danh, ngày        tháng 10 năm 2026",StringComparison.Ordinal))
                 throw new InvalidOperationException("Mẫu trường trống bị đề xuất thay đổi hoặc mất khoảng trống");
             Pass(stage);
+            stage="Trường trống có ghi chú và điểm dừng tab: sửa nhóm, lưu/mở, Hoàn tác";
+            string annotated=CreateAnnotatedHeaderSample(Path.Combine(AppContext.BaseDirectory,"samples","TruongSoNgayDeTrong.docx"),folder);
+            test.Open(annotated);
+            string annotatedBefore=test.ReadCheckText();
+            const string annotatedDate="Địa danh, ngày        tháng 10 năm 2026 (dự thảo)  ghi chú";
+            if(!annotatedBefore.Contains(annotatedDate,StringComparison.Ordinal) ||
+                !annotatedBefore.Contains("Số: 3/BC-ABC",StringComparison.Ordinal))
+                throw new InvalidOperationException("Mẫu có ghi chú không còn đúng nội dung kiểm thử");
+            var annotatedIssues=test.Check();
+            var annotatedEdits=annotatedIssues.Where(i=>i.CanFix &&
+                i.Kind is FixKind.Text or FixKind.AdministrativeNumber or FixKind.AdministrativeDate).ToArray();
+            if(annotatedEdits.Length!=2 || !annotatedEdits.Any(i=>i.Kind==FixKind.AdministrativeNumber && i.Replacement=="03") ||
+                !annotatedEdits.Any(i=>i.Kind==FixKind.Text && i.Original=="  " && i.Replacement==" ") ||
+                !annotatedIssues.Any(i=>i.Kind==FixKind.AdministrativeDate && !i.CanFix))
+                throw new InvalidOperationException("Không phân biệt đúng ô ngày trống, ghi chú và tab định dạng");
+            test.FixMany(annotatedEdits);
+            string annotatedExpected=annotatedBefore.Replace("Số: 3/BC-ABC","Số: 03/BC-ABC",StringComparison.Ordinal)
+                .Replace(annotatedDate,annotatedDate.Replace(")  ghi",") ghi",StringComparison.Ordinal),StringComparison.Ordinal);
+            if(test.ReadCheckText()!=annotatedExpected || test.Check().Any(i=>i.CanFix &&
+                i.Kind is FixKind.Text or FixKind.AdministrativeNumber or FixKind.AdministrativeDate))
+                throw new InvalidOperationException("Sửa nhóm làm mất ô trống hoặc chưa hết gợi ý được phép sửa");
+            string annotatedSaved=Path.Combine(folder,"annotated-header-fixed.docx");test.SaveCopy(annotatedSaved);
+            test.Undo();
+            if(test.ReadCheckText()!=annotatedBefore)throw new InvalidOperationException("Hoàn tác không phục hồi toàn bộ mẫu có ghi chú");
+            test.Open(annotatedSaved);
+            if(test.ReadCheckText()!=annotatedExpected)throw new InvalidOperationException("Mở lại không giữ kết quả và khoảng trống của mẫu có ghi chú");
+            Pass(stage);
             File.AppendAllText(report,"RESULT PASS\nKiểm thao tác Word/Line, vị trí nét XPS, sửa riêng/nhóm số-ngày, lưu/mở và Hoàn tác trên mẫu giả; không xác nhận mọi tài liệu.\n");
             return new(true,stage,folder);
         }
@@ -194,6 +221,27 @@ public static class OfficeIntegrationCheck
         var current=expected.Select(i=>i with {Start=test.LineTargets.Single(t=>
             t.Role==i.LineFix!.Role && t.Text==i.Original).Start}).ToArray();
         test.VerifyLineResult(current,verifyReference:true);
+    }
+    private static string CreateAnnotatedHeaderSample(string source,string folder)
+    {
+        // Only the bundled fictional blank-field fixture, copied into the isolated check folder.
+        string path=Path.Combine(folder,"annotated-header-input.docx");File.Copy(source,path);
+        using var zip=ZipFile.Open(path,ZipArchiveMode.Update);
+        var entry=zip.GetEntry("word/document.xml") ?? throw new InvalidOperationException("Thiếu XML của mẫu giả");
+        XDocument xml;
+        using(var stream=entry.Open())xml=XDocument.Load(stream,LoadOptions.PreserveWhitespace);
+        XNamespace w="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+        var number=xml.Descendants(w+"t").Single(t=>t.Value=="Số:        /BC-ABC");
+        number.Value="Số: 3/BC-ABC";
+        var paragraph=number.Ancestors(w+"p").First();
+        var properties=paragraph.Element(w+"pPr");
+        if(properties is null){properties=new(w+"pPr");paragraph.AddFirst(properties);}
+        properties.Element(w+"tabs")?.Remove();
+        properties.AddFirst(new XElement(w+"tabs",new XElement(w+"tab",new XAttribute(w+"val","center"),new XAttribute(w+"pos","1000"))));
+        xml.Descendants(w+"t").Single(t=>t.Value=="Địa danh, ngày        tháng 10 năm 2026").Value=
+            "Địa danh, ngày        tháng 10 năm 2026 (dự thảo)  ghi chú";
+        entry.Delete();using(var stream=zip.CreateEntry("word/document.xml").Open())xml.Save(stream);
+        return path;
     }
     private static Issue[] InspectLines(WordSession test,IReadOnlyList<Issue> otherIssues)
     {

@@ -13,6 +13,9 @@ public static class AdministrativeHeaderRules
     private static readonly Regex DateHint=new(@"^[ \t]*(?:[\p{L}\p{M}\p{N}][\p{L}\p{M}\p{N} .’'\-]*?(?:[ \t]+|,[ \t]*))?ngày[^\r\a]*tháng[^\r\a]*năm",Linear);
     private static readonly Regex DateRow=new(@"^[ \t]*(?<place>[\p{L}\p{M}\p{N}][\p{L}\p{M}\p{N} .’'\-]*?)(?<separator>[ \t]*,[ \t]*|[ \t]+)(?<dayLabel>ngày)(?<day>[0-9._… \t]*)(?<monthLabel>tháng)(?<month>[0-9._… \t]*)(?<yearLabel>năm)(?<year>[0-9._… \t]*)$",Linear);
     private static readonly Regex StandaloneDate=new(@"^[ \t]*ngày(?<day>[0-9._… \t]*)tháng(?<month>[0-9._… \t]*)năm(?<year>[0-9._… \t]*)$",Linear);
+    // Read blank zones separately from the strict edit parser. A trailing annotation must
+    // not turn an intentional blank into a generic spacing edit; it remains manual.
+    private static readonly Regex DateBlankZones=new(@"^[ \t]*(?:[\p{L}\p{M}\p{N}][\p{L}\p{M}\p{N} .’'\-]*?(?:[ \t]*,[ \t]*|[ \t]+))?ngày(?<day>[0-9._… \t]*)tháng(?<month>[0-9._… \t]*)năm(?<year>[0-9._… \t]*)",Linear);
     private static readonly Regex Hyphen=new(@"[ \t]*[-–—][ \t]*");
     private static string Clean(string text)=>text.TrimEnd('\r','\a','\n');
     private static bool Blank(string value)=>value.Length==0 || value.All(c=>c is '.' or '_' or '…');
@@ -153,6 +156,7 @@ public static class AdministrativeHeaderRules
         text=Clean(text);
         var date=DateRow.Match(text);
         if(!date.Success)date=StandaloneDate.Match(text);
+        if(!date.Success)date=DateBlankZones.Match(text);
         if(date.Success)
             foreach(string name in new[]{"day","month","year"})
             {

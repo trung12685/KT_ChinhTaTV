@@ -37,6 +37,24 @@ public static class AdministrativeHeaderChecks
             "Generic spacing does not overlap a structured administrative edit");
         var repaired=p.Select(row=>row with {Text=Apply(row,issues)}).ToArray();
         assert(Found(repaired).Length==0,"Applying both number and date edits leaves no residual administrative warning");
+        // Rebuild paragraph CPs after each real text change instead of carrying old offsets
+        // into the next scan. Exercise each individual edit and representative grouped choices.
+        var editable=issues.Where(i=>i.CanFix).ToArray();
+        var selections=editable.Select(i=>new[]{i}).Concat(new[]{editable.Where(i=>i.Kind==FixKind.AdministrativeNumber).ToArray(),
+            editable.Where(i=>i.Kind==FixKind.AdministrativeDate).ToArray(),editable}).ToArray();
+        foreach(var selection in selections)
+        {
+            int next=170;
+            var current=p.Select(row=>
+            {
+                var updated=row with {Start=next,Text=Apply(row,selection)};
+                next+=updated.Text.Length+2;return updated;
+            }).ToArray();
+            var remaining=Found(current);
+            var final=current.Select(row=>row with {Text=Apply(row,remaining)}).ToArray();
+            assert(final.Select(row=>row.Text).SequenceEqual(repaired.Select(row=>row.Text)) && Found(final).Length==0,
+                "Rescan with shifted Word offsets completes the selected individual/group edit without residual warnings");
+        }
         foreach(string number in new[]{"Số:        /BC-ABCD","Số:    …/BC-ABCD","Số: 01/UBND-VP","Số: 12/QĐ-ABC-XYZ","Số: 001/BC-ABC"})
             assert(Found(Header(number)).Length==0,"Valid identifier or intentional blank number is preserved: "+number);
         foreach(string date in new[]{"Ninh Bình, ngày        tháng 10 năm 2026","Hà Nội, ngày    tháng    năm    ",
@@ -47,6 +65,25 @@ public static class AdministrativeHeaderChecks
         var partial=Header(date:"Ninh Bình, ngày        tháng1 năm2026");
         assert(Apply(partial[4],Found(partial))=="Ninh Bình, ngày        tháng 01 năm 2026\r",
             "Formatting filled month/year preserves the exact intentional blank-day spacing");
+        foreach(string date in new[]{"Hà Nội, ngày        tháng 10 năm 2026 (dự thảo)  ghi chú",
+            "Hà Nội, ngày        tháng 10 năm 2026 bản dự thảo  ghi chú",
+            "Hà Nội, ngày 03 tháng        năm 2026 (dự thảo)  ghi chú",
+            "Hà Nội, ngày    tháng    năm        (dự thảo)  ghi chú"})
+        {
+            var rows=Header(date:date);var found=Checker.Check(rows);
+            var spacing=found.Where(i=>i.CanFix && i.Kind==FixKind.Text && i.Start>=rows[4].Start &&
+                i.Start<rows[4].Start+rows[4].Text.Length).ToArray();
+            int note=date.LastIndexOf("  ",StringComparison.Ordinal);
+            assert(Found(rows).Any(i=>!i.CanFix) && spacing.Length==1 && spacing[0].Start==rows[4].Start+note &&
+                Apply(rows[4],found)==date.Remove(note,2).Insert(note," ")+"\r",
+                "Annotated manual date preserves only blank fields while still checking excess spacing in the annotation");
+        }
+        var annotatedBody=Header();annotatedBody[6]=annotatedBody[6] with {Text="Hà Nội, ngày        tháng 10 năm 2026 (dự thảo)\r"};
+        assert(Checker.Check(annotatedBody).Any(i=>i.CanFix && i.Kind==FixKind.Text && i.Start>=annotatedBody[6].Start),
+            "The annotation exemption stays inside the identified header, never ordinary body text");
+        var filledInvalid=Header(date:"Hà Nội, ngày 31  tháng 2 năm 2026 (dự thảo)");
+        assert(Checker.Check(filledInvalid).Any(i=>i.CanFix && i.Kind==FixKind.Text && i.Start>=filledInvalid[4].Start),
+            "A filled day is not mistaken for an intentional blank in a manual annotated date");
         var missingPlace=Checker.Check(Header(date:"ngày    tháng    năm    "));
         assert(missingPlace.Any(i=>i.Kind==FixKind.AdministrativeDate && !i.CanFix) && !missingPlace.Any(i=>i.CanFix),
             "Missing place remains manual without collapsing any blank day/month/year fields");
@@ -101,15 +138,20 @@ public static class AdministrativeHeaderChecks
         XNamespace w="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
         const string plain="Số: 3/BC-ABC";
         XElement Run()=>new(w+"r",new XElement(w+"t",plain));
-        bool Editable(XElement bodyContent)
+        bool Editable(XElement bodyContent,string expected=plain)
         {
             string xml=new XDocument(new XElement(w+"document",new XElement(w+"body",bodyContent))).ToString();
             bool editable=false;
-            WordXmlTableMap.Read(xml,[new(0,plain.Length+1,plain+"\r",1,false,false)],_=>{},
+            WordXmlTableMap.Read(xml,[new(0,expected.Length+1,expected+"\r",1,false,false)],_=>{},
                 onTextEditable:(_,value)=>editable=value);
             return editable;
         }
         assert(Editable(new(w+"p",Run())),"Exact plain Word XML text provides editability evidence");
+        var tabStops=new XElement(w+"pPr",new XElement(w+"tabs",new XElement(w+"tab",
+            new XAttribute(w+"val","center"),new XAttribute(w+"pos","1000"))));
+        assert(Editable(new(w+"p",tabStops,Run())),"Formatting tab stops without tab characters do not disable plain-text edits");
+        assert(!Editable(new(w+"p",new XElement(w+"pPr",tabStops.Elements()),new XElement(w+"r",new XElement(w+"tab")),Run()),"\t"+plain),
+            "A real run tab still cannot be accepted as plain text even when tab-stop formatting is present");
         foreach(string wrapper in new[]{"fldSimple","hyperlink","smartTag","sdt"})
             assert(!Editable(new(w+"p",new XElement(w+wrapper,Run()))),"Structured Word run is kept manual: "+wrapper);
         assert(!Editable(new(w+"sdt",new XElement(w+"sdtContent",new XElement(w+"p",Run())))),
