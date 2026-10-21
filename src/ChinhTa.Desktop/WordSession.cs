@@ -120,12 +120,19 @@ public sealed class WordSession : IDisposable
                         Profile == DocumentProfile.State && i<=40 && AdministrativeHeaderRules.IsCandidate(text) ||
                         Profile == DocumentProfile.Personal && System.Text.RegularExpressions.Regex.IsMatch(text, @"^[ \t]+\S"))
                     {
-                        dynamic f = r.Font; dynamic format = r.ParagraphFormat;
-                        try { paragraphs.Add(new(start, text, (int)f.Bold == -1,
+                        bool administrative=Profile==DocumentProfile.State && i<=40 && AdministrativeHeaderRules.IsCandidate(text);
+                        // The paragraph/cell terminator can carry a different font. Observe
+                        // the same visible text span that a new character-format fix changes.
+                        dynamic observed=administrative?document!.Range(start,start+text.TrimEnd('\r','\a','\n').Length):r;
+                        dynamic? f=null,format=null;
+                        try
+                        {
+                            f=observed.Font;format=r.ParagraphFormat;
+                            paragraphs.Add(new(start, text, (int)f.Bold == -1,
                             (float)f.Size, (int)format.Alignment, (string?)f.Name ?? "",
                             (int)f.Italic != 0, (int)f.Color, snapshot?.InTable??(bool)r.Information[12], snapshot?.Page??(int)r.Information[3],
-                            FormatObserved:true,FormatMixed:(int)f.Italic is not (0 or -1) || (float)f.Size<=0 || (float)f.Size>=9999999 || (int)f.Color is 9999999 or -9999999 || f.Name is null)); }
-                        finally { Release(format); Release(f); }
+                            FormatObserved:true,FormatMixed:(int)f.Italic is not (0 or -1) || (float)f.Size<=0 || (float)f.Size>=9999999 || (int)f.Color is 9999999 or -9999999 || string.IsNullOrWhiteSpace((string?)f.Name))); }
+                        finally { Release(format); Release(f); if(administrative)Release(observed); }
                     }
                     else paragraphs.Add(new(start, text,Page:snapshot?.Page??0,InTable:snapshot?.InTable??false));
                 }
@@ -235,6 +242,18 @@ public sealed class WordSession : IDisposable
         document = null;
     }
     internal string ReadCheckText() => ReadStoryText(); // Isolated Office check; never logged.
+    internal (int Bold,int Underline,int Alignment) ReadCheckDecorations(Issue issue)
+    {
+        if(LineCheckArtifactFolder is null)throw new InvalidOperationException("Chỉ dùng trong phiên kiểm Word riêng.");
+        dynamic range=document!.Range(issue.Start,issue.Start+issue.Length);
+        try
+        {
+            dynamic font=range.Font;dynamic format=range.ParagraphFormat;
+            try{return ((int)font.Bold,(int)font.Underline,(int)format.Alignment);}
+            finally{Release(format);Release(font);}
+        }
+        finally{Release(range);}
+    }
     private string ReadStoryText()
     {
         dynamic content = document!.Content;
@@ -538,74 +557,115 @@ public sealed class WordSession : IDisposable
             }
             return;
         }
-        dynamic textContent=document!.Content;
-        int storyStart;string originalStory;
-        try{storyStart=(int)textContent.Start;originalStory=(string)textContent.Text;}
-        finally{Release(textContent);}
-        string expectedStory=AtomicTextBatch.ExpectedStory(plan,originalStory,item=>
-        {
-            dynamic prefix=document!.Range(storyStart,item.Start);
-            try{return (string?)prefix.Text??"";}finally{Release(prefix);}
-        });
-        bool textPreviousChanged=Changed,started=false,restored=false;
-        int applied=0;
+        var formatRanges=new List<(Issue Issue,object Range,string Expected)>();
         try
         {
-            AtomicTextBatch.Apply(plan,ReadIssueText,item=>
+            dynamic textContent=document!.Content;
+            int storyStart;string originalStory;
+            try{storyStart=(int)textContent.Start;originalStory=(string)textContent.Text;}
+            finally{Release(textContent);}
+            string expectedStory=AtomicTextBatch.ExpectedStory(plan,originalStory,item=>
             {
-                started=true;snapshotCurrent=false;Changed=true;
-                verifiedLineEdits.Clear();
-                dynamic range=document!.Range(item.Start,item.Start+item.Length);
+                dynamic prefix=document!.Range(storyStart,item.Start);
+                try{return (string?)prefix.Text??"";}finally{Release(prefix);}
+            });
+            foreach(var formatIssue in plan.Where(i=>i.CharacterFormat is not null))
+            {
+                var rowEdits=plan.Where(i=>i.CharacterFormat is null && i.Start>=formatIssue.Start &&
+                    (long)i.Start+i.Length<=(long)formatIssue.Start+formatIssue.Length).ToArray();
+                string expectedRow=AtomicTextBatch.ExpectedStory(rowEdits,formatIssue.Original,item=>
+                {
+                    dynamic prefix=document!.Range(formatIssue.Start,item.Start);
+                    try{return (string?)prefix.Text??"";}finally{Release(prefix);}
+                });
+                dynamic target=document!.Range(formatIssue.Start,formatIssue.Start+formatIssue.Length);
                 try
                 {
-                    if((string)range.Text!=item.Replacement)range.Text=item.Replacement;
-                    if(item.Format is HeadingFormat heading)
+                    if((string)target.Text!=formatIssue.Original)throw new InvalidOperationException("Dòng định dạng đã thay đổi; hãy quét lại.");
+                    formatRanges.Add((formatIssue,(object)target,expectedRow));target=null!;
+                }
+                finally{Release(target);}
+            }
+            bool textPreviousChanged=Changed,started=false,restored=false;
+            int applied=0;
+            try
+            {
+                AtomicTextBatch.Apply(plan,ReadIssueText,item=>
+                {
+                    started=true;snapshotCurrent=false;Changed=true;
+                    verifiedLineEdits.Clear();
+                    dynamic range=document!.Range(item.Start,item.Start+item.Length);
+                    try
                     {
-                        dynamic font=range.Font;dynamic format=range.ParagraphFormat;
+                        if((string)range.Text!=item.Replacement)range.Text=item.Replacement;
+                        if(item.CharacterFormat is CharacterFormat character)
+                        {
+                            dynamic font=range.Font;
+                            try{font.Name="Times New Roman";font.Size=character.Size;font.Italic=character.Italic?-1:0;font.Color=0;}
+                            finally{Release(font);}
+                        }
+                        if(item.Format is HeadingFormat heading)
+                        {
+                            dynamic font=range.Font;dynamic format=range.ParagraphFormat;
+                            try
+                            {
+                                font.Bold=-1;font.Italic=0;font.Color=0;
+                                font.Size=heading.Size;font.Name="Times New Roman";
+                                if(heading.Alignment is int alignment)format.Alignment=alignment;
+                            }
+                            finally{Release(format);Release(font);}
+                        }
+                        string actual=(string)range.Text;
+                        if(++applied==failTextAfter)throw new OfficeTextProbeException();
+                        return actual;
+                    }
+                    finally{Release(range);}
+                },()=>
+                {
+                    Checkpoint();
+                    if(ReadStoryText()!=expectedStory)
+                        throw new InvalidOperationException("Chữ sau lưu không đúng phạm vi đã chọn; phải khôi phục cả lượt.");
+                    foreach(var styled in formatRanges)
+                    {
+                        dynamic target=styled.Range;dynamic font=target.Font;
                         try
                         {
-                            font.Bold=-1;font.Italic=0;font.Color=0;
-                            font.Size=heading.Size;font.Name="Times New Roman";
-                            if(heading.Alignment is int alignment)format.Alignment=alignment;
+                            if((string)target.Text!=styled.Expected || !styled.Issue.CharacterFormat!.Matches(
+                                (string?)font.Name??"",(float)font.Size,(int)font.Italic,(int)font.Color))
+                                throw new InvalidOperationException("Định dạng sau lưu chưa khớp gợi ý hoặc vùng chữ bị thay đổi; phải khôi phục cả lượt.");
                         }
-                        finally{Release(format);Release(font);}
+                        finally{Release(font);}
                     }
-                    string actual=(string)range.Text;
-                    if(++applied==failTextAfter)throw new OfficeTextProbeException();
-                    return actual;
-                }
-                finally{Release(range);}
-            },()=>
-            {
-                Checkpoint();
-                if(ReadStoryText()!=expectedStory)
-                    throw new InvalidOperationException("Chữ sau lưu không đúng phạm vi đã chọn; phải khôi phục cả lượt.");
-            },()=>
-            {
-                // Close this private Word instance, including a disconnected COM server.
-                CheckpointSwap.Apply(RecoveryPath,before,CloseConnection,Connect);
-                if(ReadStoryText()!=originalStory)
-                    throw new InvalidOperationException("Chưa xác minh được chữ sau phục hồi checkpoint.");
-                restored=true;
-            });
-            undoCheckpoints.Push(before); // Only a fully committed action enters the Undo stack.
-            Changed=true;snapshotCurrent=true;
-        }
-        catch(Exception error)
-        {
-            Changed=restored || !started?textPreviousChanged:true;
-            snapshotCurrent=restored || !started;
-            Diagnostics.Write(restored?"Word.TextBatch.RolledBack":"Word.TextBatch.Failed",error,
-                $"Selected={plan.Count}; Applied={applied}; Restored={(restored?1:0)}");
-            if(error is AggregateException aggregate && aggregate.InnerExceptions.Count==2)
-            {
-                Diagnostics.Write("Word.TextBatch.FailureCause",aggregate.InnerExceptions[0]);
-                Diagnostics.Write("Word.TextBatch.RestoreCause",aggregate.InnerExceptions[1]);
+                },()=>
+                {
+                    // Close this private Word instance, including a disconnected COM server.
+                    foreach(var styled in formatRanges)Release(styled.Range);
+                    formatRanges.Clear();
+                    CheckpointSwap.Apply(RecoveryPath,before,CloseConnection,Connect);
+                    if(ReadStoryText()!=originalStory)
+                        throw new InvalidOperationException("Chưa xác minh được chữ sau phục hồi checkpoint.");
+                    restored=true;
+                });
+                undoCheckpoints.Push(before); // Only a fully committed action enters the Undo stack.
+                Changed=true;snapshotCurrent=true;
             }
-            throw new InvalidOperationException(restored
-                ? "Lượt sửa chưa hoàn tất; đã khôi phục bản trước lượt sửa. Hãy quét lại trước khi sửa tiếp. Checkpoint: "+before
-                : "Lượt sửa chưa hoàn tất; giữ bản trước để phục hồi: "+before,error);
+            catch(Exception error)
+            {
+                Changed=restored || !started?textPreviousChanged:true;
+                snapshotCurrent=restored || !started;
+                Diagnostics.Write(restored?"Word.TextBatch.RolledBack":"Word.TextBatch.Failed",error,
+                    $"Selected={plan.Count}; Applied={applied}; Restored={(restored?1:0)}");
+                if(error is AggregateException aggregate && aggregate.InnerExceptions.Count==2)
+                {
+                    Diagnostics.Write("Word.TextBatch.FailureCause",aggregate.InnerExceptions[0]);
+                    Diagnostics.Write("Word.TextBatch.RestoreCause",aggregate.InnerExceptions[1]);
+                }
+                throw new InvalidOperationException(restored
+                    ? "Lượt sửa chưa hoàn tất; đã khôi phục bản trước lượt sửa. Hãy quét lại trước khi sửa tiếp. Checkpoint: "+before
+                    : "Lượt sửa chưa hoàn tất; giữ bản trước để phục hồi: "+before,error);
+            }
         }
+        finally{foreach(var styled in formatRanges)Release(styled.Range);}
     }
 
     private void Checkpoint()

@@ -1,5 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
-<PropertyGroup><OutputType>WinExe</OutputType><Version>0.1.30</Version><TargetFramework>net8.0-windows</TargetFramework><UseWPF>true</UseWPF><EnableWindowsTargeting>true</EnableWindowsTargeting></PropertyGroup>
+<PropertyGroup><OutputType>WinExe</OutputType><Version>0.1.31</Version><TargetFramework>net8.0-windows</TargetFramework><UseWPF>true</UseWPF><EnableWindowsTargeting>true</EnableWindowsTargeting></PropertyGroup>
 <ItemGroup><ProjectReference Include="../ChinhTa.Core/ChinhTa.Core.csproj" /></ItemGroup>
 </Project>
 

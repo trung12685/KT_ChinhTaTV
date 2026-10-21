@@ -59,13 +59,24 @@ public static class AdministrativeHeaderRules
                 result.Add(Notice(p,date,"Chưa xác minh được dòng chữ thuần để sửa an toàn (có thể có trường tự động, control, liên kết hoặc tab bố cục). Chỉnh thủ công; giữ nguyên nội dung và cấu trúc."));
                 continue;
             }
-            if(date)CheckDate(p,result);else CheckNumber(p,result);
+            bool known=date?CheckDate(p,result):CheckNumber(p,result);
             if(p.FormatObserved && (p.FormatMixed || p.Font!="Times New Roman" ||
                 p.Color is not (0 or -16777216) || !float.IsFinite(p.Size) ||
                 (date ? p.Size<12.99f || p.Size>14.01f || !p.Italic : Math.Abs(p.Size-13)>.01f || p.Italic)))
-                result.Add(Notice(p,date,date
-                    ? "Kiểm tra Times New Roman, màu đen, cỡ 13–14, chữ nghiêng. Bản này chưa tự sửa định dạng hoặc vị trí địa danh/ngày tháng."
-                    : "Kiểm tra Times New Roman, màu đen, cỡ 13, chữ đứng. Bản này chưa tự sửa định dạng hoặc vị trí dòng số/ký hiệu."));
+            {
+                if(known && !p.FormatMixed && !string.IsNullOrWhiteSpace(p.Font) && float.IsFinite(p.Size) && p.Size>0 && p.Size<=1638)
+                {
+                    string text=Clean(p.Text);
+                    float size=date && p.Size>=13 && p.Size<=14?p.Size:13;
+                    result.Add(new(p.Start,text.Length,text,text,
+                        "Sửa phông Times New Roman, màu đen, cỡ "+(date?"13–14, chữ nghiêng":"13, chữ đứng")+
+                        "; giữ cỡ hợp lệ, chữ, ô trống, đậm/gạch chân và căn đoạn. Chưa kiểm vị trí tương đối.",false,
+                        FixKind.AdministrativeFormat,Citation:Citation(date),
+                        Title:date?"Định dạng địa danh/ngày tháng":"Định dạng số/ký hiệu",CharacterFormat:new(size,date)));
+                }
+                else result.Add(Notice(p,date,"Định dạng chưa đồng nhất hoặc mẫu dòng chưa rõ; kiểm Times New Roman, màu đen, cỡ "+
+                    (date?"13–14, chữ nghiêng.":"13, chữ đứng.")+" Giữ thủ công để tránh thay định dạng chưa xác minh."));
+            }
         }
         return result;
     }
@@ -82,7 +93,7 @@ public static class AdministrativeHeaderRules
         result.Add(new(p.Start+offset,original.Length,original,replacement,title,false,
             date?FixKind.AdministrativeDate:FixKind.AdministrativeNumber,Citation:Citation(date),Title:title));
     }
-    private static void CheckNumber(Paragraph p,List<Issue> result)
+    private static bool CheckNumber(Paragraph p,List<Issue> result)
     {
         string text=Clean(p.Text);
         var prefix=NumberPrefix.Match(text);
@@ -91,12 +102,12 @@ public static class AdministrativeHeaderRules
         if(!parsed.Success)
         {
             result.Add(Notice(p,false,"Chưa phân tích chắc chắn số/ký hiệu. Kiểm tra dấu hai chấm, dấu / và nhóm viết tắt có dấu -. Mẫu có năm hoặc cấu trúc riêng cần duyệt thủ công."));
-            return;
+            return false;
         }
         var number=parsed.Groups["number"];
         if(!Blank(number.Value) && number.Value.All(c=>c=='0'))
         {
-            result.Add(Notice(p,false,"Số thứ tự đang bằng 0; cần kiểm tra số được cấp, không tự chọn số khác."));return;
+            result.Add(Notice(p,false,"Số thứ tự đang bằng 0; cần kiểm tra số được cấp, không tự chọn số khác."));return false;
         }
         string gap=prefix.Groups["colon"].Length>0?prefix.Groups["gap"].Value:prefix.Groups["before"].Value;
         string wanted="Số:"+(Blank(number.Value)&&gap.Length>0?gap:" ");
@@ -111,14 +122,15 @@ public static class AdministrativeHeaderRules
             Edit(p,false,baseIndex+code.Index+separator.Index,separator.Value,"-","Chuẩn hóa dấu nối trong ký hiệu",result);
         if(code.Value.Any(char.IsLower))
             result.Add(Notice(p,false,"Ký hiệu có chữ thường; đối chiếu quy định chữ in hoa và mã viết tắt của cơ quan. Chưa tự đổi mã."));
+        return true;
     }
-    private static void CheckDate(Paragraph p,List<Issue> result)
+    private static bool CheckDate(Paragraph p,List<Issue> result)
     {
         string text=Clean(p.Text);
         var match=DateRow.Match(text);
         if(!match.Success)
         {
-            result.Add(Notice(p,true,"Chưa phân tích chắc chắn các trường địa danh/ngày/tháng/năm; cần kiểm tra mẫu, không tự đoán giá trị."));return;
+            result.Add(Notice(p,true,"Chưa phân tích chắc chắn các trường địa danh/ngày/tháng/năm; cần kiểm tra mẫu, không tự đoán giá trị."));return false;
         }
         string[] names=["day","month","year"];
         string[] values=names.Select(n=>match.Groups[n].Value.Trim(' ','\t')).ToArray();
@@ -128,13 +140,13 @@ public static class AdministrativeHeaderRules
             if(Blank(values[i]))continue;
             if(!values[i].All(c=>c is >= '0' and <= '9') || values[i].Length>(i==2?4:2) ||
                 i==2 && values[i].Length!=4 || !int.TryParse(values[i],out int number))
-            {result.Add(Notice(p,true,"Trường ngày/tháng/năm chưa đủ rõ hoặc năm chưa có đủ bốn chữ số; không tự điền hoặc đổi giá trị."));return;}
+            {result.Add(Notice(p,true,"Trường ngày/tháng/năm chưa đủ rõ hoặc năm chưa có đủ bốn chữ số; không tự điền hoặc đổi giá trị."));return false;}
             numbers[i]=number;
         }
         if(numbers[0] is <1 or >31 || numbers[1] is <1 or >12 || numbers[2] is <1 or >9999 ||
             numbers[0] is int day && numbers[1] is int month &&
             day>(numbers[2] is int year?DateTime.DaysInMonth(year,month):month==2?29:DateTime.DaysInMonth(2000,month)))
-        {result.Add(Notice(p,true,"Ngày/tháng/năm không hợp lệ theo lịch; cần sửa giá trị gốc, không tự chọn ngày thay thế."));return;}
+        {result.Add(Notice(p,true,"Ngày/tháng/năm không hợp lệ theo lịch; cần sửa giá trị gốc, không tự chọn ngày thay thế."));return false;}
         var separator=match.Groups["separator"];
         Edit(p,true,separator.Index,separator.Value,", ","Chuẩn hóa dấu phẩy sau địa danh",result);
         for(int i=0;i<3;i++)
@@ -150,6 +162,7 @@ public static class AdministrativeHeaderRules
         }
         if(char.IsLower(match.Groups["place"].Value[0]))
             result.Add(Notice(p,true,"Địa danh bắt đầu bằng chữ thường; cần đối chiếu tên chính thức. Chưa tự đổi tên hoặc chữ hoa của địa danh."));
+        return true;
     }
     public static bool IsBlankTemplateSpacing(string text,int start,int length)
     {

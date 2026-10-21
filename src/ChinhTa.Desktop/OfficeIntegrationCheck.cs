@@ -223,6 +223,52 @@ public static class OfficeIntegrationCheck
             test.Undo();
             if(test.ReadCheckText()!=faultBaseline)throw new InvalidOperationException("Một Hoàn tác không phục hồi nhóm sửa tiếp sau rollback");
             Pass(stage);
+            stage="Định dạng riêng/chung với số-ngày, giữ chữ và kiểu khác, lưu/mở, Hoàn tác";
+            string typography=CreateTypographySample(headerSample,folder);
+            test.Open(typography);
+            string typographyBefore=test.ReadCheckText();
+            var typographyIssues=test.Check();
+            var formats=typographyIssues.Where(i=>i.CharacterFormat is not null).OrderBy(i=>i.Start).ToArray();
+            if(formats.Length!=2 || formats[0].CharacterFormat!=new CharacterFormat(13,false) ||
+                formats[1].CharacterFormat!=new CharacterFormat(14,true))
+                throw new InvalidOperationException("Chưa nhận diện đúng hai lỗi định dạng và cỡ ngày hợp lệ");
+            var decorations=formats.Select(test.ReadCheckDecorations).ToArray();
+            if(decorations.Any(d=>d.Bold!=-1 || d.Underline!=1))throw new InvalidOperationException("Mẫu giả thiếu kiểu cần giữ");
+            test.FixMany(formats);
+            if(test.ReadCheckText()!=typographyBefore || test.Check().Any(i=>i.CharacterFormat is not null) ||
+                !formats.Select(test.ReadCheckDecorations).SequenceEqual(decorations))
+                throw new InvalidOperationException("Sửa định dạng làm đổi chữ/kiểu khác hoặc chưa đạt hậu kiểm");
+            string typographySaved=Path.Combine(folder,"typography-only-fixed.docx");test.SaveCopy(typographySaved);
+            test.Undo();
+            if(test.ReadCheckText()!=typographyBefore || test.Check().Count(i=>i.CharacterFormat is not null)!=2)
+                throw new InvalidOperationException("Hoàn tác chưa phục hồi hai lỗi định dạng");
+            test.Open(typographySaved);
+            if(test.ReadCheckText()!=typographyBefore || test.Check().Any(i=>i.CharacterFormat is not null) ||
+                !formats.Select(test.ReadCheckDecorations).SequenceEqual(decorations))
+                throw new InvalidOperationException("Mở lại chưa giữ chữ, định dạng hoặc kiểu cần giữ");
+            test.Open(typography);
+            var combined=test.Check().Where(i=>i.CanFix && (i.CharacterFormat is not null ||
+                i.Kind is FixKind.AdministrativeNumber or FixKind.AdministrativeDate)).ToArray();
+            bool formatRollback=false;
+            try{test.FixTextFailureProbe(combined,3);}
+            catch(InvalidOperationException error) when(error.InnerException is OfficeTextProbeException){formatRollback=true;}
+            if(!formatRollback || test.ReadCheckText()!=typographyBefore || test.Check().Count(i=>i.CharacterFormat is not null)!=2 ||
+                !formats.Select(test.ReadCheckDecorations).SequenceEqual(decorations))
+                throw new InvalidOperationException("Lỗi sau bước định dạng chưa phục hồi cả nhóm chữ/định dạng");
+            test.FixMany(test.Check().Where(i=>i.CanFix && (i.CharacterFormat is not null ||
+                i.Kind is FixKind.AdministrativeNumber or FixKind.AdministrativeDate)).ToArray());
+            if(test.ReadCheckText()!=expectedHeader || test.Check().Any(i=>i.CharacterFormat is not null ||
+                i.CanFix && i.Kind is FixKind.AdministrativeNumber or FixKind.AdministrativeDate))
+                throw new InvalidOperationException("Sửa chung chữ/định dạng chưa đạt trong một lượt");
+            string combinedSaved=Path.Combine(folder,"typography-and-text-fixed.docx");test.SaveCopy(combinedSaved);
+            test.Undo();
+            if(test.ReadCheckText()!=typographyBefore || test.Check().Count(i=>i.CharacterFormat is not null)!=2)
+                throw new InvalidOperationException("Một Hoàn tác chưa phục hồi cả chữ và định dạng");
+            test.Open(combinedSaved);
+            if(test.ReadCheckText()!=expectedHeader || test.Check().Any(i=>i.CharacterFormat is not null ||
+                i.CanFix && i.Kind is FixKind.AdministrativeNumber or FixKind.AdministrativeDate))
+                throw new InvalidOperationException("Mở lại nhóm chữ/định dạng còn lỗi");
+            Pass(stage);
             File.AppendAllText(report,"RESULT PASS\nKiểm thao tác Word/Line, vị trí nét XPS, sửa riêng/nhóm số-ngày, lưu/mở và Hoàn tác trên mẫu giả; không xác nhận mọi tài liệu.\n");
             return new(true,stage,folder);
         }
@@ -240,6 +286,28 @@ public static class OfficeIntegrationCheck
             File.AppendAllText(report,"RESULT FAIL\n");
             return new(false,stage,folder);
         }
+    }
+    private static string CreateTypographySample(string source,string folder)
+    {
+        string path=Path.Combine(folder,"typography-input.docx");File.Copy(source,path);
+        using var zip=ZipFile.Open(path,ZipArchiveMode.Update);
+        var entry=zip.GetEntry("word/document.xml") ?? throw new InvalidOperationException("Thiếu XML mẫu giả");
+        XDocument xml;using(var stream=entry.Open())xml=XDocument.Load(stream,LoadOptions.PreserveWhitespace);
+        XNamespace w="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+        foreach(string text in new[]{"số  :  3 / BC – ABC","Địa danh  Ngày3  Tháng1  Năm2026"})
+        {
+            var run=xml.Descendants(w+"t").Single(t=>t.Value==text).Parent!;
+            var properties=run.Element(w+"rPr")!;
+            properties.Element(w+"rFonts")!.SetAttributeValue(w+"ascii","Arial");
+            properties.Element(w+"rFonts")!.SetAttributeValue(w+"hAnsi","Arial");
+            properties.Element(w+"sz")!.SetAttributeValue(w+"val",28);
+            foreach(string name in new[]{"i","b","u","color"})properties.Element(w+name)?.Remove();
+            properties.Add(new XElement(w+"i",new XAttribute(w+"val",text.StartsWith("số",StringComparison.Ordinal)?1:0)),
+                new XElement(w+"b"),new XElement(w+"u",new XAttribute(w+"val","single")),
+                new XElement(w+"color",new XAttribute(w+"val","FF0000")));
+        }
+        entry.Delete();using(var stream=zip.CreateEntry("word/document.xml").Open())xml.Save(stream);
+        return path;
     }
     private static void VerifyCurrentLines(WordSession test,IReadOnlyList<Issue> expected)
     {

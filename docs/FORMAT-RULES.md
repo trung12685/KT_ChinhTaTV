@@ -71,3 +71,7 @@ Từ 0.1.15, thao tác ghi ba Shape Line dùng candidate DOCX và snapshot/rollb
 Đối chiếu trực tiếp trang PDF 22–23 của nguồn NĐ30 đã ghi ở trên: Phụ lục I, Phần I.II.3.a–c, số nhỏ hơn 10 có 0 phía trước; nhãn Số có hai chấm; giữa số và ký hiệu dùng /, giữa nhóm viết tắt dùng -, không có khoảng trắng. Mã viết tắt thuộc quy định của cơ quan nên không tự đoán hoặc đổi mã. Phần I.II.4.b–c: địa danh có dấu phẩy, ghi đủ ngày/tháng/năm; ngày nhỏ hơn 10, tháng 1 và 2 có 0 phía trước. Không suy rộng thành bắt tháng 3–9 phải thêm 0. Địa danh chính thức và ngoại lệ công an/quân đội chưa được xác minh tự động.
 
 Bản thử chỉ sửa cách viết trong vùng đầu đã nhận diện, cảnh báo thủ công phông/cỡ/kiểu chữ khi đo được; chưa tự căn dòng hoặc kiểm đủ vị trí. Trường bỏ trống phải giữ nguyên. Ngày không hợp lệ không được tự thay bằng ngày khác. Chi tiết phạm vi và kiểm thử: [CHANGES-0.1.28.md](CHANGES-0.1.28.md). Chưa đối chiếu độc lập mọi sửa đổi pháp lý sau bản nguồn.
+
+## Bổ sung 0.1.31: sửa định dạng số/ngày
+
+Đọc lại trực tiếp NĐ30 PL I Phần I.II.3.c và 4.c trên PDF 23: số/ký hiệu cỡ 13 đứng; địa danh/ngày tháng cỡ 13–14 nghiêng; phông/màu theo PL I.I.4. Bản thử cho sửa phông/cỡ/nghiêng/màu khi quan sát rõ trong dòng chữ thuần đã nhận diện. Giữ cỡ ngày hợp lệ, đậm/gạch chân/căn đoạn và nguyên văn. Đây chưa phải kiểm đủ tọa độ/căn giữa tương đối hoặc kiểu đậm/gạch chân của thành phần; các phần đó vẫn ngoài phạm vi tự sửa mới. Mẫu và ngoại lệ chưa rõ giữ thủ công. Xem [CHANGES-0.1.31.md](CHANGES-0.1.31.md).
