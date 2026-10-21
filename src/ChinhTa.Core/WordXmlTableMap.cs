@@ -14,7 +14,7 @@ public static class WordXmlTableMap
 {
     private static readonly XNamespace W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
     private static string Clean(string text) => text.TrimEnd('\r', '\a').Replace('\u2011', '\u001e').Replace('\u00ad', '\u001f');
-    public static IReadOnlyList<LayoutParagraph> Read(string wordOpenXml, IReadOnlyList<WordParagraphSnapshot> live, Action<WordXmlMappingException>? onMismatch = null, Action<int, int>? onParagraphMatched = null)
+    public static IReadOnlyList<LayoutParagraph> Read(string wordOpenXml, IReadOnlyList<WordParagraphSnapshot> live, Action<WordXmlMappingException>? onMismatch = null, Action<int, int>? onParagraphMatched = null, Action<int,bool>? onTextEditable = null)
     {
         var xml = XDocument.Parse(wordOpenXml);
         var body = xml.Descendants(W + "document").Single().Element(W + "body")
@@ -44,6 +44,13 @@ public static class WordXmlTableMap
                 onMismatch(error); verified = i; break;
             }
             onParagraphMatched?.Invoke(live[i].Start, i);
+            if(onTextEditable is not null)
+            {
+                var unsafeNames=new HashSet<XName>{W+"sdt",W+"fldSimple",W+"hyperlink",W+"drawing",W+"pict",W+"object",W+"smartTag",W+"tab",W+"br",W+"cr"};
+                bool editable=!p.Ancestors(W+"sdt").Any() && !p.Descendants().Any(e=>unsafeNames.Contains(e.Name) ||
+                    e.Name.NamespaceName=="http://schemas.openxmlformats.org/officeDocument/2006/math");
+                onTextEditable(live[i].Start,editable);
+            }
         }
         if (verified == paragraphs.Length && paragraphs.Length < live.Count)
         {
@@ -151,3 +158,4 @@ public static class WordXmlTableMap
         return left is not null && right is not null && Math.Abs(left.Value - right.Value) <= 20;
     }
 }
+

@@ -11,6 +11,8 @@ Dùng đúng hai PDF do người dùng cung cấp. Đây là kiểm tra theo cá
 
 HD05 Phần III (PDF trang 29) nêu thay thế Hướng dẫn 36-HD/VPTW ngày 04/3/2018. Bộ Đảng này không lấy thông số của HD36 thay cho HD05.
 
+Các bảng ban đầu dưới đây mô tả phạm vi lúc lập bộ quy tắc. Thay đổi Line và số/ngày được ghi tại các mục bổ sung theo phiên bản ở cuối tài liệu.
+
 ## Những quy tắc đã triển khai
 
 | Thành phần | Nhà nước — NĐ30 | Đảng — HD05 | Phạm vi ứng dụng |
@@ -62,3 +64,10 @@ Theo yêu cầu người dùng, chấp nhận cả hyphen `-` và en dash `–` 
 Đã bổ sung bộ kiểm/thêm/đặt lại ba Line ở mức thử nghiệm; mục “Đường kẻ và vị trí” nêu chưa kiểm bên trên mô tả phạm vi trước 0.1.8. Phạm vi/định nghĩa đo/ngoại lệ được ghi trong SHAPE-LINES.md. Từ bản 0.1.9 chỉ dùng khoảng NĐ30 1/3–1/2; đã bỏ tùy chọn 4/7 theo yêu cầu cập nhật. Chưa thể tuyên bố kiểm toàn bộ đường kẻ hay mọi vị trí.
 
 Từ 0.1.15, thao tác ghi ba Shape Line dùng candidate DOCX và snapshot/rollback, không dùng COM Shape setters; xem SHAPE-LINES.md. Chỉ cập nhật Line có marker của ứng dụng, Line khác kiểm/chỉnh thủ công.
+
+
+## Bổ sung 0.1.28: số/ký hiệu, địa danh/ngày tháng
+
+Đối chiếu trực tiếp trang PDF 22–23 của nguồn NĐ30 đã ghi ở trên: Phụ lục I, Phần I.II.3.a–c, số nhỏ hơn 10 có 0 phía trước; nhãn Số có hai chấm; giữa số và ký hiệu dùng /, giữa nhóm viết tắt dùng -, không có khoảng trắng. Mã viết tắt thuộc quy định của cơ quan nên không tự đoán hoặc đổi mã. Phần I.II.4.b–c: địa danh có dấu phẩy, ghi đủ ngày/tháng/năm; ngày nhỏ hơn 10, tháng 1 và 2 có 0 phía trước. Không suy rộng thành bắt tháng 3–9 phải thêm 0. Địa danh chính thức và ngoại lệ công an/quân đội chưa được xác minh tự động.
+
+Bản thử chỉ sửa cách viết trong vùng đầu đã nhận diện, cảnh báo thủ công phông/cỡ/kiểu chữ khi đo được; chưa tự căn dòng hoặc kiểm đủ vị trí. Trường bỏ trống phải giữ nguyên. Ngày không hợp lệ không được tự thay bằng ngày khác. Chi tiết phạm vi và kiểm thử: [CHANGES-0.1.28.md](CHANGES-0.1.28.md). Chưa đối chiếu độc lập mọi sửa đổi pháp lý sau bản nguồn.

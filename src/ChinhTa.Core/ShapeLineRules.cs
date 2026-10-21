@@ -22,6 +22,7 @@ public static class ShapeLineRules
     private static readonly HashSet<string> Types = new(StringComparer.OrdinalIgnoreCase)
     { "BÁO CÁO", "THÔNG BÁO", "KẾ HOẠCH", "TỜ TRÌNH", "QUYẾT ĐỊNH", "NGHỊ QUYẾT", "HƯỚNG DẪN", "CHỈ THỊ", "CHƯƠNG TRÌNH", "PHƯƠNG ÁN", "ĐỀ ÁN", "QUY CHẾ", "QUY ĐỊNH" };
     private static string Clean(string text) => text.TrimEnd('\r', '\a', '\n');
+    public static bool IsDocumentType(string text)=>Types.Contains(Clean(text).Trim());
     public static IReadOnlyList<LineTarget> Identify(IReadOnlyList<LayoutParagraph> paragraphs, DocumentProfile profile)
     {
         if (profile != DocumentProfile.State) return [];

@@ -96,6 +96,7 @@ public sealed class WordSession : IDisposable
         var paragraphs = new List<Paragraph>();
         IReadOnlyList<LayoutParagraph> headerLayout = [];
         var liveLayout = new List<WordParagraphSnapshot>();
+        var editableHeaderStarts=new HashSet<int>();
         bool lineLayoutUnavailable = false;
         WordXmlMappingException? mappingWarning = null;
         dynamic ps = document!.Paragraphs;
@@ -109,20 +110,24 @@ public sealed class WordSession : IDisposable
                 {
                     string text = (string)r.Text;
                     int start = (int)r.Start;
+                    WordParagraphSnapshot? snapshot=null;
                     if (Profile == DocumentProfile.State && i <= 40)
                     {
-                        liveLayout.Add(ReadLayout(r, start, text));
+                        snapshot=ReadLayout(r,start,text);
+                        liveLayout.Add(snapshot);
                     }
                     if (HeadingRules.IsCandidate(text, Profile) ||
+                        Profile == DocumentProfile.State && i<=40 && AdministrativeHeaderRules.IsCandidate(text) ||
                         Profile == DocumentProfile.Personal && System.Text.RegularExpressions.Regex.IsMatch(text, @"^[ \t]+\S"))
                     {
                         dynamic f = r.Font; dynamic format = r.ParagraphFormat;
                         try { paragraphs.Add(new(start, text, (int)f.Bold == -1,
                             (float)f.Size, (int)format.Alignment, (string?)f.Name ?? "",
-                            (int)f.Italic != 0, (int)f.Color, (bool)r.Information[12], (int)r.Information[3])); }
+                            (int)f.Italic != 0, (int)f.Color, snapshot?.InTable??(bool)r.Information[12], snapshot?.Page??(int)r.Information[3],
+                            FormatObserved:true,FormatMixed:(int)f.Italic is not (0 or -1) || (float)f.Size<=0 || (float)f.Size>=9999999 || (int)f.Color is 9999999 or -9999999 || f.Name is null)); }
                         finally { Release(format); Release(f); }
                     }
-                    else paragraphs.Add(new(start, text));
+                    else paragraphs.Add(new(start, text,Page:snapshot?.Page??0,InTable:snapshot?.InTable??false));
                 }
                 finally { Release(r); Release(p); }
             }
@@ -139,7 +144,7 @@ public sealed class WordSession : IDisposable
                 {
                     mappingWarning = warning;
                     Diagnostics.Write("Word.XmlTableMap." + warning.DiagnosticCode, warning);
-                });
+                },onTextEditable:(start,editable)=>{if(editable)editableHeaderStarts.Add(start);});
                 lineLayoutUnavailable = headerLayout.Count == 0;
             }
             catch (Exception ex) when (ex is InvalidOperationException or System.Xml.XmlException ||
@@ -151,6 +156,9 @@ public sealed class WordSession : IDisposable
             finally { if (Marshal.IsComObject(content)) Marshal.ReleaseComObject(content); }
         }
         lastLayout = liveLayout.ToArray();
+        for(int i=0;i<paragraphs.Count;i++)
+            if(Profile==DocumentProfile.State && AdministrativeHeaderRules.IsCandidate(paragraphs[i].Text))
+                paragraphs[i]=paragraphs[i] with {TextEditable=editableHeaderStarts.Contains(paragraphs[i].Start)};
         LineTargets = lineLayoutUnavailable ? [] : ShapeLineRules.Identify(headerLayout, Profile);
         LineShapes = ReadLineShapes();
         var issues = Checker.Check(paragraphs, Profile).ToList();
@@ -226,6 +234,7 @@ public sealed class WordSession : IDisposable
         Release(document);
         document = null;
     }
+    internal string ReadCheckText() => ReadStoryText(); // Isolated Office check; never logged.
     private string ReadStoryText()
     {
         dynamic content = document!.Content;
