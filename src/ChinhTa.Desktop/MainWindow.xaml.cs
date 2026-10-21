@@ -144,11 +144,12 @@ public partial class MainWindow : Window
     private void FixAllClick(object sender, RoutedEventArgs e)
     {
         var all = choices.Where(x => x.Issue.CanFix).Select(x => x.Issue).ToArray();
-        bool staged = all.Any(x => x.LineFix is not null) && all.Any(x => x.LineFix is null);
-        if (staged)
+        bool hasText=all.Any(x=>x.LineFix is null && x.CenterFix is null);
+        bool hasCenter=all.Any(x=>x.CenterFix is not null);
+        if((hasText && (hasCenter || all.Any(x=>x.LineFix is not null))) || (hasCenter && all.Any(x=>x.LineFix is not null)))
         {
-            MessageBox.Show(this, "Lượt này sẽ sửa chữ/định dạng trước. Sau khi trang được dựng lại, bấm Sửa tất cả lần nữa để sửa Shape Line theo số đo mới.", "Cập nhật số đo");
-            all = all.Where(x => x.LineFix is null).ToArray();
+            MessageBox.Show(this, "Sửa theo thứ tự: chữ/phông → căn giữa số/ngày → Shape Line. Lượt này sửa nhóm đầu còn lỗi; sau quét lại, bấm Sửa tất cả để tiếp tục theo số đo mới.", "Cập nhật số đo");
+            all=all.Where(x=>hasText?x.LineFix is null && x.CenterFix is null:x.CenterFix is not null).ToArray();
         }
         ConfirmFix(all);
     }
@@ -160,9 +161,10 @@ public partial class MainWindow : Window
             MessageBox.Show(this, "Chưa chọn lỗi nào. Tích ô bên cạnh các lỗi cần sửa.", "Chọn lỗi");
             return;
         }
-        if (selected.Any(i => i.LineFix is not null) && selected.Any(i => i.LineFix is null))
+        int Stage(Issue i)=>i.LineFix is not null?2:i.CenterFix is not null?1:0;
+        if(selected.Select(Stage).Distinct().Count()>1)
         {
-            MessageBox.Show(this, "Chọn nhóm chữ/định dạng để sửa trước, rồi quét lại và chọn riêng nhóm Shape Line. Không gộp hai nhóm vì số đo trang có thể thay đổi.", "Sửa theo hai lượt");
+            MessageBox.Show(this, "Chọn riêng một nhóm: chữ/phông, căn giữa số/ngày hoặc Shape Line. Sửa theo thứ tự này và quét lại để dùng số đo mới.", "Sửa theo từng lượt");
             return;
         }
         string examples = string.Join("\n", selected.Take(8).Select(x =>

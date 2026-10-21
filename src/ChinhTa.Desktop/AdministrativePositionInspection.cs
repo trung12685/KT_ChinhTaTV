@@ -5,6 +5,21 @@ namespace ChinhTa.Desktop;
 
 public static class AdministrativePositionInspection
 {
+    public static AdministrativeCenterEvidence MeasureCentering(FixedDocumentSequence document,PreviewHighlighter preview,
+        AdministrativePositionTarget target,IReadOnlyDictionary<Issue,PreviewAnchor> anchors)
+    {
+        bool mapped=anchors.TryGetValue(target.Probe,out var anchor) && anchor.Page==1;
+        var row=mapped?preview.MeasureSingleLine(document,anchor!):null;
+        var frame=mapped?preview.TableFrame(document,anchor!):null;
+        var refs=new List<RenderedTextLine?>();var frames=new List<LineAnchorFrame?>();
+        foreach(var reference in target.References)
+        {
+            bool found=anchors.TryGetValue(reference.Probe,out var a) && a.Page==1;
+            refs.Add(found?preview.MeasureSingleLine(document,a!):null);
+            frames.Add(found?preview.TableFrame(document,a!):null);
+        }
+        return new(target,row,refs,frame,frames);
+    }
     public static IReadOnlyList<(Issue Issue,PreviewAnchor Anchor)> Inspect(FixedDocumentSequence document,PreviewHighlighter preview,
         IReadOnlyList<AdministrativePositionTarget> targets,IReadOnlyDictionary<Issue,PreviewAnchor> anchors)
     {
@@ -21,7 +36,11 @@ public static class AdministrativePositionInspection
             var assessment=AdministrativePositionRules.Assess(target,row,refs);
             if(assessment.Measured && row is not null)measured[target.Role]=(target,row);
             if(assessment.Warnings.Count>0)
-                result.Add((target.Probe with {Message=string.Join(" ",assessment.Warnings),Citation=AdministrativePositionRules.Citation},anchor));
+            {
+                bool canCenter=AdministrativeCentering.CanOffer(MeasureCentering(document,preview,target,anchors));
+                result.Add((target.Probe with {Message=string.Join(" ",assessment.Warnings),Citation=AdministrativePositionRules.Citation,
+                    CanFix=canCenter,CenterFix=canCenter?new(target.Role):null},anchor));
+            }
         }
         if(measured.TryGetValue(AdministrativePositionRole.Number,out var number) && measured.TryGetValue(AdministrativePositionRole.Date,out var date))
         {

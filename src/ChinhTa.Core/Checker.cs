@@ -17,11 +17,12 @@ public record CharacterFormat(float Size,bool Italic)
 public record Issue(int Start, int Length, string Original, string Replacement,
     string Message, bool BatchSafe, FixKind Kind = FixKind.Text,
     bool CanFix = true, string? Citation = null, HeadingFormat? Format = null, string? Title = null, ShapeLineFix? LineFix = null,
-    CharacterFormat? CharacterFormat = null)
+    CharacterFormat? CharacterFormat = null, AdministrativeCenterFix? CenterFix = null)
 {
     public string DisplayText => Title ?? Original;
     public string Suggestion => !CanFix ? "Kiểm tra thủ công; không tự sửa."
         : LineFix is not null ? "Tạo/đặt lại Shape Line theo số đo và cấu hình đã chọn."
+        : CenterFix is not null ? "Căn giữa trong ô đã xác minh, bỏ thụt lề ngang; giữ nguyên chữ và khoảng cách dọc."
         : CharacterFormat is not null ? $"Times New Roman, màu đen, cỡ {CharacterFormat.Size:0.#}, chữ {(CharacterFormat.Italic?"nghiêng":"đứng")}; giữ nguyên chữ."
         : Format is null ? Replacement
         : Original == Replacement ? "Sửa định dạng theo mô tả." : Replacement + " — sửa định dạng theo mô tả.";

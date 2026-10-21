@@ -12,7 +12,12 @@ public static class AdministrativePositionChecks
             i<3?p[3].Start:i<6?p[6].Start:0,true,i<6?p[0].Start:-1)).ToArray();
         var targets=AdministrativePositionRules.Identify(p,layout,DocumentProfile.State);
         assert(targets.Count==2 && targets.All(t=>t.References.Count==2),"Position roles bind to the two verified header cells and the complete agency/heading blocks");
-        assert(targets.All(t=>!t.Probe.CanFix && t.Probe.LineFix is null && t.Probe.CharacterFormat is null),"Position review never creates an automatic mutation suggestion");
+        assert(targets.All(t=>!t.Probe.CanFix && t.Probe.LineFix is null && t.Probe.CharacterFormat is null),"Structural probes alone never authorize an automatic mutation");
+        assert(targets.All(t=>t.ReferencesCentered),"Position targets retain verified balanced-cell reference centering as a separate repair gate");
+        var uncentered=AdministrativePositionRules.Identify(p,layout.Select((row,i)=>i==0?row with {Centered=false}:row).ToArray(),DocumentProfile.State);
+        assert(!uncentered.Single(t=>t.Role==AdministrativePositionRole.Number).ReferencesCentered &&
+            uncentered.Single(t=>t.Role==AdministrativePositionRole.Date).ReferencesCentered,
+            "An uncentered agency row blocks only its number repair while preserving independent date evidence");
         var number=targets.Single(t=>t.Role==AdministrativePositionRole.Number);
         var date=targets.Single(t=>t.Role==AdministrativePositionRole.Date);
         RenderedTextLine[] agency=[new(100,50,120,14,61),new(120,66,80,14,77)];

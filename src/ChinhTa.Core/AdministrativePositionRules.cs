@@ -12,19 +12,19 @@ public record PositionTextAnchor(int Start,string Text)
 {
     public Issue Probe=>new(Start,Text.Length,Text,Text,"Mốc đo vị trí.",false,FixKind.AdministrativePosition,CanFix:false);
 }
-public record AdministrativePositionTarget(AdministrativePositionRole Role,PositionTextAnchor Row,IReadOnlyList<PositionTextAnchor> References)
+public record AdministrativePositionTarget(AdministrativePositionRole Role,PositionTextAnchor Row,IReadOnlyList<PositionTextAnchor> References,bool ReferencesCentered=false)
 {
     public string Label=>Role==AdministrativePositionRole.Number?"số/ký hiệu":"địa danh/ngày tháng";
     public Issue Probe=>Row.Probe with {Title="Vị trí "+Label};
 }
 public record PositionAssessment(bool Measured,IReadOnlyList<string> Warnings);
 
-// Read-only review using verified table roles and actual rendered single-line glyphs.
+// Position review using verified table roles and actual rendered single-line glyphs.
 public static class AdministrativePositionRules
 {
     public const double Tolerance=3; // Measurement policy, not a numerical requirement stated by NĐ30.
     private static string Clean(string text)=>text.TrimEnd('\r','\a','\n');
-    public const string Citation="NĐ30, PL I, Phần I.II.3.c và 4.c (PDF 23). Ngưỡng phát hiện 3 pt là chính sách đo của bản thử; chưa tự sửa vị trí.";
+    public const string Citation="NĐ30, PL I, Phần I.II.3.c và 4.c (PDF 23). Ngưỡng phát hiện 3 pt là chính sách đo của bản thử; chỉ tự căn giữa khi đủ mốc và khung ô đã xác minh.";
     public static IReadOnlyList<AdministrativePositionTarget> Identify(IReadOnlyList<Paragraph> paragraphs,
         IReadOnlyList<LayoutParagraph> layout,DocumentProfile profile)
     {
@@ -61,7 +61,8 @@ public static class AdministrativePositionRules
                     }
                 }
             }
-            result.Add(new(role,new(row.Start,Clean(row.Text)),references));
+            result.Add(new(role,new(row.Start,Clean(row.Text)),references,references.Length>0 &&
+                references.All(reference=>layout.Any(p=>p.Start==reference.Start && p.Centered))));
         }
         return result;
     }
