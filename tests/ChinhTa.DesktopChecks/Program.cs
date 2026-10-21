@@ -6,6 +6,7 @@ using System.Windows.Markup;
 using System.Windows.Media;
 using ChinhTa.Core;
 using ChinhTa.Desktop;
+using LineGeometry = ChinhTa.Core.LineGeometry;
 
 static class Program
 {
