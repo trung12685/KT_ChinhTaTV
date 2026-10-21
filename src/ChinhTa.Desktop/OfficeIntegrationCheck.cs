@@ -269,6 +269,23 @@ public static class OfficeIntegrationCheck
                 i.CanFix && i.Kind is FixKind.AdministrativeNumber or FixKind.AdministrativeDate))
                 throw new InvalidOperationException("Mở lại nhóm chữ/định dạng còn lỗi");
             Pass(stage);
+            stage="Đo vị trí số/ngày trên XPS và phát hiện mẫu giả cố ý lệch tâm/khác hàng";
+            string positionSource=Path.Combine(AppContext.BaseDirectory,"samples","TruongSoNgayDeTrong.docx");
+            test.Open(positionSource);test.Check();
+            string positionBefore=test.ReadCheckText();
+            if(test.AdministrativePositionTargets.Count!=2 || test.AdministrativePositionTargets.Any(t=>t.References.Count!=2))
+                throw new InvalidOperationException("Chưa nhận diện đủ hai dòng và các mốc đo vị trí của mẫu giả");
+            var basePositions=InspectPositions(test,folder,"position-base.xps");
+            if(basePositions.Length!=0 || test.ReadCheckText()!=positionBefore)
+                throw new InvalidOperationException("Mẫu vị trí chuẩn chưa đo đạt hoặc việc kiểm đã làm đổi chữ");
+            string shiftedPosition=CreatePositionSample(positionSource,folder);
+            test.Open(shiftedPosition);test.Check();
+            var shiftedPositions=InspectPositions(test,folder,"position-shifted.xps");
+            if(shiftedPositions.Count(i=>i.Message.Contains("lệch tâm"))<2 ||
+                !shiftedPositions.Any(i=>i.Title=="Số và ngày tháng chưa cùng dòng") ||
+                shiftedPositions.Any(i=>i.CanFix) || test.ReadCheckText()!=positionBefore)
+                throw new InvalidOperationException("Chưa phát hiện đúng mẫu lệch tâm/khác hàng hoặc cảnh báo đã thành thao tác tự sửa");
+            Pass(stage);
             File.AppendAllText(report,"RESULT PASS\nKiểm thao tác Word/Line, vị trí nét XPS, sửa riêng/nhóm số-ngày, lưu/mở và Hoàn tác trên mẫu giả; không xác nhận mọi tài liệu.\n");
             return new(true,stage,folder);
         }
@@ -286,6 +303,42 @@ public static class OfficeIntegrationCheck
             File.AppendAllText(report,"RESULT FAIL\n");
             return new(false,stage,folder);
         }
+    }
+    private static Issue[] InspectPositions(WordSession test,string folder,string artifact)
+    {
+        var probes=test.AdministrativePositionTargets.SelectMany(t=>t.References.Select(r=>r.Probe).Append(t.Probe)).Distinct().ToArray();
+        var anchors=new Dictionary<Issue,PreviewAnchor>();string path=test.ExportPreview(probes,anchors);
+        File.Copy(path,Path.Combine(folder,artifact),true);
+        using var input=new XpsDocument(path,FileAccess.Read);
+        var issues=AdministrativePositionInspection.Inspect(input.GetFixedDocumentSequence(),new PreviewHighlighter(),test.AdministrativePositionTargets,anchors)
+            .Select(x=>x.Issue).ToArray();
+        File.AppendAllText(Path.Combine(folder,"office-check.txt"),$"PositionTargets={test.AdministrativePositionTargets.Count}; PositionWarnings={issues.Length}; Artifact={artifact}\n");
+        foreach(var issue in issues)File.AppendAllText(Path.Combine(folder,"office-check.txt"),issue.Title+": "+issue.Message+"\n");
+        return issues;
+    }
+    private static string CreatePositionSample(string source,string folder)
+    {
+        string path=Path.Combine(folder,"position-shifted-input.docx");File.Copy(source,path);
+        using var zip=ZipFile.Open(path,ZipArchiveMode.Update);
+        var entry=zip.GetEntry("word/document.xml") ?? throw new InvalidOperationException("Thiếu XML mẫu giả");
+        XDocument xml;using(var stream=entry.Open())xml=XDocument.Load(stream,LoadOptions.PreserveWhitespace);
+        XNamespace w="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+        foreach(string text in new[]{"Số:        /BC-ABC","Địa danh, ngày        tháng 10 năm 2026"})
+        {
+            var p=xml.Descendants(w+"t").Single(t=>t.Value==text).Ancestors(w+"p").First();
+            var properties=p.Element(w+"pPr")!;
+            var indent=properties.Element(w+"ind");
+            if(indent is null){indent=new(w+"ind");properties.Add(indent);}
+            indent.SetAttributeValue(w+"left",720);indent.SetAttributeValue(w+"right",0);
+            if(text.StartsWith("Địa",StringComparison.Ordinal))
+            {
+                var spacing=properties.Element(w+"spacing");
+                if(spacing is null){spacing=new(w+"spacing");properties.Add(spacing);}
+                spacing.SetAttributeValue(w+"before",240);
+            }
+        }
+        entry.Delete();using(var stream=zip.CreateEntry("word/document.xml").Open())xml.Save(stream);
+        return path;
     }
     private static string CreateTypographySample(string source,string folder)
     {

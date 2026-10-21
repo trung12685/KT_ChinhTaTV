@@ -77,7 +77,8 @@ public partial class MainWindow : Window
         double checkSeconds = timer.Elapsed.TotalSeconds;
         ClosePreview();
         anchors.Clear();
-        xpsPath = session.ExportPreview(found.Concat(session.LineTargets.Select(t => t.Probe)).ToArray(), anchors);
+        var positionProbes=session.AdministrativePositionTargets.SelectMany(t=>t.References.Select(r=>r.Probe).Append(t.Probe));
+        xpsPath = session.ExportPreview(found.Concat(session.LineTargets.Select(t => t.Probe)).Concat(positionProbes).Distinct().ToArray(), anchors);
         xps = new XpsDocument(xpsPath, FileAccess.Read);
         Preview.Document = xps.GetFixedDocumentSequence();
         if (Preview.Document is System.Windows.Documents.FixedDocumentSequence sequence)
@@ -86,6 +87,8 @@ public partial class MainWindow : Window
             foreach (var entry in LineInspection.Inspect(sequence, highlighter, session.LineTargets, session.LineShapes,
                 anchors, found, policy, session.HasGroupedShapes, session.VerifiedLineEdits))
             { found.Add(entry.Issue); anchors[entry.Issue] = entry.Anchor; }
+            foreach(var entry in AdministrativePositionInspection.Inspect(sequence,highlighter,session.AdministrativePositionTargets,anchors))
+            {found.Add(entry.Issue);anchors[entry.Issue]=entry.Anchor;}
         }
         choices = found.OrderBy(i => i.Start).Select(issue => new IssueChoice(issue)).ToArray();
         Issues.ItemsSource = choices;

@@ -160,6 +160,7 @@ static class Program
             "Mapping from Word's actual prefix text measures the complete Motto even with table markers in the story");
         Assert(tableReference.Width-shortened.Width>1,
             "A CP-to-string mismatch reproduces a short Motto even after glyph-advance measurement is fixed");
+        AdministrativePositionDesktopChecks.Run(Assert);
         Console.WriteLine($"{checks} WPF checks passed.");
     }
 }

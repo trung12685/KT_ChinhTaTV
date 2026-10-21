@@ -7,7 +7,7 @@ public static class DocumentProfiles
     public static string Description(DocumentProfile profile) => profile switch
     {
         DocumentProfile.State => "Nhà nước — NĐ 30/2020/NĐ-CP, Phụ lục I: quốc hiệu, tiêu ngữ được nhận diện trên trang đầu; khổ giấy/lề; ba Shape Line khi nhận diện/đo được. " +
-            "Kiểm mẫu số/ký hiệu, địa danh/ngày tháng ở phần đầu nhận diện được; sửa định dạng chữ khi đủ rõ, giữ trường trống. " +
+            "Kiểm mẫu số/ký hiệu, địa danh/ngày tháng ở phần đầu nhận diện được; sửa định dạng chữ khi đủ rõ, giữ trường trống; cảnh báo vị trí theo XPS khi xác minh được vùng bảng và mốc chữ. " +
             "Chưa xác minh mã được cấp, địa danh chính thức, toàn bộ nội dung, chữ ký, số trang và mẫu riêng.",
         DocumentProfile.Party => "Đảng — 05-HD/VPTW ngày 27/5/2026: tiêu đề Đảng trang đầu, khổ giấy/lề và cảnh báo ngoại lệ. " +
             "Chưa kiểm đầy đủ các thành phần, thân bài, số trang, đường kẻ và mẫu riêng.",
