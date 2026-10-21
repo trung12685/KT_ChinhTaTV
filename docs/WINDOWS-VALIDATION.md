@@ -1,3 +1,7 @@
+> Cập nhật chốt bản 21/10/2026: 0.1.27 đạt 223 Core/OpenXML + 20 WPF trong CI Windows; người dùng xác nhận sửa cả ba đường cùng lúc chạy được trên Office 2021. Lưu/mở lại, một Undo và toàn bộ Office check của 0.1.27 chưa có xác nhận runtime riêng. Xem [biên bản](STATUS-0.1.27.md).
+>
+> Danh sách bên dưới là kịch bản kiểm tra tích lũy theo từng phiên bản, không phải bảng kết quả đã đạt.
+
 # Kiểm thử chấp nhận trên Windows (chưa thực hiện trong cloud Linux)
 
 1. Chạy core checks và mở giao diện bằng các lệnh trong README. Nếu chưa cài Word, khi mở file phải hiển thị thông báo dễ hiểu.
@@ -58,3 +62,4 @@ Ghi kết quả cùng phiên bản Windows, Word, .NET và cấu hình máy. Ch�
 39. Bản 0.1.17: kiểm tra Word tự động phải xác minh cả nét XPS tại tọa độ dự kiến. Mở bản gốc Bao cao.docx, kiểm đủ ba cảnh báo Line và ba vị trí rê chuột. Sửa ba mục cùng lượt, lưu bản sao/mở lại: cả ba nét phải đúng vị trí, không có pict trùng. Nếu nét thiếu/lệch, thao tác phải rollback và ghi lỗi thay vì báo đã sửa. Thử bản từng sửa bằng 0.1.16 để kiểm thay hai Line cũ và thêm Line trích yếu, không nhân đôi.
 
 40. Bản 0.1.18: trước tiên chạy Kiểm tra → Kiểm tra Word tự động… trên mẫu giả. Phải PASS cả nhận Shape type9, vị trí nét XPS, lưu/mở lại và Undo. Nếu FAIL, thư mục OfficeCheck-* chứa office-check.txt và (nếu đã tới bước tương ứng) failed-line-candidate.docx/failed-line-preview.xps; dùng chúng để đối chiếu Word/XPS mà không cần tài liệu người dùng. Sau PASS mới thử ba Line trên DOCX thật. Kiểm legacy VML được thay thành DrawingML không trùng; rê chuột sau quét/Undo không ném lỗi trang ngoài phạm vi.
+
