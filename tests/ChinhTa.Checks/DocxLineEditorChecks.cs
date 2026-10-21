@@ -64,6 +64,16 @@ public static class DocxLineEditorChecks
                 if(errors.Length>0)throw new InvalidOperationException(string.Join("\n",errors.Select(e=>e.Description)));
             }
             assert(true, "Ba DrawingML Line hợp lệ theo bộ kiểm chuẩn OpenXML SDK");
+            string compensated=Path.Combine(folder,"compensated.docx");
+            var offsets=issues.Select(i=>i with {LineFix=i.LineFix! with {Left=i.LineFix!.Left-30,Top=i.LineFix!.Top-20}}).ToArray();
+            DocxLineEditor.Write(source,compensated,live,targets,offsets,issues);
+            var intentLines=DocxLineInventory.Read(compensated,live).Lines;
+            assert(intentLines.Count==3 && intentLines.All(l=>issues.Any(i=>l.Geometry==new LineGeometry(i.LineFix!.Left,i.LineFix!.Top,i.LineFix!.Width))),
+                "Rescan uses original intended page geometry on measured-correction Lines");
+            foreach(var node in ReadDoc(compensated).Descendants(w+"drawing"))
+                if(validator.Validate(new DocumentFormat.OpenXml.Wordprocessing.Drawing(node.ToString())).Any())
+                    throw new InvalidOperationException("Compensated drawing violates schema");
+            assert(true,"Measured-correction intent uses schema-valid drawing metadata");
             var originalDoc=ReadDoc(source);
             foreach(var line in lines)line.Ancestors(w+"r").First().Remove();
             assert(XNode.DeepEquals(originalDoc.Root,result.Root), "Nội dung chữ, paragraph/table formatting và XML cũ giữ nguyên");
@@ -194,3 +204,4 @@ public static class DocxLineEditorChecks
             "Nếu khôi phục cũng không mở được, giữ rollback file để phục hồi thủ công");
     }
 }
+

@@ -1,3 +1,7 @@
+## Bản thử 0.1.21 — bù theo nét XPS và xác minh lại
+
+0.1.20 đã chạy đạt bài kiểm tra mẫu trên Word người dùng, nhưng tài liệu riêng vẫn có nét lệch 30/20 mm. Bản này cho phép đúng một lần bù candidate dựa trên nét XPS ghép chắc chắn; bắt buộc kiểm lại đích ban đầu và rollback nếu sai. Xem [bằng chứng và giới hạn](docs/OFFICE2021-0.1.21.md).
+
 ## Bản thử 0.1.20 — Office 2021 chưa được xác minh
 
 Log 0.1.19 vẫn lỗi khi đọc ID/Type của Shape. Bản này bỏ hoàn toàn Shape COM getters, dùng kiểm kê DOCX và bắt buộc xác minh nét XPS; giữ rollback. Xem [phân tích và giới hạn kiểm chứng](docs/OFFICE2021-0.1.20.md).

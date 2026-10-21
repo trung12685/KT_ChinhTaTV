@@ -61,6 +61,8 @@ public static class DocxLineInventory
                 !drawing.Descendants(a + "xfrm").Any(x => Number((string?)x.Attribute("rot") ?? "0") != 0) &&
                 (string?)properties[0].Attribute("hidden") is not ("1" or "true"))
                 geometry = new(left / 12700, top / 12700, width / 12700);
+            if (owned && geometry is not null)
+                geometry = LinePageIntent.Read((string?)properties[0].Attribute("title")) ?? geometry;
             result.Add(new(id, snapshot.Start, snapshot.Page, geometry, owned));
         }
         return new(result, uncertain);

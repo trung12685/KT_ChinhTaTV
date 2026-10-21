@@ -256,7 +256,7 @@ public sealed class WordSession : IDisposable
             {
                 var fix = item.LineFix!;
                 if (RenderedLineVerifier.Find(new(fix.Left, fix.Top, fix.Width), rendered) is not null) continue;
-                var failure = new InvalidOperationException("Word chưa hiển thị Line đúng tọa độ đề xuất; phải khôi phục bản trước.");
+                var failure = new RenderedLineMismatchException(rendered);
                 failure.Data["ChinhTa.LineVerification"] = FormattableString.Invariant(
                     $"Role={fix.Role}; ExpectedLeft={fix.Left:F2}; ExpectedTop={fix.Top:F2}; ExpectedWidth={fix.Width:F2}; RenderedCount={rendered.Count}") +
                     "; Rendered=" + string.Join("|", rendered.Take(40).Select(line => FormattableString.Invariant(
@@ -275,6 +275,18 @@ public sealed class WordSession : IDisposable
             catch (IOException error) { Diagnostics.Write("Word.LineVerify.Cleanup",error); }
         }
     }
+    private IReadOnlyList<LineGeometry> ReadRenderedLines()
+    {
+        document!.Repaginate();
+        string path = Path.Combine(folder, Guid.NewGuid() + ".baseline.xps");
+        try
+        {
+            document.ExportAsFixedFormat(path, 18, OpenAfterExport:false);
+            using var xps = new XpsDocument(path, FileAccess.Read);
+            return new PreviewHighlighter().HorizontalLines(xps.GetFixedDocumentSequence(), 1);
+        }
+        finally { if (File.Exists(path)) File.Delete(path); }
+    }
     private void ApplyLinePackage(IReadOnlyList<Issue> plan, string before)
     {
         string candidate = Path.Combine(folder, Guid.NewGuid() + ".candidate.docx");
@@ -286,19 +298,32 @@ public sealed class WordSession : IDisposable
             // The checkpoint copy was made by File.Copy and is not open in Word.
             DocxLineEditor.Write(before, candidate, lastLayout, LineTargets, plan);
             snapshotCurrent = false;
-            int openAttempts = 0;
-            CheckpointSwap.Apply(RecoveryPath, candidate, CloseDocumentOnly, () =>
+            IReadOnlyList<LineGeometry> baseline = ReadRenderedLines();
+            void ApplyCandidate()
             {
-                bool verifyLines = ++openAttempts == 1;
-                Connect();
-                if (ReadStoryText() != expectedText)
-                    throw new InvalidOperationException("Nội dung chữ thay đổi sau khi mở candidate; phải khôi phục bản trước.");
-                if (verifyLines)
+                int openAttempts = 0;
+                CheckpointSwap.Apply(RecoveryPath, candidate, CloseDocumentOnly, () =>
                 {
-                    VerifyPackageLines(plan);
-                    VerifyRenderedLines(plan);
-                }
-            });
+                    bool verifyLines = ++openAttempts == 1;
+                    Connect();
+                    if (ReadStoryText() != expectedText)
+                        throw new InvalidOperationException("Nội dung chữ thay đổi sau khi mở candidate; phải khôi phục bản trước.");
+                    if (verifyLines) VerifyLineResult(plan);
+                });
+            }
+            try { ApplyCandidate(); }
+            catch (RenderedLineMismatchException mismatch)
+            {
+                // CheckpointSwap has already restored and reopened the original working document.
+                var corrected = LinePlacementFeedback.Correct(plan, baseline, mismatch.Rendered);
+                if (corrected is null) throw;
+                Diagnostics.Write("Word.LinePackage.MeasuredCorrection", mismatch);
+                File.Delete(candidate);
+                DocxLineEditor.Write(before, candidate, lastLayout, LineTargets, corrected, plan);
+                // Exactly one retry. Use the original intended plan for the full verification.
+                ApplyCandidate();
+                Diagnostics.Write("Word.LinePackage.MeasuredCorrection.Verified", null);
+            }
             snapshotCurrent = true;
             undoCheckpoints.Push(before);
             Changed = true;

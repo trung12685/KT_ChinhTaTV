@@ -1,4 +1,7 @@
 using System.IO;
+using System.IO.Compression;
+using System.Xml.Linq;
+using System.Windows.Xps.Packaging;
 using ChinhTa.Core;
 
 namespace ChinhTa.Desktop;
@@ -57,7 +60,33 @@ public static class OfficeIntegrationCheck
             if(test.LineShapes.Count!=3 || test.LineShapes.Any(s=>!s.AppOwned))throw new InvalidOperationException("Line không giữ được sau lưu/mở");
             test.VerifyLineResult(plan);
             Pass(stage);
-            File.AppendAllText(report,"RESULT PASS\nChỉ kiểm thao tác Word/Line; không xác minh vị trí thể thức hoặc mọi tài liệu.\n");
+            stage="Đo và sửa Line trên mẫu chế độ Word 2013";
+            string modern=CreateModernSample(sample,folder);
+            test.Open(modern);
+            var modernIssues=test.Check();
+            var anchors=new Dictionary<Issue,PreviewAnchor>();
+            string modernBefore=test.ExportPreview(test.LineTargets.Select(t=>t.Probe).ToArray(),anchors);
+            Issue[] measured;
+            using(var inputXps=new XpsDocument(modernBefore,FileAccess.Read))
+                measured=LineInspection.Inspect(inputXps.GetFixedDocumentSequence(),new PreviewHighlighter(),
+                    test.LineTargets,test.LineShapes,anchors,modernIssues,LinePolicy.Decree30,test.HasGroupedShapes)
+                    .Select(pair=>pair.Issue).ToArray();
+            if(measured.Length!=3 || measured.Any(i=>!i.CanFix || i.LineFix is null))
+                throw new InvalidOperationException("Chưa đo được ba Line trên mẫu tương thích hiện đại");
+            test.FixMany(measured);
+            test.Check();
+            test.VerifyLineResult(measured);
+            Pass(stage);
+            stage="Lưu/mở lại và kiểm nét đã đo trên mẫu Word 2013";
+            string modernSaved=Path.Combine(folder,"modern-three-lines.docx");
+            test.SaveCopy(modernSaved);
+            string modernPreview=test.ExportPreview([],new Dictionary<Issue,PreviewAnchor>());
+            File.Copy(modernPreview,Path.Combine(folder,"modern-line-preview.xps"));
+            test.Undo();test.Check();
+            if(test.LineShapes.Count!=0)throw new InvalidOperationException("Hoàn tác mẫu hiện đại chưa phục hồi");
+            test.Open(modernSaved);test.Check();test.VerifyLineResult(measured);
+            Pass(stage);
+            File.AppendAllText(report,"RESULT PASS\nKiểm thao tác Word/Line và vị trí nét theo số đo XPS trên hai mẫu; không xác nhận mọi tài liệu.\n");
             return new(true,stage,folder);
         }
         catch(Exception error)
@@ -75,5 +104,35 @@ public static class OfficeIntegrationCheck
             return new(false,stage,folder);
         }
     }
+    private static string CreateModernSample(string sample,string folder)
+    {
+        string path=Path.Combine(folder,"modern-input.docx");File.Copy(sample,path);
+        using var zip=ZipFile.Open(path,ZipArchiveMode.Update);
+        XNamespace w="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+        XNamespace r="http://schemas.openxmlformats.org/package/2006/relationships";
+        XNamespace ct="http://schemas.openxmlformats.org/package/2006/content-types";
+        XDocument Read(string name,XElement fallback)
+        {
+            using var stream=zip.GetEntry(name)?.Open();
+            return stream is null?new XDocument(fallback):XDocument.Load(stream);
+        }
+        void Write(string name,XDocument xml)
+        {
+            zip.GetEntry(name)?.Delete();using var stream=zip.CreateEntry(name).Open();xml.Save(stream);
+        }
+        Write("word/settings.xml",new XDocument(new XElement(w+"settings",new XElement(w+"compat",
+            new XElement(w+"compatSetting",new XAttribute(w+"name","compatibilityMode"),
+                new XAttribute(w+"uri","http://schemas.microsoft.com/office/word"),new XAttribute(w+"val",15))))));
+        var rels=Read("word/_rels/document.xml.rels",new XElement(r+"Relationships"));
+        rels.Root!.Add(new XElement(r+"Relationship",new XAttribute("Id","rIdChinhTaSettings"),
+            new XAttribute("Type","http://schemas.openxmlformats.org/officeDocument/2006/relationships/settings"),new XAttribute("Target","settings.xml")));
+        Write("word/_rels/document.xml.rels",rels);
+        var types=Read("[Content_Types].xml",new XElement(ct+"Types"));
+        types.Root!.Add(new XElement(ct+"Override",new XAttribute("PartName","/word/settings.xml"),
+            new XAttribute("ContentType","application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml")));
+        Write("[Content_Types].xml",types);
+        return path;
+    }
+
 }
 
