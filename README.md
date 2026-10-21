@@ -1,3 +1,7 @@
+## Bản thử 0.1.26 — đối chiếu lại mốc và ánh xạ vị trí Word
+
+Log 0.1.25 thất bại tại bước so khớp mốc sau lưu, trước khi quét lại. Bản này lấy vị trí chuỗi xem trước từ văn bản tiền tố do Word trả về và ghép lại mốc bằng vai trò/nội dung chính xác trong bố cục mới, thay vì yêu cầu CP cũ giữ nguyên. Giữ xác minh nét XPS, kiểm cuối nhóm và rollback. Xem [bằng chứng và giới hạn](docs/CHANGES-0.1.26.md).
+
 ## Bản thử 0.1.25 — xác minh nét thật và hoàn tất nhóm trong một lượt
 
 Đánh giá thể thức trên nét XPS thực đo, quét lại sau lưu ngay bên trong giao dịch sửa và cho phép một lượt đặt lại các Line vừa chọn còn cảnh báo. Chỉ báo đạt khi kiểm cuối không còn cảnh báo ở nhóm đã chọn; sai thì khôi phục cả lượt, Hoàn tác vẫn một lần. Xem [thay đổi và giới hạn kiểm chứng](docs/CHANGES-0.1.25.md).

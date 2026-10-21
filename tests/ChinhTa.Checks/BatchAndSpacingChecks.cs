@@ -98,14 +98,14 @@ public static class BatchAndSpacingChecks
             AtomicLineBatch.Apply(current,before,plan,(item,_)=>
                 {order.Add(item.LineFix!.Role);File.AppendAllText(current,"/"+item.LineFix.Role);},
                 ()=>File.Copy(before,current,true),()=>{rescans++;if(order.Count!=5)throw new Exception("residual");},
-                ()=>{rescans++;return repairs;});
+                ()=>{rescans++;return new LineBatchReview(plan,repairs);});
             assert(order.SequenceEqual(new[]{LineRole.Agency,LineRole.Subject,LineRole.Motto,LineRole.Subject,LineRole.Motto}) && rescans==2,
                 "Three-Line action can settle exactly the two owned residuals and verify them before returning");
             assert(File.ReadAllText(before)=="original" && !Directory.GetFiles(folder,"*.step.docx").Any(),
                 "The settling pass retains the single original Undo checkpoint and cleans all step backups");
             File.Copy(before,current,true);int writes=0;bool unsettled=false;
             try{AtomicLineBatch.Apply(current,before,plan,(_,_)=>{writes++;File.AppendAllText(current,"/edit");},
-                ()=>File.Copy(before,current,true),()=>throw new InvalidOperationException("still residual"),()=>repairs);}
+                ()=>File.Copy(before,current,true),()=>throw new InvalidOperationException("still residual"),()=>new LineBatchReview(plan,repairs));}
             catch(InvalidOperationException){unsettled=true;}
             assert(unsettled && writes==5 && File.ReadAllText(current)=="original",
                 "Persistent residuals stop after one settling pass and roll back the entire original action");
@@ -114,7 +114,7 @@ public static class BatchAndSpacingChecks
             {
                 File.Copy(before,current,true);writes=0;bool blocked=false;
                 try{AtomicLineBatch.Apply(current,before,plan,(_,_)=>{writes++;File.AppendAllText(current,"/edit");},
-                    ()=>File.Copy(before,current,true),remainingIssues:()=>unsafeRepairs);}
+                    ()=>File.Copy(before,current,true),remainingIssues:()=>new LineBatchReview(plan,unsafeRepairs));}
                 catch(InvalidOperationException){blocked=true;}
                 assert(blocked && writes==3 && File.ReadAllText(current)=="original",
                     "Ambiguous, unselected, manual or unidentified residuals cannot trigger automatic edits");

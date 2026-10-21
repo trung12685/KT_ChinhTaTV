@@ -71,11 +71,12 @@ public static class OfficeIntegrationCheck
             foreach(var role in new[]{LineRole.Agency,LineRole.Subject,LineRole.Motto})
             {
                 stage="Đo và sửa mẫu Word 2013: " + role;
-                test.FixMany([measured.Single(i=>i.LineFix!.Role==role)]);
+                var current=InspectLines(test,test.Check()).Single(i=>i.LineFix?.Role==role);
+                test.FixMany([current]);
                 test.Check();
                 Pass(stage);
             }
-            test.VerifyLineResult(test.VerifiedLineEdits,verifyReference:true);
+            VerifyCurrentLines(test,test.VerifiedLineEdits);
             stage="Lưu/mở lại và kiểm nét đã đo trên mẫu Word 2013";
             var acceptedModern=test.VerifiedLineEdits;
             string modernSaved=Path.Combine(folder,"modern-three-lines.docx");
@@ -85,13 +86,13 @@ public static class OfficeIntegrationCheck
             for(int step=0;step<3;step++)test.Undo();
             test.Check();
             if(test.LineShapes.Count!=0)throw new InvalidOperationException("Hoàn tác mẫu hiện đại chưa phục hồi");
-            test.Open(modernSaved);test.Check();test.VerifyLineResult(acceptedModern,verifyReference:true);
+            test.Open(modernSaved);test.Check();VerifyCurrentLines(test,acceptedModern);
             Pass(stage);
             stage="Sửa cả ba Line trong một lượt trên mẫu Word 2013";
             test.Open(modern);test.Check();
             test.FixMany(measured);
             var batchIssues=test.Check();
-            test.VerifyLineResult(test.VerifiedLineEdits,verifyReference:true);
+            VerifyCurrentLines(test,test.VerifiedLineEdits);
             if(InspectLines(test,batchIssues).Length!=0)
                 throw new InvalidOperationException("Còn cảnh báo Line sau khi sửa và quét lại cả nhóm");
             Pass(stage);
@@ -147,6 +148,13 @@ public static class OfficeIntegrationCheck
             File.AppendAllText(report,"RESULT FAIL\n");
             return new(false,stage,folder);
         }
+    }
+    private static void VerifyCurrentLines(WordSession test,IReadOnlyList<Issue> expected)
+    {
+        // Synthetic expected geometry stays unchanged; only use fresh CPs for its text anchors.
+        var current=expected.Select(i=>i with {Start=test.LineTargets.Single(t=>
+            t.Role==i.LineFix!.Role && t.Text==i.Original).Start}).ToArray();
+        test.VerifyLineResult(current,verifyReference:true);
     }
     private static Issue[] InspectLines(WordSession test,IReadOnlyList<Issue> otherIssues)
     {

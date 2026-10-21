@@ -150,6 +150,16 @@ static class Program
         Assert(Math.Abs(fullReference.Width-viewedReference.Width)<.001,
             "Background verification and a DocumentViewer preview use the same full-glyph measurement");
         viewer.Document=null;
+        string tablePrefix="CƠ QUAN\r\a";
+        string tableStory=tablePrefix+Text+"\r\aBÁO CÁO\rTrích yếu\r";
+        var tableAnchor=WordPreviewAnchor.Create(1,tableStory,tablePrefix,Text);
+        var tableReference=ReferenceMeasurement.Read(caretPage,caretPreview,tableAnchor)!;
+        var cpAsIndex=new PreviewAnchor(1,tableStory,tablePrefix.Length-1,Text.Length);
+        var shortened=ReferenceMeasurement.Read(caretPage,caretPreview,cpAsIndex)!;
+        Assert(Math.Abs(tableReference.Width-fullReference.Width)<.001,
+            "Mapping from Word's actual prefix text measures the complete Motto even with table markers in the story");
+        Assert(tableReference.Width-shortened.Width>1,
+            "A CP-to-string mismatch reproduces a short Motto even after glyph-advance measurement is fixed");
         Console.WriteLine($"{checks} WPF checks passed.");
     }
 }

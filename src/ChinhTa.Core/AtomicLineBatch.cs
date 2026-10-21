@@ -1,11 +1,13 @@
 namespace ChinhTa.Core;
 
+public sealed record LineBatchReview(IReadOnlyList<Issue> Selection,IReadOnlyList<Issue> Repairs);
+
 // Stage the existing, verified single-Line operation inside one atomic user action.
 public static class AtomicLineBatch
 {
     public static void Apply(string current, string before, IReadOnlyList<Issue> plan,
         Action<Issue,string> applyStep, Action restoreOriginal, Action? verifyCompleted = null,
-        Func<IReadOnlyList<Issue>>? remainingIssues = null)
+        Func<LineBatchReview>? remainingIssues = null)
     {
         var backups=new List<string>();
         bool preserve=false;
@@ -23,9 +25,17 @@ public static class AtomicLineBatch
             ApplyPass(plan);
             if(remainingIssues is not null)
             {
-                var repairs=remainingIssues();
+                var review=remainingIssues();
+                var scope=review.Selection;
+                // Current CPs may differ after Word saves. Role and exact text must still
+                // describe precisely the original selection; the caller verifies the story/layout.
+                if(scope.Count!=plan.Count || scope.Any(i=>i.LineFix is null ||
+                    !plan.Any(p=>p.Original==i.Original && p.LineFix?.Role==i.LineFix.Role)) ||
+                    scope.Select(i=>i.LineFix!.Role).Distinct().Count()!=scope.Count)
+                    throw new InvalidOperationException("Mốc hiện tại không khớp nhóm Line đã chọn; phải khôi phục cả lượt sửa.");
+                var repairs=review.Repairs;
                 if(repairs.Any(i=>!i.CanFix || i.LineFix?.ShapeId is null ||
-                    !plan.Any(p=>p.Start==i.Start && p.Original==i.Original && p.LineFix?.Role==i.LineFix.Role)) ||
+                    !scope.Any(p=>p.Start==i.Start && p.Original==i.Original && p.LineFix?.Role==i.LineFix.Role)) ||
                     repairs.Select(i=>i.LineFix!.Role).Distinct().Count()!=repairs.Count)
                     throw new InvalidOperationException("Không ghép chắc chắn cảnh báo còn lại với các Line vừa chọn; phải khôi phục cả lượt sửa.");
                 // One measured settling pass inside the same transaction; never retry indefinitely.

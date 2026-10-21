@@ -266,7 +266,9 @@ public sealed class WordSession : IDisposable
                 if(verifyReference)
                 {
                     var target=LineTargets.Single(t=>t.Start==item.Start && t.Role==fix.Role);
-                    var reference=ReferenceMeasurement.Read(sequence,preview,anchors[item]);
+                    if(!anchors.TryGetValue(item,out var anchor))
+                        throw new InvalidOperationException("Không đối chiếu được mốc Word trong bản xem trước; phải khôi phục bản trước.");
+                    var reference=ReferenceMeasurement.Read(sequence,preview,anchor);
                     if(reference is null || !target.Centered)
                         throw new InvalidOperationException("Chưa đo được dòng tham chiếu sau khi Word mở candidate; phải khôi phục bản trước.");
                     // Apply exactly the scanner's policy to the measured stroke, not its intended coordinates.
@@ -392,14 +394,28 @@ public sealed class WordSession : IDisposable
     public void Fix(Issue issue) => FixMany([issue]);
     public void FixMany(IEnumerable<Issue> issues) => FixManyCore(issues,true);
     internal void FixLineProbe(IEnumerable<Issue> issues) => FixManyCore(issues,false);
-    private IReadOnlyList<Issue> ReadRemainingLines(IReadOnlyList<Issue> requested,IReadOnlyList<Issue> accepted)
+    private string ReadIssueText(Issue issue)
+    {
+        dynamic range=document!.Range(issue.Start,issue.Start+issue.Length);
+        try{return (string)range.Text;}
+        finally{Release(range);}
+    }
+    private LineBatchReview ReadRemainingLines(IReadOnlyList<Issue> requested,IDictionary<LineRole,Issue> accepted,string expectedStory)
     {
         // Exercise the same save, refresh and XPS inspection that follows the UI operation,
         // while the original checkpoint can still restore the entire user action.
         Checkpoint();
         var otherIssues=CheckCore();
-        if(requested.Any(i=>!LineTargets.Any(t=>t.Start==i.Start && t.Text==i.Original && t.Role==i.LineFix!.Role)))
-            throw new InvalidOperationException("Mốc đường kẻ thay đổi sau khi sửa; phải khôi phục cả lượt.");
+        LogReferenceBindings(requested);
+        string currentStory=ReadStoryText();
+        Diagnostics.Write("Word.LineBatch.StoryBinding",null,FormattableString.Invariant(
+            $"PreviousLength={expectedStory.Length}; CurrentLength={currentStory.Length}; Equal={(expectedStory==currentStory?1:0)}"));
+        var bound=LineReferenceBinding.Rebind(requested,LineTargets,expectedStory,currentStory);
+        foreach(var item in bound)
+        {
+            var role=item.LineFix!.Role;
+            accepted[role]=accepted[role] with {Start=item.Start,Length=item.Length};
+        }
         var anchors=new Dictionary<Issue,PreviewAnchor>();
         string path=ExportPreviewCore(LineTargets.Select(t=>t.Probe).ToArray(),anchors);
         try
@@ -408,21 +424,32 @@ public sealed class WordSession : IDisposable
             var sequence=xps.GetFixedDocumentSequence();
             var preview=new PreviewHighlighter();
             var residual=LineInspection.Inspect(sequence,preview,LineTargets,LineShapes,anchors,otherIssues,
-                LinePolicy.Decree30,HasGroupedShapes,accepted).Where(entry=>requested.Any(i=>
+                LinePolicy.Decree30,HasGroupedShapes,accepted.Values.ToArray()).Where(entry=>bound.Any(i=>
                     entry.Issue.Start==i.Start && entry.Issue.Original==i.Original)).Select(entry=>entry.Issue).ToArray();
-            foreach(var item in requested)
+            foreach(var item in bound)
             {
                 var fix=item.LineFix!;
                 var target=LineTargets.Single(t=>t.Start==item.Start && t.Role==fix.Role);
-                var reference=ReferenceMeasurement.Read(sequence,preview,anchors[target.Probe]);
-                var expected=accepted.Single(i=>i.LineFix!.Role==fix.Role).LineFix!;
+                var reference=anchors.TryGetValue(target.Probe,out var anchor)?ReferenceMeasurement.Read(sequence,preview,anchor):null;
+                var expected=accepted[fix.Role].LineFix!;
                 var actual=RenderedLineVerifier.Find(new(expected.Left,expected.Top,expected.Width),preview.HorizontalLines(sequence,1));
                 Diagnostics.Write("Word.LineBatch.Rescan",null,FormattableString.Invariant(
                     $"Role={fix.Role}; Residual={residual.Count(i=>i.Start==item.Start)}; ReferenceLeft={reference?.Left:F2}; ReferenceBottom={reference?.Bottom:F2}; ReferenceWidth={reference?.Width:F2}; ActualLeft={actual?.Left:F2}; ActualTop={actual?.Y:F2}; ActualWidth={actual?.Width:F2}"));
             }
-            return residual;
+            return new(bound,residual);
         }
         finally{if(File.Exists(path))File.Delete(path);}
+    }
+    private void LogReferenceBindings(IReadOnlyList<Issue> requested)
+    {
+        foreach(var item in requested)
+        {
+            var role=item.LineFix!.Role;
+            var candidates=LineTargets.Where(t=>t.Role==role).ToArray();
+            var matching=candidates.Where(t=>t.Text==item.Original).ToArray();
+            Diagnostics.Write("Word.LineBatch.ReferenceBinding",null,FormattableString.Invariant(
+                $"Role={role}; PreviousStart={item.Start}; PreviousLength={item.Length}; RoleCount={candidates.Length}; TextMatchCount={matching.Length}; CurrentStart={(matching.Length==1?matching[0].Start:-1)}; Centered={(matching.Length==1&&matching[0].Centered?1:0)}"));
+        }
     }
     private void FixManyCore(IEnumerable<Issue> issues,bool verifyReference)
     {
@@ -431,11 +458,7 @@ public sealed class WordSession : IDisposable
         if (plan.Any(i => i.LineFix is not null) && plan.Any(i => i.LineFix is null))
             throw new InvalidOperationException("Sửa chữ/định dạng trước, quét lại rồi sửa nhóm Shape Line để dùng số đo mới.");
         // Validate every original before making any changes, not halfway through the batch.
-        BatchPlan.Validate(plan, issue =>
-        {
-            dynamic range = document!.Range(issue.Start, issue.Start + issue.Length);
-            try { return (string)range.Text; } finally { Release(range); }
-        });
+        BatchPlan.Validate(plan,ReadIssueText);
         Checkpoint();
         string before = Path.Combine(folder, Guid.NewGuid() + ".undo.docx");
         File.Copy(RecoveryPath, before);
@@ -449,19 +472,27 @@ public sealed class WordSession : IDisposable
                 AtomicLineBatch.Apply(RecoveryPath,before,plan,
                     (item,step)=>
                     {
-                        foreach(var completed in ApplyLinePackage([item],step,verifyReference:verifyReference))
+                        Issue current=item;
+                        if(verifyReference)
+                        {
+                            CheckCore();
+                            LogReferenceBindings([item]);
+                            current=LineReferenceBinding.Rebind([item],LineTargets,expectedText,ReadStoryText()).Single();
+                            BatchPlan.Validate([current],ReadIssueText);
+                        }
+                        foreach(var completed in ApplyLinePackage([current],step,verifyReference:verifyReference))
                             accepted[completed.LineFix!.Role]=completed;
                     },
                     ()=>CheckpointSwap.Apply(RecoveryPath,before,CloseDocumentOnly,Connect),
                     ()=>
                     {
-                        if(verifyReference && ReadRemainingLines(plan,accepted.Values.ToArray()).Count>0)
+                        if(verifyReference && ReadRemainingLines(plan,accepted,expectedText).Repairs.Count>0)
                             throw new InvalidOperationException("Còn cảnh báo ở Line vừa sửa sau lượt đo lại; phải khôi phục cả lượt.");
                         VerifyLineResult(accepted.Values.ToArray(),verifyReference:verifyReference);
                         if(ReadStoryText()!=expectedText)
                             throw new InvalidOperationException("Nội dung chữ thay đổi sau lượt sửa Line; phải khôi phục bản trước.");
                     },
-                    verifyReference ? ()=>ReadRemainingLines(plan,accepted.Values.ToArray()) : null);
+                    verifyReference ? ()=>ReadRemainingLines(plan,accepted,expectedText) : null);
                 undoCheckpoints.Push(before);
                 foreach(var item in accepted.Values)verifiedLineEdits[item.LineFix!.Role]=item;
                 Changed=true;snapshotCurrent=true;
@@ -550,19 +581,36 @@ public sealed class WordSession : IDisposable
         anchors.Clear();
         // Export the unmodified document once. Selection highlighting belongs exclusively to WPF.
         // CheckCore has already paginated before collecting page metadata.
-        // Read the story once; do not navigate Word's invisible window with Document.GoTo.
-        // Each issue retains its absolute source offset plus the physical page number.
+        // Word CPs and Range.Text string indices are different coordinate systems.
+        // Read the actual prefix at each distinct CP; never navigate with Document.GoTo.
         dynamic content = document!.Content;
         int contentStart;
         string text;
         try { contentStart = (int)content.Start; text = (string)content.Text; }
         finally { Release(content); }
+        var prefixes=new Dictionary<int,string>();
         foreach (var issue in issues)
         {
             dynamic point = document.Range(issue.Start, issue.Start);
             int page;
             try { page = (int)point.Information[3]; } finally { Release(point); }
-            anchors[issue] = new(page, text, issue.Start - contentStart, issue.Length);
+            if(!prefixes.TryGetValue(issue.Start,out string? prefix))
+            {
+                dynamic range=document.Range(contentStart,issue.Start);
+                try{prefix=Convert.ToString((object?)range.Text)??"";}
+                finally{Release(range);}
+                prefixes.Add(issue.Start,prefix);
+            }
+            if(prefix.Length!=issue.Start-contentStart)
+                Diagnostics.Write("Word.Preview.CpMapping",null,FormattableString.Invariant(
+                    $"Kind={issue.Kind}; CP={issue.Start}; StoryStart={contentStart}; StringOffset={prefix.Length}; Length={issue.Length}"));
+            try{anchors[issue]=WordPreviewAnchor.Create(page,text,prefix,issue.Original);}
+            catch(InvalidOperationException)
+            {
+                // A missing anchor becomes a manual Line notice in the UI and blocks candidate acceptance.
+                Diagnostics.Write("Word.Preview.Unmapped",null,FormattableString.Invariant(
+                    $"Kind={issue.Kind}; CP={issue.Start}; StoryLength={text.Length}; PrefixLength={prefix.Length}; Length={issue.Length}"));
+            }
         }
         string output = Path.Combine(folder, Guid.NewGuid() + ".xps");
         document.ExportAsFixedFormat(output, 18, OpenAfterExport: false);
