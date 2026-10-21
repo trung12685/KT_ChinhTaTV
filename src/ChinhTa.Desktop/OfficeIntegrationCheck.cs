@@ -131,7 +131,46 @@ public static class OfficeIntegrationCheck
             if(InspectLines(test,test.Check()).Length!=0)
                 throw new InvalidOperationException("Còn cảnh báo sau lưu/mở hai nét đặt lại");
             Pass(stage);
-            File.AppendAllText(report,"RESULT PASS\nKiểm thao tác Word/Line và vị trí nét theo số đo XPS trên hai mẫu; không xác nhận mọi tài liệu.\n");
+            stage="Sửa riêng số văn bản và Hoàn tác trên mẫu giả";
+            string headerSample=Path.Combine(AppContext.BaseDirectory,"samples","SoKyHieuNgayThang.docx");
+            test.Open(headerSample);
+            string originalStory=test.ReadCheckText();
+            const string originalNumber="số  :  3 / BC – ABC",originalDate="Địa danh  Ngày3  Tháng1  Năm2026";
+            if(!originalStory.Contains(originalNumber,StringComparison.Ordinal) || !originalStory.Contains(originalDate,StringComparison.Ordinal))
+                throw new InvalidOperationException("Mẫu số/ngày không còn đúng nội dung kiểm thử");
+            string expectedHeader=originalStory.Replace(originalNumber,"Số: 03/BC-ABC",StringComparison.Ordinal)
+                .Replace(originalDate,"Địa danh, ngày 03 tháng 01 năm 2026",StringComparison.Ordinal);
+            static Issue[] HeaderEdits(IReadOnlyList<Issue> found)=>found.Where(i=>i.CanFix &&
+                i.Kind is FixKind.AdministrativeNumber or FixKind.AdministrativeDate).ToArray();
+            var originalHeader=HeaderEdits(test.Check());
+            var one=originalHeader.First(i=>i.Kind==FixKind.AdministrativeNumber && i.Replacement=="03");
+            test.Fix(one);
+            if(HeaderEdits(test.Check()).Length>=originalHeader.Length || test.ReadCheckText()!=originalStory.Replace(originalNumber,"số  :  03 / BC – ABC",StringComparison.Ordinal))
+                throw new InvalidOperationException("Sửa riêng số văn bản chưa giảm lỗi");
+            test.Undo();
+            if(HeaderEdits(test.Check()).Length!=originalHeader.Length || test.ReadCheckText()!=originalStory)
+                throw new InvalidOperationException("Hoàn tác sửa riêng chưa phục hồi mẫu số/ngày");
+            Pass(stage);
+            stage="Sửa chung số/ký hiệu và ngày tháng, lưu và Hoàn tác cả lượt";
+            test.FixMany(HeaderEdits(test.Check()));
+            if(HeaderEdits(test.Check()).Length!=0 || test.ReadCheckText()!=expectedHeader)
+                throw new InvalidOperationException("Sửa nhóm số/ngày chưa đạt hoặc thay chữ ngoài phạm vi");
+            string headerSaved=Path.Combine(folder,"header-fixed.docx");test.SaveCopy(headerSaved);
+            test.Undo();
+            if(HeaderEdits(test.Check()).Length!=originalHeader.Length || test.ReadCheckText()!=originalStory)
+                throw new InvalidOperationException("Hoàn tác một lần chưa phục hồi cả nhóm số/ngày");
+            Pass(stage);
+            stage="Mở lại bản đã sửa số/ngày và kiểm mẫu trường trống";
+            test.Open(headerSaved);
+            if(HeaderEdits(test.Check()).Length!=0 || test.ReadCheckText()!=expectedHeader)
+                throw new InvalidOperationException("Số/ngày chưa giữ nguyên kết quả sau mở lại");
+            test.Open(Path.Combine(AppContext.BaseDirectory,"samples","TruongSoNgayDeTrong.docx"));
+            if(test.Check().Any(i=>i.CanFix && i.Kind is FixKind.Text or FixKind.AdministrativeNumber or FixKind.AdministrativeDate) ||
+                !test.ReadCheckText().Contains("Số:        /BC-ABC",StringComparison.Ordinal) ||
+                !test.ReadCheckText().Contains("Địa danh, ngày        tháng 10 năm 2026",StringComparison.Ordinal))
+                throw new InvalidOperationException("Mẫu trường trống bị đề xuất thay đổi hoặc mất khoảng trống");
+            Pass(stage);
+            File.AppendAllText(report,"RESULT PASS\nKiểm thao tác Word/Line, vị trí nét XPS, sửa riêng/nhóm số-ngày, lưu/mở và Hoàn tác trên mẫu giả; không xác nhận mọi tài liệu.\n");
             return new(true,stage,folder);
         }
         catch(Exception error)

@@ -4,8 +4,8 @@ namespace ChinhTa.Core;
 
 public record Paragraph(int Start, string Text, bool Bold = false, float Size = 13,
     int Alignment = 1, string Font = "Times New Roman", bool Italic = false,
-    int Color = 0, bool InTable = false, int Page = 1);
-public enum FixKind { Text, NationalHeading, StateMotto, PartyHeading, Advisory, PageLayout, ShapeLine }
+    int Color = 0, bool InTable = false, int Page = 1, bool FormatObserved = false, bool FormatMixed = false, bool TextEditable = true);
+public enum FixKind { Text, NationalHeading, StateMotto, PartyHeading, Advisory, PageLayout, ShapeLine, AdministrativeNumber, AdministrativeDate }
 public record HeadingFormat(float Size, int? Alignment = null);
 public record Issue(int Start, int Length, string Original, string Replacement,
     string Message, bool BatchSafe, FixKind Kind = FixKind.Text,
@@ -25,11 +25,16 @@ public static class Checker
     {
         var result = new List<Issue>();
         var items = paragraphs.ToArray();
+        var administrative=AdministrativeHeaderRules.Check(items,profile);
+        var administrativeStarts=AdministrativeHeaderRules.Identify(items,profile).Select(p=>p.Start).ToHashSet();
+        var protectedAdministrative=items.Where(p=>administrativeStarts.Contains(p.Start) && (!p.TextEditable || p.Text.Contains('\t')))
+            .Select(p=>p.Start).ToHashSet();
         foreach (var p in items)
         {
             if (!(p.Page == 1 && HeadingRules.IsCandidate(p.Text, profile)))
             foreach (Match m in Regex.Matches(p.Text, @"(?<=\S) {2,}(?=\S)"))
-                if(!SpacingRules.IsBlankField(p.Text,m.Index,m.Length)) result.Add(new(p.Start + m.Index, m.Length, m.Value, " ",
+                if(!protectedAdministrative.Contains(p.Start) && !SpacingRules.IsBlankField(p.Text,m.Index,m.Length,administrativeStarts.Contains(p.Start)) && !administrative.Any(i=>i.CanFix &&
+                    i.Start<p.Start+m.Index+m.Length && (long)i.Start+i.Length>p.Start+m.Index)) result.Add(new(p.Start + m.Index, m.Length, m.Value, " ",
                     "Khoảng trắng liên tiếp; kiểm tra trước nếu dùng để dàn trang.", false));
             foreach (Match m in Regex.Matches(p.Text, @"\bcon\s+(đo)\b", RegexOptions.IgnoreCase))
             {
@@ -53,6 +58,7 @@ public static class Checker
             result.AddRange(HeadingRules.Check(p, profile));
         }
         result.AddRange(HeadingRules.CheckConsistency(items, profile));
+        result.AddRange(administrative);
         return result.OrderBy(x => x.Start).ToArray();
     }
 }

@@ -1,0 +1,172 @@
+using System.Text.RegularExpressions;
+
+namespace ChinhTa.Core;
+
+// Narrow text checks for the identified first-page State header. Never infer assigned identifiers/dates.
+public static class AdministrativeHeaderRules
+{
+    private const RegexOptions Options=RegexOptions.IgnoreCase|RegexOptions.CultureInvariant;
+    private const RegexOptions Linear=Options|RegexOptions.NonBacktracking;
+    private static readonly Regex NumberHint=new(@"^[ \t]*Số(?:[ \t]*:|[ \t]*(?=[0-9/._…]))",Options);
+    private static readonly Regex NumberPrefix=new(@"^[ \t]*(?<label>Số)(?<before>[ \t]*)(?<colon>:?)(?<gap>[ \t]*)(?<value>.*)$",Linear);
+    private static readonly Regex Identifier=new(@"^(?<number>[0-9]+|[._…]*)(?<slash>[ \t]*/[ \t]*)(?<code>[\p{L}\p{M}\p{N}]+(?:\.[\p{L}\p{M}\p{N}]+)*(?:[ \t]*[-–—][ \t]*[\p{L}\p{M}\p{N}]+(?:\.[\p{L}\p{M}\p{N}]+)*)+)$");
+    private static readonly Regex DateHint=new(@"^[ \t]*(?:[\p{L}\p{M}\p{N}][\p{L}\p{M}\p{N} .’'\-]*?(?:[ \t]+|,[ \t]*))?ngày[^\r\a]*tháng[^\r\a]*năm",Linear);
+    private static readonly Regex DateRow=new(@"^[ \t]*(?<place>[\p{L}\p{M}\p{N}][\p{L}\p{M}\p{N} .’'\-]*?)(?<separator>[ \t]*,[ \t]*|[ \t]+)(?<dayLabel>ngày)(?<day>[0-9._… \t]*)(?<monthLabel>tháng)(?<month>[0-9._… \t]*)(?<yearLabel>năm)(?<year>[0-9._… \t]*)$",Linear);
+    private static readonly Regex StandaloneDate=new(@"^[ \t]*ngày(?<day>[0-9._… \t]*)tháng(?<month>[0-9._… \t]*)năm(?<year>[0-9._… \t]*)$",Linear);
+    private static readonly Regex Hyphen=new(@"[ \t]*[-–—][ \t]*");
+    private static string Clean(string text)=>text.TrimEnd('\r','\a','\n');
+    private static bool Blank(string value)=>value.Length==0 || value.All(c=>c is '.' or '_' or '…');
+    private static string Citation(bool date)=>date
+        ? "NĐ 30/2020/NĐ-CP, Phụ lục I, Phần I.II.4.b–c; PDF trang 23. Chưa xác minh địa danh chính thức hoặc ngoại lệ riêng của đơn vị."
+        : "NĐ 30/2020/NĐ-CP, Phụ lục I, Phần I.II.3.a–c; PDF trang 22–23. Mã viết tắt do cơ quan quy định; chưa xác minh mã được cấp.";
+
+    public static bool IsCandidate(string text)=>NumberHint.IsMatch(Clean(text)) || DateHint.IsMatch(Clean(text));
+    public static IReadOnlyList<Paragraph> Identify(IReadOnlyList<Paragraph> paragraphs,DocumentProfile profile)
+    {
+        if(profile!=DocumentProfile.State)return [];
+        var first=paragraphs.Take(40).Where(p=>p.Page==1).ToArray();
+        var headings=first.Select((p,i)=>(p,i)).Where(x=>HeadingRules.IsCandidate(x.p.Text,profile)).ToArray();
+        if(headings.Length!=2 || headings.Any(x=>x.i>=16) ||
+            headings.Count(x=>Clean(x.p.Text).TrimStart().StartsWith("Độc",StringComparison.OrdinalIgnoreCase))!=1)return [];
+        int last=headings.Max(x=>x.i),end=first.Length;
+        for(int i=0;i<first.Length;i++)
+        {
+            string text=Clean(first[i].Text);
+            if(ShapeLineRules.IsDocumentType(text) || i>last && !first[i].InTable &&
+                !string.IsNullOrWhiteSpace(text) && !IsCandidate(text)) {end=i;break;}
+        }
+        return first.Take(end).Where(p=>IsCandidate(p.Text)).ToArray();
+    }
+    public static IReadOnlyList<Issue> Check(IReadOnlyList<Paragraph> paragraphs,DocumentProfile profile)
+    {
+        var header=Identify(paragraphs,profile);
+        var result=new List<Issue>();
+        foreach(bool date in new[]{false,true})
+        {
+            var rows=header.Where(p=>(date?DateHint:NumberHint).IsMatch(Clean(p.Text))).ToArray();
+            if(rows.Length>1)
+            {
+                foreach(var row in rows)result.Add(Notice(row,date,"Có nhiều dòng ứng viên trong phần đầu; cần xác định đúng dòng trước khi sửa."));
+                continue;
+            }
+            if(rows.Length!=1)continue;
+            var p=rows[0];
+            if(!p.TextEditable || p.Text.Contains('\t'))
+            {
+                result.Add(Notice(p,date,"Chưa xác minh được dòng chữ thuần để sửa an toàn (có thể có trường tự động, control, liên kết hoặc tab bố cục). Chỉnh thủ công; giữ nguyên nội dung và cấu trúc."));
+                continue;
+            }
+            if(date)CheckDate(p,result);else CheckNumber(p,result);
+            if(p.FormatObserved && (p.FormatMixed || p.Font!="Times New Roman" ||
+                p.Color is not (0 or -16777216) || !float.IsFinite(p.Size) ||
+                (date ? p.Size<12.99f || p.Size>14.01f || !p.Italic : Math.Abs(p.Size-13)>.01f || p.Italic)))
+                result.Add(Notice(p,date,date
+                    ? "Kiểm tra Times New Roman, màu đen, cỡ 13–14, chữ nghiêng. Bản này chưa tự sửa định dạng hoặc vị trí địa danh/ngày tháng."
+                    : "Kiểm tra Times New Roman, màu đen, cỡ 13, chữ đứng. Bản này chưa tự sửa định dạng hoặc vị trí dòng số/ký hiệu."));
+        }
+        return result;
+    }
+    private static Issue Notice(Paragraph p,bool date,string message)
+    {
+        string text=Clean(p.Text);
+        return new(p.Start,text.Length,text,text,message,false,date?FixKind.AdministrativeDate:FixKind.AdministrativeNumber,
+            CanFix:false,Citation:Citation(date),Title:date?"Kiểm tra địa danh, ngày tháng":"Kiểm tra số, ký hiệu văn bản");
+    }
+    private static void Edit(Paragraph p,bool date,int offset,string original,string replacement,string title,List<Issue> result)
+    {
+        if(original==replacement)return;
+        if(original.Length==0)throw new InvalidOperationException("An administrative edit must retain a source anchor");
+        result.Add(new(p.Start+offset,original.Length,original,replacement,title,false,
+            date?FixKind.AdministrativeDate:FixKind.AdministrativeNumber,Citation:Citation(date),Title:title));
+    }
+    private static void CheckNumber(Paragraph p,List<Issue> result)
+    {
+        string text=Clean(p.Text);
+        var prefix=NumberPrefix.Match(text);
+        string value=prefix.Groups["value"].Value.TrimEnd(' ','\t');
+        var parsed=Identifier.Match(value);
+        if(!parsed.Success)
+        {
+            result.Add(Notice(p,false,"Chưa phân tích chắc chắn số/ký hiệu. Kiểm tra dấu hai chấm, dấu / và nhóm viết tắt có dấu -. Mẫu có năm hoặc cấu trúc riêng cần duyệt thủ công."));
+            return;
+        }
+        var number=parsed.Groups["number"];
+        if(!Blank(number.Value) && number.Value.All(c=>c=='0'))
+        {
+            result.Add(Notice(p,false,"Số thứ tự đang bằng 0; cần kiểm tra số được cấp, không tự chọn số khác."));return;
+        }
+        string gap=prefix.Groups["colon"].Length>0?prefix.Groups["gap"].Value:prefix.Groups["before"].Value;
+        string wanted="Số:"+(Blank(number.Value)&&gap.Length>0?gap:" ");
+        int label=prefix.Groups["label"].Index,baseIndex=prefix.Groups["value"].Index;
+        Edit(p,false,label,text[label..baseIndex],wanted,"Chuẩn hóa nhãn Số và dấu hai chấm",result);
+        if(number.Length==1 && number.Value[0] is >= '1' and <= '9')
+            Edit(p,false,baseIndex+number.Index,number.Value,"0"+number.Value,"Thêm 0 trước số văn bản nhỏ hơn 10",result);
+        var slash=parsed.Groups["slash"];
+        Edit(p,false,baseIndex+slash.Index,slash.Value,"/","Bỏ khoảng trắng quanh dấu / của số, ký hiệu",result);
+        var code=parsed.Groups["code"];
+        foreach(Match separator in Hyphen.Matches(code.Value))
+            Edit(p,false,baseIndex+code.Index+separator.Index,separator.Value,"-","Chuẩn hóa dấu nối trong ký hiệu",result);
+        if(code.Value.Any(char.IsLower))
+            result.Add(Notice(p,false,"Ký hiệu có chữ thường; đối chiếu quy định chữ in hoa và mã viết tắt của cơ quan. Chưa tự đổi mã."));
+    }
+    private static void CheckDate(Paragraph p,List<Issue> result)
+    {
+        string text=Clean(p.Text);
+        var match=DateRow.Match(text);
+        if(!match.Success)
+        {
+            result.Add(Notice(p,true,"Chưa phân tích chắc chắn các trường địa danh/ngày/tháng/năm; cần kiểm tra mẫu, không tự đoán giá trị."));return;
+        }
+        string[] names=["day","month","year"];
+        string[] values=names.Select(n=>match.Groups[n].Value.Trim(' ','\t')).ToArray();
+        int?[] numbers=new int?[3];
+        for(int i=0;i<3;i++)
+        {
+            if(Blank(values[i]))continue;
+            if(!values[i].All(c=>c is >= '0' and <= '9') || values[i].Length>(i==2?4:2) ||
+                i==2 && values[i].Length!=4 || !int.TryParse(values[i],out int number))
+            {result.Add(Notice(p,true,"Trường ngày/tháng/năm chưa đủ rõ hoặc năm chưa có đủ bốn chữ số; không tự điền hoặc đổi giá trị."));return;}
+            numbers[i]=number;
+        }
+        if(numbers[0] is <1 or >31 || numbers[1] is <1 or >12 || numbers[2] is <1 or >9999 ||
+            numbers[0] is int day && numbers[1] is int month &&
+            day>(numbers[2] is int year?DateTime.DaysInMonth(year,month):month==2?29:DateTime.DaysInMonth(2000,month)))
+        {result.Add(Notice(p,true,"Ngày/tháng/năm không hợp lệ theo lịch; cần sửa giá trị gốc, không tự chọn ngày thay thế."));return;}
+        var separator=match.Groups["separator"];
+        Edit(p,true,separator.Index,separator.Value,", ","Chuẩn hóa dấu phẩy sau địa danh",result);
+        for(int i=0;i<3;i++)
+        {
+            var label=match.Groups[names[i]+"Label"];
+            Edit(p,true,label.Index,label.Value,new[]{"ngày","tháng","năm"}[i],"Viết thường từ ngày, tháng, năm",result);
+            var zone=match.Groups[names[i]];
+            if(Blank(values[i]))continue; // Preserve all intentional spaces and placeholders.
+            string number=values[i];
+            if(i==0 && numbers[i]<10 && number.Length==1 || i==1 && numbers[i] is 1 or 2 && number.Length==1)number="0"+number;
+            string tail=i<2?" ":new string(zone.Value.Reverse().TakeWhile(c=>c is ' ' or '\t').Reverse().ToArray());
+            Edit(p,true,zone.Index,zone.Value," "+number+tail,"Chuẩn hóa cách ghi và khoảng trắng ngày tháng",result);
+        }
+        if(char.IsLower(match.Groups["place"].Value[0]))
+            result.Add(Notice(p,true,"Địa danh bắt đầu bằng chữ thường; cần đối chiếu tên chính thức. Chưa tự đổi tên hoặc chữ hoa của địa danh."));
+    }
+    public static bool IsBlankTemplateSpacing(string text,int start,int length)
+    {
+        text=Clean(text);
+        var date=DateRow.Match(text);
+        if(!date.Success)date=StandaloneDate.Match(text);
+        if(date.Success)
+            foreach(string name in new[]{"day","month","year"})
+            {
+                var zone=date.Groups[name];
+                if(Blank(zone.Value.Trim(' ','\t')) && start>=zone.Index && (long)start+length<=zone.Index+zone.Length)return true;
+            }
+        if(NumberHint.IsMatch(text))
+        {
+            var prefix=NumberPrefix.Match(text);string value=prefix.Groups["value"].Value;
+            int labelEnd=prefix.Groups["label"].Index+prefix.Groups["label"].Length;
+            int slash=value.IndexOf('/');
+            if(slash>=0 && Blank(value[..slash].Trim(' ','\t')) && start>=labelEnd &&
+                (long)start+length<=prefix.Groups["value"].Index)return true;
+        }
+        return false;
+    }
+}
