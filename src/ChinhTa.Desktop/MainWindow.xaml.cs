@@ -69,7 +69,9 @@ public partial class MainWindow : Window
     private void ScanClick(object sender, RoutedEventArgs e) { if (session.IsOpen) Run(Scan); }
     private void Scan()
     {
-        pending = displayed = null;
+        hover.Stop();pending = displayed = null;
+        Issues.SelectedItem=null;Issues.ItemsSource=null;choices=[];
+        UpdateCheckedCount();
         var timer = Stopwatch.StartNew();
         var found = session.Check().ToList();
         double checkSeconds = timer.Elapsed.TotalSeconds;
@@ -82,7 +84,7 @@ public partial class MainWindow : Window
         {
             var policy = LinePolicy.Decree30;
             foreach (var entry in LineInspection.Inspect(sequence, highlighter, session.LineTargets, session.LineShapes,
-                anchors, found, policy, session.HasGroupedShapes))
+                anchors, found, policy, session.HasGroupedShapes, session.VerifiedLineEdits))
             { found.Add(entry.Issue); anchors[entry.Issue] = entry.Anchor; }
         }
         choices = found.OrderBy(i => i.Start).Select(issue => new IssueChoice(issue)).ToArray();
@@ -180,7 +182,7 @@ public partial class MainWindow : Window
         MessageBox.Show(this, (result.Passed ? "Đã đạt các bước kiểm tra Word trên mẫu riêng." :
             "Kiểm tra Word chưa đạt ở bước: " + result.Stage) +
             "\n\nKết quả và file mẫu đã sửa lưu tại:\n" + result.Folder +
-            "\n\nMẫu chỉ kiểm thao tác ghi/lưu Line, không đánh giá vị trí thể thức.",
+            "\n\nBài kiểm tra đo và kiểm nét XPS trên mẫu; không xác nhận mọi tài liệu.",
             "Kiểm tra Word", MessageBoxButton.OK, result.Passed ? MessageBoxImage.Information : MessageBoxImage.Warning);
         Process.Start(new ProcessStartInfo { FileName = result.Folder, UseShellExecute = true });
     });
@@ -218,3 +220,4 @@ public partial class MainWindow : Window
         Run(() => { ClosePreview(); session.Dispose(); });
     }
 }
+

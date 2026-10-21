@@ -1,3 +1,39 @@
+## Bản thử 0.1.27 — mốc đúng với bản Word đang mở
+
+Đối chiếu CP với chuỗi bằng tiền tố thật; ghép lại mốc sau lưu, sau mở candidate và sau khôi phục checkpoint. Số đo nét thực tế và đích trang vẫn được kiểm độc lập; sai thì rollback. Xem [bằng chứng và giới hạn kiểm chứng](docs/CHANGES-0.1.27.md).
+
+## Bản thử 0.1.26 — đối chiếu lại mốc và ánh xạ vị trí Word
+
+Log 0.1.25 thất bại tại bước so khớp mốc sau lưu, trước khi quét lại. Bản này lấy vị trí chuỗi xem trước từ văn bản tiền tố do Word trả về và ghép lại mốc bằng vai trò/nội dung chính xác trong bố cục mới, thay vì yêu cầu CP cũ giữ nguyên. Giữ xác minh nét XPS, kiểm cuối nhóm và rollback. Xem [bằng chứng và giới hạn](docs/CHANGES-0.1.26.md).
+
+## Bản thử 0.1.25 — xác minh nét thật và hoàn tất nhóm trong một lượt
+
+Đánh giá thể thức trên nét XPS thực đo, quét lại sau lưu ngay bên trong giao dịch sửa và cho phép một lượt đặt lại các Line vừa chọn còn cảnh báo. Chỉ báo đạt khi kiểm cuối không còn cảnh báo ở nhóm đã chọn; sai thì khôi phục cả lượt, Hoàn tác vẫn một lần. Xem [thay đổi và giới hạn kiểm chứng](docs/CHANGES-0.1.25.md).
+
+## Bản thử 0.1.24 — đo đủ glyph cuối và giữ phần bù khi sửa lại
+
+Bỏ phép đo theo điểm dừng con trỏ để nền xác minh và DocumentViewer dùng cùng độ rộng hình học. Khi đặt lại Line đã có, giữ phần bù tọa độ của Line đó và xác minh XPS như trước. Xem [bằng chứng, thay đổi và kiểm chứng](docs/CHANGES-0.1.24.md).
+
+## Bản thử 0.1.23 — bốn chỉnh sửa theo phản hồi
+
+Sửa cả nhóm ba Line với một checkpoint hoàn tác; đích tự tạo cơ quan/trích yếu 3/7, vẫn chấp nhận 1/3–1/2; đo lại dòng trích yếu trên candidate trước khi báo thành công và làm mới kết quả; giữ khoảng trống dành điền số/ngày. Xem [chi tiết và kiểm chứng](docs/CHANGES-0.1.23.md).
+
+## Bản thử 0.1.22 — Line tiêu ngữ ở ô phải
+
+Giữ phép bù nét của 0.1.21. Bổ sung một candidate cho Motto không hiển thị, dùng khung ô thực đo từ XPS và bắt buộc kiểm lại nét mới cùng các nét đã có; sai thì rollback. Xem [phân tích và điều kiện áp dụng](docs/OFFICE2021-0.1.22.md).
+
+## Bản thử 0.1.21 — bù theo nét XPS và xác minh lại
+
+0.1.20 đã chạy đạt bài kiểm tra mẫu trên Word người dùng, nhưng tài liệu riêng vẫn có nét lệch 30/20 mm. Bản này cho phép đúng một lần bù candidate dựa trên nét XPS ghép chắc chắn; bắt buộc kiểm lại đích ban đầu và rollback nếu sai. Xem [bằng chứng và giới hạn](docs/OFFICE2021-0.1.21.md).
+
+## Bản thử 0.1.20 — Office 2021 chưa được xác minh
+
+Log 0.1.19 vẫn lỗi khi đọc ID/Type của Shape. Bản này bỏ hoàn toàn Shape COM getters, dùng kiểm kê DOCX và bắt buộc xác minh nét XPS; giữ rollback. Xem [phân tích và giới hạn kiểm chứng](docs/OFFICE2021-0.1.20.md).
+
+## Bản thử 0.1.19 — Office 2021 chưa được xác minh
+
+Đọc dấu nhận diện từ DOCX thay Shape.AlternativeText; giữ xác minh nét XPS và rollback. Xem [phân tích và giới hạn kiểm chứng](docs/OFFICE2021-0.1.19.md).
+
 # Chính tả Việt — bản thử nghiệm desktop
 
 Ứng dụng C# / WPF chạy offline trên Windows, dùng Microsoft Word desktop để đọc, sửa và xuất XPS xem trước theo bố cục của Word trên máy đó. Không gọi dịch vụ AI hoặc gửi nội dung tài liệu lên mạng.
@@ -93,7 +129,7 @@ Tiêu ngữ chấp nhận cả `Độc lập - Tự do - Hạnh phúc` và `Đ�
 
 ## Bản 0.1.8 — ba đường kẻ Shape Line
 
-Chế độ Nhà nước có kiểm tra/thêm/đặt lại ba Line khi nhận diện và đo chắc chắn: dưới cơ quan trong ô trái, dưới tiêu ngữ và dưới dòng hiển thị cuối của trích yếu. Bản 0.1.9 chỉ dùng độ dài theo NĐ30 (1/3–1/2, đích 5/12); đã bỏ tùy chọn 4/7 khỏi giao diện và bộ kiểm. Khoảng cách theo yêu cầu người dùng: 6–15pt cho cơ quan/trích yếu, 3–13pt cho tiêu ngữ; mặc định tạo cách 6pt. Không gán thông số riêng thành quy định pháp lý.
+Chế độ Nhà nước có kiểm tra/thêm/đặt lại ba Line khi nhận diện và đo chắc chắn: dưới cơ quan trong ô trái, dưới tiêu ngữ và dưới dòng hiển thị cuối của trích yếu. Bản 0.1.9 chỉ dùng độ dài theo NĐ30 (1/3–1/2; từ 0.1.23 đích tự tạo là 3/7 theo lựa chọn người dùng); đã bỏ tùy chọn 4/7 khỏi giao diện và bộ kiểm. Khoảng cách theo yêu cầu người dùng: 6–15pt cho cơ quan/trích yếu, 3–13pt cho tiêu ngữ; mặc định tạo cách 6pt. Không gán thông số riêng thành quy định pháp lý.
 
 Chọn cảnh báo để thấy dòng mốc và vạch cam vị trí đề xuất; vạch cam chưa phải Shape đã lưu. Duyệt sửa để tạo/đặt lại Line. Nếu có cả lỗi chữ và Line, sửa chữ trước rồi sửa Line theo số đo mới; Sửa tất cả sẽ thông báo cách chạy hai lượt. Không ghép chắc chắn thì chỉ cảnh báo, không tự chèn trùng. Chi tiết: docs/SHAPE-LINES.md.
 
@@ -150,3 +186,4 @@ Nhật ký 0.1.17 xác nhận kiểm nét thất bại ở Agency: mong đợi L
 Thay đường ghi VML bằng DrawingML WordprocessingShape connector (`prstGeom=line`) với wp:anchor/positionH/positionV theo trang bằng EMU, layoutInCell=false, wrapNone; vẫn là Shape Line và giữ nguyên chữ. Đặt lại được VML cũ có marker hoặc DrawingML của ứng dụng. Không bỏ kiểm marker/type/nét XPS hoặc rollback. Nhật ký bổ sung tọa độ nét và metadata hình học native, không ghi nội dung. Chặn số trang ngoài phạm vi khi rê chuột sau dựng lại preview.
 
 Kiểm tra Word tự động trên mẫu giả sẽ giữ candidate và XPS thất bại ngay trong OfficeCheck-* để phân biệt lỗi dựng trang với lỗi đọc nét. Không tự lưu các hiện vật này khi xử lý tài liệu thật. 129 kiểm tra mẫu và 139 kiểm tra với cặp DOCX riêng tư đã đạt; gói DrawingML qua kiểm chuẩn OpenXML SDK và build Windows. Cloud chưa chạy Office2021, nên đây vẫn là bản thử cần xác nhận bằng menu kiểm tra Word trước.
+

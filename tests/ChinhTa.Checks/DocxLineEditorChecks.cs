@@ -64,6 +64,44 @@ public static class DocxLineEditorChecks
                 if(errors.Length>0)throw new InvalidOperationException(string.Join("\n",errors.Select(e=>e.Description)));
             }
             assert(true, "Ba DrawingML Line hợp lệ theo bộ kiểm chuẩn OpenXML SDK");
+            string compensated=Path.Combine(folder,"compensated.docx");
+            var offsets=issues.Select(i=>i with {LineFix=i.LineFix! with {Left=i.LineFix!.Left-30,Top=i.LineFix!.Top-20}}).ToArray();
+            DocxLineEditor.Write(source,compensated,live,targets,offsets,issues);
+            var intentLines=DocxLineInventory.Read(compensated,live).Lines;
+            assert(intentLines.Count==3 && intentLines.All(l=>issues.Any(i=>l.Geometry==new LineGeometry(i.LineFix!.Left,i.LineFix!.Top,i.LineFix!.Width))),
+                "Rescan uses original intended page geometry on measured-correction Lines");
+            foreach(var node in ReadDoc(compensated).Descendants(w+"drawing"))
+                if(validator.Validate(new DocumentFormat.OpenXml.Wordprocessing.Drawing(node.ToString())).Any())
+                    throw new InvalidOperationException("Compensated drawing violates schema");
+            assert(true,"Measured-correction intent uses schema-valid drawing metadata");
+            string retry=Path.Combine(folder,"retry-restored-cps.docx");
+            string story=string.Concat(live.Select(p=>p.Text));
+            var openedTargets=targets.Select(t=>t with {Start=t.Start+10}).ToArray();
+            var candidatePlan=LineReferenceBinding.Rebind(issues,openedTargets,story,story);
+            var candidateEncoded=candidatePlan.Select(i=>i with {LineFix=i.LineFix! with {Left=i.LineFix!.Left-30,Top=i.LineFix!.Top-20}}).ToArray();
+            var restoredPlan=LineReferenceBinding.Rebind(candidatePlan,targets,story,story);
+            var restoredEncoded=LineReferenceBinding.Rebind(candidateEncoded,targets,story,story);
+            DocxLineEditor.Write(source,retry,live,targets,restoredEncoded,restoredPlan);
+            var retryInventory=DocxLineInventory.Read(retry,live);
+            assert(restoredEncoded.Zip(issues).All(pair=>pair.First.Start==pair.Second.Start) &&
+                retryInventory.Lines.All(line=>issues.Any(i=>line.AnchorStart==i.Start &&
+                    line.Geometry==new LineGeometry(i.LineFix!.Left,i.LineFix!.Top,i.LineFix!.Width))),
+                "Candidate retry uses restored source CPs while preserving the measured encoding and intended page geometry");
+            string updated=Path.Combine(folder,"updated-compensated.docx");
+            var oldMotto=issues.Single(i=>i.LineFix!.Role==LineRole.Motto);
+            var oldMottoFix=oldMotto.LineFix!;
+            var requested=oldMotto with {LineFix=oldMottoFix with {ShapeId=42,Left=oldMottoFix.Left+4,Top=oldMottoFix.Top+2,Width=oldMottoFix.Width+6}};
+            var requestedFix=requested.LineFix!;
+            var encoded=DocxLineEditor.Write(compensated,updated,live,targets,[requested]).Single().LineFix!;
+            assert(Math.Abs(encoded.Left-requestedFix.Left+30)<.001 && Math.Abs(encoded.Top-requestedFix.Top+20)<.001,
+                "Updating an existing corrected Motto preserves its measured DOCX translation");
+            var updatedMetadata=DocxLineMetadata.Read(updated).Single(m=>m.Role==LineRole.Motto);
+            var updatedLine=DocxLineInventory.Read(updated,live).Lines.Single(l=>l.Id==updatedMetadata.Id);
+            assert(updatedLine.Geometry==new LineGeometry(requestedFix.Left,requestedFix.Top,requestedFix.Width),
+                "Updated Motto metadata keeps the requested page target independently of encoded coordinates");
+            var oldOther=ReadDoc(compensated).Descendants(w+"drawing").Where(d=>d.Descendants(wp+"docPr").Single().Attribute("descr")!.Value!="ChinhTaViet.ShapeLine.Motto").ToArray();
+            var newOther=ReadDoc(updated).Descendants(w+"drawing").Where(d=>d.Descendants(wp+"docPr").Single().Attribute("descr")!.Value!="ChinhTaViet.ShapeLine.Motto").ToArray();
+            assert(oldOther.Zip(newOther).All(pair=>XNode.DeepEquals(pair.First,pair.Second)),"Updating Motto leaves Agency and Subject drawing XML unchanged");
             var originalDoc=ReadDoc(source);
             foreach(var line in lines)line.Ancestors(w+"r").First().Remove();
             assert(XNode.DeepEquals(originalDoc.Root,result.Root), "Nội dung chữ, paragraph/table formatting và XML cũ giữ nguyên");
@@ -194,3 +232,4 @@ public static class DocxLineEditorChecks
             "Nếu khôi phục cũng không mở được, giữ rollback file để phục hồi thủ công");
     }
 }
+

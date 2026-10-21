@@ -8,7 +8,7 @@ public static class LineInspection
 {
     public static IReadOnlyList<(Issue Issue, PreviewAnchor Anchor)> Inspect(FixedDocumentSequence document,
         PreviewHighlighter preview, IReadOnlyList<LineTarget> targets, IReadOnlyList<WordLineShape> shapes,
-        IReadOnlyDictionary<Issue, PreviewAnchor> anchors, IReadOnlyList<Issue> otherIssues, LinePolicy policy, bool hasGroupedShapes)
+        IReadOnlyDictionary<Issue, PreviewAnchor> anchors, IReadOnlyList<Issue> otherIssues, LinePolicy policy, bool hasGroupedShapes, IReadOnlyList<Issue>? verifiedEdits = null)
     {
         var result = new List<(Issue, PreviewAnchor)>();
         foreach (var target in targets)
@@ -20,16 +20,20 @@ public static class LineInspection
                 " Khoảng cách và dung sai đo/tâm theo cấu hình người dùng.";
             Issue Notice(string message, ShapeLineFix? fix = null) => target.Probe with
             { Message = message, Citation = citation, CanFix = fix is not null, LineFix = fix };
-            var boxes = hasAnchor ? preview.Measure(document, anchor) : [];
-            if (boxes.Count == 0 || !target.Centered)
+            var reference=hasAnchor ? ReferenceMeasurement.Read(document,preview,anchor) : null;
+            if(reference is null || !target.Centered)
             {
                 result.Add((Notice("Chưa đo/nhận diện chắc chắn dòng tham chiếu hoặc dòng chưa căn giữa vùng đặt. Kiểm tra thủ công trước khi thêm Shape Line."), anchor));
                 continue;
             }
-            double bottom = boxes.Max(b => b.Bottom);
-            var last = boxes.Where(b => Math.Abs(b.Bottom - bottom) <= 3).ToArray();
-            double left = last.Min(b => b.Left), right = last.Max(b => b.Right);
-            var reference = new LineReference(left * .75, bottom * .75, (right - left) * .75);
+            // Recheck successful edits against the new XPS and the current reference. Never hide by position alone.
+            var verified=verifiedEdits?.SingleOrDefault(i=>i.Start==target.Start && i.Original==target.Text && i.LineFix?.Role==target.Role);
+            if(verified?.LineFix is ShapeLineFix accepted)
+            {
+                var actual=RenderedLineVerifier.Find(new(accepted.Left,accepted.Top,accepted.Width),preview.HorizontalLines(document,anchor.Page));
+                if(actual is not null && ShapeLineRules.Evaluate(target,reference,actual,accepted.ShapeId,policy).Errors.Length==0)
+                    continue;
+            }
             bool IsInRegion(WordLineShape shape, LineTarget region) => shape.AnchorStart >= region.RegionStart && shape.AnchorStart < region.RegionEnd;
             var pageShapes = shapes.Where(s => s.Page == anchor.Page).ToArray();
             var own = pageShapes.Where(s => IsInRegion(s, target)).ToArray();
@@ -40,7 +44,7 @@ public static class LineInspection
             {
                 (fix, errors) = ShapeLineRules.Evaluate(target, reference, null, null, policy);
             }
-            else if (!hasGroupedShapes && own.Length == 1 && own[0].Geometry is LineGeometry measured)
+            else if (own.Length == 1 && own[0].AppOwned && own[0].Geometry is LineGeometry measured)
             {
                 var actual = RenderedLineVerifier.Find(measured, preview.HorizontalLines(document, anchor.Page));
                 if (actual is null)
@@ -77,3 +81,4 @@ public static class LineInspection
         return result;
     }
 }
+

@@ -11,8 +11,8 @@ public static class DocxLineEditor
     private static readonly XNamespace WP = "http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing";
     private static readonly XNamespace A = "http://schemas.openxmlformats.org/drawingml/2006/main";
     private static readonly XNamespace WPS = "http://schemas.microsoft.com/office/word/2010/wordprocessingShape";
-    public static void Write(string source, string candidate, IReadOnlyList<WordParagraphSnapshot> live,
-        IReadOnlyList<LineTarget> targets, IReadOnlyList<Issue> issues)
+    public static IReadOnlyList<Issue> Write(string source, string candidate, IReadOnlyList<WordParagraphSnapshot> live,
+        IReadOnlyList<LineTarget> targets, IReadOnlyList<Issue> issues, IReadOnlyList<Issue>? intendedPlan = null)
     {
         if (Path.GetFullPath(source) == Path.GetFullPath(candidate) || File.Exists(candidate))
             throw new InvalidOperationException("Candidate must be a new separate file");
@@ -32,9 +32,11 @@ public static class DocxLineEditor
         WordXmlTableMap.Read(wrapper.ToString(), live, _ => { }, (start, index) => verified.Add(start, index));
         var drawingIds = document.Descendants(WP + "docPr").Select(p => (uint?)p.Attribute("id") ?? 0).ToHashSet();
         var roles = new HashSet<LineRole>();
+        var encoded=new List<Issue>();
         foreach (var issue in issues)
         {
             var fix = issue.LineFix ?? throw new InvalidOperationException("Only Line edits are allowed");
+            LineGeometry? intent = null;
             if (!roles.Add(fix.Role)) throw new InvalidOperationException("Duplicate Line role");
             if (!double.IsFinite(fix.Left) || !double.IsFinite(fix.Top) || !double.IsFinite(fix.Width) || fix.Width <= 0)
                 throw new InvalidOperationException("Invalid Line measurements");
@@ -54,6 +56,20 @@ public static class DocxLineEditor
                 int ownerIndex = Array.IndexOf(paragraphs, owner);
                 if (!verified.Any(pair => pair.Value == ownerIndex && pair.Key >= target.RegionStart && pair.Key < target.RegionEnd))
                     throw new InvalidOperationException("Marked Line anchor outside verified region");
+                if(intendedPlan is null && marked[0].Name==W+"drawing")
+                {
+                    var anchor=marked[0].Element(WP+"anchor");
+                    var oldIntent=LinePageIntent.Read((string?)anchor?.Element(WP+"docPr")?.Attribute("title"));
+                    var h=anchor?.Element(WP+"positionH");var v=anchor?.Element(WP+"positionV");
+                    if(oldIntent is not null && (string?)h?.Attribute("relativeFrom")=="page" &&
+                        (string?)v?.Attribute("relativeFrom")=="page" &&
+                        long.TryParse(h.Element(WP+"posOffset")?.Value,out long oldX) &&
+                        long.TryParse(v.Element(WP+"posOffset")?.Value,out long oldY))
+                    {
+                        intent=new(fix.Left,fix.Top,fix.Width);
+                        fix=fix with {Left=fix.Left-(oldIntent.Left-oldX/12700d),Top=fix.Top-(oldIntent.Y-oldY/12700d)};
+                    }
+                }
                 var run = marked[0].Ancestors(W + "r").First();
                 var pict = marked[0].Parent?.Name == W + "pict" ? marked[0].Parent : null;
                 marked[0].Remove();
@@ -75,7 +91,15 @@ public static class DocxLineEditor
             uint number = 1;
             while (drawingIds.Contains(number)) number++;
             drawingIds.Add(number);
-            paragraphs[index].Add(new XElement(W + "r", CreateDrawing(fix, marker, number)));
+            if (intendedPlan is not null)
+            {
+                var expected = intendedPlan.Single(i => i.Start == issue.Start && i.LineFix?.Role == fix.Role).LineFix!;
+                if (!double.IsFinite(expected.Left) || !double.IsFinite(expected.Top) || expected.Width != fix.Width)
+                    throw new InvalidOperationException("Invalid intended Line geometry");
+                intent = new(expected.Left, expected.Top, expected.Width);
+            }
+            paragraphs[index].Add(new XElement(W + "r", CreateDrawing(fix, marker, number, intent)));
+            encoded.Add(issue with {LineFix=fix});
 
         }
         File.Copy(source, candidate);
@@ -87,10 +111,11 @@ public static class DocxLineEditor
             document.Save(output, SaveOptions.DisableFormatting);
         }
         catch { File.Delete(candidate); throw; }
+        return encoded;
     }
     // A page-relative DrawingML connector, supported by Word 2010 and later.
     // No VML coordinate interpretation and no COM AddLine/LineFormat setters.
-    private static XElement CreateDrawing(ShapeLineFix fix, string marker, uint id)
+    private static XElement CreateDrawing(ShapeLineFix fix, string marker, uint id, LineGeometry? intent)
     {
         long Emu(double points) => checked((long)Math.Round(points * 12700));
         long width = Emu(fix.Width);
@@ -108,7 +133,8 @@ public static class DocxLineEditor
                 new XElement(WP + "extent", new XAttribute("cx", width), new XAttribute("cy", 0)),
                 new XElement(WP + "effectExtent", new XAttribute("l", 0), new XAttribute("t", 0), new XAttribute("r", 0), new XAttribute("b", 0)),
                 new XElement(WP + "wrapNone"),
-                new XElement(WP + "docPr", new XAttribute("id", id), new XAttribute("name", "ChinhTaViet Line " + id), new XAttribute("descr", marker)),
+                new XElement(WP + "docPr", new XAttribute("id", id), new XAttribute("name", "ChinhTaViet Line " + id), new XAttribute("descr", marker),
+                    intent is null ? null : new XAttribute("title", LinePageIntent.Format(intent))),
                 new XElement(WP + "cNvGraphicFramePr"),
                 new XElement(A + "graphic", new XElement(A + "graphicData", new XAttribute("uri", WPS.NamespaceName),
                     new XElement(WPS + "wsp",
@@ -128,3 +154,4 @@ public static class DocxLineEditor
     }
 
 }
+

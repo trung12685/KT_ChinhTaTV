@@ -2,7 +2,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
-using System.Windows.Media.TextFormatting;
 using System.Windows.Shapes;
 using ChinhTa.Core;
 using LineGeometry = ChinhTa.Core.LineGeometry;
@@ -72,8 +71,10 @@ public sealed class PreviewHighlighter
                 int end = Math.Min(span.Start + span.Length, run.Start + run.Length) - run.Start;
                 if (end <= start) continue;
                 GlyphRun glyphRun = run.Glyph.ToGlyphRun();
-                double x1 = glyphRun.GetDistanceFromCaretCharacterHit(new CharacterHit(start, 0));
-                double x2 = glyphRun.GetDistanceFromCaretCharacterHit(new CharacterHit(end, 0));
+                if(glyphRun.IsSideways || glyphRun.BidiLevel%2!=0)return [];
+                var advance=GlyphAdvanceRange.Read(glyphRun.AdvanceWidths.ToArray(),glyphRun.ClusterMap?.ToArray(),run.Length,start,end);
+                if(advance is null)return [];
+                double x1=advance.Start,x2=advance.End;
                 Rect alignment = glyphRun.ComputeAlignmentBox();
                 var bounds = new Rect(glyphRun.BaselineOrigin.X + Math.Min(x1, x2),
                     glyphRun.BaselineOrigin.Y + alignment.Y,
@@ -85,6 +86,40 @@ public sealed class PreviewHighlighter
         catch (ArgumentException) { return []; }
         catch (InvalidOperationException) { return []; }
         return boxes;
+    }
+    public LineAnchorFrame? TableFrame(FixedDocumentSequence document, PreviewAnchor anchor)
+    {
+        var index=GetIndex(document,anchor.Page);
+        if(index is null)return null;
+        var span=PreviewLocator.Locate(anchor,index.Text);
+        if(span is null)return null;
+        var selected=index.Runs.Where(run=>run.Start<span.Start+span.Length && run.Start+run.Length>span.Start).ToArray();
+        if(selected.Length==0)return null;
+        var frames=new List<Rect>();
+        foreach(var run in selected)
+        {
+            var candidates=new List<Rect>();
+            for(DependencyObject? parent=VisualTreeHelper.GetParent(run.Glyph);parent is not null && parent!=index.Page;
+                parent=VisualTreeHelper.GetParent(parent))
+            {
+                if(parent is not UIElement element || element.Clip is not Geometry clip || clip.Bounds.IsEmpty)continue;
+                var difference=Geometry.Combine(clip,new RectangleGeometry(clip.Bounds),GeometryCombineMode.Xor,Transform.Identity);
+                if(difference.GetArea()>.01)continue;
+                var transform=element.TransformToAncestor(index.Page);
+                // Only an axis-aligned rectangular clip can establish a table coordinate frame.
+                var corners=new[]{clip.Bounds.TopLeft,clip.Bounds.TopRight,clip.Bounds.BottomLeft}.Select(transform.Transform).ToArray();
+                if(Math.Abs(corners[0].Y-corners[1].Y)>.01 || Math.Abs(corners[0].X-corners[2].X)>.01)continue;
+                var rect=transform.TransformBounds(clip.Bounds);
+                if(rect.Width>0 && rect.Height>0 && rect.Width<index.Page.Width*.9 &&
+                    rect.Left>0 && rect.Top>=0 && double.IsFinite(rect.Left) && double.IsFinite(rect.Top))candidates.Add(rect);
+            }
+            if(candidates.Count==0)return null;
+            frames.Add(candidates.OrderBy(r=>r.Width*r.Height).First());
+        }
+        var frame=frames[0];
+        if(frames.Any(r=>Math.Abs(r.Left-frame.Left)>.5 || Math.Abs(r.Top-frame.Top)>.5 ||
+            Math.Abs(r.Width-frame.Width)>.5 || Math.Abs(r.Height-frame.Height)>.5))return null;
+        return new(frame.Left*.75,frame.Top*.75,frame.Width*.75,frame.Height*.75,index.Page.Width*.75);
     }
     public IReadOnlyList<LineGeometry> HorizontalLines(FixedDocumentSequence document, int pageNumber)
     {
@@ -138,3 +173,4 @@ public sealed class PreviewHighlighter
         return marks.Count > 0;
     }
 }
+
