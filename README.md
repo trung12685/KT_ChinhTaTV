@@ -1,3 +1,7 @@
+## Bản thử 0.1.20 — Office 2021 chưa được xác minh
+
+Log 0.1.19 vẫn lỗi khi đọc ID/Type của Shape. Bản này bỏ hoàn toàn Shape COM getters, dùng kiểm kê DOCX và bắt buộc xác minh nét XPS; giữ rollback. Xem [phân tích và giới hạn kiểm chứng](docs/OFFICE2021-0.1.20.md).
+
 ## Bản thử 0.1.19 — Office 2021 chưa được xác minh
 
 Đọc dấu nhận diện từ DOCX thay Shape.AlternativeText; giữ xác minh nét XPS và rollback. Xem [phân tích và giới hạn kiểm chứng](docs/OFFICE2021-0.1.19.md).

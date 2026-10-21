@@ -211,39 +211,11 @@ public sealed class WordSession : IDisposable
     }
     private IReadOnlyList<WordLineShape> ReadLineShapes()
     {
-        HasGroupedShapes = false;
-        if (LineTargets.Count == 0) return [];
-        var result = new List<WordLineShape>();
-        var metadata = DocxLineMetadata.Read(RecoveryPath);
-        dynamic shapes = document!.Shapes;
-        try
-        {
-            int count = (int)shapes.Count;
-            for (int i = 1; i <= count; i++)
-            {
-                dynamic shape = shapes[i];
-                try
-                {
-                    int type = (int)shape.Type;
-                    if (type is 6 or 20) HasGroupedShapes = true;
-                    if (type != 9) continue; // Office msoLine
-                    LineGeometry? geometry = null;
-                    bool owned = metadata.Any(m => m.Id == (int)shape.ID && m.IsLine);
-                    if (owned &&
-                        (int)shape.RelativeHorizontalPosition == 1 && (int)shape.RelativeVerticalPosition == 1 &&
-                        Math.Abs((float)shape.Height) <= .5f && Math.Abs((float)shape.Rotation) < .01f && (int)shape.Visible != 0)
-                    {
-                        geometry = new((float)shape.Left, (float)shape.Top, (float)shape.Width);
-                    }
-                    dynamic anchor = shape.Anchor;
-                    try { result.Add(new((int)shape.ID, (int)anchor.Start, (int)anchor.Information[3], geometry, owned)); }
-                    finally { Release(anchor); }
-                }
-                finally { Release(shape); }
-            }
-        }
-        finally { Release(shapes); }
-        return result;
+        // Use the saved package and verified live paragraph offsets, without any Shape COM getter.
+        var inventory = DocxLineInventory.Read(RecoveryPath, lastLayout);
+        HasGroupedShapes = inventory.HasUnmappedShapes;
+        return inventory.Lines.Select(line => new WordLineShape(line.Id, line.AnchorStart,
+            line.Page, line.Geometry, line.AppOwned)).ToArray();
     }
     private void CloseDocumentOnly()
     {
@@ -262,24 +234,8 @@ public sealed class WordSession : IDisposable
     {
         var metadata = DocxLineMetadata.Read(RecoveryPath);
         DocxLineMetadata.Verify(metadata, plan.Select(item => item.LineFix!.Role));
-        dynamic shapes = document!.Shapes;
-        try
-        {
-            foreach (var item in plan)
-            {
-                int id = metadata.Single(m => m.Role == item.LineFix!.Role).Id;
-                int matches = 0;
-                for (int i = 1; i <= (int)shapes.Count; i++)
-                {
-                    dynamic shape = shapes[i];
-                    try { if ((int)shape.ID == id && (int)shape.Type == 9) matches++; }
-                    finally { Release(shape); }
-                }
-                if (matches != 1)
-                    throw new InvalidOperationException("Không đối chiếu được dấu DOCX với đúng một Line trong Word.");
-            }
-        }
-        finally { Release(shapes); }
+        // Package identity is only the first gate. VerifyRenderedLines must still pass.
+        // Office 2021 can fail even on Shape.ID / Shape.Type; never enumerate Shapes here.
     }
     internal void VerifyLineResult(IReadOnlyList<Issue> plan)
     {
@@ -304,7 +260,7 @@ public sealed class WordSession : IDisposable
                 failure.Data["ChinhTa.LineVerification"] = FormattableString.Invariant(
                     $"Role={fix.Role}; ExpectedLeft={fix.Left:F2}; ExpectedTop={fix.Top:F2}; ExpectedWidth={fix.Width:F2}; RenderedCount={rendered.Count}") +
                     "; Rendered=" + string.Join("|", rendered.Take(40).Select(line => FormattableString.Invariant(
-                        $"L={line.Left:F2},Y={line.Y:F2},W={line.Width:F2}"))) + "; " + ReadOwnedLinePositions();
+                        $"L={line.Left:F2},Y={line.Y:F2},W={line.Width:F2}")));
                 throw failure;
             }
         }
@@ -318,30 +274,6 @@ public sealed class WordSession : IDisposable
             try { if (File.Exists(path)) File.Delete(path); }
             catch (IOException error) { Diagnostics.Write("Word.LineVerify.Cleanup",error); }
         }
-    }
-    private string ReadOwnedLinePositions()
-    {
-        // Numeric geometry only: never include document text or arbitrary alternative text.
-        var positions = new List<string>();
-        var metadata = DocxLineMetadata.Read(RecoveryPath);
-        dynamic shapes = document!.Shapes;
-        try
-        {
-            for (int i = 1; i <= (int)shapes.Count; i++)
-            {
-                dynamic shape = shapes[i];
-                try
-                {
-                    if (!metadata.Any(m => m.Id == (int)shape.ID && m.IsLine)) continue;
-                    positions.Add(FormattableString.Invariant($"ID={(int)shape.ID},Type={(int)shape.Type},L={(float)shape.Left:F2},Y={(float)shape.Top:F2},W={(float)shape.Width:F2},H={(float)shape.Height:F2},RH={(int)shape.RelativeHorizontalPosition},RV={(int)shape.RelativeVerticalPosition}"));
-                }
-                finally { Release(shape); }
-            }
-        }
-        catch (Exception error) when (error is COMException or Microsoft.CSharp.RuntimeBinder.RuntimeBinderException)
-        { positions.Add($"MetadataUnavailable=0x{error.HResult:X8}"); }
-        finally { Release(shapes); }
-        return "Native=" + string.Join("|", positions);
     }
     private void ApplyLinePackage(IReadOnlyList<Issue> plan, string before)
     {
