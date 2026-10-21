@@ -75,3 +75,7 @@ Bản thử chỉ sửa cách viết trong vùng đầu đã nhận diện, cả
 ## Bổ sung 0.1.31: sửa định dạng số/ngày
 
 Đọc lại trực tiếp NĐ30 PL I Phần I.II.3.c và 4.c trên PDF 23: số/ký hiệu cỡ 13 đứng; địa danh/ngày tháng cỡ 13–14 nghiêng; phông/màu theo PL I.I.4. Bản thử cho sửa phông/cỡ/nghiêng/màu khi quan sát rõ trong dòng chữ thuần đã nhận diện. Giữ cỡ ngày hợp lệ, đậm/gạch chân/căn đoạn và nguyên văn. Đây chưa phải kiểm đủ tọa độ/căn giữa tương đối hoặc kiểu đậm/gạch chân của thành phần; các phần đó vẫn ngoài phạm vi tự sửa mới. Mẫu và ngoại lệ chưa rõ giữ thủ công. Xem [CHANGES-0.1.31.md](CHANGES-0.1.31.md).
+
+## Bổ sung 0.1.32: cảnh báo vị trí số/ngày
+
+NĐ30 PL I, Phần I.II.3.c và 4.c, PDF 23: số/ký hiệu căn giữa dưới tên cơ quan; địa danh/ngày tháng cùng dòng với số/ký hiệu, đặt dưới và căn giữa với quốc hiệu/tiêu ngữ. Bản thử chỉ đánh giá các quan hệ này trong vùng bảng đã nhận diện bằng khung glyph/baseline XPS và đưa cảnh báo thủ công. Ngưỡng phát hiện 3 pt và dung sai nhỏ 0,5 pt là chính sách đo ứng dụng, không phải số ghi trong điều khoản. Chưa kiểm đủ vị trí trên trang hoặc mọi mẫu, chưa tự dịch đoạn/căn giữa. Thiếu mốc hoặc chữ cắt/xoay/xuống dòng phải báo chưa đo được. Xem [CHANGES-0.1.32.md](CHANGES-0.1.32.md).

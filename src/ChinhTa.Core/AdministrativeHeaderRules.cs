@@ -24,6 +24,7 @@ public static class AdministrativeHeaderRules
         : "NĐ 30/2020/NĐ-CP, Phụ lục I, Phần I.II.3.a–c; PDF trang 22–23. Mã viết tắt do cơ quan quy định; chưa xác minh mã được cấp.";
 
     public static bool IsCandidate(string text)=>NumberHint.IsMatch(Clean(text)) || DateHint.IsMatch(Clean(text));
+    public static bool IsNumber(string text)=>NumberHint.IsMatch(Clean(text));
     public static IReadOnlyList<Paragraph> Identify(IReadOnlyList<Paragraph> paragraphs,DocumentProfile profile)
     {
         if(profile!=DocumentProfile.State)return [];

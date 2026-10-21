@@ -57,6 +57,19 @@ public sealed class PreviewHighlighter
         return index;
     }
     public IReadOnlyList<Rect> Measure(FixedDocumentSequence document, PreviewAnchor anchor)
+        =>MeasureCore(document,anchor,null);
+    public RenderedTextLine? MeasureSingleLine(FixedDocumentSequence document,PreviewAnchor anchor)
+    {
+        var baselines=new List<double>();
+        var boxes=MeasureCore(document,anchor,baselines);
+        // Different glyph runs may share one baseline. Wrapped, superscript or rotated
+        // text does not establish one unambiguous administrative row.
+        if(boxes.Count==0 || baselines.Count!=boxes.Count || baselines.Max()-baselines.Min()>.5/.75)return null;
+        double left=boxes.Min(b=>b.Left),right=boxes.Max(b=>b.Right),top=boxes.Min(b=>b.Top),bottom=boxes.Max(b=>b.Bottom);
+        var line=new RenderedTextLine(left*.75,top*.75,(right-left)*.75,(bottom-top)*.75,baselines.Average()*.75);
+        return line.Valid?line:null;
+    }
+    private IReadOnlyList<Rect> MeasureCore(FixedDocumentSequence document, PreviewAnchor anchor,List<double>? baselines)
     {
         var index = GetIndex(document, anchor.Page);
         if (index is null) return [];
@@ -79,8 +92,33 @@ public sealed class PreviewHighlighter
                 var bounds = new Rect(glyphRun.BaselineOrigin.X + Math.Min(x1, x2),
                     glyphRun.BaselineOrigin.Y + alignment.Y,
                     Math.Max(2, Math.Abs(x2 - x1)), Math.Max(2, alignment.Height));
-                bounds = run.Glyph.TransformToAncestor(index.Page).TransformBounds(bounds);
-                if (!bounds.IsEmpty && double.IsFinite(bounds.X) && double.IsFinite(bounds.Y)) boxes.Add(bounds);
+                var transform=run.Glyph.TransformToAncestor(index.Page);
+                bounds = transform.TransformBounds(bounds);
+                if (!bounds.IsEmpty && double.IsFinite(bounds.X) && double.IsFinite(bounds.Y))
+                {
+                    if(baselines is not null)
+                    {
+                        var origin=transform.Transform(glyphRun.BaselineOrigin);
+                        var next=transform.Transform(new Point(glyphRun.BaselineOrigin.X+1,glyphRun.BaselineOrigin.Y));
+                        if(!double.IsFinite(origin.Y) || Math.Abs(origin.Y-next.Y)>.001 || next.X<=origin.X)return [];
+                        if(!new Rect(0,0,index.Page.Width,index.Page.Height).Contains(bounds))return [];
+                        for(DependencyObject? parent=run.Glyph;parent is not null;parent=parent==index.Page?null:VisualTreeHelper.GetParent(parent))
+                        {
+                            if(parent is not UIElement element || element.Clip is not Geometry clip)continue;
+                            var difference=Geometry.Combine(clip,new RectangleGeometry(clip.Bounds),GeometryCombineMode.Xor,Transform.Identity);
+                            if(difference.GetArea()>.01)return [];
+                            var clipTransform=element.TransformToAncestor(index.Page);
+                            var corners=new[]{clip.Bounds.TopLeft,clip.Bounds.TopRight,clip.Bounds.BottomLeft}.Select(clipTransform.Transform).ToArray();
+                            if(Math.Abs(corners[0].Y-corners[1].Y)>.001 || Math.Abs(corners[0].X-corners[2].X)>.001)return [];
+                            var clipBounds=clipTransform.TransformBounds(clip.Bounds);
+                            clipBounds.Inflate(.1,.1);
+                            if(!clipBounds.Contains(bounds))return [];
+                        }
+                        baselines.Add(origin.Y);
+                    }
+                    boxes.Add(bounds);
+                }
+                else if(baselines is not null)return [];
             }
         }
         catch (ArgumentException) { return []; }

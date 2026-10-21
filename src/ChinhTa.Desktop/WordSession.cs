@@ -17,6 +17,7 @@ public sealed class WordSession : IDisposable
     private readonly Dictionary<LineRole,Issue> verifiedLineEdits = new();
     public IReadOnlyList<Issue> VerifiedLineEdits => verifiedLineEdits.Values.ToArray();
     public IReadOnlyList<LineTarget> LineTargets { get; private set; } = [];
+    public IReadOnlyList<AdministrativePositionTarget> AdministrativePositionTargets { get; private set; } = [];
     public IReadOnlyList<WordLineShape> LineShapes { get; private set; } = [];
     public bool HasGroupedShapes { get; private set; }
     public DocumentProfile Profile { get; set; } = DocumentProfile.State;
@@ -47,7 +48,7 @@ public sealed class WordSession : IDisposable
         // Do not reuse an RCW from a Word process that has already exited.
         CloseConnection();
         undoCheckpoints.Clear();verifiedLineEdits.Clear();
-        lastLayout = [];
+        lastLayout = [];AdministrativePositionTargets=[];
         Source = Path.GetFullPath(path);
         Changed = false;
         Recovered = false;
@@ -167,6 +168,7 @@ public sealed class WordSession : IDisposable
             if(Profile==DocumentProfile.State && AdministrativeHeaderRules.IsCandidate(paragraphs[i].Text))
                 paragraphs[i]=paragraphs[i] with {TextEditable=editableHeaderStarts.Contains(paragraphs[i].Start)};
         LineTargets = lineLayoutUnavailable ? [] : ShapeLineRules.Identify(headerLayout, Profile);
+        AdministrativePositionTargets=AdministrativePositionRules.Identify(paragraphs,headerLayout,Profile);
         LineShapes = ReadLineShapes();
         var issues = Checker.Check(paragraphs, Profile).ToList();
         if ((lineLayoutUnavailable || mappingWarning is not null && LineTargets.Count < 3) && paragraphs.FirstOrDefault(p => p.Text.Length > 0) is Paragraph first)
