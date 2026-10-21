@@ -82,8 +82,9 @@ public static class AdministrativePositionDesktopChecks
         b.OriginX=a.OriginX+a.ToGlyphRun().AdvanceWidths.Sum();
         assert(new PreviewHighlighter().MeasureSingleLine(wrappedPage,new(1,wrapped,0,wrapped.Length)) is not null,
             "Multiple glyph runs on one baseline can establish one measured row");
-        a.RenderTransform=new RotateTransform(5);
-        assert(new PreviewHighlighter().MeasureSingleLine(wrappedPage,new(1,wrapped,0,wrapped.Length)) is null,
+        var rotated=Glyph(wrapped,150,100);rotated.RenderTransform=new RotateTransform(5);
+        var rotatedPage=Build([rotated]);
+        assert(new PreviewHighlighter().MeasureSingleLine(rotatedPage,new(1,wrapped,0,wrapped.Length)) is null,
             "Rotated glyphs stay unverified rather than producing axis-aligned position claims");
     }
 }
