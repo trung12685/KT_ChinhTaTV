@@ -124,7 +124,8 @@ public static class AdministrativeHeaderChecks
             "Without a unique recognized national-heading pair the rules cannot assume a State header");
         var format=Header();format[1]=format[1] with {FormatObserved=true,Italic=true,Size=14};
         format[4]=format[4] with {FormatObserved=true,Italic=false,Font="Arial"};
-        assert(Found(format).Length==2 && Found(format).All(i=>!i.CanFix),"Measured number/date font-size-style problems are manual, keeping rich formatting unchanged");
+        assert(Checker.Check(format).Count(i=>i.Kind==FixKind.AdministrativeFormat && i.CanFix)==2,
+            "Uniform observed number/date formatting errors offer character-only fixes");
         format=Header();format[4]=format[4] with {FormatObserved=true,FormatMixed=true};
         assert(Found(format).Single().CanFix==false,"Mixed run formatting cannot be accepted as uniformly italic");
         assert(Found(Header()).Length==0,"Unobserved default formatting is not presented as measured compliance");

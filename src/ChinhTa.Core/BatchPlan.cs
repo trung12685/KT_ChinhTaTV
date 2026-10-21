@@ -5,6 +5,7 @@ public static class BatchPlan
     public static IReadOnlyList<Issue> Create(IEnumerable<Issue> issues)
     {
         var ordered = issues.Distinct().OrderBy(x => x.Start).ToArray();
+        var active=new List<Issue>();
         for (int i = 0; i < ordered.Length; i++)
         {
             var current = ordered[i];
@@ -12,11 +13,23 @@ public static class BatchPlan
                 throw new InvalidOperationException("Có cảnh báo chỉ kiểm tra thủ công, không thể sửa tự động.");
             if (current.Start < 0 || current.Length <= 0 || current.Original.Length != current.Length)
                 throw new InvalidOperationException("Vị trí lỗi không hợp lệ. Hãy quét lại.");
-            if (i > 0 && (long)ordered[i - 1].Start + ordered[i - 1].Length > current.Start)
-                throw new InvalidOperationException("Các lỗi chồng lấn vị trí. Hãy sửa riêng từng lỗi rồi quét lại.");
+            if(current.CharacterFormat is CharacterFormat style && (!style.Valid || current.Kind!=FixKind.AdministrativeFormat ||
+                current.Original!=current.Replacement || current.Format is not null || current.LineFix is not null ||
+                current.Original.IndexOfAny(['\r','\n','\a','\t'])>=0))
+                throw new InvalidOperationException("Gợi ý định dạng ký tự không hợp lệ. Hãy quét lại.");
+            active.RemoveAll(previous=>(long)previous.Start+previous.Length<=current.Start);
+            foreach(var previous in active)
+                if(!SharesFormat(previous,current) && !SharesFormat(current,previous))
+                    throw new InvalidOperationException("Các lỗi chồng lấn vị trí. Hãy sửa riêng từng lỗi rồi quét lại.");
+            active.Add(current);
         }
-        return ordered.Reverse().ToArray();
+        // Character-only formatting does not change CPs. Apply it before descending text edits.
+        return ordered.OrderByDescending(i=>i.CharacterFormat is not null).ThenByDescending(i=>i.Start).ToArray();
     }
+    private static bool SharesFormat(Issue format,Issue text)=>format.CharacterFormat is not null &&
+        text.CharacterFormat is null && text.Format is null && text.LineFix is null &&
+        text.Kind is FixKind.Text or FixKind.AdministrativeNumber or FixKind.AdministrativeDate &&
+        text.Start>=format.Start && (long)text.Start+text.Length<=(long)format.Start+format.Length;
     public static void Validate(IReadOnlyList<Issue> plan, Func<Issue, string> read)
     {
         foreach (var issue in plan)
@@ -24,3 +37,4 @@ public static class BatchPlan
                 throw new InvalidOperationException("Nội dung đã thay đổi; chưa áp dụng lượt sửa này. Hãy quét lại.");
     }
 }
+
