@@ -322,7 +322,7 @@ public sealed class WordSession : IDisposable
             string expectedText = ReadStoryText();
             // Word owns RecoveryPath with a write handle. ZIP's FileShare.Read conflicts with that handle.
             // The checkpoint copy was made by File.Copy and is not open in Word.
-            DocxLineEditor.Write(before, candidate, lastLayout, LineTargets, plan);
+            var encodedPlan=DocxLineEditor.Write(before, candidate, lastLayout, LineTargets, plan);
             snapshotCurrent = false;
             var baseline = ReadPlacementBaseline(plan);
             void ApplyCandidate()
@@ -346,6 +346,8 @@ public sealed class WordSession : IDisposable
                 corrected ??= LinePlacementFeedback.CorrectHiddenMotto(plan,baseline.Lines,mismatch.Rendered,baseline.MottoFrame);
                 if (corrected is null) throw;
                 acceptancePlan=mismatch.RebasedPlan ?? plan;
+                // Feedback is in page coordinates; retain any existing DOCX encoding translation.
+                corrected=LinePlacementFeedback.Rebase(corrected,plan,encodedPlan);
                 corrected=LinePlacementFeedback.Rebase(corrected,plan,acceptancePlan);
                 if(frameCorrection && baseline.MottoFrame is LineAnchorFrame frame)
                     mismatch.Data["ChinhTa.LineVerification"] += FormattableString.Invariant(

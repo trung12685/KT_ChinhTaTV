@@ -1,3 +1,7 @@
+## Bản thử 0.1.24 — đo đủ glyph cuối và giữ phần bù khi sửa lại
+
+Bỏ phép đo theo điểm dừng con trỏ để nền xác minh và DocumentViewer dùng cùng độ rộng hình học. Khi đặt lại Line đã có, giữ phần bù tọa độ của Line đó và xác minh XPS như trước. Xem [bằng chứng, thay đổi và kiểm chứng](docs/CHANGES-0.1.24.md).
+
 ## Bản thử 0.1.23 — bốn chỉnh sửa theo phản hồi
 
 Sửa cả nhóm ba Line với một checkpoint hoàn tác; đích tự tạo cơ quan/trích yếu 3/7, vẫn chấp nhận 1/3–1/2; đo lại dòng trích yếu trên candidate trước khi báo thành công và làm mới kết quả; giữ khoảng trống dành điền số/ngày. Xem [chi tiết và kiểm chứng](docs/CHANGES-0.1.23.md).

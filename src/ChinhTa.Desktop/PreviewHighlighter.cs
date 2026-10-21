@@ -2,7 +2,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
-using System.Windows.Media.TextFormatting;
 using System.Windows.Shapes;
 using ChinhTa.Core;
 using LineGeometry = ChinhTa.Core.LineGeometry;
@@ -72,8 +71,10 @@ public sealed class PreviewHighlighter
                 int end = Math.Min(span.Start + span.Length, run.Start + run.Length) - run.Start;
                 if (end <= start) continue;
                 GlyphRun glyphRun = run.Glyph.ToGlyphRun();
-                double x1 = glyphRun.GetDistanceFromCaretCharacterHit(new CharacterHit(start, 0));
-                double x2 = glyphRun.GetDistanceFromCaretCharacterHit(new CharacterHit(end, 0));
+                if(glyphRun.IsSideways || glyphRun.BidiLevel%2!=0)return [];
+                var advance=GlyphAdvanceRange.Read(glyphRun.AdvanceWidths.ToArray(),glyphRun.ClusterMap?.ToArray(),run.Length,start,end);
+                if(advance is null)return [];
+                double x1=advance.Start,x2=advance.End;
                 Rect alignment = glyphRun.ComputeAlignmentBox();
                 var bounds = new Rect(glyphRun.BaselineOrigin.X + Math.Min(x1, x2),
                     glyphRun.BaselineOrigin.Y + alignment.Y,

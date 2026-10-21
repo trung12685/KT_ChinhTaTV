@@ -74,6 +74,21 @@ public static class DocxLineEditorChecks
                 if(validator.Validate(new DocumentFormat.OpenXml.Wordprocessing.Drawing(node.ToString())).Any())
                     throw new InvalidOperationException("Compensated drawing violates schema");
             assert(true,"Measured-correction intent uses schema-valid drawing metadata");
+            string updated=Path.Combine(folder,"updated-compensated.docx");
+            var oldMotto=issues.Single(i=>i.LineFix!.Role==LineRole.Motto);
+            var oldMottoFix=oldMotto.LineFix!;
+            var requested=oldMotto with {LineFix=oldMottoFix with {ShapeId=42,Left=oldMottoFix.Left+4,Top=oldMottoFix.Top+2,Width=oldMottoFix.Width+6}};
+            var requestedFix=requested.LineFix!;
+            var encoded=DocxLineEditor.Write(compensated,updated,live,targets,[requested]).Single().LineFix!;
+            assert(Math.Abs(encoded.Left-requestedFix.Left+30)<.001 && Math.Abs(encoded.Top-requestedFix.Top+20)<.001,
+                "Updating an existing corrected Motto preserves its measured DOCX translation");
+            var updatedMetadata=DocxLineMetadata.Read(updated).Single(m=>m.Role==LineRole.Motto);
+            var updatedLine=DocxLineInventory.Read(updated,live).Lines.Single(l=>l.Id==updatedMetadata.Id);
+            assert(updatedLine.Geometry==new LineGeometry(requestedFix.Left,requestedFix.Top,requestedFix.Width),
+                "Updated Motto metadata keeps the requested page target independently of encoded coordinates");
+            var oldOther=ReadDoc(compensated).Descendants(w+"drawing").Where(d=>d.Descendants(wp+"docPr").Single().Attribute("descr")!.Value!="ChinhTaViet.ShapeLine.Motto").ToArray();
+            var newOther=ReadDoc(updated).Descendants(w+"drawing").Where(d=>d.Descendants(wp+"docPr").Single().Attribute("descr")!.Value!="ChinhTaViet.ShapeLine.Motto").ToArray();
+            assert(oldOther.Zip(newOther).All(pair=>XNode.DeepEquals(pair.First,pair.Second)),"Updating Motto leaves Agency and Subject drawing XML unchanged");
             var originalDoc=ReadDoc(source);
             foreach(var line in lines)line.Ancestors(w+"r").First().Remove();
             assert(XNode.DeepEquals(originalDoc.Root,result.Root), "Nội dung chữ, paragraph/table formatting và XML cũ giữ nguyên");

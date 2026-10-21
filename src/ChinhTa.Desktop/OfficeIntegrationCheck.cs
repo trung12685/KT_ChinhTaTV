@@ -99,6 +99,24 @@ public static class OfficeIntegrationCheck
             test.Undo();test.Check();
             if(test.LineShapes.Count!=0)throw new InvalidOperationException("Hoàn tác một lần chưa bỏ cả nhóm ba Line");
             Pass(stage);
+            stage="Đặt lại cùng lúc hai Line đã có, giữ bù tọa độ";
+            test.Open(modern);test.Check();
+            var shifted=measured.Select(i=>i.LineFix!.Role==LineRole.Agency?i:i with {LineFix=i.LineFix! with {Left=i.LineFix!.Left-6}}).ToArray();
+            test.FixLineProbe(shifted);
+            var existingIssues=test.Check();
+            var repair=InspectLines(test,existingIssues);
+            if(repair.Length!=2 || repair.Any(i=>!i.CanFix || i.LineFix is null))
+                throw new InvalidOperationException("Không nhận đúng hai nét lệch tâm đã có trong mẫu");
+            test.FixMany(repair);
+            if(InspectLines(test,test.Check()).Length!=0)
+                throw new InvalidOperationException("Còn cảnh báo sau khi đặt lại hai nét đã có");
+            Pass(stage);
+            stage="Lưu/mở lại sau khi sửa hai Line đã có";
+            string updated=Path.Combine(folder,"updated-existing-lines.docx");
+            test.SaveCopy(updated);test.Open(updated);
+            if(InspectLines(test,test.Check()).Length!=0)
+                throw new InvalidOperationException("Còn cảnh báo sau lưu/mở hai nét đặt lại");
+            Pass(stage);
             File.AppendAllText(report,"RESULT PASS\nKiểm thao tác Word/Line và vị trí nét theo số đo XPS trên hai mẫu; không xác nhận mọi tài liệu.\n");
             return new(true,stage,folder);
         }

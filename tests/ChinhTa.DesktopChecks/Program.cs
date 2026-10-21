@@ -112,6 +112,29 @@ static class Program
         var finalShape=oldShape with {Geometry=new(finalFix.Left,finalFix.Top,finalFix.Width)};
         Assert(LineInspection.Inspect(changedPage,changedPreview,[oldSubject],[finalShape],subjectAnchors,[],LinePolicy.Decree30,false).Count==0,
             "Repositioning from the final glyph reference leaves no residual Subject warning on rescan");
+        Glyphs? caretGlyph=null;
+        var caretPage=Page(clip,built:canvas=>caretGlyph=canvas.Children.OfType<Canvas>().SelectMany(c=>c.Children.OfType<Glyphs>()).Single());
+        var caretPreview=new PreviewHighlighter();
+        var fullReference=ReferenceMeasurement.Read(caretPage,caretPreview,anchor)!;
+        // All character positions allow a caret, except the trailing boundary of the last character.
+        string mask=string.Concat(Enumerable.Range(0,(Text.Length+4)/4).Select(group=>
+        {
+            int value=0;for(int bit=0;bit<4;bit++)if(group*4+bit<Text.Length)value|=8>>bit;
+            return value.ToString("X");
+        }));
+        caretGlyph!.CaretStops=mask;
+        var stoppedRun=caretGlyph.ToGlyphRun();
+        double snapped=stoppedRun.GetDistanceFromCaretCharacterHit(new System.Windows.Media.TextFormatting.CharacterHit(Text.Length,0));
+        Assert(stoppedRun.AdvanceWidths.Sum()-snapped>1,"WPF caret hit testing reproduces omission of the last glyph when the trailing caret stop is disabled");
+        var stoppedReference=ReferenceMeasurement.Read(caretPage,caretPreview,anchor)!;
+        Assert(Math.Abs(fullReference.Width-stoppedReference.Width)<.001 && Math.Abs(fullReference.Left-stoppedReference.Left)<.001,
+            "Reference geometry remains identical when caret navigation changes on the same fixed page");
+        var viewer=new DocumentViewer {Document=caretPage};
+        viewer.Measure(new Size(1000,800));viewer.Arrange(new Rect(0,0,1000,800));viewer.UpdateLayout();
+        var viewedReference=ReferenceMeasurement.Read(caretPage,caretPreview,anchor)!;
+        Assert(Math.Abs(fullReference.Width-viewedReference.Width)<.001,
+            "Background verification and a DocumentViewer preview use the same full-glyph measurement");
+        viewer.Document=null;
         Console.WriteLine($"{checks} WPF checks passed.");
     }
 }
