@@ -74,6 +74,19 @@ public static class DocxLineEditorChecks
                 if(validator.Validate(new DocumentFormat.OpenXml.Wordprocessing.Drawing(node.ToString())).Any())
                     throw new InvalidOperationException("Compensated drawing violates schema");
             assert(true,"Measured-correction intent uses schema-valid drawing metadata");
+            string retry=Path.Combine(folder,"retry-restored-cps.docx");
+            string story=string.Concat(live.Select(p=>p.Text));
+            var openedTargets=targets.Select(t=>t with {Start=t.Start+10}).ToArray();
+            var candidatePlan=LineReferenceBinding.Rebind(issues,openedTargets,story,story);
+            var candidateEncoded=candidatePlan.Select(i=>i with {LineFix=i.LineFix! with {Left=i.LineFix!.Left-30,Top=i.LineFix!.Top-20}}).ToArray();
+            var restoredPlan=LineReferenceBinding.Rebind(candidatePlan,targets,story,story);
+            var restoredEncoded=LineReferenceBinding.Rebind(candidateEncoded,targets,story,story);
+            DocxLineEditor.Write(source,retry,live,targets,restoredEncoded,restoredPlan);
+            var retryInventory=DocxLineInventory.Read(retry,live);
+            assert(restoredEncoded.Zip(issues).All(pair=>pair.First.Start==pair.Second.Start) &&
+                retryInventory.Lines.All(line=>issues.Any(i=>line.AnchorStart==i.Start &&
+                    line.Geometry==new LineGeometry(i.LineFix!.Left,i.LineFix!.Top,i.LineFix!.Width))),
+                "Candidate retry uses restored source CPs while preserving the measured encoding and intended page geometry");
             string updated=Path.Combine(folder,"updated-compensated.docx");
             var oldMotto=issues.Single(i=>i.LineFix!.Role==LineRole.Motto);
             var oldMottoFix=oldMotto.LineFix!;

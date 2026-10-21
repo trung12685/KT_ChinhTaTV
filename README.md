@@ -1,3 +1,7 @@
+## Bản thử 0.1.27 — mốc đúng với bản Word đang mở
+
+Đối chiếu CP với chuỗi bằng tiền tố thật; ghép lại mốc sau lưu, sau mở candidate và sau khôi phục checkpoint. Số đo nét thực tế và đích trang vẫn được kiểm độc lập; sai thì rollback. Xem [bằng chứng và giới hạn kiểm chứng](docs/CHANGES-0.1.27.md).
+
 ## Bản thử 0.1.26 — đối chiếu lại mốc và ánh xạ vị trí Word
 
 Log 0.1.25 thất bại tại bước so khớp mốc sau lưu, trước khi quét lại. Bản này lấy vị trí chuỗi xem trước từ văn bản tiền tố do Word trả về và ghép lại mốc bằng vai trò/nội dung chính xác trong bố cục mới, thay vì yêu cầu CP cũ giữ nguyên. Giữ xác minh nét XPS, kiểm cuối nhóm và rollback. Xem [bằng chứng và giới hạn](docs/CHANGES-0.1.26.md).

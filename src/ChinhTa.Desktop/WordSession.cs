@@ -350,6 +350,15 @@ public sealed class WordSession : IDisposable
                     Connect();
                     if (ReadStoryText() != expectedText)
                         throw new InvalidOperationException("Nội dung chữ thay đổi sau khi mở candidate; phải khôi phục bản trước.");
+                    if(verifyReference)
+                    {
+                        // Refresh on both candidate open and restoration. Neither file is assumed
+                        // to retain the CPs observed before the preceding open/save cycle.
+                        CheckCore();
+                        LogReferenceBindings(acceptancePlan,verifyLines?"Candidate":"Restored");
+                        if(verifyLines)
+                            acceptancePlan=LineReferenceBinding.Rebind(acceptancePlan,LineTargets,expectedText,ReadStoryText());
+                    }
                     if (verifyLines) VerifyLineResult(acceptancePlan,baseline.Preserve,verifyReference);
                 });
             }
@@ -365,6 +374,14 @@ public sealed class WordSession : IDisposable
                 // Feedback is in page coordinates; retain any existing DOCX encoding translation.
                 corrected=LinePlacementFeedback.Rebase(corrected,plan,encodedPlan);
                 corrected=LinePlacementFeedback.Rebase(corrected,plan,acceptancePlan);
+                if(verifyReference)
+                {
+                    // CheckpointSwap has restored the source: encode using its current CPs,
+                    // while keeping the independently measured encoded and intended geometry.
+                    string restoredStory=ReadStoryText();
+                    corrected=LineReferenceBinding.Rebind(corrected,LineTargets,expectedText,restoredStory);
+                    acceptancePlan=LineReferenceBinding.Rebind(acceptancePlan,LineTargets,expectedText,restoredStory);
+                }
                 if(frameCorrection && baseline.MottoFrame is LineAnchorFrame frame)
                     mismatch.Data["ChinhTa.LineVerification"] += FormattableString.Invariant(
                         $"; CellLeft={frame.Left:F2}; CellTop={frame.Top:F2}; CellWidth={frame.Width:F2}; PageWidth={frame.PageWidth:F2}");
@@ -406,7 +423,7 @@ public sealed class WordSession : IDisposable
         // while the original checkpoint can still restore the entire user action.
         Checkpoint();
         var otherIssues=CheckCore();
-        LogReferenceBindings(requested);
+        LogReferenceBindings(requested,"AfterSave");
         string currentStory=ReadStoryText();
         Diagnostics.Write("Word.LineBatch.StoryBinding",null,FormattableString.Invariant(
             $"PreviousLength={expectedStory.Length}; CurrentLength={currentStory.Length}; Equal={(expectedStory==currentStory?1:0)}"));
@@ -440,14 +457,14 @@ public sealed class WordSession : IDisposable
         }
         finally{if(File.Exists(path))File.Delete(path);}
     }
-    private void LogReferenceBindings(IReadOnlyList<Issue> requested)
+    private void LogReferenceBindings(IReadOnlyList<Issue> requested,string stage)
     {
         foreach(var item in requested)
         {
             var role=item.LineFix!.Role;
             var candidates=LineTargets.Where(t=>t.Role==role).ToArray();
             var matching=candidates.Where(t=>t.Text==item.Original).ToArray();
-            Diagnostics.Write("Word.LineBatch.ReferenceBinding",null,FormattableString.Invariant(
+            Diagnostics.Write("Word.LineBatch.ReferenceBinding."+stage,null,FormattableString.Invariant(
                 $"Role={role}; PreviousStart={item.Start}; PreviousLength={item.Length}; RoleCount={candidates.Length}; TextMatchCount={matching.Length}; CurrentStart={(matching.Length==1?matching[0].Start:-1)}; Centered={(matching.Length==1&&matching[0].Centered?1:0)}"));
         }
     }
@@ -476,7 +493,7 @@ public sealed class WordSession : IDisposable
                         if(verifyReference)
                         {
                             CheckCore();
-                            LogReferenceBindings([item]);
+                            LogReferenceBindings([item],"BeforeEdit");
                             current=LineReferenceBinding.Rebind([item],LineTargets,expectedText,ReadStoryText()).Single();
                             BatchPlan.Validate([current],ReadIssueText);
                         }
