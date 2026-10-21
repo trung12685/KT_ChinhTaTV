@@ -112,6 +112,21 @@ static class Program
         var finalShape=oldShape with {Geometry=new(finalFix.Left,finalFix.Top,finalFix.Width)};
         Assert(LineInspection.Inspect(changedPage,changedPreview,[oldSubject],[finalShape],subjectAnchors,[],LinePolicy.Decree30,false).Count==0,
             "Repositioning from the final glyph reference leaves no residual Subject warning on rescan");
+        oldPath.Data=new System.Windows.Media.LineGeometry(new Point(finalFix.Left,finalFix.Top-.75),new Point(finalFix.Left+finalFix.Width,finalFix.Top-.75));
+        changedCanvas.UpdateLayout();
+        var nearRendered=changedPreview.HorizontalLines(changedPage,1);
+        var nearAssessment=RenderedLineVerifier.Assess(oldSubject,changedReference,finalFix,nearRendered,LinePolicy.Decree30);
+        Assert(nearAssessment.Actual is not null && nearAssessment.Errors.Any(e=>e.Contains("Khoảng cách")) &&
+            LineInspection.Inspect(changedPage,changedPreview,[oldSubject],[finalShape],subjectAnchors,[],LinePolicy.Decree30,false).Count==1,
+            "Candidate verification and the UI scanner both reject a real stroke 0.75pt above the allowed gap");
+        var finalIssue=oldEdit with {LineFix=finalFix};
+        var gapCorrection=LinePlacementFeedback.Correct([finalIssue],[],nearRendered)![0].LineFix!;
+        oldPath.Data=new System.Windows.Media.LineGeometry(new Point(gapCorrection.Left,gapCorrection.Top-.75),
+            new Point(gapCorrection.Left+gapCorrection.Width,gapCorrection.Top-.75));
+        changedCanvas.UpdateLayout();
+        Assert(LineInspection.Inspect(changedPage,changedPreview,[oldSubject],[finalShape],subjectAnchors,[],LinePolicy.Decree30,false).Count==0 &&
+            RenderedLineVerifier.Assess(oldSubject,changedReference,finalFix,changedPreview.HorizontalLines(changedPage,1),LinePolicy.Decree30).Errors.Length==0,
+            "Measured correction makes both candidate acceptance and the next UI rescan pass on the actual stroke");
         Glyphs? caretGlyph=null;
         var caretPage=Page(clip,built:canvas=>caretGlyph=canvas.Children.OfType<Canvas>().SelectMany(c=>c.Children.OfType<Glyphs>()).Single());
         var caretPreview=new PreviewHighlighter();

@@ -40,6 +40,26 @@ public static class BatchAndSpacingChecks
         var rebased=LinePlacementFeedback.Rebase(encoded,[originalIssue],[desiredIssue])[0].LineFix!;
         assert(ShapeLineRules.Evaluate(subject,finalReference,new(rebased.Left,rebased.Top,rebased.Width),null,LinePolicy.Decree30).Errors.Length==0 &&
             Math.Abs(rebased.Width-228.5*3/7)<.001,"Rebase uses the final reference and the requested 3/7 creation target before reporting success");
+        var intended=ShapeLineRules.Evaluate(subject,finalReference,null,42,LinePolicy.Decree30).Fix;
+        var tooClose=new LineGeometry(intended.Left,intended.Top-.75,intended.Width);
+        var actualAssessment=RenderedLineVerifier.Assess(subject,finalReference,intended,[tooClose],LinePolicy.Decree30);
+        assert(actualAssessment.Actual is not null && actualAssessment.Errors.Any(e=>e.Contains("Khoảng cách")) &&
+            ShapeLineRules.Evaluate(subject,finalReference,new(intended.Left,intended.Top,intended.Width),42,LinePolicy.Decree30).Errors.Length==0,
+            "A stroke within 1pt of the proposal can still violate the actual gap; verification must report it");
+        assert(RenderedLineVerifier.Assess(subject,finalReference,intended,[],LinePolicy.Decree30).Errors.Length>0,
+            "Rendered assessment cannot succeed without an actual stroke");
+        var unrelated=new LineGeometry(30,70,50);
+        var preserve=RenderedLineVerifier.RetainOtherStrokes([unrelated,tooClose],[tooClose]);
+        var subpointIssue=originalIssue with {LineFix=intended};
+        var correction=LinePlacementFeedback.Correct([subpointIssue],preserve,[unrelated,tooClose])![0].LineFix!;
+        assert(preserve.SequenceEqual(new[]{unrelated}) && Math.Abs(correction.Top-intended.Top-.75)<.001,
+            "Updating an owned stroke by 0.75pt excludes only that old stroke and permits measured feedback");
+        assert(RenderedLineVerifier.RetainOtherStrokes([unrelated],[tooClose]).SequenceEqual(new[]{unrelated}),
+            "Replacing an invisible owned Line must retain every visible baseline stroke");
+        bool ambiguousBaseline=false;
+        try{RenderedLineVerifier.RetainOtherStrokes([tooClose,tooClose],[tooClose]);}
+        catch(InvalidOperationException){ambiguousBaseline=true;}
+        assert(ambiguousBaseline,"Overlapping old strokes cannot be silently excluded from preservation checks");
         string folder=Path.Combine(Path.GetTempPath(),Guid.NewGuid().ToString());Directory.CreateDirectory(folder);
         try
         {
@@ -73,6 +93,32 @@ public static class BatchAndSpacingChecks
                 ()=>File.Copy(before,current,true),()=>throw new InvalidOperationException("final reference changed"));}
             catch(InvalidOperationException){finalFailed=true;}
             assert(finalFailed && File.ReadAllText(current)=="original","Final whole-group verification failure restores the original despite individually successful steps");
+            File.Copy(before,current,true);order.Clear();int rescans=0;
+            var repairs=plan.Where(i=>i.LineFix!.Role!=LineRole.Agency).Select(i=>i with {LineFix=i.LineFix! with {ShapeId=42}}).ToArray();
+            AtomicLineBatch.Apply(current,before,plan,(item,_)=>
+                {order.Add(item.LineFix!.Role);File.AppendAllText(current,"/"+item.LineFix.Role);},
+                ()=>File.Copy(before,current,true),()=>{rescans++;if(order.Count!=5)throw new Exception("residual");},
+                ()=>{rescans++;return repairs;});
+            assert(order.SequenceEqual(new[]{LineRole.Agency,LineRole.Subject,LineRole.Motto,LineRole.Subject,LineRole.Motto}) && rescans==2,
+                "Three-Line action can settle exactly the two owned residuals and verify them before returning");
+            assert(File.ReadAllText(before)=="original" && !Directory.GetFiles(folder,"*.step.docx").Any(),
+                "The settling pass retains the single original Undo checkpoint and cleans all step backups");
+            File.Copy(before,current,true);int writes=0;bool unsettled=false;
+            try{AtomicLineBatch.Apply(current,before,plan,(_,_)=>{writes++;File.AppendAllText(current,"/edit");},
+                ()=>File.Copy(before,current,true),()=>throw new InvalidOperationException("still residual"),()=>repairs);}
+            catch(InvalidOperationException){unsettled=true;}
+            assert(unsettled && writes==5 && File.ReadAllText(current)=="original",
+                "Persistent residuals stop after one settling pass and roll back the entire original action");
+            foreach(var unsafeRepairs in new[]{new[]{repairs[0] with {Start=999}},new[]{repairs[0] with {CanFix=false}},
+                new[]{repairs[0] with {LineFix=repairs[0].LineFix! with {ShapeId=null}}},new[]{repairs[0],repairs[0]}})
+            {
+                File.Copy(before,current,true);writes=0;bool blocked=false;
+                try{AtomicLineBatch.Apply(current,before,plan,(_,_)=>{writes++;File.AppendAllText(current,"/edit");},
+                    ()=>File.Copy(before,current,true),remainingIssues:()=>unsafeRepairs);}
+                catch(InvalidOperationException){blocked=true;}
+                assert(blocked && writes==3 && File.ReadAllText(current)=="original",
+                    "Ambiguous, unselected, manual or unidentified residuals cannot trigger automatic edits");
+            }
             bool aggregate=false;
             try{AtomicLineBatch.Apply(current,before,plan,(_,_)=>throw new IOException("write failed"),()=>throw new IOException("restore failed"));}
             catch(AggregateException e){aggregate=e.InnerExceptions.Count==2;}

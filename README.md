@@ -1,3 +1,7 @@
+## Bản thử 0.1.25 — xác minh nét thật và hoàn tất nhóm trong một lượt
+
+Đánh giá thể thức trên nét XPS thực đo, quét lại sau lưu ngay bên trong giao dịch sửa và cho phép một lượt đặt lại các Line vừa chọn còn cảnh báo. Chỉ báo đạt khi kiểm cuối không còn cảnh báo ở nhóm đã chọn; sai thì khôi phục cả lượt, Hoàn tác vẫn một lần. Xem [thay đổi và giới hạn kiểm chứng](docs/CHANGES-0.1.25.md).
+
 ## Bản thử 0.1.24 — đo đủ glyph cuối và giữ phần bù khi sửa lại
 
 Bỏ phép đo theo điểm dừng con trỏ để nền xác minh và DocumentViewer dùng cùng độ rộng hình học. Khi đặt lại Line đã có, giữ phần bù tọa độ của Line đó và xác minh XPS như trước. Xem [bằng chứng, thay đổi và kiểm chứng](docs/CHANGES-0.1.24.md).

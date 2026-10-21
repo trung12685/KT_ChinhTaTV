@@ -95,9 +95,22 @@ public static class OfficeIntegrationCheck
             if(InspectLines(test,batchIssues).Length!=0)
                 throw new InvalidOperationException("Còn cảnh báo Line sau khi sửa và quét lại cả nhóm");
             Pass(stage);
+            stage="Quét lại lần nữa và lưu nhóm ba Line không cần sửa lần hai";
+            if(InspectLines(test,test.Check()).Length!=0)
+                throw new InvalidOperationException("Cảnh báo Line xuất hiện lại ở lần quét kế tiếp");
+            string groupedSaved=Path.Combine(folder,"grouped-three-lines.docx");
+            test.SaveCopy(groupedSaved);
+            if(InspectLines(test,test.Check()).Length!=0)
+                throw new InvalidOperationException("Còn cảnh báo Line sau khi lưu nhóm");
+            Pass(stage);
             stage="Hoàn tác một lần cho cả nhóm ba Line";
             test.Undo();test.Check();
             if(test.LineShapes.Count!=0)throw new InvalidOperationException("Hoàn tác một lần chưa bỏ cả nhóm ba Line");
+            Pass(stage);
+            stage="Mở lại nhóm ba Line đã lưu, kiểm không dựa vào lịch sử sửa";
+            test.Open(groupedSaved);
+            if(InspectLines(test,test.Check()).Length!=0)
+                throw new InvalidOperationException("Còn cảnh báo sau khi mở lại nhóm ba Line");
             Pass(stage);
             stage="Đặt lại cùng lúc hai Line đã có, giữ bù tọa độ";
             test.Open(modern);test.Check();
