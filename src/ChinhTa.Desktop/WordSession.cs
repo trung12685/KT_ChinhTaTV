@@ -477,12 +477,19 @@ public sealed class WordSession : IDisposable
                 $"Role={role}; PreviousStart={item.Start}; PreviousLength={item.Length}; RoleCount={candidates.Length}; TextMatchCount={matching.Length}; CurrentStart={(matching.Length==1?matching[0].Start:-1)}; Centered={(matching.Length==1&&matching[0].Centered?1:0)}"));
         }
     }
-    private void FixManyCore(IEnumerable<Issue> issues,bool verifyReference)
+    internal void FixTextFailureProbe(IEnumerable<Issue> issues,int failAfter)
+    {
+        if(LineCheckArtifactFolder is null || failAfter<1)throw new InvalidOperationException("Chỉ dùng trong phiên Kiểm tra Word riêng.");
+        FixManyCore(issues,true,failAfter);
+    }
+    private void FixManyCore(IEnumerable<Issue> issues,bool verifyReference,int? failTextAfter=null)
     {
         var plan = BatchPlan.Create(issues);
         if (plan.Count == 0) return;
         if (plan.Any(i => i.LineFix is not null) && plan.Any(i => i.LineFix is null))
             throw new InvalidOperationException("Sửa chữ/định dạng trước, quét lại rồi sửa nhóm Shape Line để dùng số đo mới.");
+        if(failTextAfter is not null && plan.Any(i=>i.LineFix is not null))
+            throw new InvalidOperationException("Mẫu lỗi chữ không nhận Shape Line.");
         // Validate every original before making any changes, not halfway through the batch.
         BatchPlan.Validate(plan,ReadIssueText);
         Checkpoint();
@@ -531,50 +538,76 @@ public sealed class WordSession : IDisposable
             }
             return;
         }
-        verifiedLineEdits.Clear();
-        undoCheckpoints.Push(before);
-        dynamic undo = app!.UndoRecord;
+        dynamic textContent=document!.Content;
+        int storyStart;string originalStory;
+        try{storyStart=(int)textContent.Start;originalStory=(string)textContent.Text;}
+        finally{Release(textContent);}
+        string expectedStory=AtomicTextBatch.ExpectedStory(plan,originalStory,item=>
+        {
+            dynamic prefix=document!.Range(storyStart,item.Start);
+            try{return (string?)prefix.Text??"";}finally{Release(prefix);}
+        });
+        bool textPreviousChanged=Changed,started=false,restored=false;
+        int applied=0;
         try
         {
-            undo.StartCustomRecord($"Sửa {plan.Count} lỗi");
-            snapshotCurrent = false;
-            Changed = true;
-            try
+            AtomicTextBatch.Apply(plan,ReadIssueText,item=>
             {
-                foreach (var issue in plan)
+                started=true;snapshotCurrent=false;Changed=true;
+                verifiedLineEdits.Clear();
+                dynamic range=document!.Range(item.Start,item.Start+item.Length);
+                try
                 {
-                    dynamic r = document!.Range(issue.Start, issue.Start + issue.Length);
-                    try
+                    if((string)range.Text!=item.Replacement)range.Text=item.Replacement;
+                    if(item.Format is HeadingFormat heading)
                     {
-                        if ((string)r.Text != issue.Replacement) r.Text = issue.Replacement;
-                        if (issue.Format is HeadingFormat heading)
+                        dynamic font=range.Font;dynamic format=range.ParagraphFormat;
+                        try
                         {
-                            dynamic f = r.Font; dynamic format = r.ParagraphFormat;
-                            try
-                            {
-                                f.Bold = -1; f.Italic = 0; f.Color = 0;
-                                f.Size = heading.Size; f.Name = "Times New Roman";
-                                if (heading.Alignment is int alignment) format.Alignment = alignment;
-                            }
-                            finally { Release(f); Release(format); }
+                            font.Bold=-1;font.Italic=0;font.Color=0;
+                            font.Size=heading.Size;font.Name="Times New Roman";
+                            if(heading.Alignment is int alignment)format.Alignment=alignment;
                         }
+                        finally{Release(format);Release(font);}
                     }
-                    finally { Release(r); }
+                    string actual=(string)range.Text;
+                    if(++applied==failTextAfter)throw new OfficeTextProbeException();
+                    return actual;
                 }
-            }
-            finally { undo.EndCustomRecord(); }
+                finally{Release(range);}
+            },()=>
+            {
+                Checkpoint();
+                if(ReadStoryText()!=expectedStory)
+                    throw new InvalidOperationException("Chữ sau lưu không đúng phạm vi đã chọn; phải khôi phục cả lượt.");
+            },()=>
+            {
+                // Close this private Word instance, including a disconnected COM server.
+                CheckpointSwap.Apply(RecoveryPath,before,CloseConnection,Connect);
+                if(ReadStoryText()!=originalStory)
+                    throw new InvalidOperationException("Chưa xác minh được chữ sau phục hồi checkpoint.");
+                restored=true;
+            });
+            undoCheckpoints.Push(before); // Only a fully committed action enters the Undo stack.
+            Changed=true;snapshotCurrent=true;
         }
-        catch (Exception error)
+        catch(Exception error)
         {
-            Diagnostics.Write("Word.FixMany", error);
-            throw new InvalidOperationException("Lượt sửa bị gián đoạn; có thể mới áp dụng một phần. " +
-                "Không tự thử lại. Nếu Word vẫn kết nối, dùng Hoàn tác để bỏ lượt sửa hoặc lưu bản sao để kiểm tra. " +
-                "Bản checkpoint trước lượt sửa: " + RecoveryPath, error);
+            Changed=restored || !started?textPreviousChanged:true;
+            snapshotCurrent=restored || !started;
+            Diagnostics.Write(restored?"Word.TextBatch.RolledBack":"Word.TextBatch.Failed",error,
+                $"Selected={plan.Count}; Applied={applied}; Restored={(restored?1:0)}");
+            if(error is AggregateException aggregate && aggregate.InnerExceptions.Count==2)
+            {
+                Diagnostics.Write("Word.TextBatch.FailureCause",aggregate.InnerExceptions[0]);
+                Diagnostics.Write("Word.TextBatch.RestoreCause",aggregate.InnerExceptions[1]);
+            }
+            throw new InvalidOperationException(restored
+                ? "Lượt sửa chưa hoàn tất; đã khôi phục bản trước lượt sửa. Hãy quét lại trước khi sửa tiếp. Checkpoint: "+before
+                : "Lượt sửa chưa hoàn tất; giữ bản trước để phục hồi: "+before,error);
         }
-        finally { Release(undo); }
-        // One checkpoint, one UI rescan/export for the entire successful batch.
-        Checkpoint();
     }
+
     private void Checkpoint()
     {
         document!.Save();
@@ -683,3 +716,6 @@ public sealed class WordSession : IDisposable
     }
 }
 
+
+// Deliberate failure used only by the isolated Office check; never enabled by UI commands.
+internal sealed class OfficeTextProbeException() : InvalidOperationException("OFFICE-CHECK-INJECTED-TEXT-FAILURE") { }

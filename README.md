@@ -2,6 +2,10 @@
 
 Ứng dụng C# / WPF chạy trên Windows với Microsoft Word desktop, làm việc offline trên bản sao DOCX và xem trước bằng XPS. Không gửi nội dung tài liệu tới dịch vụ AI.
 
+## Bản thử 0.1.30
+
+Sửa nhóm chữ/số/ngày có giao dịch phục hồi: kiểm nguyên văn, lưu và đối chiếu toàn bộ chữ trong phạm vi đã chọn trước khi báo hoàn tất. Lỗi giữa lượt hoặc khi lưu sẽ phục hồi checkpoint và giữ lượt Hoàn tác trước đó; nếu phục hồi lỗi thì giữ hiện vật. [Tải bản thử 0.1.30](https://github.com/trung12685/KT_ChinhTaTV/releases/tag/v0.1.30) · [Chi tiết và cách thử](docs/CHANGES-0.1.30.md). Chưa xác nhận runtime Office 2021.
+
 ## Bản thử 0.1.29
 
 Rà soát tiếp 0.1.28: giữ ô ngày/tháng/năm chưa điền khi cuối dòng có ghi chú; phân biệt điểm dừng tab trong định dạng với ký tự tab thật. Vẫn kiểm khoảng trắng thừa trong ghi chú và nội dung thường. [Tải bản thử 0.1.29](https://github.com/trung12685/KT_ChinhTaTV/releases/tag/v0.1.29) · [Chi tiết và cách thử](docs/CHANGES-0.1.29.md). Chưa xác nhận runtime Office 2021; 0.1.27 vẫn là mốc ổn định.
