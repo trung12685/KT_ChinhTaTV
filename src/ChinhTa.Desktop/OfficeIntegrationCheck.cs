@@ -197,6 +197,32 @@ public static class OfficeIntegrationCheck
             test.Open(annotatedSaved);
             if(test.ReadCheckText()!=annotatedExpected)throw new InvalidOperationException("Mở lại không giữ kết quả và khoảng trống của mẫu có ghi chú");
             Pass(stage);
+            stage="Lỗi giữa/cuối nhóm chữ: rollback và giữ lượt Hoàn tác trước đó";
+            test.Open(headerSample);
+            string faultBaseline=test.ReadCheckText();
+            var faultInitial=HeaderEdits(test.Check());
+            test.Fix(faultInitial.First(i=>i.Kind==FixKind.AdministrativeNumber && i.Replacement=="03"));
+            string beforeFailure=test.ReadCheckText();
+            if(beforeFailure==faultBaseline)throw new InvalidOperationException("Chưa tạo được lượt sửa trước để kiểm Hoàn tác");
+            var remainingBeforeFailure=HeaderEdits(test.Check());
+            if(remainingBeforeFailure.Length<2)throw new InvalidOperationException("Thiếu gợi ý để kiểm lỗi giữa nhóm");
+            foreach(int failAfter in new[]{1,remainingBeforeFailure.Length})
+            {
+                bool injected=false;
+                try{test.FixTextFailureProbe(HeaderEdits(test.Check()),failAfter);}
+                catch(InvalidOperationException error) when(error.InnerException is OfficeTextProbeException){injected=true;}
+                if(!injected || test.ReadCheckText()!=beforeFailure || HeaderEdits(test.Check()).Length!=remainingBeforeFailure.Length)
+                    throw new InvalidOperationException("Lỗi giả lập chưa phục hồi nguyên văn và trạng thái trước nhóm");
+            }
+            test.Undo();
+            if(test.ReadCheckText()!=faultBaseline || HeaderEdits(test.Check()).Length!=faultInitial.Length)
+                throw new InvalidOperationException("Nhóm thất bại đã làm thay đổi lượt Hoàn tác thành công trước đó");
+            test.FixMany(HeaderEdits(test.Check()));
+            if(test.ReadCheckText()!=expectedHeader || HeaderEdits(test.Check()).Length!=0)
+                throw new InvalidOperationException("Không sửa tiếp được sau rollback lỗi giả lập");
+            test.Undo();
+            if(test.ReadCheckText()!=faultBaseline)throw new InvalidOperationException("Một Hoàn tác không phục hồi nhóm sửa tiếp sau rollback");
+            Pass(stage);
             File.AppendAllText(report,"RESULT PASS\nKiểm thao tác Word/Line, vị trí nét XPS, sửa riêng/nhóm số-ngày, lưu/mở và Hoàn tác trên mẫu giả; không xác nhận mọi tài liệu.\n");
             return new(true,stage,folder);
         }
