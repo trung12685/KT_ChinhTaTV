@@ -1,0 +1,37 @@
+name: Windows package
+on:
+  push:
+    branches: [fix/office2021-docx-markers]
+permissions:
+  contents: write
+jobs:
+  package:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Regression checks
+        run: dotnet run --project tests/ChinhTa.Checks -c Release
+      - name: Publish Windows x64
+        run: dotnet publish src/ChinhTa.Desktop -c Release -r win-x64 --self-contained true -o artifacts/win-x64
+      - name: Include samples and validation notes
+        shell: pwsh
+        run: |
+          Copy-Item samples artifacts/win-x64/samples -Recurse -Force
+          Copy-Item docs/OFFICE2021-0.1.19.md artifacts/win-x64/
+          Compress-Archive artifacts/win-x64/* artifacts/ChinhTaViet-0.1.19-win-x64.zip
+          Get-FileHash artifacts/ChinhTaViet-0.1.19-win-x64.zip -Algorithm SHA256 | Format-List | Out-File artifacts/SHA256.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ChinhTaViet-0.1.19-win-x64
+          path: |
+            artifacts/*.zip
+            artifacts/SHA256.txt
+      - name: Publish prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: pwsh
+        run: |
+          gh release create v0.1.19 artifacts/ChinhTaViet-0.1.19-win-x64.zip artifacts/SHA256.txt --target $env:GITHUB_SHA --prerelease --title '0.1.19 — DOCX identity, Office 2021 validation pending' --notes-file docs/OFFICE2021-0.1.19.md

@@ -1,3 +1,7 @@
+## Bản thử 0.1.19 — Office 2021 chưa được xác minh
+
+Đọc dấu nhận diện từ DOCX thay Shape.AlternativeText; giữ xác minh nét XPS và rollback. Xem [phân tích và giới hạn kiểm chứng](docs/OFFICE2021-0.1.19.md).
+
 # Chính tả Việt — bản thử nghiệm desktop
 
 Ứng dụng C# / WPF chạy offline trên Windows, dùng Microsoft Word desktop để đọc, sửa và xuất XPS xem trước theo bố cục của Word trên máy đó. Không gọi dịch vụ AI hoặc gửi nội dung tài liệu lên mạng.
@@ -150,3 +154,4 @@ Nhật ký 0.1.17 xác nhận kiểm nét thất bại ở Agency: mong đợi L
 Thay đường ghi VML bằng DrawingML WordprocessingShape connector (`prstGeom=line`) với wp:anchor/positionH/positionV theo trang bằng EMU, layoutInCell=false, wrapNone; vẫn là Shape Line và giữ nguyên chữ. Đặt lại được VML cũ có marker hoặc DrawingML của ứng dụng. Không bỏ kiểm marker/type/nét XPS hoặc rollback. Nhật ký bổ sung tọa độ nét và metadata hình học native, không ghi nội dung. Chặn số trang ngoài phạm vi khi rê chuột sau dựng lại preview.
 
 Kiểm tra Word tự động trên mẫu giả sẽ giữ candidate và XPS thất bại ngay trong OfficeCheck-* để phân biệt lỗi dựng trang với lỗi đọc nét. Không tự lưu các hiện vật này khi xử lý tài liệu thật. 129 kiểm tra mẫu và 139 kiểm tra với cặp DOCX riêng tư đã đạt; gói DrawingML qua kiểm chuẩn OpenXML SDK và build Windows. Cloud chưa chạy Office2021, nên đây vẫn là bản thử cần xác nhận bằng menu kiểm tra Word trước.
+

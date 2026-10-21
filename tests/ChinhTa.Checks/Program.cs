@@ -6,6 +6,7 @@ void Assert(bool condition, string name)
     if (!condition) throw new Exception("FAIL: " + name);
     Console.WriteLine("PASS: " + name); checks++;
 }
+DocxLineMetadataChecks.Run(Assert);
 var text = "Tôi đi trên một con đo. Đây  là văn bản.\r";
 var issues = Checker.Check([new(37, text)]);
 Assert(issues.Count == 2, "Hai lỗi minh họa");
@@ -273,3 +274,4 @@ Assert(ShapeLineRules.UnidentifiedRoles(lineTargets).Count==0 &&
 Assert(ShapeLineRules.UnidentifiedRoles([]).Count==3,
     "Không nhận diện được mốc nào phải nêu rõ ba vùng chưa được kiểm tra");
 Console.WriteLine($"{checks} checks passed.");
+

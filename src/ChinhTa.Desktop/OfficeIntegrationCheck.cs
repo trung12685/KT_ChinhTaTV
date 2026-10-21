@@ -55,6 +55,7 @@ public static class OfficeIntegrationCheck
             stage="Mở lại bản đã lưu";
             test.Open(saved);test.Check();
             if(test.LineShapes.Count!=3 || test.LineShapes.Any(s=>!s.AppOwned))throw new InvalidOperationException("Line không giữ được sau lưu/mở");
+            test.VerifyLineResult(plan);
             Pass(stage);
             File.AppendAllText(report,"RESULT PASS\nChỉ kiểm thao tác Word/Line; không xác minh vị trí thể thức hoặc mọi tài liệu.\n");
             return new(true,stage,folder);
@@ -75,3 +76,4 @@ public static class OfficeIntegrationCheck
         }
     }
 }
+

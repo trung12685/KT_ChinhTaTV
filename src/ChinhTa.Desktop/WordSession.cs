@@ -214,6 +214,7 @@ public sealed class WordSession : IDisposable
         HasGroupedShapes = false;
         if (LineTargets.Count == 0) return [];
         var result = new List<WordLineShape>();
+        var metadata = DocxLineMetadata.Read(RecoveryPath);
         dynamic shapes = document!.Shapes;
         try
         {
@@ -227,7 +228,7 @@ public sealed class WordSession : IDisposable
                     if (type is 6 or 20) HasGroupedShapes = true;
                     if (type != 9) continue; // Office msoLine
                     LineGeometry? geometry = null;
-                    bool owned = ((string?)shape.AlternativeText ?? "").StartsWith("ChinhTaViet.ShapeLine.", StringComparison.Ordinal);
+                    bool owned = metadata.Any(m => m.Id == (int)shape.ID && m.IsLine);
                     if (owned &&
                         (int)shape.RelativeHorizontalPosition == 1 && (int)shape.RelativeVerticalPosition == 1 &&
                         Math.Abs((float)shape.Height) <= .5f && Math.Abs((float)shape.Rotation) < .01f && (int)shape.Visible != 0)
@@ -259,38 +260,31 @@ public sealed class WordSession : IDisposable
     }
     private void VerifyPackageLines(IReadOnlyList<Issue> plan)
     {
+        var metadata = DocxLineMetadata.Read(RecoveryPath);
+        DocxLineMetadata.Verify(metadata, plan.Select(item => item.LineFix!.Role));
         dynamic shapes = document!.Shapes;
         try
         {
             foreach (var item in plan)
             {
-                string marker = "ChinhTaViet.ShapeLine." + item.LineFix!.Role;
-                int matches = 0, named = 0;
-                var types = new HashSet<int>();
+                int id = metadata.Single(m => m.Role == item.LineFix!.Role).Id;
+                int matches = 0;
                 for (int i = 1; i <= (int)shapes.Count; i++)
                 {
                     dynamic shape = shapes[i];
-                    try
-                    {
-                        if ((string?)shape.AlternativeText == marker)
-                        {
-                            named++;
-                            int type = (int)shape.Type; types.Add(type);
-                            if (type == 9) matches++;
-                        }
-                    }
+                    try { if ((int)shape.ID == id && (int)shape.Type == 9) matches++; }
                     finally { Release(shape); }
                 }
                 if (matches != 1)
-                {
-                    var failure = new InvalidOperationException("Word chưa nhận diện đúng một Shape Line sau khi mở candidate.");
-                    failure.Data["ChinhTa.LineVerification"] = $"Role={item.LineFix.Role}; Named={named}; Types={string.Join(",",types)}; Total={shapes.Count}";
-                    Diagnostics.Write("Word.LinePackage.Verify", failure);
-                    throw failure;
-                }
+                    throw new InvalidOperationException("Không đối chiếu được dấu DOCX với đúng một Line trong Word.");
             }
         }
         finally { Release(shapes); }
+    }
+    internal void VerifyLineResult(IReadOnlyList<Issue> plan)
+    {
+        VerifyPackageLines(plan);
+        VerifyRenderedLines(plan);
     }
     private void VerifyRenderedLines(IReadOnlyList<Issue> plan)
     {
@@ -329,6 +323,7 @@ public sealed class WordSession : IDisposable
     {
         // Numeric geometry only: never include document text or arbitrary alternative text.
         var positions = new List<string>();
+        var metadata = DocxLineMetadata.Read(RecoveryPath);
         dynamic shapes = document!.Shapes;
         try
         {
@@ -337,8 +332,7 @@ public sealed class WordSession : IDisposable
                 dynamic shape = shapes[i];
                 try
                 {
-                    string marker = (string?)shape.AlternativeText ?? "";
-                    if (!Enum.GetValues<LineRole>().Any(role => marker == "ChinhTaViet.ShapeLine." + role)) continue;
+                    if (!metadata.Any(m => m.Id == (int)shape.ID && m.IsLine)) continue;
                     positions.Add(FormattableString.Invariant($"ID={(int)shape.ID},Type={(int)shape.Type},L={(float)shape.Left:F2},Y={(float)shape.Top:F2},W={(float)shape.Width:F2},H={(float)shape.Height:F2},RH={(int)shape.RelativeHorizontalPosition},RV={(int)shape.RelativeVerticalPosition}"));
                 }
                 finally { Release(shape); }
@@ -542,3 +536,4 @@ public sealed class WordSession : IDisposable
         try { Directory.Delete(folder, true); } catch (IOException) { }
     }
 }
+
