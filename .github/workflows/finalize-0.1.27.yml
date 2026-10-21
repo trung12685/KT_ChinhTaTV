@@ -1,0 +1,80 @@
+name: Finalize 0.1.27 baseline
+on:
+  push:
+    branches: [main]
+    paths:
+      - docs/STATUS-0.1.27.md
+      - .github/workflows/finalize-0.1.27.yml
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: finalize-v0.1.27
+  cancel-in-progress: false
+jobs:
+  finalize:
+    if: github.repository == 'trung12685/KT_ChinhTaTV'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify immutable package and finalize existing release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json, os, subprocess
+          from pathlib import Path
+          repository = "trung12685/KT_ChinhTaTV"
+          tag = "v0.1.27"
+          source = "1ec3092ccd68ed0acd8878b2737664116a6b11fe"
+          digest = "sha256:6b9607c6aecb6497ff2c294b5019e6fa2162f428da350a41b02e759562403b09"
+          def api(path):
+              result = subprocess.run(["gh", "api", f"repos/{repository}/{path}"],
+                                      check=True, capture_output=True, text=True)
+              return json.loads(result.stdout)
+          def require(condition, message):
+              if not condition:
+                  raise SystemExit(message)
+          reference = api(f"git/ref/tags/{tag}")
+          require(reference["object"]["type"] == "commit" and reference["object"]["sha"] == source,
+                  "Release tag no longer points to the tested application commit")
+          run = api("actions/runs/39570349615")
+          require(run["head_sha"] == source and run["status"] == "completed" and run["conclusion"] == "success",
+                  "Original Windows verification is not successful for the package source")
+          release = api(f"releases/tags/{tag}")
+          assets = {a["name"]: a for a in release["assets"]}
+          package = assets.get("ChinhTaViet-0.1.27-win-x64.zip", {})
+          require(package.get("digest") == digest and package.get("size") == 72274460
+                  and package.get("state") == "uploaded", "Existing package differs from the accepted baseline")
+          require("SHA256.txt" in assets and not release["draft"], "Published checksum/release is missing")
+          comparison = api(f"compare/{source}...{os.environ['GITHUB_SHA']}")
+          allowed = {
+              "README.md", "docs/STATUS-0.1.27.md", "docs/DEVELOPMENT.md",
+              "docs/HISTORY-THROUGH-0.1.27.md", "docs/SHAPE-LINES.md",
+              "docs/WINDOWS-VALIDATION.md", "docs/CHANGES-0.1.27.md",
+              ".github/workflows/finalize-0.1.27.yml",
+          }
+          files = comparison.get("files", [])
+          require(comparison["status"] in ("ahead", "identical") and len(files) < 300,
+                  "Cannot establish the tested source as the unchanged baseline")
+          require(all(f["filename"] in allowed for f in files),
+                  "Application or other files changed after the accepted package; refusing promotion")
+          notes = Path(os.environ["RUNNER_TEMP"]) / "release-notes-0.1.27.md"
+          text = Path("docs/STATUS-0.1.27.md").read_text(encoding="utf-8")
+          for document in ("DEVELOPMENT.md", "HISTORY-THROUGH-0.1.27.md"):
+              url = f"https://github.com/{repository}/blob/{os.environ['GITHUB_SHA']}/docs/{document}"
+              text = text.replace(f"]({document})", f"]({url})")
+          notes.write_text(text, encoding="utf-8")
+          subprocess.run([
+              "gh", "release", "edit", tag, "--repo", repository,
+              "--prerelease=false", "--latest",
+              "--title", "0.1.27 — Chốt sửa ba đường kẻ, Office 2021",
+              "--notes-file", str(notes),
+          ], check=True)
+          final = api(f"releases/tags/{tag}")
+          final_package = next(a for a in final["assets"] if a["name"] == package["name"])
+          require(not final["prerelease"] and final_package["id"] == package["id"]
+                  and final_package.get("digest") == digest, "Final release/package verification failed")
+          print(f"Finalized {tag}; original tag and package retained; Windows verification remains tied to {source}")
+          PY

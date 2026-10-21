@@ -1,3 +1,5 @@
+> Cập nhật 21/10/2026: người dùng đã xác nhận thao tác sửa cả ba đường trên Office 2021 chạy được với 0.1.27. Phạm vi xác nhận và điểm còn chờ được ghi ở [STATUS-0.1.27.md](STATUS-0.1.27.md). Ghi chú bên dưới là bản ghi tại thời điểm phát hành thử.
+
 # 0.1.27 — ghép lại mốc sau lưu và ánh xạ CP sang chuỗi
 
 Log người dùng xác nhận 0.1.25 đã qua xác minh nét từng Line rồi thất bại tại ReadRemainingLines, dòng 402: điều kiện yêu cầu vai trò, nội dung và Start của mốc sau lưu đồng thời bằng lựa chọn ban đầu. Không có lỗi COM Shape mới. Log cũ chưa ghi vai trò hay trường khác biệt ở guard này; không khẳng định chỉ riêng CP đã được chứng minh là nguyên nhân cụ thể. Đây là lỗi ở bước đối chiếu bổ sung, không phải bằng chứng 0.1.25 đạt Office 2021.

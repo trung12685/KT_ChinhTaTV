@@ -1,3 +1,5 @@
+> Trạng thái đã chốt 0.1.27: xem [STATUS-0.1.27.md](STATUS-0.1.27.md) và [luồng hiện tại](DEVELOPMENT.md). Các phần theo phiên bản bên dưới giữ lịch sử thiết kế; mô tả COM cũ, số lần mở Word hoặc nhận xét chưa xác minh không thay thế trạng thái hiện tại.
+
 # Ba Shape Line — bản thử 0.1.18
 
 ## Phạm vi
