@@ -63,3 +63,12 @@ Ghi kết quả cùng phiên bản Windows, Word, .NET và cấu hình máy. Ch�
 
 40. Bản 0.1.18: trước tiên chạy Kiểm tra → Kiểm tra Word tự động… trên mẫu giả. Phải PASS cả nhận Shape type9, vị trí nét XPS, lưu/mở lại và Undo. Nếu FAIL, thư mục OfficeCheck-* chứa office-check.txt và (nếu đã tới bước tương ứng) failed-line-candidate.docx/failed-line-preview.xps; dùng chúng để đối chiếu Word/XPS mà không cần tài liệu người dùng. Sau PASS mới thử ba Line trên DOCX thật. Kiểm legacy VML được thay thành DrawingML không trùng; rê chuột sau quét/Undo không ném lỗi trang ngoài phạm vi.
 
+
+
+## Thử 0.1.33 — căn giữa số/ngày
+
+Giữ gói/tag cũ. Giải nén .33 vào thư mục riêng và chạy Kiểm tra Word tự động. Kịch bản mới phải nhận đủ hai tâm lệch có thể sửa và cảnh báo khác hàng thủ công trên mẫu giả; nếu không có clip/mốc chắc chắn thì FAIL rõ ràng, không bỏ điều kiện để tạo PASS.
+
+Thử lỗi có chủ ý sau dòng đầu để phục hồi cả lượt, không thêm Undo; sửa riêng mỗi vai trò, sửa nhóm hai dòng; kiểm lại tâm thật, giữ toàn chữ/ô trống, một Undo, lưu/mở lại. XPS được lưu với tên `position-*.xps`, gồm trước sửa, rollback, sau sửa, Undo và mở lại. Sau sửa nhóm phải chỉ còn cảnh báo khác hàng đã cố ý tạo; không được giữ cảnh báo lệch tâm cũ hoặc xóa nhầm cảnh báo khác hàng. Thử chọn lẫn chữ/phông, căn giữa và Line: UI phải yêu cầu theo nhóm trước khi ghi; Sửa tất cả xử lý lần lượt theo số đo mới.
+
+Trên bản sao tài liệu thực, dòng chưa đủ điều kiện vẫn chỉ cảnh báo. Chưa tự căn dọc/hàng, không sửa bảng gộp/lồng. CI Windows không có Word; chỉ kết quả Office check đúng phiên bản cùng thử tài liệu thật mới xác nhận được Office 2021.

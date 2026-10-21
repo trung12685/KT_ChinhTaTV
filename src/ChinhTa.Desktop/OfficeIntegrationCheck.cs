@@ -283,8 +283,51 @@ public static class OfficeIntegrationCheck
             var shiftedPositions=InspectPositions(test,folder,"position-shifted.xps");
             if(shiftedPositions.Count(i=>i.Message.Contains("lệch tâm"))<2 ||
                 !shiftedPositions.Any(i=>i.Title=="Số và ngày tháng chưa cùng dòng") ||
-                shiftedPositions.Any(i=>i.CanFix) || test.ReadCheckText()!=positionBefore)
-                throw new InvalidOperationException("Chưa phát hiện đúng mẫu lệch tâm/khác hàng hoặc cảnh báo đã thành thao tác tự sửa");
+                shiftedPositions.Count(i=>i.CenterFix is not null)!=2 ||
+                shiftedPositions.Any(i=>i.Title=="Số và ngày tháng chưa cùng dòng" && i.CanFix) || test.ReadCheckText()!=positionBefore)
+                throw new InvalidOperationException("Chưa đo đủ điều kiện căn giữa hai dòng hoặc cảnh báo khác hàng bị cho sửa tự động");
+            Pass(stage);
+            stage="Rollback cả nhóm căn giữa khi lỗi sau dòng đầu, không thêm lượt Undo";
+            var centerPlan=shiftedPositions.Where(i=>i.CenterFix is not null).ToArray();
+            bool positionRollback=false;
+            try{test.FixTextFailureProbe(centerPlan,1);}
+            catch(InvalidOperationException error) when(error.InnerException is OfficeTextProbeException){positionRollback=true;}
+            test.Check();
+            if(!positionRollback || test.ReadCheckText()!=positionBefore ||
+                InspectPositions(test,folder,"position-rollback.xps").Count(i=>i.CenterFix is not null)!=2)
+                throw new InvalidOperationException("Rollback căn giữa chưa phục hồi cả hai tâm lệch");
+            test.Undo();test.Check();
+            if(InspectPositions(test,folder,"position-no-undo.xps").Count(i=>i.CenterFix is not null)!=2)
+                throw new InvalidOperationException("Lượt căn giữa lỗi đã làm sai stack Undo");
+            Pass(stage);
+            foreach(var role in Enum.GetValues<AdministrativePositionRole>())
+            {
+                stage="Căn giữa riêng dòng "+role+", kiểm tâm thật và hoàn tác";
+                var current=InspectPositions(test,folder,"position-single-before.xps").Single(i=>i.CenterFix?.Role==role);
+                test.FixMany([current]);test.Check();
+                var single=InspectPositions(test,folder,"position-single-after.xps");
+                if(single.Any(i=>i.CenterFix?.Role==role) || single.Count(i=>i.CenterFix is not null)!=1 || test.ReadCheckText()!=positionBefore)
+                    throw new InvalidOperationException("Sửa riêng căn giữa chưa đúng hoặc làm đổi chữ");
+                test.Undo();test.Check();
+                if(InspectPositions(test,folder,"position-single-undo.xps").Count(i=>i.CenterFix is not null)!=2)
+                    throw new InvalidOperationException("Hoàn tác sửa riêng chưa trả tâm ban đầu");
+                Pass(stage);
+            }
+            stage="Căn giữa cả hai dòng trong một lượt, giữ cảnh báo khác hàng và chữ/ô trống";
+            centerPlan=InspectPositions(test,folder,"position-group-before.xps").Where(i=>i.CenterFix is not null).ToArray();
+            test.FixMany(centerPlan);test.Check();
+            var centered=InspectPositions(test,folder,"position-centered.xps");
+            if(centered.Length!=1 || centered[0].Title!="Số và ngày tháng chưa cùng dòng" || centered[0].CanFix || test.ReadCheckText()!=positionBefore)
+                throw new InvalidOperationException("Còn lệch tâm/chưa đo được hoặc cảnh báo khác hàng bị xóa sai");
+            string centerSaved=Path.Combine(folder,"position-centered.docx");test.SaveCopy(centerSaved);Pass(stage);
+            stage="Một Undo khôi phục cả hai tâm; lưu/mở lại giữ hai tâm đã sửa";
+            test.Undo();test.Check();
+            if(InspectPositions(test,folder,"position-group-undo.xps").Count(i=>i.CenterFix is not null)!=2 || test.ReadCheckText()!=positionBefore)
+                throw new InvalidOperationException("Một Undo chưa phục hồi cả nhóm căn giữa");
+            test.Open(centerSaved);test.Check();
+            var reopened=InspectPositions(test,folder,"position-reopened.xps");
+            if(reopened.Length!=1 || reopened[0].Title!="Số và ngày tháng chưa cùng dòng" || test.ReadCheckText()!=positionBefore)
+                throw new InvalidOperationException("Tâm đã sửa chưa giữ sau mở lại hoặc chữ bị thay đổi");
             Pass(stage);
             File.AppendAllText(report,"RESULT PASS\nKiểm thao tác Word/Line, vị trí nét XPS, sửa riêng/nhóm số-ngày, lưu/mở và Hoàn tác trên mẫu giả; không xác nhận mọi tài liệu.\n");
             return new(true,stage,folder);

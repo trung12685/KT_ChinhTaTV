@@ -79,3 +79,8 @@ Bản thử chỉ sửa cách viết trong vùng đầu đã nhận diện, cả
 ## Bổ sung 0.1.32: cảnh báo vị trí số/ngày
 
 NĐ30 PL I, Phần I.II.3.c và 4.c, PDF 23: số/ký hiệu căn giữa dưới tên cơ quan; địa danh/ngày tháng cùng dòng với số/ký hiệu, đặt dưới và căn giữa với quốc hiệu/tiêu ngữ. Bản thử chỉ đánh giá các quan hệ này trong vùng bảng đã nhận diện bằng khung glyph/baseline XPS và đưa cảnh báo thủ công. Ngưỡng phát hiện 3 pt và dung sai nhỏ 0,5 pt là chính sách đo ứng dụng, không phải số ghi trong điều khoản. Chưa kiểm đủ vị trí trên trang hoặc mọi mẫu, chưa tự dịch đoạn/căn giữa. Thiếu mốc hoặc chữ cắt/xoay/xuống dòng phải báo chưa đo được. Xem [CHANGES-0.1.32.md](CHANGES-0.1.32.md).
+
+
+## Bản thử 0.1.33 — sửa căn giữa có điều kiện
+
+Tiếp nối căn cứ vị trí số/ngày ở bản .32 (NĐ30 PL I Phần I.II.3.c, 4.c, PDF 23). Chỉ tự căn giữa khi có cả bằng chứng range/XML và glyph/khung ô XPS đồng nhất; bỏ thụt lề ngang của đúng dòng được chọn, không sửa chữ/ô trống, khoảng cách dọc hoặc tự làm hai dòng cùng hàng. Tham chiếu phía trên phải đã căn giữa không thụt lề trong ô lề cân bằng, và được đo thật cùng tâm với khung. Sau lưu phải đo đạt lại, nếu không phục hồi cả lượt. Dung sai tâm 3 pt và giữ hình học 0,5 pt là chính sách kiểm đo của ứng dụng, không phải số bắt buộc nêu trong NĐ30. Chưa có xác nhận runtime Office 2021 cho tính năng này.

@@ -2,6 +2,10 @@
 
 Ứng dụng C# / WPF chạy trên Windows với Microsoft Word desktop, làm việc offline trên bản sao DOCX và xem trước bằng XPS. Không gửi nội dung tài liệu tới dịch vụ AI.
 
+## Bản thử 0.1.33
+
+Bổ sung căn giữa số/ký hiệu và địa danh/ngày tháng khi mốc chữ và cùng khung ô bảng được xác minh trên XPS. Giữ chữ, ô trống và khoảng cách dọc; đo lại sau lưu, rollback cả lượt nếu không đạt, một Undo cho nhóm. Khác hàng hoặc thiếu bằng chứng vẫn thủ công. [Tải bản thử](https://github.com/trung12685/KT_ChinhTaTV/releases/tag/v0.1.33) · [Phạm vi và cách thử](docs/CHANGES-0.1.33.md). Chưa xác nhận Office 2021.
+
 ## Bản thử 0.1.32
 
 Bổ sung cảnh báo vị trí số/ký hiệu và địa danh/ngày tháng theo khung chữ và đường cơ sở đo trên XPS: tâm so với khối cơ quan/quốc hiệu–tiêu ngữ, nằm dưới và cùng hàng. Chỉ cảnh báo để duyệt, chưa tự dịch chuyển. Thiếu mốc, chữ bị cắt/xoay/xuống dòng được ghi rõ chưa kiểm được. [Tải bản thử](https://github.com/trung12685/KT_ChinhTaTV/releases/tag/v0.1.32) · [Phạm vi và cách thử](docs/CHANGES-0.1.32.md). Chưa xác nhận Office 2021.

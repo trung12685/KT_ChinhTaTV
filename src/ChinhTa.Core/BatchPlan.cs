@@ -17,6 +17,12 @@ public static class BatchPlan
                 current.Original!=current.Replacement || current.Format is not null || current.LineFix is not null ||
                 current.Original.IndexOfAny(['\r','\n','\a','\t'])>=0))
                 throw new InvalidOperationException("Gợi ý định dạng ký tự không hợp lệ. Hãy quét lại.");
+            if(current.CenterFix is not null && (current.Kind!=FixKind.AdministrativePosition ||
+                !Enum.IsDefined(current.CenterFix.Role) || current.Original!=current.Replacement ||
+                current.Original!=current.Original.Trim() || current.Original.IndexOfAny(['\r','\n','\a','\t'])>=0 ||
+                current.CharacterFormat is not null || current.Format is not null || current.LineFix is not null) ||
+                current.Kind==FixKind.AdministrativePosition && current.CenterFix is null)
+                throw new InvalidOperationException("Gợi ý căn giữa không hợp lệ. Hãy quét lại.");
             active.RemoveAll(previous=>(long)previous.Start+previous.Length<=current.Start);
             foreach(var previous in active)
                 if(!SharesFormat(previous,current) && !SharesFormat(current,previous))

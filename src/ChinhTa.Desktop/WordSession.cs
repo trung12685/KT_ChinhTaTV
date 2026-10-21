@@ -6,7 +6,7 @@ using ChinhTa.Core;
 namespace ChinhTa.Desktop;
 
 // All calls stay on the WPF STA thread. Only this private Word instance is closed.
-public sealed class WordSession : IDisposable
+public sealed partial class WordSession : IDisposable
 {
     private dynamic? app;
     private dynamic? document;
@@ -511,6 +511,13 @@ public sealed class WordSession : IDisposable
             throw new InvalidOperationException("Sửa chữ/định dạng trước, quét lại rồi sửa nhóm Shape Line để dùng số đo mới.");
         if(failTextAfter is not null && plan.Any(i=>i.LineFix is not null))
             throw new InvalidOperationException("Mẫu lỗi chữ không nhận Shape Line.");
+        if(plan.Any(i=>i.CenterFix is not null))
+        {
+            if(plan.Any(i=>i.CenterFix is null))
+                throw new InvalidOperationException("Sửa chữ/phông trước, quét lại rồi chọn riêng nhóm căn giữa; sửa Line sau cùng.");
+            FixPositionBatch(plan,failTextAfter);
+            return;
+        }
         // Validate every original before making any changes, not halfway through the batch.
         BatchPlan.Validate(plan,ReadIssueText);
         Checkpoint();
