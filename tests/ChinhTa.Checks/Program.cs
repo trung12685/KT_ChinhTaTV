@@ -8,6 +8,7 @@ void Assert(bool condition, string name)
 }
 DocxLineMetadataChecks.Run(Assert);
 LinePlacementFeedbackChecks.Run(Assert);
+BatchAndSpacingChecks.Run(Assert);
 var text = "Tôi đi trên một con đo. Đây  là văn bản.\r";
 var issues = Checker.Check([new(37, text)]);
 Assert(issues.Count == 2, "Hai lỗi minh họa");
@@ -217,9 +218,9 @@ Assert(!ShapeLineRules.Identify(lineParagraphs,DocumentProfile.Party).Any() &&
 var agencyTarget = lineTargets.Single(t=>t.Role==LineRole.Agency);
 var referenceLine = new LineReference(100,100,210);
 var missingLine = ShapeLineRules.Evaluate(agencyTarget, referenceLine,null,null,LinePolicy.Decree30);
-Assert(missingLine.Errors.Length==1 && Math.Abs(missingLine.Fix.Width-87.5)<.01 && missingLine.Fix.Top==106,
-    "Thiếu line đề xuất đích 5/12 và khoảng cách 6pt theo cấu hình");
-var correctGeometry = new ChinhTa.Core.LineGeometry(missingLine.Fix.Left,109,87.5);
+Assert(missingLine.Errors.Length==1 && Math.Abs(missingLine.Fix.Width-90)<.01 && missingLine.Fix.Top==106,
+    "Thiếu line đề xuất đích 3/7 và khoảng cách 6pt theo cấu hình");
+var correctGeometry = new ChinhTa.Core.LineGeometry(missingLine.Fix.Left,109,missingLine.Fix.Width);
 Assert(ShapeLineRules.Evaluate(agencyTarget,referenceLine,correctGeometry,42,LinePolicy.Decree30).Errors.Length==0,
     "Line đúng độ dài/tâm/khoảng cách không bị cảnh báo");
 Assert(ShapeLineRules.Evaluate(agencyTarget,referenceLine,correctGeometry with {Left=190},42,LinePolicy.Decree30).Errors.Any(e=>e.Contains("lệch")),

@@ -1,3 +1,7 @@
+## Bản thử 0.1.23 — bốn chỉnh sửa theo phản hồi
+
+Sửa cả nhóm ba Line với một checkpoint hoàn tác; đích tự tạo cơ quan/trích yếu 3/7, vẫn chấp nhận 1/3–1/2; đo lại dòng trích yếu trên candidate trước khi báo thành công và làm mới kết quả; giữ khoảng trống dành điền số/ngày. Xem [chi tiết và kiểm chứng](docs/CHANGES-0.1.23.md).
+
 ## Bản thử 0.1.22 — Line tiêu ngữ ở ô phải
 
 Giữ phép bù nét của 0.1.21. Bổ sung một candidate cho Motto không hiển thị, dùng khung ô thực đo từ XPS và bắt buộc kiểm lại nét mới cùng các nét đã có; sai thì rollback. Xem [phân tích và điều kiện áp dụng](docs/OFFICE2021-0.1.22.md).
@@ -109,7 +113,7 @@ Tiêu ngữ chấp nhận cả `Độc lập - Tự do - Hạnh phúc` và `Đ�
 
 ## Bản 0.1.8 — ba đường kẻ Shape Line
 
-Chế độ Nhà nước có kiểm tra/thêm/đặt lại ba Line khi nhận diện và đo chắc chắn: dưới cơ quan trong ô trái, dưới tiêu ngữ và dưới dòng hiển thị cuối của trích yếu. Bản 0.1.9 chỉ dùng độ dài theo NĐ30 (1/3–1/2, đích 5/12); đã bỏ tùy chọn 4/7 khỏi giao diện và bộ kiểm. Khoảng cách theo yêu cầu người dùng: 6–15pt cho cơ quan/trích yếu, 3–13pt cho tiêu ngữ; mặc định tạo cách 6pt. Không gán thông số riêng thành quy định pháp lý.
+Chế độ Nhà nước có kiểm tra/thêm/đặt lại ba Line khi nhận diện và đo chắc chắn: dưới cơ quan trong ô trái, dưới tiêu ngữ và dưới dòng hiển thị cuối của trích yếu. Bản 0.1.9 chỉ dùng độ dài theo NĐ30 (1/3–1/2; từ 0.1.23 đích tự tạo là 3/7 theo lựa chọn người dùng); đã bỏ tùy chọn 4/7 khỏi giao diện và bộ kiểm. Khoảng cách theo yêu cầu người dùng: 6–15pt cho cơ quan/trích yếu, 3–13pt cho tiêu ngữ; mặc định tạo cách 6pt. Không gán thông số riêng thành quy định pháp lý.
 
 Chọn cảnh báo để thấy dòng mốc và vạch cam vị trí đề xuất; vạch cam chưa phải Shape đã lưu. Duyệt sửa để tạo/đặt lại Line. Nếu có cả lỗi chữ và Line, sửa chữ trước rồi sửa Line theo số đo mới; Sửa tất cả sẽ thông báo cách chạy hai lượt. Không ghép chắc chắn thì chỉ cảnh báo, không tự chèn trùng. Chi tiết: docs/SHAPE-LINES.md.
 

@@ -17,7 +17,7 @@ static class Program
         if(!condition)throw new InvalidOperationException(name);
         Console.WriteLine("PASS "+name);checks++;
     }
-    static FixedDocumentSequence Page(Geometry? clip, bool split=false)
+    static FixedDocumentSequence Page(Geometry? clip, bool split=false, Action<Canvas>? built=null)
     {
         var page=new FixedPage {Width=794,Height=1123};
         var root=new Canvas {RenderTransform=new ScaleTransform(4d/3,4d/3)};
@@ -34,6 +34,7 @@ static class Program
             Add(Text[10..],400,new RectangleGeometry(new Rect(85,56.67,191,104)));
         }
         else Add(Text,325.99,clip);
+        built?.Invoke(root);
         var content=new PageContent();((IAddChild)content).AddChild(page);
         var document=new FixedDocument();document.Pages.Add(content);
         var reference=new DocumentReference();reference.SetDocument(document);
@@ -59,6 +60,58 @@ static class Program
         var correction=LinePlacementFeedback.CorrectHiddenMotto([motto],existing,existing,frame);
         Assert(correction is not null && Math.Abs(correction[0].LineFix!.Left-57.47)<.01,
             "Measured WPF table frame feeds the invisible-Motto correction without reusing the left-cell offset");
+        Canvas? lineCanvas=null;
+        var linePage=Page(clip,built:canvas=>lineCanvas=canvas);
+        var highlighter=new PreviewHighlighter();
+        var boxes=highlighter.Measure(linePage,anchor);
+        Assert(boxes.Count>0,"Reference glyph measurement is available for rescan regression");
+        double bottom=boxes.Max(b=>b.Bottom), left=boxes.Min(b=>b.Left), right=boxes.Max(b=>b.Right);
+        var target=new LineTarget(LineRole.Motto,0,Text,0,Text.Length+1,true);
+        var referenceLine=new LineReference(left*.75,bottom*.75,(right-left)*.75);
+        var proposed=ShapeLineRules.Evaluate(target,referenceLine,null,null,LinePolicy.Decree30).Fix;
+        lineCanvas!.Children.Add(new System.Windows.Shapes.Path {
+            Data=new System.Windows.Media.LineGeometry(new Point(proposed.Left,proposed.Top),new Point(proposed.Left+proposed.Width,proposed.Top)),
+            Stroke=Brushes.Black,StrokeThickness=.5});
+        lineCanvas.UpdateLayout();
+        var known=new[]{new WordLineShape(1,0,1,new(proposed.Left,proposed.Top,proposed.Width),true)};
+        var anchors=new Dictionary<Issue,PreviewAnchor>{{target.Probe,anchor}};
+        var refreshed=LineInspection.Inspect(linePage,highlighter,[target],known,anchors,[],LinePolicy.Decree30,true);
+        Assert(refreshed.Count==0,"A verified corrected owned Line disappears after rescan despite unrelated unmapped shapes");
+        var confirmed=target.Probe with {CanFix=true,LineFix=proposed};
+        Assert(LineInspection.Inspect(linePage,highlighter,[target],[],anchors,[],LinePolicy.Decree30,true,[confirmed]).Count==0,
+            "A successful edit is removed from the fresh list after its current XPS and reference are independently reverified");
+        var wrongConfirmed=confirmed with {LineFix=proposed with {Top=proposed.Top+20}};
+        Assert(LineInspection.Inspect(linePage,highlighter,[target],[],anchors,[],LinePolicy.Decree30,true,[wrongConfirmed]).Count==1,
+            "An edit history entry cannot hide an error when current rendered geometry no longer matches");
+        var displaced=known.Select(l=>l with {Geometry=l.Geometry! with {Y=l.Geometry!.Y+20}}).ToArray();
+        Assert(LineInspection.Inspect(linePage,highlighter,[target],displaced,anchors,[],LinePolicy.Decree30,true).Count==1,
+            "Rescan still reports a genuinely unverified or displaced Line");
+        Canvas? changedCanvas=null;
+        var changedPage=Page(clip,built:canvas=>
+        {
+            changedCanvas=canvas;
+            foreach(var cell in canvas.Children.OfType<Canvas>())
+                foreach(var glyph in cell.Children.OfType<Glyphs>())glyph.FontRenderingEmSize=15;
+        });
+        var changedPreview=new PreviewHighlighter();
+        var changedReference=ReferenceMeasurement.Read(changedPage,changedPreview,anchor)!;
+        var oldSubject=new LineTarget(LineRole.Subject,0,Text,0,Text.Length+1,true);
+        var oldSubjectFix=ShapeLineRules.Evaluate(oldSubject,referenceLine,null,null,LinePolicy.Decree30).Fix;
+        var oldPath=new System.Windows.Shapes.Path {Data=new System.Windows.Media.LineGeometry(new Point(oldSubjectFix.Left,oldSubjectFix.Top),
+            new Point(oldSubjectFix.Left+oldSubjectFix.Width,oldSubjectFix.Top)),Stroke=Brushes.Black,StrokeThickness=.5};
+        changedCanvas!.Children.Add(oldPath);changedCanvas.UpdateLayout();
+        var subjectAnchors=new Dictionary<Issue,PreviewAnchor>{{oldSubject.Probe,anchor}};
+        var oldShape=new WordLineShape(2,0,1,new(oldSubjectFix.Left,oldSubjectFix.Top,oldSubjectFix.Width),true);
+        var oldEdit=oldSubject.Probe with {CanFix=true,LineFix=oldSubjectFix};
+        var residual=LineInspection.Inspect(changedPage,changedPreview,[oldSubject],[oldShape],subjectAnchors,[],LinePolicy.Decree30,false,[oldEdit]);
+        Assert(residual.Count==1 && residual[0].Issue.Message.Contains("lệch tâm"),
+            "A changed glyph measurement produces a real residual-center warning rather than a stale-list entry");
+        var finalFix=ShapeLineRules.Evaluate(oldSubject,changedReference,null,null,LinePolicy.Decree30).Fix;
+        oldPath.Data=new System.Windows.Media.LineGeometry(new Point(finalFix.Left,finalFix.Top),new Point(finalFix.Left+finalFix.Width,finalFix.Top));
+        changedCanvas.UpdateLayout();
+        var finalShape=oldShape with {Geometry=new(finalFix.Left,finalFix.Top,finalFix.Width)};
+        Assert(LineInspection.Inspect(changedPage,changedPreview,[oldSubject],[finalShape],subjectAnchors,[],LinePolicy.Decree30,false).Count==0,
+            "Repositioning from the final glyph reference leaves no residual Subject warning on rescan");
         Console.WriteLine($"{checks} WPF checks passed.");
     }
 }

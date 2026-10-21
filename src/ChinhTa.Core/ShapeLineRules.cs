@@ -11,7 +11,7 @@ public record LineTarget(LineRole Role, int Start, string Text, int RegionStart,
 }
 public record LinePolicy(double MinFraction, double MaxFraction, double TargetFraction)
 {
-    public static LinePolicy Decree30 { get; } = new(1d / 3, .5, 5d / 12);
+    public static LinePolicy Decree30 { get; } = new(1d / 3, .5, 3d / 7);
 }
 public record LineGeometry(double Left, double Y, double Width);
 public record LineReference(double Left, double Bottom, double Width);
@@ -100,3 +100,4 @@ public static class ShapeLineRules
         return (fix, errors.ToArray());
     }
 }
+

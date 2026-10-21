@@ -6,6 +6,7 @@ public sealed class RenderedLineMismatchException(IReadOnlyList<LineGeometry> re
     : InvalidOperationException("Word chưa hiển thị Line đúng tọa độ đề xuất; phải khôi phục bản trước.")
 {
     public IReadOnlyList<LineGeometry> Rendered { get; } = rendered;
+    public IReadOnlyList<Issue>? RebasedPlan { get; init; }
 }
 
 public sealed record LineAnchorFrame(double Left, double Top, double Width, double Height, double PageWidth);
@@ -41,6 +42,15 @@ public static class LinePlacementFeedback
             return item with {LineFix = f with {Left = 2 * f.Left - actual[i].Left, Top = 2 * f.Top - actual[i].Y}};
         }).ToArray();
     }
+    public static IReadOnlyList<Issue> Rebase(IReadOnlyList<Issue> encoded,IReadOnlyList<Issue> original,IReadOnlyList<Issue> desired) =>
+        desired.Select(item=>
+        {
+            var target=item.LineFix!;
+            var old=original.Single(i=>i.LineFix!.Role==target.Role).LineFix!;
+            var coordinate=encoded.Single(i=>i.LineFix!.Role==target.Role).LineFix!;
+            return item with {LineFix=target with {Left=coordinate.Left+target.Left-old.Left,Top=coordinate.Top+target.Top-old.Top}};
+        }).ToArray();
+
     // Only a new, invisible Motto in a verified right-hand table frame qualifies.
     public static IReadOnlyList<Issue>? CorrectHiddenMotto(IReadOnlyList<Issue> plan,
         IReadOnlyList<LineGeometry> before, IReadOnlyList<LineGeometry> after, LineAnchorFrame? frame)

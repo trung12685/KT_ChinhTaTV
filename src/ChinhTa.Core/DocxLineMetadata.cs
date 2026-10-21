@@ -19,6 +19,7 @@ public static class DocxLineMetadata
     {
         XNamespace wp = "http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing";
         XNamespace a = "http://schemas.openxmlformats.org/drawingml/2006/main";
+        XNamespace wpg = "http://schemas.microsoft.com/office/word/2010/wordprocessingGroup";
         XNamespace wps = "http://schemas.microsoft.com/office/word/2010/wordprocessingShape";
         XNamespace w = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
         var result = new List<DocxLineMarker>();
@@ -35,7 +36,7 @@ public static class DocxLineMetadata
                 throw new InvalidDataException("Invalid or duplicate Line identity");
             var anchor = property.Parent;
             bool line = anchor?.Name == wp + "anchor" && !property.Ancestors(w + "txbxContent").Any() &&
-                anchor.Descendants(wps + "wsp").Count() == 1 &&
+                !anchor.Descendants(wpg + "wgp").Any() && anchor.Descendants(wps + "wsp").Count() == 1 &&
                 anchor.Descendants(a + "prstGeom").Count() == 1 &&
                 (string?)anchor.Descendants(a + "prstGeom").Single().Attribute("prst") == "line";
             result.Add(new(id, role, line));

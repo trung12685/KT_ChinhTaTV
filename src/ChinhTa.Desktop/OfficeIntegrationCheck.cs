@@ -37,7 +37,7 @@ public static class OfficeIntegrationCheck
             var plan=test.LineTargets.Select(t=>t.Probe with {CanFix=true,
                 LineFix=ShapeLineRules.Evaluate(t,new(100,100+(int)t.Role*45,210),null,null,LinePolicy.Decree30).Fix}).ToArray();
             stage="Ghi nhóm ba Line từ checkpoint không bị Word khóa";
-            test.FixMany(plan);
+            test.FixLineProbe(plan);
             Pass(stage);
             stage="Word nhận ba Line sau mở lại";
             test.Check();
@@ -64,13 +64,7 @@ public static class OfficeIntegrationCheck
             string modern=CreateModernSample(sample,folder);
             test.Open(modern);
             var modernIssues=test.Check();
-            var anchors=new Dictionary<Issue,PreviewAnchor>();
-            string modernBefore=test.ExportPreview(test.LineTargets.Select(t=>t.Probe).ToArray(),anchors);
-            Issue[] measured;
-            using(var inputXps=new XpsDocument(modernBefore,FileAccess.Read))
-                measured=LineInspection.Inspect(inputXps.GetFixedDocumentSequence(),new PreviewHighlighter(),
-                    test.LineTargets,test.LineShapes,anchors,modernIssues,LinePolicy.Decree30,test.HasGroupedShapes)
-                    .Select(pair=>pair.Issue).ToArray();
+            var measured=InspectLines(test,modernIssues);
             if(measured.Length!=3 || measured.Any(i=>!i.CanFix || i.LineFix is null))
                 throw new InvalidOperationException("Chưa đo được ba Line trên mẫu tương thích hiện đại");
             // Reproduce sequential creation: the two existing Lines must survive the missing-Motto case.
@@ -81,8 +75,9 @@ public static class OfficeIntegrationCheck
                 test.Check();
                 Pass(stage);
             }
-            test.VerifyLineResult(measured);
+            test.VerifyLineResult(test.VerifiedLineEdits,verifyReference:true);
             stage="Lưu/mở lại và kiểm nét đã đo trên mẫu Word 2013";
+            var acceptedModern=test.VerifiedLineEdits;
             string modernSaved=Path.Combine(folder,"modern-three-lines.docx");
             test.SaveCopy(modernSaved);
             string modernPreview=test.ExportPreview([],new Dictionary<Issue,PreviewAnchor>());
@@ -90,7 +85,19 @@ public static class OfficeIntegrationCheck
             for(int step=0;step<3;step++)test.Undo();
             test.Check();
             if(test.LineShapes.Count!=0)throw new InvalidOperationException("Hoàn tác mẫu hiện đại chưa phục hồi");
-            test.Open(modernSaved);test.Check();test.VerifyLineResult(measured);
+            test.Open(modernSaved);test.Check();test.VerifyLineResult(acceptedModern,verifyReference:true);
+            Pass(stage);
+            stage="Sửa cả ba Line trong một lượt trên mẫu Word 2013";
+            test.Open(modern);test.Check();
+            test.FixMany(measured);
+            var batchIssues=test.Check();
+            test.VerifyLineResult(test.VerifiedLineEdits,verifyReference:true);
+            if(InspectLines(test,batchIssues).Length!=0)
+                throw new InvalidOperationException("Còn cảnh báo Line sau khi sửa và quét lại cả nhóm");
+            Pass(stage);
+            stage="Hoàn tác một lần cho cả nhóm ba Line";
+            test.Undo();test.Check();
+            if(test.LineShapes.Count!=0)throw new InvalidOperationException("Hoàn tác một lần chưa bỏ cả nhóm ba Line");
             Pass(stage);
             File.AppendAllText(report,"RESULT PASS\nKiểm thao tác Word/Line và vị trí nét theo số đo XPS trên hai mẫu; không xác nhận mọi tài liệu.\n");
             return new(true,stage,folder);
@@ -109,6 +116,15 @@ public static class OfficeIntegrationCheck
             File.AppendAllText(report,"RESULT FAIL\n");
             return new(false,stage,folder);
         }
+    }
+    private static Issue[] InspectLines(WordSession test,IReadOnlyList<Issue> otherIssues)
+    {
+        var anchors=new Dictionary<Issue,PreviewAnchor>();
+        string path=test.ExportPreview(test.LineTargets.Select(t=>t.Probe).ToArray(),anchors);
+        using var input=new XpsDocument(path,FileAccess.Read);
+        return LineInspection.Inspect(input.GetFixedDocumentSequence(),new PreviewHighlighter(),
+            test.LineTargets,test.LineShapes,anchors,otherIssues,LinePolicy.Decree30,test.HasGroupedShapes,test.VerifiedLineEdits)
+            .Select(pair=>pair.Issue).ToArray();
     }
     private static string CreateModernSample(string sample,string folder)
     {

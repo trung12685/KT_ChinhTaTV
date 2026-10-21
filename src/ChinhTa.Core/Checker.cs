@@ -29,7 +29,7 @@ public static class Checker
         {
             if (!(p.Page == 1 && HeadingRules.IsCandidate(p.Text, profile)))
             foreach (Match m in Regex.Matches(p.Text, @"(?<=\S) {2,}(?=\S)"))
-                result.Add(new(p.Start + m.Index, m.Length, m.Value, " ",
+                if(!SpacingRules.IsBlankField(p.Text,m.Index,m.Length)) result.Add(new(p.Start + m.Index, m.Length, m.Value, " ",
                     "Khoảng trắng liên tiếp; kiểm tra trước nếu dùng để dàn trang.", false));
             foreach (Match m in Regex.Matches(p.Text, @"\bcon\s+(đo)\b", RegexOptions.IgnoreCase))
             {
@@ -56,3 +56,4 @@ public static class Checker
         return result.OrderBy(x => x.Start).ToArray();
     }
 }
+

@@ -23,7 +23,7 @@ Khi không có Line trong vùng, chỉ báo thiếu chắc chắn nếu toàn b�
 
 | Vùng | Độ dài |
 |---|---|
-| Cơ quan/trích yếu | 1/3–1/2 dòng cuối; khi tạo chọn 5/12 |
+| Cơ quan/trích yếu | 1/3–1/2 dòng cuối; khi tạo chọn 3/7 (từ 0.1.23 theo yêu cầu người dùng) |
 | Tiêu ngữ | Bằng độ dài dòng tiêu ngữ |
 
 Chỉ sử dụng khoảng theo NĐ30; đã bỏ lựa chọn riêng 4/7 khỏi giao diện và bộ kiểm từ bản 0.1.9.
@@ -97,3 +97,4 @@ Căn giữa cấu trúc dùng để duyệt toàn khối trích yếu độc l�
 Nhật ký mới xác nhận 0.1.17 bị chặn ở kiểm nét; không đủ tọa độ thực tế để phân biệt Word đặt sai với reader bỏ sót. Thay VML bằng w:drawing/wp:anchor/a:graphic/wps:wsp connector, preset line. positionH/V relativeFrom=page dùng EMU (12700/pt); extent cy=0, transform cục bộ off=(0,0); layoutInCell=0, wrapNone, nét đen 0,5pt, không mũi tên. Không sửa font/chữ hoặc gọi setter LineFormat COM. Thay được Line có marker từ cả hai encoder.
 
 Giữ kiểm XPS 1pt và rollback. Nhật ký chứa các nét thực tế (giới hạn 40) và native Left/Top/Width/Height/relative-position, không chứa chữ. Bài kiểm tra Office riêng trên mẫu giả giữ failed-line-candidate.docx và failed-line-preview.xps nếu có lỗi; tài liệu người dùng không được tự sao chép vào thư mục kiểm tra. Chưa xác nhận Office2021 trong cloud.
+
