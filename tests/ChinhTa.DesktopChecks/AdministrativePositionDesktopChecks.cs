@@ -103,18 +103,18 @@ public static class AdministrativePositionDesktopChecks
         var trusted=targets.Select(t=>t with {ReferencesCentered=true}).ToArray();
         FixedDocumentSequence Framed(bool shifted,bool split=false)=>Build(text.Select((s,i)=>
             Glyph(s,(i<3?150:435)+(shifted && i%3==2?10:0),i%3==0?50:i%3==1?70:110,i==2?13:14)),true,split);
-        var offset=Framed(true);
-        var offered=AdministrativePositionInspection.Inspect(offset,new PreviewHighlighter(),trusted,anchors);
+        var offsetPage=Framed(true);
+        var offered=AdministrativePositionInspection.Inspect(offsetPage,new PreviewHighlighter(),trusted,anchors);
         assert(offered.Count==2 && offered.All(x=>x.Issue.CanFix && x.Issue.CenterFix is not null),
             "Real single-line offsets with aligned reference blocks in the same cell clips offer two center repairs");
-        var prior=AdministrativePositionInspection.MeasureCentering(offset,new PreviewHighlighter(),trusted[0],anchors);
+        var prior=AdministrativePositionInspection.MeasureCentering(offsetPage,new PreviewHighlighter(),trusted[0],anchors);
         var centered=Framed(false);
         var corrected=AdministrativePositionInspection.MeasureCentering(centered,new PreviewHighlighter(),trusted[0],anchors);
         assert(AdministrativeCentering.Verify(prior,corrected) &&
             AdministrativePositionInspection.Inspect(centered,new PreviewHighlighter(),trusted,anchors).Count==0,
             "Fresh measured centering passes and the corrected items leave the issue list");
         assert(!AdministrativeCentering.Verify(prior,prior),"Successful Word properties cannot replace actual post-save glyph movement");
-        assert(AdministrativePositionInspection.Inspect(offset,new PreviewHighlighter(),targets,anchors).All(x=>!x.Issue.CanFix),
+        assert(AdministrativePositionInspection.Inspect(offsetPage,new PreviewHighlighter(),targets,anchors).All(x=>!x.Issue.CanFix),
             "Cell clipping alone cannot authorize repair when reference paragraph centering is unproven");
         var split=AdministrativePositionInspection.Inspect(Framed(true,true),new PreviewHighlighter(),trusted,anchors);
         assert(split.Single(x=>x.Issue.Start==number.Row.Start).Issue.CanFix==false,
