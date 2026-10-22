@@ -126,7 +126,8 @@ public sealed partial class WordSession : IDisposable
                         bool administrative=Profile==DocumentProfile.State && i<=40 && AdministrativeHeaderRules.IsCandidate(text);
                         // The paragraph/cell terminator can carry a different font. Observe
                         // the same visible text span that a new character-format fix changes.
-                        dynamic observed=administrative || documentHeading?document!.Range(start,start+text.TrimEnd('\r','\a','\n').Length):r;
+                        bool observeVisible=administrative || documentHeading || HeadingRules.IsCandidate(text,Profile);
+                        dynamic observed=observeVisible?document!.Range(start,start+text.TrimEnd('\r','\a','\n').Length):r;
                         dynamic? f=null,format=null;
                         try
                         {
@@ -138,7 +139,7 @@ public sealed partial class WordSession : IDisposable
                             italic != 0, color, snapshot?.InTable??(bool)r.Information[12], snapshot?.Page??(int)r.Information[3],
                             FormatObserved:true,FormatMixed:italic is not (0 or -1) || size<=0 || size>=9999999 || color is 9999999 or -9999999 ||
                                 string.IsNullOrWhiteSpace(fontName),BoldMixed:bold is not (0 or -1))); }
-                        finally { Release(format); Release(f); if(administrative || documentHeading)Release(observed); }
+                        finally { Release(format); Release(f); if(observeVisible)Release(observed); }
                     }
                     else paragraphs.Add(new(start, text,Page:snapshot?.Page??0,InTable:snapshot?.InTable??false));
                 }
@@ -509,7 +510,15 @@ public sealed partial class WordSession : IDisposable
         if(LineCheckArtifactFolder is null || failAfter<1)throw new InvalidOperationException("Chỉ dùng trong phiên Kiểm tra Word riêng.");
         FixManyCore(issues,true,failAfter);
     }
-    private void FixManyCore(IEnumerable<Issue> issues,bool verifyReference,int? failTextAfter=null)
+    internal void FixHeadingDriftProbe(IEnumerable<Issue> issues)
+    {
+        if(LineCheckArtifactFolder is null)throw new InvalidOperationException("Chỉ dùng trong phiên Kiểm tra Word riêng.");
+        var selected=issues.ToArray();
+        if(!selected.Any(i=>i.Format is not null) || selected.Any(i=>i.LineFix is not null || i.CenterFix is not null))
+            throw new InvalidOperationException("Mẫu lỗi hậu kiểm cần gợi ý định dạng tiêu đề.");
+        FixManyCore(selected,true,driftHeading:true);
+    }
+    private void FixManyCore(IEnumerable<Issue> issues,bool verifyReference,int? failTextAfter=null,bool driftHeading=false)
     {
         var plan = BatchPlan.Create(issues);
         if (plan.Count == 0) return;
@@ -633,6 +642,14 @@ public sealed partial class WordSession : IDisposable
                             }
                             finally{Release(format);Release(font);}
                         }
+                        if(item.Format is not null)
+                        {
+                            // Track the actual replacement range, after a full heading text
+                            // replacement has changed its length. Later lower CP edits may move it.
+                            dynamic tracked=range.Duplicate;
+                            try{formatRanges.Add((item,(object)tracked,item.Replacement));tracked=null!;}
+                            finally{Release(tracked);}
+                        }
                         string actual=(string)range.Text;
                         if(++applied==failTextAfter)throw new OfficeTextProbeException();
                         return actual;
@@ -641,18 +658,34 @@ public sealed partial class WordSession : IDisposable
                 },()=>
                 {
                     Checkpoint();
+                    if(driftHeading)
+                    {
+                        // Only the separate synthetic Office check can request this drift.
+                        // Do not throw here: the normal post-save proof must detect it.
+                        dynamic changedRange=formatRanges.First(s=>s.Issue.Format is not null).Range;
+                        dynamic changedFont=changedRange.Font;
+                        try{changedFont.Italic=-1;snapshotCurrent=false;}
+                        finally{Release(changedFont);}
+                    }
                     if(ReadStoryText()!=expectedStory)
                         throw new InvalidOperationException("Chữ sau lưu không đúng phạm vi đã chọn; phải khôi phục cả lượt.");
                     foreach(var styled in formatRanges)
                     {
-                        dynamic target=styled.Range;dynamic font=target.Font;
+                        dynamic target=styled.Range;dynamic font=target.Font;dynamic? paragraphFormat=null;
                         try
                         {
-                            if((string)target.Text!=styled.Expected || !styled.Issue.CharacterFormat!.Matches(
-                                (string?)font.Name??"",(float)font.Size,(int)font.Italic,(int)font.Color,(int)font.Bold))
+                            int? alignment=null;
+                            if(styled.Issue.Format?.Alignment is not null)
+                            {paragraphFormat=target.ParagraphFormat;alignment=(int)paragraphFormat.Alignment;}
+                            string name=(string?)font.Name??"";float size=(float)font.Size;
+                            int bold=(int)font.Bold,italic=(int)font.Italic,color=(int)font.Color;
+                            bool matches=styled.Issue.CharacterFormat is CharacterFormat character
+                                ?character.Matches(name,size,italic,color,bold)
+                                :styled.Issue.Format is HeadingFormat heading && heading.Matches(name,size,bold,italic,color,alignment);
+                            if((string)target.Text!=styled.Expected || !matches)
                                 throw new InvalidOperationException("Định dạng sau lưu chưa khớp gợi ý hoặc vùng chữ bị thay đổi; phải khôi phục cả lượt.");
                         }
-                        finally{Release(font);}
+                        finally{Release(paragraphFormat);Release(font);}
                     }
                 },()=>
                 {

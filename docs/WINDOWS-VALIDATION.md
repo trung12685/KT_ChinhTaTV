@@ -104,3 +104,10 @@ Giải nén vào thư mục mới, giữ samples. Thử trên bản sao tài li�
 Chạy toàn bộ Kiểm tra Word tự động. Cuối bài có hai thư mục `structured-hyperlink`/`structured-sdt`: bản plain và bản structured phải cùng nguyên văn, nhóm gợi ý plain cũ phải bị từ chối toàn bộ sau mở structured, không đổi checkpoint/Changed và không tạo Undo. Trích yếu có cấu trúc chứa lỗi chữ minh họa và hai khoảng trắng chỉ được cảnh báo thủ công; tên loại/đoạn thường bên cạnh vẫn sửa được. Sửa nhóm vùng thường phải chỉ thay đúng chữ đã chọn và phông đã chọn, giữ cảnh báo/định danh/chữ vùng cấu trúc, lưu/mở và một Undo phục hồi cả nhóm; nguồn không đổi.
 
 Trên bản sao thực, nếu trích yếu có hyperlink/control/field/Line neo, không được tích sửa chữ vòng qua cảnh báo thủ công. Ô số/ngày trống không trở thành lỗi khoảng trắng. Phạm vi đối chiếu cấu trúc mới chỉ 40 đoạn đầu State; không coi hết cảnh báo là toàn bộ tài liệu an toàn/đúng thể thức. Giữ các bài Line/XPS/rollback và lưu bản sao trước. Chưa có xác nhận runtime Office 2021 cho .37.
+
+
+## Thử 0.1.38 — hậu kiểm tiêu đề và dấu đoạn khác phông
+
+Chạy hết Kiểm tra Word tự động. Hai mẫu `heading-proof-State`/`heading-proof-Party` cố ý sai chữ/phông/cỡ của quốc hiệu, tiêu ngữ hoặc tiêu đề Đảng; dấu đoạn có Arial8. Gây nghiêng sau Save phải bị phép hậu kiểm định dạng bình thường phát hiện, rollback toàn nhóm cùng lỗi khoảng trắng khác, giữ checkpoint/Changed và không tạo Undo. Không được báo đạt chỉ nhờ chữ đúng.
+
+Sửa nhóm bình thường phải đổi đúng chữ/kiểu yêu cầu; dấu đoạn khác phông không được gây cảnh báo phông cũ cho phần chữ đã đúng. Quét lại, lưu/mở lại và một Undo phục hồi cả nhóm; nguồn giả giữ hash. Giữ nguyên các bài Line/XPS/rollback, cấu trúc và lưu bản sao trước đó. Trên bản sao tài liệu thực thử quốc hiệu/tiêu ngữ có dấu đoạn khác phông và sửa chung một lỗi khoảng trắng ngoài dòng. Chưa có xác nhận runtime Office 2021 cho .38; kiểm phông không xác nhận vị trí nét hoặc toàn bộ thể thức.
