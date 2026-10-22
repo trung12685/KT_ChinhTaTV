@@ -111,3 +111,10 @@ Trên bản sao thực, nếu trích yếu có hyperlink/control/field/Line neo,
 Chạy hết Kiểm tra Word tự động. Hai mẫu `heading-proof-State`/`heading-proof-Party` cố ý sai chữ/phông/cỡ của quốc hiệu, tiêu ngữ hoặc tiêu đề Đảng; dấu đoạn có Arial8. Gây nghiêng sau Save phải bị phép hậu kiểm định dạng bình thường phát hiện, rollback toàn nhóm cùng lỗi khoảng trắng khác, giữ checkpoint/Changed và không tạo Undo. Không được báo đạt chỉ nhờ chữ đúng.
 
 Sửa nhóm bình thường phải đổi đúng chữ/kiểu yêu cầu; dấu đoạn khác phông không được gây cảnh báo phông cũ cho phần chữ đã đúng. Quét lại, lưu/mở lại và một Undo phục hồi cả nhóm; nguồn giả giữ hash. Giữ nguyên các bài Line/XPS/rollback, cấu trúc và lưu bản sao trước đó. Trên bản sao tài liệu thực thử quốc hiệu/tiêu ngữ có dấu đoạn khác phông và sửa chung một lỗi khoảng trắng ngoài dòng. Chưa có xác nhận runtime Office 2021 cho .38; kiểm phông không xác nhận vị trí nét hoặc toàn bộ thể thức.
+
+
+## Thử 0.1.39 — cleanup backup và thứ tự Hoàn tác
+
+Chạy hết Kiểm tra Word tự động. Bài cuối tạo hai lượt sửa tiêu đề độc lập trên mẫu giả; lần Undo đầu gây lỗi I/O chỉ ở dọn backup. Phải trả về thành công, giữ backup, Changed=true, chữ/cảnh báo đúng trạng thái sau lượt sửa đầu. Undo tiếp theo về nguyên bản; Undo khi hết stack không đổi; nguồn giữ hash. Log có Word.CheckpointCleanup.Retained, không ghi nội dung hoặc đường dẫn người dùng.
+
+Core Windows giữ handle không cho xóa rollback thật và kiểm các lỗi đóng/chép/mở/restore cùng cleanup. Đây là test file; CI không có Word. Thử thao tác sửa nhiều lượt, Hoàn tác từng lượt, lưu/mở và các bài nét XPS cũ trên bản sao. Chưa có xác nhận runtime Office 2021 cho .39; không tự tạo khóa/xóa tệp tài liệu thật để thử lỗi này.
