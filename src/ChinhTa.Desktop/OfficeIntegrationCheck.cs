@@ -260,6 +260,38 @@ public static class OfficeIntegrationCheck
             if(test.ReadCheckText()!=expectedHeader || test.Check().Any(i=>i.CharacterFormat is not null ||
                 i.CanFix && i.Kind is FixKind.AdministrativeNumber or FixKind.AdministrativeDate))
                 throw new InvalidOperationException("Sửa chung chữ/định dạng chưa đạt trong một lượt");
+            Pass(stage);
+            stage="Lưu bản sao: lỗi giữa chừng/đích bị khóa giữ tệp cũ, tài liệu gốc và trạng thái chưa lưu";
+            string existingCopy=Path.Combine(folder,"save-copy-existing.docx");File.Copy(test.Source,existingCopy);
+            byte[] existingDigest=SaveDigest(existingCopy),sourceDigest=SaveDigest(test.Source);
+            if(!test.Changed)throw new InvalidOperationException("Mẫu thiếu lượt sửa chưa lưu để kiểm lỗi lưu");
+            bool interruptedSave=false;
+            try{test.SaveCopyFailureProbe(existingCopy);}
+            catch(OfficeSaveProbeException){interruptedSave=true;}
+            if(!interruptedSave || !test.Changed || !SaveDigest(existingCopy).SequenceEqual(existingDigest) ||
+                !SaveDigest(test.Source).SequenceEqual(sourceDigest) || test.ReadCheckText()!=expectedHeader)
+                throw new InvalidOperationException("Lỗi giữa chừng đã làm đổi tệp đích/gốc hoặc mất trạng thái chưa lưu");
+            bool lockedSave=false;
+            using(var held=new FileStream(existingCopy,FileMode.Open,FileAccess.Read,FileShare.Read))
+            {
+                try{test.SaveCopy(existingCopy);}catch(IOException){lockedSave=true;}
+            }
+            if(!lockedSave || !test.Changed || !SaveDigest(existingCopy).SequenceEqual(existingDigest))
+                throw new InvalidOperationException("Tệp đang khóa không được giữ nguyên sau lỗi công bố bản sao");
+            foreach(string protectedPath in new[]{test.Source,test.RecoveryPath})
+            {
+                bool rejected=false;try{test.SaveCopy(protectedPath);}catch(InvalidOperationException){rejected=true;}
+                if(!rejected || !test.Changed || !SaveDigest(test.Source).SequenceEqual(sourceDigest))
+                    throw new InvalidOperationException("Chưa chặn lưu đè tài liệu gốc/bản làm việc");
+            }
+            if(Directory.EnumerateFiles(folder,".ChinhTaViet-*.tmp").Any())
+                throw new InvalidOperationException("Còn bản sao tạm sau lỗi lưu đã xử lý");
+            Pass(stage);
+            stage="Thay bản sao đã có bằng bản đầy đủ, lưu/mở và giữ một Undo của nhóm chữ/phông";
+            test.SaveCopy(existingCopy);
+            if(test.Changed || !SaveDigest(existingCopy).SequenceEqual(SaveDigest(test.RecoveryPath)) ||
+                !SaveDigest(test.Source).SequenceEqual(sourceDigest))
+                throw new InvalidOperationException("Bản công bố chưa khớp checkpoint hoặc trạng thái lưu/tệp gốc bị sai");
             string combinedSaved=Path.Combine(folder,"typography-and-text-fixed.docx");test.SaveCopy(combinedSaved);
             test.Undo();
             if(test.ReadCheckText()!=typographyBefore || test.Check().Count(i=>i.CharacterFormat is not null)!=2)
@@ -360,6 +392,11 @@ public static class OfficeIntegrationCheck
             File.AppendAllText(report,"RESULT FAIL\n");
             return new(false,stage,folder);
         }
+    }
+    private static byte[] SaveDigest(string path)
+    {
+        using var input=new FileStream(path,FileMode.Open,FileAccess.Read,FileShare.ReadWrite|FileShare.Delete);
+        return System.Security.Cryptography.SHA256.HashData(input);
     }
     private static Issue[] InspectPositions(WordSession test,string folder,string artifact)
     {

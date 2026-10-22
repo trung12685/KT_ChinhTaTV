@@ -744,14 +744,7 @@ public sealed partial class WordSession : IDisposable
         document.ExportAsFixedFormat(output, 18, OpenAfterExport: false);
         return output;
     }
-    public void SaveCopy(string path)
-    {
-        if (string.Equals(Path.GetFullPath(path), Source, StringComparison.OrdinalIgnoreCase))
-            throw new InvalidOperationException("Hãy chọn tên khác để giữ nguyên tài liệu gốc.");
-        Checkpoint();
-        File.Copy(RecoveryPath, path, true);
-        Changed = false;
-    }
+    public void SaveCopy(string path) => SaveCopyCore(path);
     private void CloseConnection()
     {
         // A dead COM server can throw from Close/Quit too. Still release both handles.

@@ -2,6 +2,10 @@
 
 Ứng dụng C# / WPF chạy trên Windows với Microsoft Word desktop, làm việc offline trên bản sao DOCX và xem trước bằng XPS. Không gửi nội dung tài liệu tới dịch vụ AI.
 
+## Bản thử 0.1.35
+
+Lưu bản sao qua tệp tạm cùng thư mục, kiểm SHA-256 rồi thay tên để tránh công bố bản bị thiếu khi sao chép lỗi. Giữ tệp đích cũ và trạng thái chưa lưu nếu chưa thay thành công; chặn ghi đè gốc/bản làm việc/Undo, kể cả alias được xác minh. [Tải bản thử](https://github.com/trung12685/KT_ChinhTaTV/releases/tag/v0.1.35) · [Phạm vi và cách thử](docs/CHANGES-0.1.35.md). Chưa xác nhận Office 2021; mốc ổn định vẫn 0.1.27.
+
 ## Bản thử 0.1.34
 
 Siết hậu kiểm căn giữa: kiểm cả dòng số/ngày không chọn để phát hiện dịch chuyển ngoài ý muốn; sau rollback đo lại vị trí gốc. Nếu sửa đã xong nhưng quét lại thất bại, thông báo rõ kết quả và bỏ danh sách cũ để tránh sửa lại nhầm. [Tải bản thử](https://github.com/trung12685/KT_ChinhTaTV/releases/tag/v0.1.34) · [Phạm vi và cách thử](docs/CHANGES-0.1.34.md). Chưa xác nhận Office 2021; 0.1.27 vẫn là mốc ổn định.
