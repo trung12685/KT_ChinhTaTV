@@ -13,7 +13,9 @@ public static class BatchPlan
                 throw new InvalidOperationException("Có cảnh báo chỉ kiểm tra thủ công, không thể sửa tự động.");
             if (current.Start < 0 || current.Length <= 0 || current.Original.Length != current.Length)
                 throw new InvalidOperationException("Vị trí lỗi không hợp lệ. Hãy quét lại.");
-            if(current.CharacterFormat is CharacterFormat style && (!style.Valid || current.Kind!=FixKind.AdministrativeFormat ||
+            if(current.CharacterFormat is CharacterFormat style && (!style.Valid ||
+                !(current.Kind==FixKind.AdministrativeFormat && style.Bold is null ||
+                  current.Kind==FixKind.DocumentHeadingFormat && style.Bold==true && !style.Italic) ||
                 current.Original!=current.Replacement || current.Format is not null || current.LineFix is not null ||
                 current.Original.IndexOfAny(['\r','\n','\a','\t'])>=0))
                 throw new InvalidOperationException("Gợi ý định dạng ký tự không hợp lệ. Hãy quét lại.");
@@ -23,6 +25,8 @@ public static class BatchPlan
                 current.CharacterFormat is not null || current.Format is not null || current.LineFix is not null) ||
                 current.Kind==FixKind.AdministrativePosition && current.CenterFix is null)
                 throw new InvalidOperationException("Gợi ý căn giữa không hợp lệ. Hãy quét lại.");
+            if(current.Kind==FixKind.DocumentHeadingFormat && current.CharacterFormat is null)
+                throw new InvalidOperationException("Gợi ý tên loại/trích yếu thiếu định dạng đã xác minh. Hãy quét lại.");
             active.RemoveAll(previous=>(long)previous.Start+previous.Length<=current.Start);
             foreach(var previous in active)
                 if(!SharesFormat(previous,current) && !SharesFormat(current,previous))

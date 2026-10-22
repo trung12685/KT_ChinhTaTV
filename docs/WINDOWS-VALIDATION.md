@@ -88,3 +88,12 @@ Chưa có xác nhận runtime Office 2021 cho .34; CI Windows không có Word. G
 Chạy toàn bộ Kiểm tra Word tự động. Sau sửa nhóm chữ/phông trên mẫu giả, bài kiểm tạo `save-copy-existing.docx` có sẵn, gây lỗi giữa copy và thử giữ khóa không cho thay tên. Tệp đích/gốc phải giữ nguyên hash, Changed vẫn true, không còn stage đã xử lý; lưu đè Source/RecoveryPath bị chặn. Sau bỏ khóa, bản sao mới phải bằng checkpoint, Changed=false; lưu/mở và một Undo của nhóm chữ/phông vẫn chạy đạt. Các bài Line/XPS và hậu kiểm vị trí cũ vẫn chạy đầy đủ.
 
 Trên bản sao tài liệu thực: sửa vài mục, lưu vào tên mới; sửa tiếp và lưu thay bản sao đó, mở lại để kiểm chữ/phông. Thử đích không có quyền ghi hoặc đang khóa: không báo đã lưu, không mất thay đổi và không làm hỏng bản đích cũ; sau xử lý khóa/quyền có thể lưu lại. Không thử ghi đè chính tài liệu gốc. Lưu bản sao giữ các checkpoint Hoàn tác; lưu không tạo thêm checkpoint. Kết quả CI không thay cho thử Word thật; .35 vẫn chưa có xác nhận runtime Office 2021.
+
+
+## Thử 0.1.36 — tên loại và trích yếu
+
+Chạy đầy đủ Kiểm tra Word tự động. Cuối bài có mẫu `document-heading-input.docx` với tên loại + 2 đoạn trích yếu cần sửa; dấu đoạn có phông khác không được làm sai kết quả quan sát chữ. Sửa riêng tên loại phải chỉ còn hai lỗi trích yếu; Undo khôi phục. Lỗi có chủ ý sau bước định dạng thứ hai phải phục hồi cả nhóm. Sửa nhóm + đúng một lỗi khoảng trắng phải giữ mọi chữ/ô trống còn lại, cỡ hợp lệ 14/13,5, gạch chân/căn đoạn; sau quét không còn mục định dạng cũ, lưu/mở lại và một Undo đều đúng. Bản đã sửa: `document-heading-fixed.docx`.
+
+Mẫu `document-heading-mixed.docx` có kiểu đậm trộn trong trích yếu đầu: mục đó phải thủ công, không tích được; hai đoạn khác vẫn đủ điều kiện. Ngoài phạm vi: Công văn/V/v, tên loại chưa nhận diện/trùng, tiêu đề nằm sau văn xuôi, bảng/field/drawing/tab, trích yếu chưa có ranh giới, quá 4 đoạn hoặc profile khác. Chữ hoa/thường không tự đổi, vị trí tuyệt đối vẫn giới hạn. Nếu có Line trong cùng đoạn, bản thử có thể giữ định dạng đoạn đó thủ công vì chưa xác minh chữ thuần; không nới điều kiện để có PASS.
+
+Giải nén vào thư mục mới, giữ samples. Thử trên bản sao tài liệu, sửa phông/chữ trước rồi quét lại trước khi sửa Line theo số đo mới. Chưa có xác nhận runtime Office 2021 cho .36; CI không thay bài Word thực tế.
