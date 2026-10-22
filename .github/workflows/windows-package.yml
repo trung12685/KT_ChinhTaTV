@@ -1,7 +1,7 @@
 name: Windows package
 on:
   push:
-    branches: [fix/verified-save-copy-0.1.35]
+    branches: [feature/document-heading-0.1.36]
 permissions:
   contents: write
 jobs:
@@ -22,12 +22,12 @@ jobs:
         shell: pwsh
         run: |
           Copy-Item samples artifacts/win-x64/samples -Recurse -Force
-          Copy-Item docs/CHANGES-0.1.35.md artifacts/win-x64/
-          Compress-Archive artifacts/win-x64/* artifacts/ChinhTaViet-0.1.35-win-x64.zip
-          Get-FileHash artifacts/ChinhTaViet-0.1.35-win-x64.zip -Algorithm SHA256 | Format-List | Out-File artifacts/SHA256.txt
+          Copy-Item docs/CHANGES-0.1.36.md artifacts/win-x64/
+          Compress-Archive artifacts/win-x64/* artifacts/ChinhTaViet-0.1.36-win-x64.zip
+          Get-FileHash artifacts/ChinhTaViet-0.1.36-win-x64.zip -Algorithm SHA256 | Format-List | Out-File artifacts/SHA256.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: ChinhTaViet-0.1.35-win-x64
+          name: ChinhTaViet-0.1.36-win-x64
           path: |
             artifacts/*.zip
             artifacts/SHA256.txt
@@ -36,4 +36,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         shell: pwsh
         run: |
-          gh release create v0.1.35 artifacts/ChinhTaViet-0.1.35-win-x64.zip artifacts/SHA256.txt --target $env:GITHUB_SHA --prerelease --title '0.1.35 — Lưu bản sao có kiểm tra — bản thử' --notes-file docs/CHANGES-0.1.35.md
+          gh release create v0.1.36 artifacts/ChinhTaViet-0.1.36-win-x64.zip artifacts/SHA256.txt --target $env:GITHUB_SHA --prerelease --title '0.1.36 — Định dạng tên loại và trích yếu — bản thử' --notes-file docs/CHANGES-0.1.36.md

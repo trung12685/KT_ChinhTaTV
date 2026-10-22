@@ -98,6 +98,7 @@ public sealed partial class WordSession : IDisposable
         IReadOnlyList<LayoutParagraph> headerLayout = [];
         var liveLayout = new List<WordParagraphSnapshot>();
         var editableHeaderStarts=new HashSet<int>();
+        var documentFormatStarts=new HashSet<int>();
         bool lineLayoutUnavailable = false;
         WordXmlMappingException? mappingWarning = null;
         dynamic ps = document!.Paragraphs;
@@ -117,23 +118,29 @@ public sealed partial class WordSession : IDisposable
                         snapshot=ReadLayout(r,start,text);
                         liveLayout.Add(snapshot);
                     }
-                    if (HeadingRules.IsCandidate(text, Profile) ||
+                    bool documentHeading=Profile==DocumentProfile.State && i<=40 && !HeadingRules.IsCandidate(text,Profile) && snapshot is {InTable:false} &&
+                        (ShapeLineRules.IsDocumentType(text) || snapshot.ParagraphCentered==true);
+                    if(documentHeading)documentFormatStarts.Add(start);
+                    if (documentHeading || HeadingRules.IsCandidate(text, Profile) ||
                         Profile == DocumentProfile.State && i<=40 && AdministrativeHeaderRules.IsCandidate(text) ||
                         Profile == DocumentProfile.Personal && System.Text.RegularExpressions.Regex.IsMatch(text, @"^[ \t]+\S"))
                     {
                         bool administrative=Profile==DocumentProfile.State && i<=40 && AdministrativeHeaderRules.IsCandidate(text);
                         // The paragraph/cell terminator can carry a different font. Observe
                         // the same visible text span that a new character-format fix changes.
-                        dynamic observed=administrative?document!.Range(start,start+text.TrimEnd('\r','\a','\n').Length):r;
+                        dynamic observed=administrative || documentHeading?document!.Range(start,start+text.TrimEnd('\r','\a','\n').Length):r;
                         dynamic? f=null,format=null;
                         try
                         {
                             f=observed.Font;format=r.ParagraphFormat;
-                            paragraphs.Add(new(start, text, (int)f.Bold == -1,
-                            (float)f.Size, (int)format.Alignment, (string?)f.Name ?? "",
-                            (int)f.Italic != 0, (int)f.Color, snapshot?.InTable??(bool)r.Information[12], snapshot?.Page??(int)r.Information[3],
-                            FormatObserved:true,FormatMixed:(int)f.Italic is not (0 or -1) || (float)f.Size<=0 || (float)f.Size>=9999999 || (int)f.Color is 9999999 or -9999999 || string.IsNullOrWhiteSpace((string?)f.Name))); }
-                        finally { Release(format); Release(f); if(administrative)Release(observed); }
+                            int bold=(int)f.Bold,italic=(int)f.Italic,color=(int)f.Color;
+                            float size=(float)f.Size;string fontName=(string?)f.Name??"";
+                            paragraphs.Add(new(start, text, bold == -1,
+                            size, (int)format.Alignment, fontName,
+                            italic != 0, color, snapshot?.InTable??(bool)r.Information[12], snapshot?.Page??(int)r.Information[3],
+                            FormatObserved:true,FormatMixed:italic is not (0 or -1) || size<=0 || size>=9999999 || color is 9999999 or -9999999 ||
+                                string.IsNullOrWhiteSpace(fontName),BoldMixed:bold is not (0 or -1))); }
+                        finally { Release(format); Release(f); if(administrative || documentHeading)Release(observed); }
                     }
                     else paragraphs.Add(new(start, text,Page:snapshot?.Page??0,InTable:snapshot?.InTable??false));
                 }
@@ -165,12 +172,13 @@ public sealed partial class WordSession : IDisposable
         }
         lastLayout = liveLayout.ToArray();
         for(int i=0;i<paragraphs.Count;i++)
-            if(Profile==DocumentProfile.State && AdministrativeHeaderRules.IsCandidate(paragraphs[i].Text))
+            if(Profile==DocumentProfile.State && (AdministrativeHeaderRules.IsCandidate(paragraphs[i].Text) || documentFormatStarts.Contains(paragraphs[i].Start)))
                 paragraphs[i]=paragraphs[i] with {TextEditable=editableHeaderStarts.Contains(paragraphs[i].Start)};
         LineTargets = lineLayoutUnavailable ? [] : ShapeLineRules.Identify(headerLayout, Profile);
         AdministrativePositionTargets=AdministrativePositionRules.Identify(paragraphs,headerLayout,Profile);
         LineShapes = ReadLineShapes();
         var issues = Checker.Check(paragraphs, Profile).ToList();
+        issues.AddRange(DocumentHeadingRules.Check(paragraphs,headerLayout,Profile));
         if ((lineLayoutUnavailable || mappingWarning is not null && LineTargets.Count < 3) && paragraphs.FirstOrDefault(p => p.Text.Length > 0) is Paragraph first)
             issues.Add(new(first.Start, first.Text.Length, first.Text, first.Text,
                 "Chưa đối chiếu đủ các mốc đường kẻ. " +
@@ -518,6 +526,13 @@ public sealed partial class WordSession : IDisposable
             FixPositionBatch(plan,failTextAfter);
             return;
         }
+        if(plan.Any(i=>i.Kind==FixKind.DocumentHeadingFormat))
+        {
+            var current=CheckCore().Where(i=>i.Kind==FixKind.DocumentHeadingFormat && i.CanFix).ToArray();
+            foreach(var requested in plan.Where(i=>i.Kind==FixKind.DocumentHeadingFormat))
+                if(current.Count(i=>i.Start==requested.Start && i.Original==requested.Original && i.CharacterFormat==requested.CharacterFormat)!=1)
+                    throw new InvalidOperationException("Mốc/định dạng tên loại hoặc trích yếu đã thay đổi; hãy quét lại trước khi sửa.");
+        }
         // Validate every original before making any changes, not halfway through the batch.
         BatchPlan.Validate(plan,ReadIssueText);
         Checkpoint();
@@ -610,7 +625,8 @@ public sealed partial class WordSession : IDisposable
                         if(item.CharacterFormat is CharacterFormat character)
                         {
                             dynamic font=range.Font;
-                            try{font.Name="Times New Roman";font.Size=character.Size;font.Italic=character.Italic?-1:0;font.Color=0;}
+                            try{font.Name="Times New Roman";font.Size=character.Size;font.Italic=character.Italic?-1:0;font.Color=0;
+                                if(character.Bold is bool bold)font.Bold=bold?-1:0;}
                             finally{Release(font);}
                         }
                         if(item.Format is HeadingFormat heading)
@@ -640,7 +656,7 @@ public sealed partial class WordSession : IDisposable
                         try
                         {
                             if((string)target.Text!=styled.Expected || !styled.Issue.CharacterFormat!.Matches(
-                                (string?)font.Name??"",(float)font.Size,(int)font.Italic,(int)font.Color))
+                                (string?)font.Name??"",(float)font.Size,(int)font.Italic,(int)font.Color,(int)font.Bold))
                                 throw new InvalidOperationException("Định dạng sau lưu chưa khớp gợi ý hoặc vùng chữ bị thay đổi; phải khôi phục cả lượt.");
                         }
                         finally{Release(font);}

@@ -84,3 +84,10 @@ NĐ30 PL I, Phần I.II.3.c và 4.c, PDF 23: số/ký hiệu căn giữa dưới
 ## Bản thử 0.1.33 — sửa căn giữa có điều kiện
 
 Tiếp nối căn cứ vị trí số/ngày ở bản .32 (NĐ30 PL I Phần I.II.3.c, 4.c, PDF 23). Chỉ tự căn giữa khi có cả bằng chứng range/XML và glyph/khung ô XPS đồng nhất; bỏ thụt lề ngang của đúng dòng được chọn, không sửa chữ/ô trống, khoảng cách dọc hoặc tự làm hai dòng cùng hàng. Tham chiếu phía trên phải đã căn giữa không thụt lề trong ô lề cân bằng, và được đo thật cùng tâm với khung. Sau lưu phải đo đạt lại, nếu không phục hồi cả lượt. Dung sai tâm 3 pt và giữ hình học 0,5 pt là chính sách kiểm đo của ứng dụng, không phải số bắt buộc nêu trong NĐ30. Chưa có xác nhận runtime Office 2021 cho tính năng này.
+
+
+## Bản thử 0.1.36 — tên loại/trích yếu của văn bản có tên loại
+
+Đối chiếu lại nguồn NĐ30 đã ghi: PDF 21 (PL I Phần I.I.4) quy định Times New Roman, Unicode TCVN 6909:2001, màu đen; PDF 24 (I.II.5.b) quy định tên loại in hoa, cỡ 13–14, đứng, đậm; trích yếu ngay dưới, chữ in thường, cỡ 13–14, đứng, đậm và căn giữa. Công văn sau “V/v” có cách trình bày khác; chưa áp dụng phần mới cho công văn.
+
+Tự sửa chỉ định dạng ký tự của dòng đã xác minh: giữ cỡ trong 13–14; ngoài khoảng đề xuất 13. Không tự viết hoa tên loại hoặc viết thường trích yếu để tránh đổi tên riêng/mã. Chỉ dùng khối ở đầu trang 1, sau cặp quốc hiệu/tiêu ngữ duy nhất và trước nội dung thường; XML/range sống phải khớp. Tối đa 4 đoạn trích yếu là phạm vi an toàn của bản thử, không phải giới hạn số đoạn theo NĐ30. Chưa kiểm toàn bộ vị trí tuyệt đối, mẫu đặc thù hoặc sửa đổi pháp lý sau nguồn đã ghi. Đường kẻ vẫn đo riêng trên XPS, không suy đạt từ định dạng chữ.

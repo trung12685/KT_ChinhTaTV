@@ -4,15 +4,16 @@ namespace ChinhTa.Core;
 
 public record Paragraph(int Start, string Text, bool Bold = false, float Size = 13,
     int Alignment = 1, string Font = "Times New Roman", bool Italic = false,
-    int Color = 0, bool InTable = false, int Page = 1, bool FormatObserved = false, bool FormatMixed = false, bool TextEditable = true);
-public enum FixKind { Text, NationalHeading, StateMotto, PartyHeading, Advisory, PageLayout, ShapeLine, AdministrativeNumber, AdministrativeDate, AdministrativeFormat, AdministrativePosition }
+    int Color = 0, bool InTable = false, int Page = 1, bool FormatObserved = false, bool FormatMixed = false, bool TextEditable = true, bool BoldMixed = false);
+public enum FixKind { Text, NationalHeading, StateMotto, PartyHeading, Advisory, PageLayout, ShapeLine, AdministrativeNumber, AdministrativeDate, AdministrativeFormat, AdministrativePosition, DocumentHeadingFormat }
 public record HeadingFormat(float Size, int? Alignment = null);
-public record CharacterFormat(float Size,bool Italic)
+public record CharacterFormat(float Size,bool Italic,bool? Bold=null)
 {
-    public bool Valid => float.IsFinite(Size) && (Italic?Size>=13 && Size<=14:Math.Abs(Size-13)<.01f);
-    public bool Matches(string font,float size,int italic,int color)=>
+    public bool Valid => float.IsFinite(Size) && (Bold is null?(Italic?Size>=13 && Size<=14:Math.Abs(Size-13)<.01f):Bold==true && !Italic && Size>=13 && Size<=14);
+    public bool Matches(string font,float size,int italic,int color,int? bold=null)=>
         font.Equals("Times New Roman",StringComparison.OrdinalIgnoreCase) && float.IsFinite(size) &&
-        Math.Abs(size-Size)<.01f && italic==(Italic?-1:0) && color is 0 or -16777216;
+        Math.Abs(size-Size)<.01f && italic==(Italic?-1:0) && color is 0 or -16777216 &&
+        (Bold is null || bold==(Bold==true?-1:0));
 }
 public record Issue(int Start, int Length, string Original, string Replacement,
     string Message, bool BatchSafe, FixKind Kind = FixKind.Text,
@@ -23,7 +24,7 @@ public record Issue(int Start, int Length, string Original, string Replacement,
     public string Suggestion => !CanFix ? "Kiểm tra thủ công; không tự sửa."
         : LineFix is not null ? "Tạo/đặt lại Shape Line theo số đo và cấu hình đã chọn."
         : CenterFix is not null ? "Căn giữa trong ô đã xác minh, bỏ thụt lề ngang; giữ nguyên chữ và khoảng cách dọc."
-        : CharacterFormat is not null ? $"Times New Roman, màu đen, cỡ {CharacterFormat.Size:0.#}, chữ {(CharacterFormat.Italic?"nghiêng":"đứng")}; giữ nguyên chữ."
+        : CharacterFormat is not null ? $"Times New Roman, màu đen, cỡ {CharacterFormat.Size:0.#}, chữ {(CharacterFormat.Italic?"nghiêng":"đứng")}{(CharacterFormat.Bold==true?", đậm":"")}; giữ nguyên chữ."
         : Format is null ? Replacement
         : Original == Replacement ? "Sửa định dạng theo mô tả." : Replacement + " — sửa định dạng theo mô tả.";
 }

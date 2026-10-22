@@ -376,6 +376,66 @@ public static class OfficeIntegrationCheck
             if(reopened.Length!=1 || reopened[0].Title!="Số và ngày tháng chưa cùng dòng" || test.ReadCheckText()!=positionBefore)
                 throw new InvalidOperationException("Tâm đã sửa chưa giữ sau mở lại hoặc chữ bị thay đổi");
             Pass(stage);
+            stage="Nhận diện ba đoạn tên loại/trích yếu, giữ cỡ 14/13,5 và bỏ qua phông khác ở dấu đoạn";
+            string docHeadingSource=CreateDocumentHeadingSample(positionSource,folder,false);
+            byte[] docHeadingDigest=SaveDigest(docHeadingSource);
+            test.Open(docHeadingSource);
+            string docHeadingOriginal=test.ReadCheckText();
+            var docFormats=test.Check().Where(i=>i.Kind==FixKind.DocumentHeadingFormat && i.CanFix).OrderBy(i=>i.Start).ToArray();
+            if(docFormats.Length!=3 || !docFormats.Select(i=>i.CharacterFormat!.Size).SequenceEqual(new[]{13f,14f,13.5f}))
+                throw new InvalidOperationException("Chưa nhận diện đúng tên loại/trích yếu hoặc chưa giữ cỡ đang hợp lệ");
+            var docDecorations=docFormats.Select(test.ReadCheckDecorations).ToArray();
+            if(docDecorations.Any(d=>d.Bold!=0 || d.Underline!=1 || d.Alignment!=1))
+                throw new InvalidOperationException("Mẫu giả thiếu kiểu cần đổi/giữ để kiểm tên loại/trích yếu");
+            Pass(stage);
+            stage="Sửa riêng tên loại, quét lại chỉ còn hai trích yếu và một Undo";
+            test.FixMany([docFormats[0]]);
+            if(test.ReadCheckText()!=docHeadingOriginal || test.Check().Count(i=>i.Kind==FixKind.DocumentHeadingFormat)!=2)
+                throw new InvalidOperationException("Sửa tên loại chưa bỏ đúng mục hoặc làm đổi chữ");
+            test.Undo();
+            if(test.ReadCheckText()!=docHeadingOriginal || test.Check().Count(i=>i.Kind==FixKind.DocumentHeadingFormat && i.CanFix)!=3)
+                throw new InvalidOperationException("Undo sửa riêng chưa phục hồi đúng ba gợi ý");
+            Pass(stage);
+            stage="Rollback nhóm tên loại/trích yếu khi lỗi sau bước định dạng thứ hai";
+            bool docRollback=false;
+            try{test.FixTextFailureProbe(docFormats,2);}
+            catch(InvalidOperationException error) when(error.InnerException is OfficeTextProbeException){docRollback=true;}
+            if(!docRollback || test.ReadCheckText()!=docHeadingOriginal ||
+                test.Check().Count(i=>i.Kind==FixKind.DocumentHeadingFormat && i.CanFix)!=3 ||
+                !docFormats.Select(test.ReadCheckDecorations).SequenceEqual(docDecorations))
+                throw new InvalidOperationException("Rollback chưa giữ nguyên chữ/kiểu của cả nhóm tên loại/trích yếu");
+            Pass(stage);
+            stage="Sửa nhóm tên loại/trích yếu cùng một lỗi khoảng trắng đã chọn, kiểm toàn chữ và giữ gạch chân/căn đoạn";
+            var docFound=test.Check();
+            var docStyles=docFound.Where(i=>i.Kind==FixKind.DocumentHeadingFormat && i.CanFix).ToArray();
+            var subjectSpacing=docFound.Single(i=>i.Kind==FixKind.Text && i.Start>=docFormats[1].Start &&
+                i.Start<docFormats[1].Start+docFormats[1].Length);
+            string docExpected=docHeadingOriginal.Replace("kết quả  thử","kết quả thử",StringComparison.Ordinal);
+            test.FixMany(docStyles.Append(subjectSpacing));
+            var docAfter=test.Check();
+            if(test.ReadCheckText()!=docExpected || docAfter.Any(i=>i.Kind==FixKind.DocumentHeadingFormat))
+                throw new InvalidOperationException("Sửa nhóm tên loại/trích yếu còn lỗi hoặc làm đổi chữ ngoài lựa chọn");
+            var docTargets=test.LineTargets.Single(t=>t.Role==LineRole.Subject);
+            string firstSubjectAfter=docFormats[1].Original.Replace("kết quả  thử","kết quả thử",StringComparison.Ordinal);
+            var currentDocRows=new[]{docFormats[0],docFormats[1] with {Length=firstSubjectAfter.Length,Original=firstSubjectAfter,Replacement=firstSubjectAfter},
+                docFormats[2] with {Start=docTargets.Start}};
+            if(currentDocRows.Select(test.ReadCheckDecorations).Any(d=>d.Bold!=-1 || d.Underline!=1 || d.Alignment!=1))
+                throw new InvalidOperationException("Nhóm tên loại/trích yếu chưa đậm hoặc làm mất kiểu cần giữ");
+            string docHeadingSaved=Path.Combine(folder,"document-heading-fixed.docx");test.SaveCopy(docHeadingSaved);
+            test.Undo();
+            if(test.ReadCheckText()!=docHeadingOriginal || test.Check().Count(i=>i.Kind==FixKind.DocumentHeadingFormat && i.CanFix)!=3)
+                throw new InvalidOperationException("Một Undo chưa phục hồi cả chữ/định dạng nhóm tên loại/trích yếu");
+            test.Open(docHeadingSaved);
+            if(test.ReadCheckText()!=docExpected || test.Check().Any(i=>i.Kind==FixKind.DocumentHeadingFormat) ||
+                !SaveDigest(docHeadingSource).SequenceEqual(docHeadingDigest))
+                throw new InvalidOperationException("Mở lại bản tên loại/trích yếu đã sửa chưa đạt hoặc tệp nguồn bị thay đổi");
+            Pass(stage);
+            stage="Trích yếu trộn kiểu đậm giữ thủ công, không cho sửa tự động dòng đó";
+            string mixedHeading=CreateDocumentHeadingSample(positionSource,folder,true);test.Open(mixedHeading);
+            var mixedDoc=test.Check().Where(i=>i.Kind==FixKind.DocumentHeadingFormat).ToArray();
+            if(mixedDoc.Count(i=>i.CanFix)!=2 || mixedDoc.Count(i=>!i.CanFix)!=1)
+                throw new InvalidOperationException("Chưa giữ thủ công riêng trích yếu có kiểu đậm trộn");
+            Pass(stage);
             File.AppendAllText(report,"RESULT PASS\nKiểm thao tác Word/Line, vị trí nét XPS, sửa riêng/nhóm số-ngày, lưu/mở và Hoàn tác trên mẫu giả; không xác nhận mọi tài liệu.\n");
             return new(true,stage,folder);
         }
@@ -393,6 +453,44 @@ public static class OfficeIntegrationCheck
             File.AppendAllText(report,"RESULT FAIL\n");
             return new(false,stage,folder);
         }
+    }
+    private static string CreateDocumentHeadingSample(string source,string folder,bool mixed)
+    {
+        string path=Path.Combine(folder,mixed?"document-heading-mixed.docx":"document-heading-input.docx");File.Copy(source,path);
+        using var zip=ZipFile.Open(path,ZipArchiveMode.Update);
+        var entry=zip.GetEntry("word/document.xml") ?? throw new InvalidOperationException("Thiếu XML mẫu giả");
+        XDocument xml;using(var stream=entry.Open())xml=XDocument.Load(stream,LoadOptions.PreserveWhitespace);
+        XNamespace w="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+        var body=xml.Descendants(w+"body").Single();
+        var title=body.Elements(w+"p").Single(p=>string.Concat(p.Descendants(w+"t").Select(t=>t.Value))=="BÁO CÁO");
+        var first=title.ElementsAfterSelf(w+"p").First();
+        var second=new XElement(first);first.AddAfterSelf(second);
+        first.Descendants(w+"t").Single().Value="Về kết quả  thử nghiệm mẫu";
+        second.Descendants(w+"t").Single().Value="đợt công tác năm 2026";
+        foreach(var item in new[]{(Paragraph:title,Size:32),(Paragraph:first,Size:28),(Paragraph:second,Size:27)})
+        {
+            var run=item.Paragraph.Element(w+"r")!;
+            var properties=run.Element(w+"rPr")!;
+            properties.Element(w+"rFonts")!.SetAttributeValue(w+"ascii","Arial");
+            properties.Element(w+"rFonts")!.SetAttributeValue(w+"hAnsi","Arial");
+            properties.Element(w+"sz")!.SetAttributeValue(w+"val",item.Size);
+            foreach(string name in new[]{"i","b","u","color"})properties.Element(w+name)?.Remove();
+            properties.Add(new XElement(w+"b",new XAttribute(w+"val",0)),new XElement(w+"i"),
+                new XElement(w+"u",new XAttribute(w+"val","single")),new XElement(w+"color",new XAttribute(w+"val","FF0000")));
+            var paragraphProperties=item.Paragraph.Element(w+"pPr")!;
+            paragraphProperties.Element(w+"rPr")?.Remove();
+            paragraphProperties.Add(new XElement(w+"rPr",new XElement(w+"rFonts",new XAttribute(w+"ascii","Arial"),new XAttribute(w+"hAnsi","Arial")),
+                new XElement(w+"sz",new XAttribute(w+"val",16))));
+        }
+        if(mixed)
+        {
+            var run=first.Element(w+"r")!;var other=new XElement(run);
+            string text=run.Element(w+"t")!.Value;run.Element(w+"t")!.Value=text[..6];other.Element(w+"t")!.Value=text[6..];
+            run.Element(w+"t")!.SetAttributeValue(XNamespace.Xml+"space","preserve");
+            other.Element(w+"t")!.SetAttributeValue(XNamespace.Xml+"space","preserve");
+            other.Element(w+"rPr")!.Element(w+"b")!.SetAttributeValue(w+"val",1);run.AddAfterSelf(other);
+        }
+        entry.Delete();using(var stream=zip.CreateEntry("word/document.xml").Open())xml.Save(stream);return path;
     }
     private static byte[] SaveDigest(string path)
     {
