@@ -436,6 +436,51 @@ public static class OfficeIntegrationCheck
             if(mixedDoc.Count(i=>i.CanFix)!=2 || mixedDoc.Count(i=>!i.CanFix)!=1)
                 throw new InvalidOperationException("Chưa giữ thủ công riêng trích yếu có kiểu đậm trộn");
             Pass(stage);
+            foreach(string structure in new[]{"hyperlink","sdt"})
+            {
+                stage="Giữ thủ công trích yếu có "+structure+", chặn nhóm gợi ý cũ trước ghi";
+                string structuredSource=CreateStructuredTextSample(positionSource,folder,structure);
+                string plainSource=RemoveTextStructure(structuredSource);
+                byte[] structuredDigest=SaveDigest(structuredSource);
+                test.Open(plainSource);string plainStory=test.ReadCheckText();
+                var oldTextPlan=test.Check().Where(i=>i.Kind==FixKind.Text && i.CanFix).ToArray();
+                if(oldTextPlan.Length!=3)throw new InvalidOperationException("Mẫu chữ thuần chưa có đúng ba lựa chọn chữ/khoảng trắng");
+                test.Open(structuredSource);string structuredStory=test.ReadCheckText();
+                if(structuredStory!=plainStory)throw new InvalidOperationException("Hai mẫu cấu trúc chưa cùng nguyên văn");
+                byte[] checkpointDigest=SaveDigest(test.RecoveryPath);bool staleRejected=false;
+                try{test.FixMany(oldTextPlan);}
+                catch(InvalidOperationException error) when(error.Message.Contains("Gợi ý chữ/định dạng đã thay đổi",StringComparison.Ordinal)){staleRejected=true;}
+                if(!staleRejected || test.Changed || test.ReadCheckText()!=structuredStory ||
+                    !SaveDigest(test.RecoveryPath).SequenceEqual(checkpointDigest))
+                    throw new InvalidOperationException("Nhóm cũ chưa bị từ chối trước ghi/checkpoint");
+                test.Undo();
+                if(test.ReadCheckText()!=structuredStory)throw new InvalidOperationException("Lượt bị chặn không được tạo Undo");
+                Pass(stage);
+                stage="Sửa riêng chữ/phông vùng thường bên cạnh "+structure+", lưu/mở và một Undo";
+                var structuredFound=test.Check();
+                var manual=structuredFound.Single(i=>!i.CanFix && i.Title=="Kiểm tra chữ trong vùng chưa cho phép sửa");
+                if(structuredFound.Any(i=>i.CanFix && i.LineFix is null && i.Start>=manual.Start && i.Start<manual.Start+manual.Length))
+                    throw new InvalidOperationException("Vùng có cấu trúc vẫn có lựa chọn chữ/phông tự sửa");
+                var safeTextPlan=structuredFound.Where(i=>i.CanFix && i.Kind is FixKind.Text or FixKind.DocumentHeadingFormat).ToArray();
+                if(safeTextPlan.Length!=3)throw new InvalidOperationException("Vùng thường phải còn hai định dạng và một lỗi khoảng trắng");
+                string safeExpected=structuredStory.Replace("đợt  công tác","đợt công tác",StringComparison.Ordinal);
+                test.FixMany(safeTextPlan);
+                var afterStructured=test.Check();
+                if(test.ReadCheckText()!=safeExpected || afterStructured.Any(i=>i.CanFix && i.Kind is FixKind.Text or FixKind.DocumentHeadingFormat) ||
+                    !afterStructured.Any(i=>!i.CanFix && i.Title==manual.Title && i.Original==manual.Original))
+                    throw new InvalidOperationException("Sửa vùng thường làm đổi/mất cảnh báo của vùng có cấu trúc hoặc còn lỗi cũ");
+                string structuredSaved=Path.Combine(Path.GetDirectoryName(structuredSource)!,"structured-fixed.docx");
+                test.SaveCopy(structuredSaved);
+                VerifyTextStructure(structuredSource,structuredSaved,structure);
+                test.Undo();
+                if(test.ReadCheckText()!=structuredStory || test.Check().Count(i=>i.CanFix && i.Kind is FixKind.Text or FixKind.DocumentHeadingFormat)!=3)
+                    throw new InvalidOperationException("Một Undo chưa phục hồi đầy đủ nhóm vùng thường");
+                test.Open(structuredSaved);
+                if(test.ReadCheckText()!=safeExpected || !test.Check().Any(i=>!i.CanFix && i.Original==manual.Original) ||
+                    !SaveDigest(structuredSource).SequenceEqual(structuredDigest))
+                    throw new InvalidOperationException("Mở lại không giữ chữ/cấu trúc hoặc làm đổi nguồn");
+                Pass(stage);
+            }
             File.AppendAllText(report,"RESULT PASS\nKiểm thao tác Word/Line, vị trí nét XPS, sửa riêng/nhóm số-ngày, lưu/mở và Hoàn tác trên mẫu giả; không xác nhận mọi tài liệu.\n");
             return new(true,stage,folder);
         }
@@ -491,6 +536,54 @@ public static class OfficeIntegrationCheck
             other.Element(w+"rPr")!.Element(w+"b")!.SetAttributeValue(w+"val",1);run.AddAfterSelf(other);
         }
         entry.Delete();using(var stream=zip.CreateEntry("word/document.xml").Open())xml.Save(stream);return path;
+    }
+    private static string CreateStructuredTextSample(string source,string folder,string kind)
+    {
+        string sampleFolder=Path.Combine(folder,"structured-"+kind);Directory.CreateDirectory(sampleFolder);
+        string path=CreateDocumentHeadingSample(source,sampleFolder,false);
+        using var zip=ZipFile.Open(path,ZipArchiveMode.Update);
+        var entry=zip.GetEntry("word/document.xml")!;
+        XDocument xml;using(var input=entry.Open())xml=XDocument.Load(input,LoadOptions.PreserveWhitespace);
+        XNamespace w="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+        var first=xml.Descendants(w+"t").Single(t=>t.Value=="Về kết quả  thử nghiệm mẫu");
+        first.Value="Về con đo và kết quả  thử nghiệm mẫu";
+        xml.Descendants(w+"t").Single(t=>t.Value=="đợt công tác năm 2026").Value="đợt  công tác năm 2026";
+        if(kind=="hyperlink")
+        {
+            var title=xml.Descendants(w+"t").Single(t=>t.Value=="BÁO CÁO").Parent!;
+            title.AddBeforeSelf(new XElement(w+"bookmarkStart",new XAttribute(w+"id",120037),new XAttribute(w+"name","ctv_fixture")));
+            title.AddAfterSelf(new XElement(w+"bookmarkEnd",new XAttribute(w+"id",120037)));
+        }
+        var run=first.Parent!;run.ReplaceWith(kind=="hyperlink"
+            ?new XElement(w+"hyperlink",new XAttribute(w+"anchor","ctv_fixture"),new XElement(run))
+            :new XElement(w+"sdt",new XElement(w+"sdtPr",new XElement(w+"tag",new XAttribute(w+"val","ctv_fixture")),
+                new XElement(w+"id",new XAttribute(w+"val",120037))),new XElement(w+"sdtContent",new XElement(run))));
+        entry.Delete();using(var output=zip.CreateEntry("word/document.xml").Open())xml.Save(output);return path;
+    }
+    private static string RemoveTextStructure(string source)
+    {
+        string path=Path.Combine(Path.GetDirectoryName(source)!,"plain-same-text.docx");File.Copy(source,path);
+        using var zip=ZipFile.Open(path,ZipArchiveMode.Update);var entry=zip.GetEntry("word/document.xml")!;
+        XDocument xml;using(var input=entry.Open())xml=XDocument.Load(input,LoadOptions.PreserveWhitespace);
+        XNamespace w="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+        foreach(var node in xml.Descendants(w+"hyperlink").ToArray())node.ReplaceWith(node.Nodes().ToArray());
+        foreach(var node in xml.Descendants(w+"sdt").ToArray())node.ReplaceWith(node.Element(w+"sdtContent")!.Nodes().ToArray());
+        entry.Delete();using(var output=zip.CreateEntry("word/document.xml").Open())xml.Save(output);return path;
+    }
+    private static void VerifyTextStructure(string source,string saved,string kind)
+    {
+        XElement Read(string path)
+        {
+            using var zip=ZipFile.OpenRead(path);using var input=zip.GetEntry("word/document.xml")!.Open();
+            XNamespace w="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+            return XDocument.Load(input).Descendants(w+kind).Single();
+        }
+        XNamespace word="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+        var before=Read(source);var after=Read(saved);
+        if(string.Concat(before.Descendants(word+"t").Select(t=>t.Value))!=string.Concat(after.Descendants(word+"t").Select(t=>t.Value)) ||
+            (kind=="hyperlink"?(string?)before.Attribute(word+"anchor")!=(string?)after.Attribute(word+"anchor"):
+                (string?)before.Descendants(word+"tag").Single().Attribute(word+"val")!=(string?)after.Descendants(word+"tag").Single().Attribute(word+"val")))
+            throw new InvalidOperationException("Bản lưu chưa giữ nguyên chữ/định danh cấu trúc mẫu");
     }
     private static byte[] SaveDigest(string path)
     {

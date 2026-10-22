@@ -98,7 +98,6 @@ public sealed partial class WordSession : IDisposable
         IReadOnlyList<LayoutParagraph> headerLayout = [];
         var liveLayout = new List<WordParagraphSnapshot>();
         var editableHeaderStarts=new HashSet<int>();
-        var documentFormatStarts=new HashSet<int>();
         bool lineLayoutUnavailable = false;
         WordXmlMappingException? mappingWarning = null;
         dynamic ps = document!.Paragraphs;
@@ -120,7 +119,6 @@ public sealed partial class WordSession : IDisposable
                     }
                     bool documentHeading=Profile==DocumentProfile.State && i<=40 && !HeadingRules.IsCandidate(text,Profile) && snapshot is {InTable:false} &&
                         (ShapeLineRules.IsDocumentType(text) || snapshot.ParagraphCentered==true);
-                    if(documentHeading)documentFormatStarts.Add(start);
                     if (documentHeading || HeadingRules.IsCandidate(text, Profile) ||
                         Profile == DocumentProfile.State && i<=40 && AdministrativeHeaderRules.IsCandidate(text) ||
                         Profile == DocumentProfile.Personal && System.Text.RegularExpressions.Regex.IsMatch(text, @"^[ \t]+\S"))
@@ -172,7 +170,7 @@ public sealed partial class WordSession : IDisposable
         }
         lastLayout = liveLayout.ToArray();
         for(int i=0;i<paragraphs.Count;i++)
-            if(Profile==DocumentProfile.State && (AdministrativeHeaderRules.IsCandidate(paragraphs[i].Text) || documentFormatStarts.Contains(paragraphs[i].Start)))
+            if(Profile==DocumentProfile.State && (i<40 || AdministrativeHeaderRules.IsCandidate(paragraphs[i].Text)))
                 paragraphs[i]=paragraphs[i] with {TextEditable=editableHeaderStarts.Contains(paragraphs[i].Start)};
         LineTargets = lineLayoutUnavailable ? [] : ShapeLineRules.Identify(headerLayout, Profile);
         AdministrativePositionTargets=AdministrativePositionRules.Identify(paragraphs,headerLayout,Profile);
@@ -526,13 +524,8 @@ public sealed partial class WordSession : IDisposable
             FixPositionBatch(plan,failTextAfter);
             return;
         }
-        if(plan.Any(i=>i.Kind==FixKind.DocumentHeadingFormat))
-        {
-            var current=CheckCore().Where(i=>i.Kind==FixKind.DocumentHeadingFormat && i.CanFix).ToArray();
-            foreach(var requested in plan.Where(i=>i.Kind==FixKind.DocumentHeadingFormat))
-                if(current.Count(i=>i.Start==requested.Start && i.Original==requested.Original && i.CharacterFormat==requested.CharacterFormat)!=1)
-                    throw new InvalidOperationException("Mốc/định dạng tên loại hoặc trích yếu đã thay đổi; hãy quét lại trước khi sửa.");
-        }
+        if(plan.All(i=>i.LineFix is null))
+            CurrentTextPlan.Validate(plan,CheckCore());
         // Validate every original before making any changes, not halfway through the batch.
         BatchPlan.Validate(plan,ReadIssueText);
         Checkpoint();
