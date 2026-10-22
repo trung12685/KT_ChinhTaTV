@@ -69,7 +69,7 @@ Tài liệu riêng chỉ dùng cục bộ theo đường dẫn tùy chọn của
 dotnet publish src/ChinhTa.Desktop -c Release -r win-x64 --self-contained true -o artifacts/win-x64
 ```
 
-Kèm thư mục `samples`, ghi chú phiên bản, ZIP và SHA-256. Chạy kiểm thử trước khi phát hành. Khi tạo bản mới, cập nhật version trong csproj, tiêu đề UI, tên gói/tag, ghi chú và workflow Windows; không phát hành lại vào tag cũ. Workflow `windows-package.yml` gắn `feature/document-heading-0.1.36` và phát hành prerelease 0.1.36 sau kiểm thử. Mỗi phiên bản sau phải đổi nhánh/version và không ghi đè tag đã phát hành. Workflow `finalize-0.1.27.yml` chỉ chốt metadata của bản đã thử, có kiểm tag, digest, CI và thay đổi chỉ thuộc tài liệu/workflow được cho phép; không build hoặc thay asset.
+Kèm thư mục `samples`, ghi chú phiên bản, ZIP và SHA-256. Chạy kiểm thử trước khi phát hành. Khi tạo bản mới, cập nhật version trong csproj, tiêu đề UI, tên gói/tag, ghi chú và workflow Windows; không phát hành lại vào tag cũ. Workflow `windows-package.yml` gắn `fix/structured-text-0.1.37` và phát hành prerelease 0.1.37 sau kiểm thử. Mỗi phiên bản sau phải đổi nhánh/version và không ghi đè tag đã phát hành. Workflow `finalize-0.1.27.yml` chỉ chốt metadata của bản đã thử, có kiểm tag, digest, CI và thay đổi chỉ thuộc tài liệu/workflow được cho phép; không build hoặc thay asset.
 
 Khi nhận lỗi, lấy log đúng version và phân biệt lỗi đọc Word, ghép XML, CP/mốc, marker, candidate, nét XPS hay rollback. Các mã `Word.Preview.CpMapping`, `Word.Preview.Unmapped`, `Word.LineBatch.ReferenceBinding.*`, `Word.LineBatch.StoryBinding`, `Word.LineBatch.Rescan` ghi số liệu mà không ghi chữ tài liệu. Không kết luận nguyên nhân chỉ từ ngoại lệ tổng quát hoặc một điều kiện guard gộp.
 
@@ -172,3 +172,14 @@ Quan sát phông trên visible range không gồm dấu đoạn, không đổi c
 Giữ thứ tự chữ/phông → căn giữa số/ngày → Line. Đổi phông/cỡ có thể đổi số đo dòng; Scan dựng lại và kiểm nét XPS sau đó. Mục đã sửa phải biến mất theo quy tắc quét mới, cảnh báo khác còn thật vẫn giữ. Lưu bản sao có kiểm byte của .35 không đổi.
 
 Core kiểm nhận diện/ranh giới, kiểu trộn, cỡ hợp lệ, câu nội dung bị căn giữa, chữ hoa thủ công, payload, overlap và lỗi hậu kiểm đậm. Office check thêm mẫu giả title + 2 subject, cỡ 16/14/13,5, Arial đỏ/nghiêng/chưa đậm, gạch chân và dấu đoạn phông khác: sửa riêng, lỗi có chủ ý giữa nhóm, sửa nhóm + một lỗi khoảng trắng, giữ toàn chữ/kiểu khác, lưu/mở và một Undo; thêm trích yếu trộn đậm giữ thủ công. Không đưa tài liệu/font riêng vào kho. CI không có Word; chưa có báo cáo Office check đúng version cho chức năng mới. Phản hồi chưa phát hiện thêm lỗi của người dùng không được ghi thành PASS mọi kịch bản.
+
+
+## Ghi chú triển khai 0.1.37
+
+Rà .36 thấy `Checker.Check` chưa dùng TextEditable cho spacing/con-đo, trong khi DocumentHeadingRules đã giữ field/control/drawing thủ công; HeadingRules cũng chưa dùng cờ. Chưa ghi nhận hỏng tài liệu thật. Nay generic text chỉ đưa lựa chọn nếu cờ cho phép; nếu có ứng viên chữ ở vùng không cho phép, tạo một Advisory toàn đoạn không payload, nguyên văn bằng thay thế. CP của đoạn lấy từ Word; tránh đưa substring CP suy từ chữ khi field/đối tượng có thể chiếm CP ẩn. Ngoại lệ ô số/ngày và protectedAdministrative cũ giữ nguyên. Kiểu trộn không tự suy thành chữ không sửa được.
+
+WordSession áp cờ XML đã có cho mọi 40 đoạn đầu State và các ứng viên số/ngày cũ, không thêm COM từng đoạn ngoài phạm vi. Thiếu ghép/prefix dừng thì cờ false. Chưa mở rộng quan sát XML cho toàn story hoặc profile khác. Đừng quảng bá đây là hỗ trợ sửa field/control.
+
+`CurrentTextPlan.Validate` ghép toàn bộ nhóm chữ/phông với các gợi ý CanFix hiện tại bằng Start/Length/Original/Replacement/Kind/HeadingFormat/CharacterFormat. Thiếu, trùng hoặc payload đổi từ chối trước Checkpoint/File.Copy; nhãn/citation không quyết định phép sửa. `FixManyCore` gọi CheckCore tươi trước mọi nhóm chữ/phông; Line và căn giữa vẫn dùng cơ chế đối chiếu/hậu kiểm riêng. Không lấy lại đề xuất mới rồi tự áp nếu người dùng chọn đề xuất khác; không retry viết hoặc bỏ riêng một mục lỗi. AtomicTextBatch, expected story, post-font, rollback và một Undo vẫn giữ nguyên.
+
+Core thêm các ca cấu trúc và stale same-text; Office check có hyperlink nội bộ/bookmark và content control giả, lấy gợi ý từ bản plain có cùng chữ rồi mở bản structured để kiểm từ chối trước ghi, sau đó sửa vùng thường và giữ metadata/chữ vùng cấu trúc qua lưu/mở/Undo. Không upload nguồn riêng. CI không có Word, runtime Office còn chờ xác nhận. Ghi rõ các cảnh báo thủ công vẫn thật sau sửa vùng khác, không dùng số mục đơn thuần làm điều kiện đạt.

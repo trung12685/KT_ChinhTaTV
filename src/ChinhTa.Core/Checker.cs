@@ -42,17 +42,28 @@ public static class Checker
             .Select(p=>p.Start).ToHashSet();
         foreach (var p in items)
         {
+            var textIssues=new List<Issue>();
             if (!(p.Page == 1 && HeadingRules.IsCandidate(p.Text, profile)))
             foreach (Match m in Regex.Matches(p.Text, @"(?<=\S) {2,}(?=\S)"))
                 if(!protectedAdministrative.Contains(p.Start) && !SpacingRules.IsBlankField(p.Text,m.Index,m.Length,administrativeStarts.Contains(p.Start)) && !administrative.Any(i=>i.CanFix && i.CharacterFormat is null &&
-                    i.Start<p.Start+m.Index+m.Length && (long)i.Start+i.Length>p.Start+m.Index)) result.Add(new(p.Start + m.Index, m.Length, m.Value, " ",
+                    i.Start<p.Start+m.Index+m.Length && (long)i.Start+i.Length>p.Start+m.Index)) textIssues.Add(new(p.Start + m.Index, m.Length, m.Value, " ",
                     "Khoảng trắng liên tiếp; kiểm tra trước nếu dùng để dàn trang.", false));
             foreach (Match m in Regex.Matches(p.Text, @"\bcon\s+(đo)\b", RegexOptions.IgnoreCase))
             {
                 var word = m.Groups[1];
-                result.Add(new(p.Start + word.Index, word.Length, word.Value,
+                textIssues.Add(new(p.Start + word.Index, word.Length, word.Value,
                     char.IsUpper(word.Value[0]) ? "Đò" : "đò",
                     "Có thể là ‘con đò’. Đây là quy tắc minh họa, cần người dùng xác nhận.", false));
+            }
+            if(p.TextEditable && !protectedAdministrative.Contains(p.Start)) result.AddRange(textIssues);
+            else if(textIssues.Count>0)
+            {
+                // A Word field/object may occupy CPs absent from visible text. Anchor a
+                // manual notice to the real paragraph start, never a guessed substring.
+                string text=p.Text.TrimEnd('\r','\a','\n');
+                result.Add(new(p.Start,text.Length,text,text,
+                    "Có gợi ý sửa chữ/khoảng trắng trong vùng có cấu trúc hoặc chưa đối chiếu được XML. Kiểm tra thủ công để giữ trường, liên kết và đối tượng.",
+                    false,FixKind.Advisory,CanFix:false,Title:"Kiểm tra chữ trong vùng chưa cho phép sửa"));
             }
             if (profile == DocumentProfile.Personal)
             {

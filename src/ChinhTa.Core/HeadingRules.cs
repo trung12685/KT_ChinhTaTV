@@ -44,6 +44,13 @@ public static class HeadingRules
             citation += " Căn giữa quốc hiệu trong ô: lựa chọn trình bày theo yêu cầu người dùng.";
         string sizeLabel = min == max ? $"{min:0}" : $"{min:0}–{max:0}";
         string label = party ? "Tiêu đề Đảng" : motto ? "Tiêu ngữ" : "Quốc hiệu";
+        if(!p.TextEditable)
+        {
+            yield return new(p.Start,text.Length,text,text,
+                $"{label}: cần kiểm tra chữ/định dạng thủ công vì dòng có cấu trúc hoặc chưa đối chiếu được XML.",
+                false,FixKind.Advisory,CanFix:false,Citation:citation,Title:$"Kiểm tra {label.ToLowerInvariant()}");
+            yield break;
+        }
         yield return new(p.Start, text.Length, text, expected,
             $"{label}: Times New Roman, chữ đứng, đậm, màu đen, cỡ {sizeLabel}. " +
             (align is not null ? "Căn giữa trong ô. " : "") +
@@ -69,3 +76,4 @@ public static class HeadingRules
     }
 
 }
+

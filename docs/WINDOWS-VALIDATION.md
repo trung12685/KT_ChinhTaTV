@@ -97,3 +97,10 @@ Chạy đầy đủ Kiểm tra Word tự động. Cuối bài có mẫu `documen
 Mẫu `document-heading-mixed.docx` có kiểu đậm trộn trong trích yếu đầu: mục đó phải thủ công, không tích được; hai đoạn khác vẫn đủ điều kiện. Ngoài phạm vi: Công văn/V/v, tên loại chưa nhận diện/trùng, tiêu đề nằm sau văn xuôi, bảng/field/drawing/tab, trích yếu chưa có ranh giới, quá 4 đoạn hoặc profile khác. Chữ hoa/thường không tự đổi, vị trí tuyệt đối vẫn giới hạn. Nếu có Line trong cùng đoạn, bản thử có thể giữ định dạng đoạn đó thủ công vì chưa xác minh chữ thuần; không nới điều kiện để có PASS.
 
 Giải nén vào thư mục mới, giữ samples. Thử trên bản sao tài liệu, sửa phông/chữ trước rồi quét lại trước khi sửa Line theo số đo mới. Chưa có xác nhận runtime Office 2021 cho .36; CI không thay bài Word thực tế.
+
+
+## Thử 0.1.37 — giữ vùng cấu trúc khi sửa chữ/phông
+
+Chạy toàn bộ Kiểm tra Word tự động. Cuối bài có hai thư mục `structured-hyperlink`/`structured-sdt`: bản plain và bản structured phải cùng nguyên văn, nhóm gợi ý plain cũ phải bị từ chối toàn bộ sau mở structured, không đổi checkpoint/Changed và không tạo Undo. Trích yếu có cấu trúc chứa lỗi chữ minh họa và hai khoảng trắng chỉ được cảnh báo thủ công; tên loại/đoạn thường bên cạnh vẫn sửa được. Sửa nhóm vùng thường phải chỉ thay đúng chữ đã chọn và phông đã chọn, giữ cảnh báo/định danh/chữ vùng cấu trúc, lưu/mở và một Undo phục hồi cả nhóm; nguồn không đổi.
+
+Trên bản sao thực, nếu trích yếu có hyperlink/control/field/Line neo, không được tích sửa chữ vòng qua cảnh báo thủ công. Ô số/ngày trống không trở thành lỗi khoảng trắng. Phạm vi đối chiếu cấu trúc mới chỉ 40 đoạn đầu State; không coi hết cảnh báo là toàn bộ tài liệu an toàn/đúng thể thức. Giữ các bài Line/XPS/rollback và lưu bản sao trước. Chưa có xác nhận runtime Office 2021 cho .37.

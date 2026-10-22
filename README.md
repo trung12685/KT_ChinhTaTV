@@ -2,6 +2,10 @@
 
 Ứng dụng C# / WPF chạy trên Windows với Microsoft Word desktop, làm việc offline trên bản sao DOCX và xem trước bằng XPS. Không gửi nội dung tài liệu tới dịch vụ AI.
 
+## Bản thử 0.1.37
+
+Chặn gợi ý sửa chữ/khoảng trắng trong vùng đã xác định có cấu trúc hoặc chưa đối chiếu được ở 40 đoạn đầu Nhà nước; tránh sửa vòng qua cảnh báo thủ công. Trước ghi nhóm chữ/phông, quét lại và đối chiếu toàn bộ lựa chọn, giữ rollback và kiểm nét XPS như trước. [Tải bản thử](https://github.com/trung12685/KT_ChinhTaTV/releases/tag/v0.1.37) · [Nội dung và cách thử](docs/CHANGES-0.1.37.md). Chưa xác nhận runtime Office 2021; mốc ổn định vẫn 0.1.27.
+
 ## Bản thử 0.1.36
 
 Bổ sung kiểm/sửa phông Times New Roman, màu đen, cỡ 13–14, đứng và đậm cho tên loại/trích yếu đã nhận diện chắc chắn ở đầu văn bản Nhà nước. Giữ chữ, cỡ đang hợp lệ, gạch chân và căn đoạn; cách viết hoa/thường và vùng chưa chắc vẫn thủ công. [Tải bản thử](https://github.com/trung12685/KT_ChinhTaTV/releases/tag/v0.1.36) · [Phạm vi và cách thử](docs/CHANGES-0.1.36.md). Chưa xác nhận runtime Office 2021 cho chức năng mới; mốc ổn định vẫn 0.1.27.
