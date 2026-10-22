@@ -481,6 +481,51 @@ public static class OfficeIntegrationCheck
                     throw new InvalidOperationException("Mở lại không giữ chữ/cấu trúc hoặc làm đổi nguồn");
                 Pass(stage);
             }
+            foreach(var headingProfile in new[]{DocumentProfile.State,DocumentProfile.Party})
+            {
+                test.Profile=headingProfile;
+                stage="Hậu kiểm chữ/phông tiêu đề "+headingProfile+": drift sau lưu phải rollback cả nhóm";
+                string legacySource=CreateLegacyHeadingSample(headingProfile==DocumentProfile.State?positionSource:
+                    Path.Combine(AppContext.BaseDirectory,"samples","VanBanDangMau.docx"),folder,headingProfile);
+                byte[] legacySourceDigest=SaveDigest(legacySource);test.Open(legacySource);
+                string legacyOriginal=test.ReadCheckText();
+                var legacyFound=test.Check();
+                var legacyFormats=legacyFound.Where(i=>i.CanFix && i.Format is not null).ToArray();
+                var legacySpacing=legacyFound.Single(i=>i.CanFix && i.Kind==FixKind.Text);
+                if(legacyFormats.Length!=(headingProfile==DocumentProfile.State?2:1) || legacyFormats.Any(i=>i.Original==i.Replacement))
+                    throw new InvalidOperationException("Mẫu tiêu đề cần đủ lỗi chữ + phông và lỗi khoảng trắng riêng");
+                var legacyPlan=legacyFormats.Append(legacySpacing).ToArray();
+                byte[] legacyCheckpointDigest=SaveDigest(test.RecoveryPath);bool postSaveRejected=false;
+                try{test.FixHeadingDriftProbe(legacyPlan);}
+                catch(InvalidOperationException error) when(error.InnerException is InvalidOperationException cause &&
+                    cause.Message.Contains("Định dạng sau lưu chưa khớp",StringComparison.Ordinal)){postSaveRejected=true;}
+                if(!postSaveRejected || test.Changed || test.ReadCheckText()!=legacyOriginal ||
+                    !SaveDigest(test.RecoveryPath).SequenceEqual(legacyCheckpointDigest) ||
+                    test.Check().Count(i=>i.CanFix && i.Format is not null)!=legacyFormats.Length)
+                    throw new InvalidOperationException("Drift phông sau lưu chưa bị phát hiện hoặc rollback chưa phục hồi cả nhóm");
+                test.Undo();
+                if(test.ReadCheckText()!=legacyOriginal)throw new InvalidOperationException("Nhóm thất bại không được tạo Undo");
+                Pass(stage);
+                stage="Sửa nhóm tiêu đề "+headingProfile+" và khoảng trắng, quét lại, lưu/mở, một Undo";
+                // Word CPs can differ after reopening the checkpoint: use fresh proposals.
+                var legacyFresh=test.Check().Where(i=>i.CanFix && (i.Format is not null || i.Kind==FixKind.Text)).ToArray();
+                string legacyExpected=legacyOriginal.Replace("nội dung  thử nghiệm","nội dung thử nghiệm",StringComparison.Ordinal);
+                foreach(var item in legacyFresh.Where(i=>i.Format is not null))
+                    legacyExpected=legacyExpected.Replace(item.Original,item.Replacement,StringComparison.Ordinal);
+                test.FixMany(legacyFresh);
+                if(test.ReadCheckText()!=legacyExpected || test.Check().Any(i=>i.CanFix && (i.Format is not null || i.Kind==FixKind.Text)))
+                    throw new InvalidOperationException("Sửa tiêu đề chưa khớp chữ/phông hoặc dấu đoạn làm giữ cảnh báo cũ");
+                string legacySaved=Path.Combine(Path.GetDirectoryName(legacySource)!,"heading-fixed.docx");test.SaveCopy(legacySaved);
+                test.Undo();
+                if(test.ReadCheckText()!=legacyOriginal || test.Check().Count(i=>i.CanFix && i.Format is not null)!=legacyFormats.Length)
+                    throw new InvalidOperationException("Một Undo chưa phục hồi toàn bộ chữ/phông của nhóm tiêu đề");
+                test.Open(legacySaved);
+                if(test.ReadCheckText()!=legacyExpected || test.Check().Any(i=>i.CanFix && (i.Format is not null || i.Kind==FixKind.Text)) ||
+                    !SaveDigest(legacySource).SequenceEqual(legacySourceDigest))
+                    throw new InvalidOperationException("Lưu/mở chưa giữ kết quả tiêu đề hoặc làm đổi nguồn");
+                Pass(stage);
+            }
+            test.Profile=DocumentProfile.State;
             File.AppendAllText(report,"RESULT PASS\nKiểm thao tác Word/Line, vị trí nét XPS, sửa riêng/nhóm số-ngày, lưu/mở và Hoàn tác trên mẫu giả; không xác nhận mọi tài liệu.\n");
             return new(true,stage,folder);
         }
@@ -536,6 +581,39 @@ public static class OfficeIntegrationCheck
             other.Element(w+"rPr")!.Element(w+"b")!.SetAttributeValue(w+"val",1);run.AddAfterSelf(other);
         }
         entry.Delete();using(var stream=zip.CreateEntry("word/document.xml").Open())xml.Save(stream);return path;
+    }
+    private static string CreateLegacyHeadingSample(string source,string folder,DocumentProfile profile)
+    {
+        string targetFolder=Path.Combine(folder,"heading-proof-"+profile);Directory.CreateDirectory(targetFolder);
+        string path=Path.Combine(targetFolder,"heading-input.docx");File.Copy(source,path);
+        using var zip=ZipFile.Open(path,ZipArchiveMode.Update);var entry=zip.GetEntry("word/document.xml")!;
+        XDocument xml;using(var input=entry.Open())xml=XDocument.Load(input,LoadOptions.PreserveWhitespace);
+        XNamespace w="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+        var headings=xml.Descendants(w+"p").Where(p=>HeadingRules.IsCandidate(string.Concat(p.Descendants(w+"t").Select(t=>t.Value)),profile)).ToArray();
+        if(headings.Length!=(profile==DocumentProfile.State?2:1))throw new InvalidOperationException("Không nhận đủ tiêu đề trong mẫu giả");
+        foreach(var p in headings)
+        {
+            string original=string.Concat(p.Descendants(w+"t").Select(t=>t.Value));
+            string lower=original.ToLowerInvariant();int firstSpace=lower.IndexOf(' ');
+            string changed=lower.Insert(firstSpace," ");
+            var properties=p.Element(w+"pPr");if(properties is null){properties=new(w+"pPr");p.AddFirst(properties);}
+            // The paragraph terminator intentionally differs from the visible heading.
+            properties.Element(w+"rPr")?.Remove();
+            properties.Element(w+"jc")?.Remove();properties.Add(new XElement(w+"jc",new XAttribute(w+"val","left")));
+            properties.Add(new XElement(w+"rPr",new XElement(w+"rFonts",new XAttribute(w+"ascii","Arial"),new XAttribute(w+"hAnsi","Arial")),
+                new XElement(w+"sz",new XAttribute(w+"val",16))));
+            foreach(var node in p.Elements().Where(e=>e.Name!=w+"pPr").ToArray())node.Remove();
+            p.Add(new XElement(w+"r",new XElement(w+"rPr",new XElement(w+"rFonts",new XAttribute(w+"ascii","Arial"),new XAttribute(w+"hAnsi","Arial")),
+                new XElement(w+"b",new XAttribute(w+"val",0)),new XElement(w+"i"),new XElement(w+"color",new XAttribute(w+"val","FF0000")),
+                new XElement(w+"sz",new XAttribute(w+"val",32))),new XElement(w+"t",new XAttribute(XNamespace.Xml+"space","preserve"),changed)));
+        }
+        // Remove the unrelated old spelling demonstration from this new Party fixture.
+        foreach(var t in xml.Descendants(w+"t").Where(t=>t.Value=="Tôi đi trên một con đo. Đây  là ví dụ."))
+            t.Value="Đây là nội dung giả được giữ nguyên.";
+        var body=xml.Descendants(w+"body").Single();
+        var extra=new XElement(w+"p",new XElement(w+"r",new XElement(w+"t","nội dung  thử nghiệm")));
+        if(body.Element(w+"sectPr") is XElement section) section.AddBeforeSelf(extra);else body.Add(extra);
+        entry.Delete();using(var output=zip.CreateEntry("word/document.xml").Open())xml.Save(output);return path;
     }
     private static string CreateStructuredTextSample(string source,string folder,string kind)
     {

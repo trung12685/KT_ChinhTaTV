@@ -6,7 +6,13 @@ public record Paragraph(int Start, string Text, bool Bold = false, float Size = 
     int Alignment = 1, string Font = "Times New Roman", bool Italic = false,
     int Color = 0, bool InTable = false, int Page = 1, bool FormatObserved = false, bool FormatMixed = false, bool TextEditable = true, bool BoldMixed = false);
 public enum FixKind { Text, NationalHeading, StateMotto, PartyHeading, Advisory, PageLayout, ShapeLine, AdministrativeNumber, AdministrativeDate, AdministrativeFormat, AdministrativePosition, DocumentHeadingFormat }
-public record HeadingFormat(float Size, int? Alignment = null);
+public record HeadingFormat(float Size, int? Alignment = null)
+{
+    public bool Matches(string font,float size,int bold,int italic,int color,int? alignment)=>
+        font.Equals("Times New Roman",StringComparison.OrdinalIgnoreCase) && float.IsFinite(Size) && Size>0 &&
+        float.IsFinite(size) && Math.Abs(size-Size)<.01f && bold==-1 && italic==0 &&
+        color is 0 or -16777216 && (Alignment is null || alignment==Alignment);
+}
 public record CharacterFormat(float Size,bool Italic,bool? Bold=null)
 {
     public bool Valid => float.IsFinite(Size) && (Bold is null?(Italic?Size>=13 && Size<=14:Math.Abs(Size-13)<.01f):Bold==true && !Italic && Size>=13 && Size<=14);
