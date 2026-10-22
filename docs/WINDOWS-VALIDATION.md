@@ -72,3 +72,12 @@ Giữ gói/tag cũ. Giải nén .33 vào thư mục riêng và chạy Kiểm tra
 Thử lỗi có chủ ý sau dòng đầu để phục hồi cả lượt, không thêm Undo; sửa riêng mỗi vai trò, sửa nhóm hai dòng; kiểm lại tâm thật, giữ toàn chữ/ô trống, một Undo, lưu/mở lại. XPS được lưu với tên `position-*.xps`, gồm trước sửa, rollback, sau sửa, Undo và mở lại. Sau sửa nhóm phải chỉ còn cảnh báo khác hàng đã cố ý tạo; không được giữ cảnh báo lệch tâm cũ hoặc xóa nhầm cảnh báo khác hàng. Thử chọn lẫn chữ/phông, căn giữa và Line: UI phải yêu cầu theo nhóm trước khi ghi; Sửa tất cả xử lý lần lượt theo số đo mới.
 
 Trên bản sao tài liệu thực, dòng chưa đủ điều kiện vẫn chỉ cảnh báo. Chưa tự căn dọc/hàng, không sửa bảng gộp/lồng. CI Windows không có Word; chỉ kết quả Office check đúng phiên bản cùng thử tài liệu thật mới xác nhận được Office 2021.
+
+
+## Thử 0.1.34 — hậu kiểm ngoài dòng chọn và trạng thái quét lại
+
+Chạy đầy đủ Kiểm tra Word tự động trên gói .34. Bài mới cố ý dịch ngày không chọn trong khi sửa riêng số; hậu kiểm phải từ chối, phục hồi cả lượt, đo lại cả hai vị trí trước khi ghi là đã phục hồi. XPS cố ý sai `position-unselected-drift.xps`, trước/sau phục hồi `position-drift-before.xps`, `position-drift-restored.xps`; `office-check.txt` phải có PASS đúng bước này và vẫn chạy hết các bài Line/căn giữa cũ.
+
+Sau sửa riêng, mục đã hết phải biến mất và lỗi chưa chọn còn thật phải được giữ; sau sửa cả hai tâm, cảnh báo khác hàng có chủ ý vẫn thủ công. Không đánh dấu đạt dựa vào số mục đơn thuần. Nếu sửa đã commit nhưng xuất/đọc XPS hoặc quét lại bị lỗi, UI phải nói rõ lượt sửa vẫn ở bản làm việc, xóa danh sách/lựa chọn cũ, cho Quét lại hoặc một Hoàn tác; không tự ghi lại lượt cũ. Lỗi sửa trước commit giữ thông báo rollback/lỗi gốc như trước. Nhánh lỗi quét này được giả lập trong test Core, chưa gây lỗi xuất XPS có chủ ý trên Office thật.
+
+Chưa có xác nhận runtime Office 2021 cho .34; CI Windows không có Word. Giữ nguyên main và các gói/tag cũ trong lúc dùng thử.

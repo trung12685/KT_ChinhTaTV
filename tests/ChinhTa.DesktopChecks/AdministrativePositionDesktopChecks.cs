@@ -27,7 +27,7 @@ public static class AdministrativePositionDesktopChecks
                     if(splitReference && i==0)
                     {
                         var other=new Canvas {Clip=new RectangleGeometry(new Rect(21,30,259,110))};
-                        root.Children.Add(other);other.Children.Add(items[i]);
+                        cell.Children.Add(other);other.Children.Add(items[i]);
                     }
                     else cell.Children.Add(items[i]);
                 }
@@ -101,8 +101,10 @@ public static class AdministrativePositionDesktopChecks
         assert(new PreviewHighlighter().MeasureSingleLine(wrappedPage,new(1,wrapped,0,wrapped.Length)) is not null,
             "Multiple glyph runs on one baseline can establish one measured row");
         var trusted=targets.Select(t=>t with {ReferencesCentered=true}).ToArray();
-        FixedDocumentSequence Framed(bool shifted,bool split=false)=>Build(text.Select((s,i)=>
-            Glyph(s,(i<3?150:435)+(shifted && i%3==2?10:0),i%3==0?50:i%3==1?70:110,i==2?13:14)),true,split);
+        FixedDocumentSequence FramedRows(bool shiftNumber,bool shiftDate,double dateDelta=0,bool split=false)=>Build(text.Select((s,i)=>
+            Glyph(s,(i<3?150:435)+(i==2 && shiftNumber || i==5 && shiftDate?10:0),
+                (i%3==0?50:i%3==1?70:110)+(i==5?dateDelta:0),i==2?13:14)),true,split);
+        FixedDocumentSequence Framed(bool shifted,bool split=false)=>FramedRows(shifted,shifted,split:split);
         var offsetPage=Framed(true);
         var offered=AdministrativePositionInspection.Inspect(offsetPage,new PreviewHighlighter(),trusted,anchors);
         assert(offered.Count==2 && offered.All(x=>x.Issue.CanFix && x.Issue.CenterFix is not null),
@@ -116,8 +118,12 @@ public static class AdministrativePositionDesktopChecks
         assert(!AdministrativeCentering.Verify(prior,prior),"Successful Word properties cannot replace actual post-save glyph movement");
         assert(AdministrativePositionInspection.Inspect(offsetPage,new PreviewHighlighter(),targets,anchors).All(x=>!x.Issue.CanFix),
             "Cell clipping alone cannot authorize repair when reference paragraph centering is unproven");
-        var split=AdministrativePositionInspection.Inspect(Framed(true,true),new PreviewHighlighter(),trusted,anchors);
-        assert(split.Single(x=>x.Issue.Start==number.Row.Start).Issue.CanFix==false,
+        var splitPage=Framed(true,true);
+        var split=AdministrativePositionInspection.Inspect(splitPage,new PreviewHighlighter(),trusted,anchors);
+        var splitEvidence=AdministrativePositionInspection.MeasureCentering(splitPage,new PreviewHighlighter(),trusted[0],anchors);
+        assert(splitEvidence.Row is not null && splitEvidence.References.All(r=>r is not null) &&
+            splitEvidence.Frame is not null && splitEvidence.ReferenceFrames.All(f=>f is not null) &&
+            split.Single(x=>x.Issue.Start==number.Row.Start).Issue.CanFix==false,
             "Reference text in a different clip frame cannot authorize a center edit");
         var verticalGlyphs=text.Select((s,i)=>Glyph(s,i<3?150:435,(i%3==0?50:i%3==1?70:110)+(i==2?1:0),i==2?13:14));
         var movedDown=Build(verticalGlyphs,true);
@@ -125,6 +131,36 @@ public static class AdministrativePositionDesktopChecks
             "A horizontally centered result that moves the baseline fails final acceptance");
         var lost=AdministrativePositionInspection.MeasureCentering(centered,new PreviewHighlighter(),trusted[0],new Dictionary<Issue,PreviewAnchor>());
         assert(!AdministrativeCentering.Verify(prior,lost),"Losing post-save anchors rolls back instead of mistaking missing warnings for success");
+        AdministrativeCenterEvidence[] Evidence(FixedDocumentSequence document,IReadOnlyDictionary<Issue,PreviewAnchor>? mapping=null)=>
+            trusted.Select(t=>AdministrativePositionInspection.MeasureCentering(document,new PreviewHighlighter(),t,mapping??anchors)).ToArray();
+        var originalPair=Evidence(offsetPage);
+        var onlyNumberPage=FramedRows(false,true);
+        var onlyNumber=Evidence(onlyNumberPage);
+        assert(AdministrativeCentering.VerifyBatch(originalPair,onlyNumber,[AdministrativePositionRole.Number]),
+            "Batch acceptance verifies an actual corrected number and an unchanged unselected rendered date");
+        var remainingChoices=AdministrativePositionInspection.Inspect(onlyNumberPage,new PreviewHighlighter(),trusted,anchors)
+            .Select(x=>new IssueChoice(x.Issue)).ToArray();
+        assert(remainingChoices.Length==1 && remainingChoices[0].Issue.CenterFix?.Role==AdministrativePositionRole.Date &&
+            !remainingChoices[0].IsChecked,"Fresh issue choices remove only the corrected number and retain the real unselected date warning without stale checkmarks");
+        var collateralPage=FramedRows(false,true,8);
+        var collateralPair=Evidence(collateralPage);
+        assert(AdministrativeCentering.Verify(originalPair[0],collateralPair[0]) &&
+            !AdministrativeCentering.VerifyBatch(originalPair,collateralPair,[AdministrativePositionRole.Number]),
+            "Real glyphs reproduce the old selected-only acceptance gap and the batch gate rejects the moved unselected date");
+        var lostDate=new Dictionary<Issue,PreviewAnchor>(anchors);lostDate.Remove(trusted[1].Probe);
+        assert(!AdministrativeCentering.VerifyBatch(originalPair,Evidence(onlyNumberPage,lostDate),[AdministrativePositionRole.Number]),
+            "Losing an unselected Word-to-XPS row anchor after save cannot silently pass the batch");
+        var separateBaselineBefore=Evidence(FramedRows(true,true,8));
+        var separateBaselineAfterPage=FramedRows(false,false,8);
+        assert(AdministrativeCentering.VerifyBatch(separateBaselineBefore,Evidence(separateBaselineAfterPage),
+            [AdministrativePositionRole.Number,AdministrativePositionRole.Date]),
+            "A deliberately different date baseline is preserved while both actual centers are corrected");
+        var manualChoices=AdministrativePositionInspection.Inspect(separateBaselineAfterPage,new PreviewHighlighter(),trusted,anchors)
+            .Select(x=>new IssueChoice(x.Issue)).ToArray();
+        foreach(var choice in manualChoices)choice.IsChecked=true;
+        assert(manualChoices.Length==1 && manualChoices[0].Issue.Title=="Số và ngày tháng chưa cùng dòng" &&
+            !manualChoices[0].Issue.CanFix && !manualChoices[0].IsChecked,
+            "After both centers are fixed the real same-row warning remains manual and cannot be selected for another edit");
         var rotated=Glyph(wrapped,150,100);rotated.RenderTransform=new RotateTransform(5);
         var rotatedPage=Build([rotated]);
         assert(new PreviewHighlighter().MeasureSingleLine(rotatedPage,new(1,wrapped,0,wrapped.Length)) is null,
