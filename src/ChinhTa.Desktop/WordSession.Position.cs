@@ -77,7 +77,7 @@ public sealed partial class WordSession
                     throw new PositionVerificationException();
             },()=>
             {
-                CheckpointSwap.Apply(RecoveryPath,before,CloseConnection,Connect);
+                SwapCheckpoint(RecoveryPath,before,CloseConnection,Connect);
                 var restoredEvidence=ReadCenteringEvidence();
                 if(ReadStoryText()!=original || !AdministrativeCentering.VerifyRestored(measured,restoredEvidence))
                     throw new InvalidOperationException("Chưa xác minh đủ chữ và vị trí số/ngày sau phục hồi căn giữa.");

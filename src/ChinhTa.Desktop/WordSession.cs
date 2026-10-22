@@ -381,7 +381,7 @@ public sealed partial class WordSession : IDisposable
             void ApplyCandidate()
             {
                 int openAttempts = 0;
-                CheckpointSwap.Apply(RecoveryPath, candidate, CloseDocumentOnly, () =>
+                SwapCheckpoint(RecoveryPath, candidate, CloseDocumentOnly, () =>
                 {
                     bool verifyLines = ++openAttempts == 1;
                     Connect();
@@ -561,7 +561,7 @@ public sealed partial class WordSession : IDisposable
                         foreach(var completed in ApplyLinePackage([current],step,verifyReference:verifyReference))
                             accepted[completed.LineFix!.Role]=completed;
                     },
-                    ()=>CheckpointSwap.Apply(RecoveryPath,before,CloseDocumentOnly,Connect),
+                    ()=>SwapCheckpoint(RecoveryPath,before,CloseDocumentOnly,Connect),
                     ()=>
                     {
                         if(verifyReference && ReadRemainingLines(plan,accepted,expectedText).Repairs.Count>0)
@@ -692,7 +692,7 @@ public sealed partial class WordSession : IDisposable
                     // Close this private Word instance, including a disconnected COM server.
                     foreach(var styled in formatRanges)Release(styled.Range);
                     formatRanges.Clear();
-                    CheckpointSwap.Apply(RecoveryPath,before,CloseConnection,Connect);
+                    SwapCheckpoint(RecoveryPath,before,CloseConnection,Connect);
                     if(ReadStoryText()!=originalStory)
                         throw new InvalidOperationException("Chưa xác minh được chữ sau phục hồi checkpoint.");
                     restored=true;
@@ -724,18 +724,20 @@ public sealed partial class WordSession : IDisposable
         document!.Save();
         snapshotCurrent = true;
     }
-    public void Undo()
+    public void Undo() => UndoCore();
+    private CheckpointCleanup? UndoCore(Action<string>? deleteRollback=null)
     {
-        if (undoCheckpoints.Count == 0) return;
+        if (undoCheckpoints.Count == 0) return null;
         string before = undoCheckpoints.Peek();
         verifiedLineEdits.Clear();
         snapshotCurrent = false;
         try
         {
-            CheckpointSwap.Apply(RecoveryPath, before, CloseDocumentOnly, Connect);
+            var cleanup=SwapCheckpoint(RecoveryPath,before,CloseDocumentOnly,Connect,deleteRollback);
             undoCheckpoints.Pop();
             Changed = true;
             snapshotCurrent = true;
+            return cleanup;
         }
         catch (Exception error)
         {

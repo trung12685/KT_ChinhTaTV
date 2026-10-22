@@ -526,6 +526,26 @@ public static class OfficeIntegrationCheck
                 Pass(stage);
             }
             test.Profile=DocumentProfile.State;
+            stage="Hoàn tác thành công dù dọn backup lỗi: tiêu thụ đúng lượt, lần sau về lượt trước";
+            string cleanupSource=Path.Combine(folder,"heading-proof-State","heading-input.docx");
+            byte[] cleanupSourceDigest=SaveDigest(cleanupSource);test.Profile=DocumentProfile.State;test.Open(cleanupSource);
+            string cleanupBaseline=test.ReadCheckText();
+            var firstCleanupEdit=test.Check().Where(i=>i.CanFix && i.Format is not null).OrderBy(i=>i.Start).First();
+            test.Fix(firstCleanupEdit);string cleanupFirst=test.ReadCheckText();
+            var secondCleanupEdit=test.Check().Single(i=>i.CanFix && i.Format is not null);
+            test.Fix(secondCleanupEdit);string cleanupSecond=test.ReadCheckText();
+            if(cleanupFirst==cleanupBaseline || cleanupSecond==cleanupFirst)
+                throw new InvalidOperationException("Chưa tạo đủ hai lượt sửa độc lập để kiểm Hoàn tác");
+            if(!test.UndoCleanupProbe() || test.ReadCheckText()!=cleanupFirst ||
+                test.Check().Count(i=>i.CanFix && i.Format is not null)!=1 || !test.Changed)
+                throw new InvalidOperationException("Lỗi dọn backup làm sai kết quả Hoàn tác hoặc không giữ backup");
+            test.Undo();
+            if(test.ReadCheckText()!=cleanupBaseline || test.Check().Count(i=>i.CanFix && i.Format is not null)!=2)
+                throw new InvalidOperationException("Lần Hoàn tác kế tiếp chưa về lượt trước, có thể lặp lại checkpoint đã dùng");
+            test.Undo();
+            if(test.ReadCheckText()!=cleanupBaseline || !SaveDigest(cleanupSource).SequenceEqual(cleanupSourceDigest))
+                throw new InvalidOperationException("Hết lượt Hoàn tác phải giữ nguyên trạng thái và nguồn mẫu");
+            Pass(stage);
             File.AppendAllText(report,"RESULT PASS\nKiểm thao tác Word/Line, vị trí nét XPS, sửa riêng/nhóm số-ngày, lưu/mở và Hoàn tác trên mẫu giả; không xác nhận mọi tài liệu.\n");
             return new(true,stage,folder);
         }

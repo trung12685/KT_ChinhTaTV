@@ -2,6 +2,10 @@
 
 Ứng dụng C# / WPF chạy trên Windows với Microsoft Word desktop, làm việc offline trên bản sao DOCX và xem trước bằng XPS. Không gửi nội dung tài liệu tới dịch vụ AI.
 
+## Bản thử 0.1.39
+
+Tách lỗi dọn backup khỏi kết quả thay checkpoint: phục hồi/Hoàn tác đã mở lại đúng bản vẫn được ghi nhận khi tệp dự phòng chưa xóa được; giữ backup và ghi nhật ký. Lỗi thực khi đóng/chép/mở và nguyên nhân kiểm nét vẫn giữ nguyên. [Tải bản thử](https://github.com/trung12685/KT_ChinhTaTV/releases/tag/v0.1.39) · [Nội dung và cách thử](docs/CHANGES-0.1.39.md). Chưa xác nhận runtime Office 2021; mốc ổn định vẫn 0.1.27.
+
 ## Bản thử 0.1.38
 
 Bổ sung hậu kiểm phông/cỡ/đậm/đứng/màu và căn đoạn được yêu cầu sau lưu quốc hiệu, tiêu ngữ, tiêu đề Đảng; sai định dạng cũng phục hồi cả lượt. Đọc phông trên phần chữ, bỏ dấu kết thúc đoạn để tránh giữ cảnh báo sai khi dấu đoạn có kiểu khác. [Tải bản thử](https://github.com/trung12685/KT_ChinhTaTV/releases/tag/v0.1.38) · [Nội dung và cách thử](docs/CHANGES-0.1.38.md). Chưa xác nhận runtime Office 2021; mốc ổn định vẫn 0.1.27.
