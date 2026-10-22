@@ -81,3 +81,10 @@ Chạy đầy đủ Kiểm tra Word tự động trên gói .34. Bài mới cố
 Sau sửa riêng, mục đã hết phải biến mất và lỗi chưa chọn còn thật phải được giữ; sau sửa cả hai tâm, cảnh báo khác hàng có chủ ý vẫn thủ công. Không đánh dấu đạt dựa vào số mục đơn thuần. Nếu sửa đã commit nhưng xuất/đọc XPS hoặc quét lại bị lỗi, UI phải nói rõ lượt sửa vẫn ở bản làm việc, xóa danh sách/lựa chọn cũ, cho Quét lại hoặc một Hoàn tác; không tự ghi lại lượt cũ. Lỗi sửa trước commit giữ thông báo rollback/lỗi gốc như trước. Nhánh lỗi quét này được giả lập trong test Core, chưa gây lỗi xuất XPS có chủ ý trên Office thật.
 
 Chưa có xác nhận runtime Office 2021 cho .34; CI Windows không có Word. Giữ nguyên main và các gói/tag cũ trong lúc dùng thử.
+
+
+## Thử 0.1.35 — lưu bản sao khi lỗi/đích đang khóa
+
+Chạy toàn bộ Kiểm tra Word tự động. Sau sửa nhóm chữ/phông trên mẫu giả, bài kiểm tạo `save-copy-existing.docx` có sẵn, gây lỗi giữa copy và thử giữ khóa không cho thay tên. Tệp đích/gốc phải giữ nguyên hash, Changed vẫn true, không còn stage đã xử lý; lưu đè Source/RecoveryPath bị chặn. Sau bỏ khóa, bản sao mới phải bằng checkpoint, Changed=false; lưu/mở và một Undo của nhóm chữ/phông vẫn chạy đạt. Các bài Line/XPS và hậu kiểm vị trí cũ vẫn chạy đầy đủ.
+
+Trên bản sao tài liệu thực: sửa vài mục, lưu vào tên mới; sửa tiếp và lưu thay bản sao đó, mở lại để kiểm chữ/phông. Thử đích không có quyền ghi hoặc đang khóa: không báo đã lưu, không mất thay đổi và không làm hỏng bản đích cũ; sau xử lý khóa/quyền có thể lưu lại. Không thử ghi đè chính tài liệu gốc. Lưu bản sao giữ các checkpoint Hoàn tác; lưu không tạo thêm checkpoint. Kết quả CI không thay cho thử Word thật; .35 vẫn chưa có xác nhận runtime Office 2021.
