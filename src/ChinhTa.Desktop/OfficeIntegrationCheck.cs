@@ -274,7 +274,8 @@ public static class OfficeIntegrationCheck
             bool lockedSave=false;
             using(var held=new FileStream(existingCopy,FileMode.Open,FileAccess.Read,FileShare.Read))
             {
-                try{test.SaveCopy(existingCopy);}catch(IOException){lockedSave=true;}
+                try{test.SaveCopy(existingCopy);}
+                catch(Exception error) when(error is IOException or UnauthorizedAccessException){lockedSave=true;}
             }
             if(!lockedSave || !test.Changed || !SaveDigest(existingCopy).SequenceEqual(existingDigest))
                 throw new InvalidOperationException("Tệp đang khóa không được giữ nguyên sau lỗi công bố bản sao");

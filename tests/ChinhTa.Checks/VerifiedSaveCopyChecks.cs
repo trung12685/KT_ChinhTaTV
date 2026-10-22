@@ -76,7 +76,8 @@ public static class VerifiedSaveCopyChecks
                 File.WriteAllBytes(saved,previous);bool locked=false;
                 using(var held=new FileStream(saved,FileMode.Open,FileAccess.Read,FileShare.Read))
                 {
-                    try{VerifiedSaveCopy.Write(working,saved,protectedFiles);}catch(IOException){locked=true;}
+                    try{VerifiedSaveCopy.Write(working,saved,protectedFiles);}
+                    catch(Exception error) when(error is IOException or UnauthorizedAccessException){locked=true;}
                     assert(locked && File.ReadAllBytes(saved).SequenceEqual(previous),
                         "An existing destination that denies replacement stays intact when Windows rejects publication");
                 }
