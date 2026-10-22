@@ -46,4 +46,43 @@ public static class AdministrativeCentering
             Math.Abs(pair.First.Width-pair.Second.Width)<=Slack && Math.Abs(pair.First.Height-pair.Second.Height)<=Slack &&
             Math.Abs(pair.First.Baseline-pair.Second.Baseline)<=Slack);
     }
+    private static bool SameLine(RenderedTextLine? a,RenderedTextLine? b)=>a is null || b is null?a is null && b is null:
+        a.Valid && b.Valid && Math.Abs(a.Left-b.Left)<=Slack && Math.Abs(a.Top-b.Top)<=Slack &&
+        Math.Abs(a.Width-b.Width)<=Slack && Math.Abs(a.Height-b.Height)<=Slack && Math.Abs(a.Baseline-b.Baseline)<=Slack;
+    private static bool SameObservedFrame(LineAnchorFrame? a,LineAnchorFrame? b)=>
+        a is null || b is null?a is null && b is null:SameFrame(a,b);
+    private static bool SameBinding(AdministrativeCenterEvidence a,AdministrativeCenterEvidence b)=>
+        a.Target.Role==b.Target.Role && a.Target.Row==b.Target.Row &&
+        a.Target.References.SequenceEqual(b.Target.References) && a.Target.ReferencesCentered==b.Target.ReferencesCentered;
+    // Check every identified header row, including unselected rows and their available evidence.
+    // Missing observations remain unknown; their absence never proves successful centering.
+    public static bool VerifyBatch(IReadOnlyList<AdministrativeCenterEvidence> before,
+        IReadOnlyList<AdministrativeCenterEvidence> after,IReadOnlyCollection<AdministrativePositionRole> selected)
+    {
+        return selected.Count>0 && CompareBatch(before,after,selected);
+    }
+    public static bool VerifyRestored(IReadOnlyList<AdministrativeCenterEvidence> before,
+        IReadOnlyList<AdministrativeCenterEvidence> after)=>CompareBatch(before,after,[]);
+    private static bool CompareBatch(IReadOnlyList<AdministrativeCenterEvidence> before,
+        IReadOnlyList<AdministrativeCenterEvidence> after,IReadOnlyCollection<AdministrativePositionRole> selected)
+    {
+        if(before.Count==0 || selected.Distinct().Count()!=selected.Count || selected.Any(role=>!Enum.IsDefined(role)) ||
+            before.Count!=after.Count || before.Any(e=>!Enum.IsDefined(e.Target.Role)) || before.Select(e=>e.Target.Role).Distinct().Count()!=before.Count ||
+            after.Select(e=>e.Target.Role).Distinct().Count()!=after.Count ||
+            selected.Any(role=>!before.Any(e=>e.Target.Role==role)))return false;
+        foreach(var previous in before)
+        {
+            var current=after.SingleOrDefault(e=>e.Target.Role==previous.Target.Role);
+            if(current is null || !SameBinding(previous,current))return false;
+            if(selected.Contains(previous.Target.Role))
+            {
+                if(!Verify(previous,current))return false;
+            }
+            else if(!SameLine(previous.Row,current.Row) || !SameObservedFrame(previous.Frame,current.Frame) ||
+                previous.References.Count!=current.References.Count || previous.ReferenceFrames.Count!=current.ReferenceFrames.Count ||
+                !previous.References.Zip(current.References).All(pair=>SameLine(pair.First,pair.Second)) ||
+                !previous.ReferenceFrames.Zip(current.ReferenceFrames).All(pair=>SameObservedFrame(pair.First,pair.Second)))return false;
+        }
+        return true;
+    }
 }

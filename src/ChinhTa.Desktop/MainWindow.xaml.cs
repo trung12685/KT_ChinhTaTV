@@ -42,13 +42,17 @@ public partial class MainWindow : Window
         catch (Exception ex)
         {
             Diagnostics.Write("UI.Operation", ex);
+            if(ex is ScanAfterEditException && ex.InnerException is Exception cause)
+                Diagnostics.Write("UI.ScanAfterEdit.Cause",cause);
             pending = displayed = null;
             anchors.Clear();
             highlighter.Clear();
             choices = [];
             Issues.ItemsSource = null;
             UpdateCheckedCount();
-            string message = WordConnectionPolicy.IsDisconnected(ex)
+            Status.Text=ex is ScanAfterEditException?ex.Message:
+                "Thao tác chưa hoàn tất. Danh sách lỗi cũ đã được xóa; hãy Quét lại trước khi sửa tiếp.";
+            string message = ex is ScanAfterEditException?ex.Message:WordConnectionPolicy.IsDisconnected(ex)
                 ? "Ứng dụng mất kết nối với Microsoft Word. Hãy chọn Kiểm tra → Quét lại để thử khôi phục bản lưu gần nhất. " +
                   "Không cần đóng các cửa sổ Word khác. Nếu lỗi xảy ra ngay khi mở, hãy mở lại file."
                 : ex.Message;
@@ -177,7 +181,7 @@ public partial class MainWindow : Window
         if (MessageBox.Show(this, $"Áp dụng {selected.Count} gợi ý sửa?\n\n{examples}{more}{caution}{manualNote}\n\n" +
             "Hoàn tác một lần để bỏ cả lượt sửa. Tài liệu gốc được giữ nguyên.", "Duyệt lượt sửa",
             MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes) return;
-        Run(() => { session.FixMany(selected); Scan(); Status.Text = $"Đã áp dụng {selected.Count} gợi ý. " + Status.Text; });
+        Run(() => { EditThenScan.Run(()=>session.FixMany(selected),Scan); Status.Text = $"Đã áp dụng {selected.Count} gợi ý. " + Status.Text; });
     }
     private void OfficeCheckClick(object sender, RoutedEventArgs e) => Run(() =>
     {

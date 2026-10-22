@@ -6,17 +6,25 @@ namespace ChinhTa.Desktop;
 
 public sealed partial class WordSession
 {
-    private IReadOnlyList<AdministrativeCenterEvidence> ReadCenteringEvidence()
+    private IReadOnlyList<AdministrativeCenterEvidence> ReadCenteringEvidence(string? artifact=null)
     {
         CheckCore();
         var probes=AdministrativePositionTargets.SelectMany(t=>t.References.Select(r=>r.Probe).Append(t.Probe)).Distinct().ToArray();
         var anchors=new Dictionary<Issue,PreviewAnchor>();
         string path=ExportPreviewCore(probes,anchors);
+        if(artifact is not null)CaptureCheckArtifact(path,artifact);
         using var input=new XpsDocument(path,FileAccess.Read);
         var sequence=input.GetFixedDocumentSequence();var preview=new PreviewHighlighter();
         return AdministrativePositionTargets.Select(t=>AdministrativePositionInspection.MeasureCentering(sequence,preview,t,anchors)).ToArray();
     }
-    private void FixPositionBatch(IReadOnlyList<Issue> plan,int? failAfter)
+    internal void FixPositionDriftProbe(IEnumerable<Issue> issues)
+    {
+        var plan=BatchPlan.Create(issues);
+        if(LineCheckArtifactFolder is null || plan.Count!=1 || plan[0].CenterFix is null)
+            throw new InvalidOperationException("Chỉ dùng trong phiên kiểm Word riêng với một dòng căn giữa.");
+        FixPositionBatch(plan,null,true);
+    }
+    private void FixPositionBatch(IReadOnlyList<Issue> plan,int? failAfter,bool driftUnselected=false)
     {
         BatchPlan.Validate(plan,ReadIssueText);
         Checkpoint();
@@ -51,14 +59,28 @@ public sealed partial class WordSession
                 finally{Release(range);}
             },()=>
             {
+                if(driftUnselected)
+                {
+                    var other=measured.Single(e=>plan.All(i=>i.CenterFix!.Role!=e.Target.Role)).Target.Row;
+                    dynamic range=document!.Range(other.Start,other.Start+other.Text.Length);
+                    try
+                    {
+                        dynamic format=range.ParagraphFormat;
+                        try{format.LeftIndent=(float)format.LeftIndent+12;}
+                        finally{Release(format);}
+                    }
+                    finally{Release(range);}
+                }
                 Checkpoint();
-                var after=ReadCenteringEvidence();
-                if(ReadStoryText()!=original || plan.Where((item,i)=>!AdministrativeCentering.Verify(beforeEvidence[i],Match(item,after))).Any())
-                    throw new InvalidOperationException("Tâm chữ trên XPS sau sửa chưa đạt hoặc bố cục khác bị thay đổi; phải khôi phục cả lượt.");
+                var after=ReadCenteringEvidence(driftUnselected?"position-unselected-drift.xps":null);
+                if(ReadStoryText()!=original || !AdministrativeCentering.VerifyBatch(measured,after,plan.Select(i=>i.CenterFix!.Role).ToArray()))
+                    throw new PositionVerificationException();
             },()=>
             {
                 CheckpointSwap.Apply(RecoveryPath,before,CloseConnection,Connect);
-                if(ReadStoryText()!=original)throw new InvalidOperationException("Chưa xác minh chữ sau phục hồi căn giữa.");
+                var restoredEvidence=ReadCenteringEvidence();
+                if(ReadStoryText()!=original || !AdministrativeCentering.VerifyRestored(measured,restoredEvidence))
+                    throw new InvalidOperationException("Chưa xác minh đủ chữ và vị trí số/ngày sau phục hồi căn giữa.");
                 restored=true;
             });
             undoCheckpoints.Push(before);Changed=true;snapshotCurrent=true;
@@ -79,3 +101,6 @@ public sealed partial class WordSession
         }
     }
 }
+
+internal sealed class PositionVerificationException():InvalidOperationException(
+    "Tâm chữ trên XPS sau sửa chưa đạt, mất số đo hoặc bố cục khác bị thay đổi; phải khôi phục cả lượt.");

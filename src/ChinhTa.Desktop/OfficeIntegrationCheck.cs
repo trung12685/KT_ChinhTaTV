@@ -300,6 +300,20 @@ public static class OfficeIntegrationCheck
             if(InspectPositions(test,folder,"position-no-undo.xps").Count(i=>i.CenterFix is not null)!=2)
                 throw new InvalidOperationException("Lượt căn giữa lỗi đã làm sai stack Undo");
             Pass(stage);
+            stage="Hậu kiểm từ chối và phục hồi khi dòng không chọn bị dịch sau sửa";
+            var numberOnly=InspectPositions(test,folder,"position-drift-before.xps").Single(i=>i.CenterFix?.Role==AdministrativePositionRole.Number);
+            bool driftRejected=false;
+            try{test.FixPositionDriftProbe([numberOnly]);}
+            catch(InvalidOperationException error) when(error.InnerException is PositionVerificationException){driftRejected=true;}
+            test.Check();
+            var driftRestored=InspectPositions(test,folder,"position-drift-restored.xps");
+            if(!driftRejected || test.ReadCheckText()!=positionBefore || driftRestored.Count(i=>i.CenterFix is not null)!=2 ||
+                !driftRestored.Any(i=>i.Title=="Số và ngày tháng chưa cùng dòng"))
+                throw new InvalidOperationException("Chưa từ chối/khôi phục đầy đủ khi dòng không chọn bị dịch");
+            test.Undo();test.Check();
+            if(InspectPositions(test,folder,"position-drift-no-undo.xps").Count(i=>i.CenterFix is not null)!=2)
+                throw new InvalidOperationException("Hậu kiểm thất bại đã thêm Undo sai");
+            Pass(stage);
             foreach(var role in Enum.GetValues<AdministrativePositionRole>())
             {
                 stage="Căn giữa riêng dòng "+role+", kiểm tâm thật và hoàn tác";

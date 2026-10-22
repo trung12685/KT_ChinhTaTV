@@ -69,7 +69,7 @@ Tài liệu riêng chỉ dùng cục bộ theo đường dẫn tùy chọn của
 dotnet publish src/ChinhTa.Desktop -c Release -r win-x64 --self-contained true -o artifacts/win-x64
 ```
 
-Kèm thư mục `samples`, ghi chú phiên bản, ZIP và SHA-256. Chạy kiểm thử trước khi phát hành. Khi tạo bản mới, cập nhật version trong csproj, tiêu đề UI, tên gói/tag, ghi chú và workflow Windows; không phát hành lại vào tag cũ. Workflow `windows-package.yml` gắn `feature/admin-centering-0.1.33` và phát hành prerelease 0.1.33 sau kiểm thử. Mỗi phiên bản sau phải đổi nhánh/version và không ghi đè tag đã phát hành. Workflow `finalize-0.1.27.yml` chỉ chốt metadata của bản đã thử, có kiểm tag, digest, CI và thay đổi chỉ thuộc tài liệu/workflow được cho phép; không build hoặc thay asset.
+Kèm thư mục `samples`, ghi chú phiên bản, ZIP và SHA-256. Chạy kiểm thử trước khi phát hành. Khi tạo bản mới, cập nhật version trong csproj, tiêu đề UI, tên gói/tag, ghi chú và workflow Windows; không phát hành lại vào tag cũ. Workflow `windows-package.yml` gắn `fix/header-review-0.1.34` và phát hành prerelease 0.1.34 sau kiểm thử. Mỗi phiên bản sau phải đổi nhánh/version và không ghi đè tag đã phát hành. Workflow `finalize-0.1.27.yml` chỉ chốt metadata của bản đã thử, có kiểm tag, digest, CI và thay đổi chỉ thuộc tài liệu/workflow được cho phép; không build hoặc thay asset.
 
 Khi nhận lỗi, lấy log đúng version và phân biệt lỗi đọc Word, ghép XML, CP/mốc, marker, candidate, nét XPS hay rollback. Các mã `Word.Preview.CpMapping`, `Word.Preview.Unmapped`, `Word.LineBatch.ReferenceBinding.*`, `Word.LineBatch.StoryBinding`, `Word.LineBatch.Rescan` ghi số liệu mà không ghi chữ tài liệu. Không kết luận nguyên nhân chỉ từ ngoại lệ tổng quát hoặc một điều kiện guard gộp.
 
@@ -135,3 +135,14 @@ Core kiểm vai trò/ô, thiếu/trùng mốc, dung sai, baseline khác cỡ ch�
 UI phân ba nhóm chữ/phông → căn giữa số/ngày → Line. Sửa tất cả áp dụng nhóm đầu còn lỗi rồi quét lại; chọn tích lẫn nhóm bị chặn trước ghi. Hai dòng căn giữa có thể sửa chung một lượt và một Undo. Vẫn dùng quét thật để bỏ mục đã hết lỗi; cảnh báo khác hàng độc lập được giữ. Luồng Line và phép đo cũ không thay đổi.
 
 Test mới kiểm gate an toàn, số đo trước/sau, dữ liệu thiếu, baseline/reference/frame thay đổi, payload giả và rollback khi setter không tạo kết quả hình học. WPF dùng glyph/clip thật để kiểm đề xuất và danh sách sau sửa. Office check thêm sửa riêng/nhóm, lỗi có chủ ý sau dòng đầu, Undo, lưu/mở lại và giữ cảnh báo khác hàng. Các kịch bản Office có trong chương trình, chưa chạy đạt trên Office 2021 ở môi trường phát triển này. Gói .33 tiếp nối .32, không thay main/tag/gói cũ.
+
+
+## Ghi chú triển khai 0.1.34
+
+Rà soát .33 tìm ra khoảng trống trong hậu kiểm: `Verify(before,after)` chỉ được gọi cho dòng đã chọn. Đã tái hiện bằng Core và glyph WPF: số được căn đúng nhưng ngày không chọn bị dịch, phép kiểm riêng số vẫn chấp nhận. Đây là trường hợp mô phỏng, chưa phải lỗi được quan sát trên Office 2021.
+
+`AdministrativeCentering.VerifyBatch` nay đối chiếu toàn bộ tập dòng số/ngày trước và sau sửa: vai trò, CP/nguyên văn, mốc và cờ tham chiếu không đổi, không mất/thêm/trùng mục. Dòng chọn phải qua phép kiểm tâm thật cũ; dòng không chọn phải giữ mọi hộp chữ/baseline/khung đang đo được trong dung sai 0,5 pt. Không coi dòng chưa đo được là đạt: nó chỉ có thể giữ trạng thái chưa đo/cảnh báo thủ công, mất dữ liệu đã có thì từ chối. `VerifyRestored` kiểm mọi quan sát trở về ban đầu sau `CheckpointSwap`, rồi mới đánh dấu restored=true. Rollback lỗi vẫn giữ cả hai nguyên nhân và hiện vật.
+
+`EditThenScan` phân biệt sửa thất bại với sửa đã commit nhưng quét lại lỗi. Không phát lại ghi hoặc tự Undo khi chỉ lần quét bị lỗi. `MainWindow.Run` tiếp tục xóa lựa chọn/anchor/highlight cũ, đồng thời đổi trạng thái rõ ràng và giữ nguyên nguyên nhân quét trong mã `UI.ScanAfterEdit.Cause`. Một Undo của lượt đã commit vẫn được giữ. Không dùng trạng thái UI hoặc lịch sử sửa để che cảnh báo thật.
+
+Core kiểm lỗ hổng cũ, dòng không chọn bị thay đổi/mất mốc, rollback và giao dịch chữ đã commit trước khi giả lập lỗi XPS. WPF dùng glyph/clip mới để đối chiếu cả hai dòng, mất anchor, danh sách sau sửa một/cả hai và cảnh báo khác hàng vẫn không được tích. Bài khung clip khác nay đòi đo được toàn bộ chữ/khung để tránh vượt qua nhờ mất ánh xạ. Office check cố ý dịch thụt lề của ngày không chọn sau khi sửa số, yêu cầu hậu kiểm từ chối và rollback cả hai trạng thái, không thêm Undo; giữ XPS mẫu `position-unselected-drift.xps`. Chưa chạy trên Office 2021 trong môi trường này.
