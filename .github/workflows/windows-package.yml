@@ -1,7 +1,7 @@
 name: Windows package
 on:
   push:
-    branches: [fix/whole-body-text-proof-0.1.47]
+    branches: [feature/inner-sentence-spacing-0.1.48]
 permissions:
   contents: write
 jobs:
@@ -43,29 +43,29 @@ jobs:
         shell: pwsh
         run: |
           Copy-Item samples artifacts/win-x64/samples -Recurse -Force
-          Copy-Item docs/CHANGES-0.1.47.md artifacts/win-x64/
+          Copy-Item docs/CHANGES-0.1.48.md artifacts/win-x64/
           Copy-Item docs/REPORT-EXPORT.md artifacts/win-x64/
-          Copy-Item docs/SUPPORTED-FIXES-0.1.47.md artifacts/win-x64/
+          Copy-Item docs/SUPPORTED-FIXES-0.1.48.md artifacts/win-x64/
           Copy-Item artifacts/build-checks.json artifacts/win-x64/
       - name: Verify packaged report metadata
         run: dotnet run --project tests/ChinhTa.DesktopChecks -c Release -- --verify-report-package artifacts/win-x64
       - name: Archive and hash
         shell: pwsh
         run: |
-          Copy-Item artifacts/ChinhTaViet-0.1.47-tien-do.txt artifacts/win-x64/
-          Compress-Archive artifacts/win-x64/* artifacts/ChinhTaViet-0.1.47-win-x64.zip
-          Get-FileHash artifacts/ChinhTaViet-0.1.47-win-x64.zip -Algorithm SHA256 | Format-List | Out-File artifacts/SHA256.txt
+          Copy-Item artifacts/ChinhTaViet-0.1.48-tien-do.txt artifacts/win-x64/
+          Compress-Archive artifacts/win-x64/* artifacts/ChinhTaViet-0.1.48-win-x64.zip
+          Get-FileHash artifacts/ChinhTaViet-0.1.48-win-x64.zip -Algorithm SHA256 | Format-List | Out-File artifacts/SHA256.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: ChinhTaViet-0.1.47-win-x64
+          name: ChinhTaViet-0.1.48-win-x64
           path: |
             artifacts/*.zip
             artifacts/SHA256.txt
             artifacts/build-checks.json
-            artifacts/ChinhTaViet-0.1.47-tien-do.txt
+            artifacts/ChinhTaViet-0.1.48-tien-do.txt
       - name: Publish prerelease
         env:
           GH_TOKEN: ${{ github.token }}
         shell: pwsh
         run: |
-          gh release create v0.1.47 artifacts/ChinhTaViet-0.1.47-win-x64.zip artifacts/SHA256.txt artifacts/build-checks.json artifacts/ChinhTaViet-0.1.47-tien-do.txt --target $env:GITHUB_SHA --prerelease --title '0.1.47 — Bảo vệ vùng sửa chữ toàn thân tài liệu — bản thử' --notes-file docs/CHANGES-0.1.47.md
+          gh release create v0.1.48 artifacts/ChinhTaViet-0.1.48-win-x64.zip artifacts/SHA256.txt artifacts/build-checks.json artifacts/ChinhTaViet-0.1.48-tien-do.txt --target $env:GITHUB_SHA --prerelease --title '0.1.48 — Khoảng trắng trước dấu kết câu giữa đoạn — bản thử' --notes-file docs/CHANGES-0.1.48.md
