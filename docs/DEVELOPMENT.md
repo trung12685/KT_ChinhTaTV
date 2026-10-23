@@ -10,7 +10,7 @@
 
 Mốc đã chốt: [0.1.27](STATUS-0.1.27.md), mã gói `1ec3092ccd68ed0acd8878b2737664116a6b11fe`, tag `v0.1.27`. Đọc biên bản này trước để phân biệt bằng chứng CI, xác nhận người dùng và kịch bản còn chờ. Phát triển từ `main` sau khi chốt, tạo nhánh mới; không tiếp tục phát hành vào tag hoặc ghi đè ZIP 0.1.27.
 
-Nhánh đang phát triển: `feature/punctuation-spacing-0.1.42`, từ 0.1.41 (`d21be190f56e101201ae057f809e9e223b80b9c1`). Chuỗi bản thử dựa trên main đã chốt `da6cf3b0999dbfb60d16ab1eae9733b0f1f20c81`. Đọc các CHANGES và [phạm vi 0.1.42](CHANGES-0.1.42.md). Chưa nhập main hoặc coi CI là bằng chứng Office 2021.
+Nhánh đang phát triển: `feature/parenthesis-spacing-0.1.43`, từ 0.1.42 (`73acbfcf6e688be858dcaa823097110308cfcb14`). Chuỗi bản thử dựa trên main đã chốt `da6cf3b0999dbfb60d16ab1eae9733b0f1f20c81`. Đọc các CHANGES và [phạm vi 0.1.43](CHANGES-0.1.43.md). Chưa nhập main hoặc coi CI là bằng chứng Office 2021.
 
 ## Bản đồ mã nguồn
 
@@ -75,7 +75,7 @@ Tài liệu riêng chỉ dùng cục bộ theo đường dẫn tùy chọn của
 dotnet publish src/ChinhTa.Desktop -c Release -r win-x64 --self-contained true -o artifacts/win-x64
 ```
 
-Kèm thư mục `samples`, ghi chú phiên bản, ZIP và SHA-256. Chạy kiểm thử trước khi phát hành. Khi tạo bản mới, cập nhật version trong csproj, tiêu đề UI, tên gói/tag, ghi chú và workflow Windows; không phát hành lại vào tag cũ. Workflow `windows-package.yml` gắn `feature/punctuation-spacing-0.1.42` và phát hành prerelease 0.1.42 sau kiểm thử. Mỗi phiên bản sau phải đổi nhánh/version và không ghi đè tag đã phát hành. Workflow `finalize-0.1.27.yml` chỉ chốt metadata của bản đã thử, có kiểm tag, digest, CI và thay đổi chỉ thuộc tài liệu/workflow được cho phép; không build hoặc thay asset.
+Kèm thư mục `samples`, ghi chú phiên bản, ZIP và SHA-256. Chạy kiểm thử trước khi phát hành. Khi tạo bản mới, cập nhật version trong csproj, tiêu đề UI, tên gói/tag, ghi chú và workflow Windows; không phát hành lại vào tag cũ. Workflow `windows-package.yml` gắn `feature/parenthesis-spacing-0.1.43` và phát hành prerelease 0.1.43 sau kiểm thử. Mỗi phiên bản sau phải đổi nhánh/version và không ghi đè tag đã phát hành. Workflow `finalize-0.1.27.yml` chỉ chốt metadata của bản đã thử, có kiểm tag, digest, CI và thay đổi chỉ thuộc tài liệu/workflow được cho phép; không build hoặc thay asset.
 
 Khi nhận lỗi, lấy log đúng version và phân biệt lỗi đọc Word, ghép XML, CP/mốc, marker, candidate, nét XPS hay rollback. Các mã `Word.Preview.CpMapping`, `Word.Preview.Unmapped`, `Word.LineBatch.ReferenceBinding.*`, `Word.LineBatch.StoryBinding`, `Word.LineBatch.Rescan` ghi số liệu mà không ghi chữ tài liệu. Không kết luận nguyên nhân chỉ từ ngoại lệ tổng quát hoặc một điều kiện guard gộp.
 
@@ -239,3 +239,11 @@ Core kiểm số nhóm và scope, evidence stale/malformed/negative/wrong URL, t
 Checker nhường generic spacing chồng span cho C14, sau đó vẫn nhường span chứa trong deletion cụm lặp như cũ. BatchPlan cho punctuation chia sẻ CharacterFormat bao cả span. Không thay CurrentTextPlan/Word CP mapping, giao dịch, hậu kiểm story/phông, Undo hoặc nhánh Line. Office fixture dùng chữ trước dấu câu có đậm/gạch chân riêng; lỗi cố ý sau text edit thứ ba (dấu câu đầu trong thứ tự từ cuối) kiểm rollback nhóm hỗn hợp. Sau Undo sửa riêng, mở lại nguồn mẫu để baseline Changed=false trước fault probe.
 
 Cập nhật catalog C14/milestone, guide và báo cáo mẫu từ renderer/gói thực; workflow lấy số kiểm từ log đã đạt, không dự đoán trước. Chưa có xác nhận Word/Office 2021 cho .42; không merge main hoặc thay stable.
+
+## Ghi chú triển khai 0.1.43
+
+`ParenthesisSpaceRules` trước hết kiểm toàn đoạn có cặp ASCII round parentheses cân bằng/không lồng; mỗi cặp xét ranh giới ngoài và phần chữ hẹp. Duyệt chữ/dấu kết hợp, ASCII space, phẩy/chấm phẩy, ba dấu nối; yêu cầu từ ≥2 chữ cái và có chữ thường; không cố phân loại ngữ nghĩa mọi token. Bỏ qua dấu kỹ thuật/tab/header, regex tuyến tính ngày…tháng…năm ngay cả chú thích làm header parser chặt không nhận. Không thay AdministrativeHeaderRules để đoán header. Mỗi mép chỉ deletion ASCII space, tránh ghi lại cả cặp/runs. TextEditable=false trả manual cả đoạn; gate/giới hạn XML cũ giữ nguyên.
+
+Checker gộp các generic-space chồng C14/C15 rồi nhường deletion cụm lặp như cũ. BatchPlan cho ParenthesisSpace chia sẻ full CharacterFormat. Suggestion có chữ rõ cho replacement rỗng. PunctuationSpaceRules nhận ranh giới ngoặc prose, chặn mở ngoặc dính tên hàm; sửa C15 một mình không được làm C14 chưa chọn biến mất. SpacingRules giữ span toàn ASCII space ngay giữa ( và ) để generic Fix All không thu hẹp ô trống — chỉ skip C15 là chưa đủ.
+
+Office fixture có đậm/gạch chân từ đầu trong ngoặc; CP của probe lấy từ edge issue thật rồi dịch bằng delta ASCII của các edits đứng trước, không lấy string.IndexOf làm Word CP. Sau Undo riêng mở lại nguồn để baseline Changed=false; fault probe edit thứ hai đã xóa mép đóng, phải rollback cả nhóm. Kiểm nhóm, rescan, Undo, save/reopen, source hash; chưa có runtime Office. Cập nhật C15/milestone/guide và báo cáo gói; giữ main/stable/tag cũ.

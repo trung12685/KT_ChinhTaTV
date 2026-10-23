@@ -22,7 +22,7 @@ public static class PunctuationSpaceRules
             while(left>0 && WordChar(text[left-1]))left--;
             while(right<text.Length && WordChar(text[right]))right++;
             if(!Word(text,left,start) || !Word(text,end,right) ||
-                left>0 && text[left-1]!=' ' || !RightBoundary(text,right) ||
+                !LeftBoundary(text,left) || !RightBoundary(text,right) ||
                 Upper(text,left,start) && Upper(text,end,right))continue;
             string original=text[start..end],replacement=text[mark]+" ";
             if(original==replacement)continue;
@@ -43,9 +43,12 @@ public static class PunctuationSpaceRules
     private static bool Word(string text,int start,int end)=>start<end && char.IsLetter(text[start]) &&
         text[start..end].Count(char.IsLetter)>=2;
     private static bool Upper(string text,int start,int end)=>text[start..end].All(c=>!char.IsLetter(c) || char.IsUpper(c));
+    private static bool LeftBoundary(string text,int start)=>start==0 || text[start-1]==' ' ||
+        text[start-1]=='(' && (start==1 || text[start-2]==' ');
     private static bool RightBoundary(string text,int end)
     {
         if(end==text.Length || text[end] is ' ' or '\r' or '\n' or '\a' or ',' or ';')return true;
+        if(text[end]==')')return end+1==text.Length || text[end+1] is ' ' or '\r' or '\n' or '\a' or ',' or ';' or '.' or ':' or '!' or '?';
         // A sentence-ending dot is allowed; a domain/file extension is not.
         return text[end] is '.' or '!' or '?' && (end+1==text.Length || text[end+1] is ' ' or '\r' or '\n' or '\a');
     }

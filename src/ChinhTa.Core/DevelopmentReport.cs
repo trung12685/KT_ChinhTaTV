@@ -30,7 +30,7 @@ public static class DevelopmentReport
     public static IReadOnlyList<ReportCapability> Capabilities { get; }=Array.AsReadOnly(new ReportCapability[]
     {
         new("C01","Khoảng trắng thừa",CapabilityMode.Reviewable,"Cả ba chế độ",
-            "Gộp dấu cách thường liên tiếp giữa chữ; giữ ô số/ngày trống theo mẫu nhận diện. Không tự xóa tab hoặc thụt đầu dòng."),
+            "Gộp dấu cách thường liên tiếp giữa chữ; giữ ô số/ngày trống theo mẫu nhận diện và ngoặc tròn chỉ chứa dấu cách. Không tự xóa tab hoặc thụt đầu dòng."),
         new("C02","Quốc hiệu",CapabilityMode.Reviewable,"Nhà nước, trang đầu",
             "Chuẩn hóa chữ/khoảng trắng của dòng nhận diện; Times New Roman, đen, đậm, đứng, cỡ 12–13. Không tự thêm dòng bị thiếu hoặc đoán dòng sai chữ chưa nhận ra."),
         new("C03","Tiêu ngữ",CapabilityMode.Reviewable,"Nhà nước, trang đầu",
@@ -57,6 +57,8 @@ public static class DevelopmentReport
             "Cụm 2–8 tiếng: đề xuất xóa bản lặp, giữ lần đầu sau khi duyệt. Một tiếng như đều đều/nhà nhà, toàn chữ hoa hoặc dòng số/ngày giữ thủ công. Chưa suy nghĩa câu."),
         new("C14","Khoảng trắng quanh dấu phẩy/chấm phẩy",CapabilityMode.Reviewable,"Giữa hai từ có ít nhất hai chữ cái, dấu cách thường",
             "Đề xuất bỏ khoảng trắng trước và giữ một khoảng trắng sau dấu phẩy/chấm phẩy. Cần duyệt; bỏ qua dòng số/ngày, tab và dấu hiệu địa chỉ/đường dẫn/mã. Chưa mở rộng sang mọi dấu câu."),
+        new("C15","Khoảng trắng sát bên trong ngoặc tròn",CapabilityMode.Reviewable,"Ngoặc cân bằng, không lồng, phần chữ đơn giản trong cùng đoạn",
+            "Đề xuất xóa dấu cách thường ngay sau ( và trước ), giữ chữ/kiểu và khoảng cách ngoài. Bỏ qua ô trống, nội dung có số/ký hiệu kỹ thuật, toàn chữ hoa, tab, ngoặc lồng/thiếu và vùng chưa cho phép sửa. Cần duyệt, chưa kiểm mọi loại ngoặc/nháy."),
         new("M01","Khổ giấy và lề",CapabilityMode.Manual,"Nhà nước/Đảng",
             "Cảnh báo A4/lề, trang ngang/lề đối xứng và ngoại lệ; chưa tự đổi thiết lập trang."),
         new("M02","Khác hàng hoặc vị trí dọc số/ngày",CapabilityMode.Manual,"Khi đo được mốc XPS",
@@ -86,7 +88,8 @@ public static class DevelopmentReport
         new("0.1.39","Tách lỗi dọn backup khỏi kết quả checkpoint/Hoàn tác, giữ nguyên nguyên nhân lỗi thực."),
         new("0.1.40","Phát hiện lặp cơ học, đề xuất xóa phần lặp có duyệt, giữ kiểu lần đầu; từ láy/mã/header chưa rõ giữ thủ công."),
         new("0.1.41","Thêm xem/xuất báo cáo tiến độ, danh mục loại lỗi, kết quả kiểm thử đi kèm gói và việc tiếp theo, không cần mở Word."),
-        new("0.1.42","Thêm gợi ý khoảng trắng quanh dấu phẩy/chấm phẩy có giới hạn, gộp vùng khoảng trắng để sửa nhóm không chồng lấn; cập nhật danh mục và mẫu kiểm.")
+        new("0.1.42","Thêm gợi ý khoảng trắng quanh dấu phẩy/chấm phẩy có giới hạn, gộp vùng khoảng trắng để sửa nhóm không chồng lấn; cập nhật danh mục và mẫu kiểm."),
+        new("0.1.43","Thêm khoảng trắng sát trong ngoặc tròn có điều kiện; giữ đề xuất dấu phẩy/chấm phẩy khi sửa ngoặc, kiểm nhóm/rollback và cập nhật báo cáo.")
     });
     public static IReadOnlyList<string> NextSteps { get; }=Array.AsReadOnly(new[]
     {
