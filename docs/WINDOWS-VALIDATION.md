@@ -1,6 +1,6 @@
 > Cập nhật chốt bản 21/10/2026: 0.1.27 đạt 223 Core/OpenXML + 20 WPF trong CI Windows; người dùng xác nhận sửa cả ba đường cùng lúc chạy được trên Office 2021. Lưu/mở lại, một Undo và toàn bộ Office check của 0.1.27 chưa có xác nhận runtime riêng. Xem [biên bản](STATUS-0.1.27.md).
 >
-Để chọn từng nhóm lỗi khi kiểm tra, xem [Danh sách khả năng sửa 0.1.43](SUPPORTED-FIXES-0.1.43.md): C01–C15, các mục thủ công và bảng sửa riêng/nhóm/quét/Undo/lưu-mở. Danh sách mô tả chức năng đã lập trình, không phải xác nhận Office đã đạt.
+Để chọn từng nhóm lỗi khi kiểm tra, xem [Danh sách khả năng sửa 0.1.44](SUPPORTED-FIXES-0.1.44.md): C01–C16, các mục thủ công và bảng sửa riêng/nhóm/quét/Undo/lưu-mở. Danh sách mô tả chức năng đã lập trình, không phải xác nhận Office đã đạt.
 
 > Danh sách bên dưới là kịch bản kiểm tra tích lũy theo từng phiên bản, không phải bảng kết quả đã đạt.
 
@@ -146,3 +146,9 @@ Trong Trợ giúp, báo cáo phải có C14 và mốc .42, đúng version và s�
 Bài Word thêm `parenthesis-input.docx`/`parenthesis-fixed.docx`: hai mép ngoặc, cụm lặp, dấu câu và khoảng trắng ngoài. Sửa riêng một mép giữ mục không chọn và đậm/gạch chân từ đầu trong ngoặc. Lỗi cố ý sau xóa mép trong nhóm phải phục hồi toàn chữ/kiểu, không tạo Undo. Sửa cả nhóm một lần, quét bỏ đúng các mục, một Undo phục hồi cả nhóm; lưu/mở giữ chữ/kiểu và hash nguồn. Dòng ô trống/số/mã/ký hiệu trong mẫu phải nguyên vẹn.
 
 Thử riêng `( công,tác )`: sửa hai mép ngoặc, dấu phẩy chưa chọn phải còn gợi ý sau quét; chọn cả hai loại phải ra `(công, tác)`. `(    )` không bị gộp thành `( )` khi sửa tất cả; lỗi khoảng trắng độc lập vẫn sửa được. Ngoặc lồng/thiếu, tab/NBSP, số/toàn hoa, dấu công thức và dòng ngày có chú thích không tạo C15. Báo cáo Trợ giúp có C15/mốc .43/version và số kiểm đúng gói. Chưa coi Core/WPF/gói là xác nhận Word/Office 2021.
+
+## Bổ sung .44 — dấu cách trước dấu kết câu cuối đoạn (chưa xác nhận runtime)
+
+Bài Word thêm `sentence-end-input.docx` và bản lưu `sentence-end-fixed.docx`: ba dấu .?! cuối đoạn, năm lỗi chữ/ngoặc độc lập, các dòng ngoại lệ. Sửa riêng một C16 giữ lỗi khác và kiểu phần chữ; lỗi cố ý sau C16 đầu trong nhóm phải rollback toàn chữ/kiểu, không tạo Undo. Sửa cả nhóm một lượt, quét hết đúng mục, một Undo trả toàn nhóm, lưu/mở giữ chữ/kiểu/hash nguồn. Các dòng số, TS, địa chỉ và dấu lửng giữ nguyên.
+
+Thử Unicode tổ hợp/surrogate trước lỗi, khoảng trắng cuối và dấu đoạn/ô; C16 chỉ xóa ASCII space trước dấu, không ghi lại từ/dấu câu. Kiểm ngoại lệ tab/NBSP, dấu giữa câu/chuỗi dấu/header/ngày. Báo cáo có C16/mốc .44 và dữ liệu kiểm đúng gói. Chưa coi CI là xác nhận Word/Office 2021.

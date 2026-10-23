@@ -5,17 +5,17 @@ public static class DevelopmentReportChecks
 {
     public static void Run(Action<bool,string> assert)
     {
-        const string version="0.1.43";
+        const string version="0.1.44";
         var now=new DateTimeOffset(2026,10,23,9,15,0,TimeSpan.FromHours(7));
         var evidence=new ReportEvidence(version,17,29,new string('a',40),"https://github.com/trung12685/KT_ChinhTaTV/actions/runs/123");
         string text=DevelopmentReport.Build(version,now,evidence);
         assert(DevelopmentReport.Capabilities.Select(c=>c.Id).Distinct().Count()==DevelopmentReport.Capabilities.Count &&
             DevelopmentReport.Capabilities.All(c=>c.Name.Length>0 && c.Scope.Length>0 && c.Detail.Length>0),
             "The exported capability catalog has unique IDs, scopes and limits instead of empty headline claims");
-        assert(DevelopmentReport.Count(CapabilityMode.Reviewable)==15 && DevelopmentReport.Count(CapabilityMode.Manual)==8 &&
-            DevelopmentReport.Count(CapabilityMode.Demonstration)==1 && DevelopmentReport.Capabilities.Count==24,
-            "Feature totals distinguish fifteen reviewed repair groups, eight manual groups and one demo rather than counting repaired document errors");
-        assert(text.Contains("Phiên bản: 0.1.43") && text.Contains("2026-10-23 09:15 +07:00") &&
+        assert(DevelopmentReport.Count(CapabilityMode.Reviewable)==16 && DevelopmentReport.Count(CapabilityMode.Manual)==8 &&
+            DevelopmentReport.Count(CapabilityMode.Demonstration)==1 && DevelopmentReport.Capabilities.Count==25,
+            "Feature totals distinguish sixteen reviewed repair groups, eight manual groups and one demo rather than counting repaired document errors");
+        assert(text.Contains("Phiên bản: 0.1.44") && text.Contains("2026-10-23 09:15 +07:00") &&
             text.Contains("17 Core/OpenXML và 29 WPF đạt.") && text.Contains(evidence.RunUrl) && text.Contains(evidence.Commit),
             "The report renders the supplied version, local offset and actual matching build counts without hard-coded test totals");
         assert(text.Contains("không phải số lỗi đã sửa") && text.Contains("CI không có Word") && text.Contains("chưa có xác nhận bài Word") &&
@@ -23,7 +23,7 @@ public static class DevelopmentReportChecks
             "Program capabilities and automated checks never become claims of document repair, complete spelling coverage or Office PASS");
         assert(DevelopmentReport.Capabilities.All(item=>text.Contains(item.Id+" — "+item.Name)),
             "Every catalog item, including manual and demo entries, appears in the exported report");
-        assert(DevelopmentReport.Milestones.All(item=>text.Contains(item.Version+": "+item.Detail)) && text.Contains("0.1.18–0.1.27") && text.Contains("0.1.40") && text.Contains("0.1.43"),
+        assert(DevelopmentReport.Milestones.All(item=>text.Contains(item.Version+": "+item.Detail)) && text.Contains("0.1.18–0.1.27") && text.Contains("0.1.40") && text.Contains("0.1.44"),
             "The report retains the delivered Line, formatting, save/recovery and repetition milestones for future development");
         int format=text.IndexOf("1. Thể thức",StringComparison.Ordinal),basic=text.IndexOf("2. Lỗi chữ",StringComparison.Ordinal),
             context=text.IndexOf("3. Sau cùng",StringComparison.Ordinal);
@@ -43,7 +43,7 @@ public static class DevelopmentReportChecks
             JsonSerializer.Serialize(evidence with {RunUrl="https://github.com/trung12685/KT_ChinhTaTV/actions/runs/123/extra"}),
             JsonSerializer.Serialize(evidence with {RunUrl="https://github.com/other/repo/actions/runs/123"}),
             JsonSerializer.Serialize(evidence with {Commit=null!}),JsonSerializer.Serialize(evidence with {RunUrl=null!}),
-            "{\"Version\":\"0.1.43\",\"CoreChecks\":999999999999999999999}"})
+            "{\"Version\":\"0.1.44\",\"CoreChecks\":999999999999999999999}"})
             assert(ReportEvidence.Parse(json,version) is null,"Invalid, wrong-version or unrelated build metadata cannot claim current-version validation");
         assert(DevelopmentReport.Build(version,now,evidence)==text,"Viewing and exporting one report snapshot are deterministic and do not require a document or Word connection");
     }

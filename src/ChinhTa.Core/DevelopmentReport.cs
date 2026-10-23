@@ -59,6 +59,8 @@ public static class DevelopmentReport
             "Đề xuất bỏ khoảng trắng trước và giữ một khoảng trắng sau dấu phẩy/chấm phẩy. Cần duyệt; bỏ qua dòng số/ngày, tab và dấu hiệu địa chỉ/đường dẫn/mã. Chưa mở rộng sang mọi dấu câu."),
         new("C15","Khoảng trắng sát bên trong ngoặc tròn",CapabilityMode.Reviewable,"Ngoặc cân bằng, không lồng, phần chữ đơn giản trong cùng đoạn",
             "Đề xuất xóa dấu cách thường ngay sau ( và trước ), giữ chữ/kiểu và khoảng cách ngoài. Bỏ qua ô trống, nội dung có số/ký hiệu kỹ thuật, toàn chữ hoa, tab, ngoặc lồng/thiếu và vùng chưa cho phép sửa. Cần duyệt, chưa kiểm mọi loại ngoặc/nháy."),
+        new("C16","Khoảng trắng trước dấu kết câu cuối đoạn",CapabilityMode.Reviewable,"Một dấu .?! cuối đoạn, từ cuối ≥2 chữ cái thường và có từ trước",
+            "Đề xuất xóa dấu cách ASCII trước dấu kết câu; giữ chữ, dấu câu, khoảng trắng sau. Bỏ qua số/ký hiệu, dấu hiệu kỹ thuật/header/ngày, chuỗi dấu và ranh giới chưa rõ. Cần duyệt; chưa kiểm dấu giữa câu hoặc tự thêm dấu/khoảng sau."),
         new("M01","Khổ giấy và lề",CapabilityMode.Manual,"Nhà nước/Đảng",
             "Cảnh báo A4/lề, trang ngang/lề đối xứng và ngoại lệ; chưa tự đổi thiết lập trang."),
         new("M02","Khác hàng hoặc vị trí dọc số/ngày",CapabilityMode.Manual,"Khi đo được mốc XPS",
@@ -89,7 +91,8 @@ public static class DevelopmentReport
         new("0.1.40","Phát hiện lặp cơ học, đề xuất xóa phần lặp có duyệt, giữ kiểu lần đầu; từ láy/mã/header chưa rõ giữ thủ công."),
         new("0.1.41","Thêm xem/xuất báo cáo tiến độ, danh mục loại lỗi, kết quả kiểm thử đi kèm gói và việc tiếp theo, không cần mở Word."),
         new("0.1.42","Thêm gợi ý khoảng trắng quanh dấu phẩy/chấm phẩy có giới hạn, gộp vùng khoảng trắng để sửa nhóm không chồng lấn; cập nhật danh mục và mẫu kiểm."),
-        new("0.1.43","Thêm khoảng trắng sát trong ngoặc tròn có điều kiện; giữ đề xuất dấu phẩy/chấm phẩy khi sửa ngoặc, kiểm nhóm/rollback và cập nhật báo cáo.")
+        new("0.1.43","Thêm khoảng trắng sát trong ngoặc tròn có điều kiện; giữ đề xuất dấu phẩy/chấm phẩy khi sửa ngoặc, kiểm nhóm/rollback và cập nhật báo cáo."),
+        new("0.1.44","Thêm gợi ý khoảng trắng trước dấu kết câu cuối đoạn có điều kiện; sửa nhóm cùng ngoặc/dấu phẩy/cụm lặp, rollback và cập nhật báo cáo.")
     });
     public static IReadOnlyList<string> NextSteps { get; }=Array.AsReadOnly(new[]
     {
