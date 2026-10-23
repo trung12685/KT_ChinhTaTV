@@ -42,8 +42,14 @@ static class Program
         return sequence;
     }
     [STAThread]
-    static void Main()
+    static void Main(string[] args)
     {
+        if(args.Length==2 && args[0]=="--verify-report-package")
+        {
+            ProgressReportDesktopChecks.VerifyPackage(args[1],Assert);
+            Console.WriteLine($"{checks} package checks passed.");
+            return;
+        }
         var anchor=new PreviewAnchor(1,Text,0,Text.Length);
         var clip=new RectangleGeometry(new Rect(276.2,56.67,290.55,104));
         var frame=new PreviewHighlighter().TableFrame(Page(clip),anchor);
@@ -161,6 +167,7 @@ static class Program
         Assert(tableReference.Width-shortened.Width>1,
             "A CP-to-string mismatch reproduces a short Motto even after glyph-advance measurement is fixed");
         AdministrativePositionDesktopChecks.Run(Assert);
+        ProgressReportDesktopChecks.Run(Assert);
         Console.WriteLine($"{checks} WPF checks passed.");
     }
 }

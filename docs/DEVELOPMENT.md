@@ -10,7 +10,7 @@
 
 Mốc đã chốt: [0.1.27](STATUS-0.1.27.md), mã gói `1ec3092ccd68ed0acd8878b2737664116a6b11fe`, tag `v0.1.27`. Đọc biên bản này trước để phân biệt bằng chứng CI, xác nhận người dùng và kịch bản còn chờ. Phát triển từ `main` sau khi chốt, tạo nhánh mới; không tiếp tục phát hành vào tag hoặc ghi đè ZIP 0.1.27.
 
-Nhánh đang phát triển: `feature/admin-position-review-0.1.32`, từ tag 0.1.31 (`7bf086637622f4a1657edb4e66dc79e3b9e92838`). Chuỗi bản thử dựa trên main đã chốt `da6cf3b0999dbfb60d16ab1eae9733b0f1f20c81`. Đọc các CHANGES và [phạm vi 0.1.32](CHANGES-0.1.32.md). Chưa nhập main hoặc coi CI là bằng chứng Office 2021.
+Nhánh đang phát triển: `feature/progress-report-0.1.41`, từ 0.1.40 (`366b53b29d02c1c14dd2dd5fa0db2593089918a0`). Chuỗi bản thử dựa trên main đã chốt `da6cf3b0999dbfb60d16ab1eae9733b0f1f20c81`. Đọc các CHANGES và [phạm vi 0.1.41](CHANGES-0.1.41.md). Chưa nhập main hoặc coi CI là bằng chứng Office 2021.
 
 ## Bản đồ mã nguồn
 
@@ -75,7 +75,7 @@ Tài liệu riêng chỉ dùng cục bộ theo đường dẫn tùy chọn của
 dotnet publish src/ChinhTa.Desktop -c Release -r win-x64 --self-contained true -o artifacts/win-x64
 ```
 
-Kèm thư mục `samples`, ghi chú phiên bản, ZIP và SHA-256. Chạy kiểm thử trước khi phát hành. Khi tạo bản mới, cập nhật version trong csproj, tiêu đề UI, tên gói/tag, ghi chú và workflow Windows; không phát hành lại vào tag cũ. Workflow `windows-package.yml` gắn `feature/repeated-text-0.1.40` và phát hành prerelease 0.1.40 sau kiểm thử. Mỗi phiên bản sau phải đổi nhánh/version và không ghi đè tag đã phát hành. Workflow `finalize-0.1.27.yml` chỉ chốt metadata của bản đã thử, có kiểm tag, digest, CI và thay đổi chỉ thuộc tài liệu/workflow được cho phép; không build hoặc thay asset.
+Kèm thư mục `samples`, ghi chú phiên bản, ZIP và SHA-256. Chạy kiểm thử trước khi phát hành. Khi tạo bản mới, cập nhật version trong csproj, tiêu đề UI, tên gói/tag, ghi chú và workflow Windows; không phát hành lại vào tag cũ. Workflow `windows-package.yml` gắn `feature/progress-report-0.1.41` và phát hành prerelease 0.1.41 sau kiểm thử. Mỗi phiên bản sau phải đổi nhánh/version và không ghi đè tag đã phát hành. Workflow `finalize-0.1.27.yml` chỉ chốt metadata của bản đã thử, có kiểm tag, digest, CI và thay đổi chỉ thuộc tài liệu/workflow được cho phép; không build hoặc thay asset.
 
 Khi nhận lỗi, lấy log đúng version và phân biệt lỗi đọc Word, ghép XML, CP/mốc, marker, candidate, nét XPS hay rollback. Các mã `Word.Preview.CpMapping`, `Word.Preview.Unmapped`, `Word.LineBatch.ReferenceBinding.*`, `Word.LineBatch.StoryBinding`, `Word.LineBatch.Rescan` ghi số liệu mà không ghi chữ tài liệu. Không kết luận nguyên nhân chỉ từ ngoại lệ tổng quát hoặc một điều kiện guard gộp.
 
@@ -220,3 +220,14 @@ Core dùng file thật với callback lỗi dọn để kiểm byte/trình tự/
 Gợi ý có Kind.RepeatedText, BatchSafe=false, Replacement rỗng và span chỉ gồm separator + bản lặp sau. Giữ lần đầu thay vì replace toàn nhóm, tránh ép kiểu của phần giữ lại. Checker bỏ các spacing/demo nằm trong deletion, giữ các mục ngoài; gate TextEditable/protectedAdministrative cũ vẫn áp dụng. Word normalize Text=null của range đã xóa thành ""; hậu kiểm story và giao dịch cũ không đổi. BatchPlan cho CharacterFormat cả dòng chứa RepeatedText như text edit khác; kiểm kỳ vọng hàng và phông sau lưu bằng tracker cũ. Không thay MainWindow stage/confirmation hoặc bắt đầu thư viện ngữ cảnh.
 
 Core kiểm ranh giới, Unicode, hai nhóm, 8 tiếng, từ láy/mã/header, overlap spacing/demo/style, fresh scan và rollback sau delete. Office sample có phần giữ lại đậm/gạch chân, hai cụm lặp + một spacing + hai manual; kiểm riêng/nhóm, post-delete lỗi, nguyên văn/kiểu và Undo/save/reopen. Chưa xác nhận Office 2021. Bảo vệ XML sâu vẫn chỉ 40 đoạn đầu State; chưa dùng tính năng mới để tuyên bố field/control mọi trang/profile an toàn. Không có từ điển chính tả đầy đủ; `con đo` vẫn chỉ minh họa cũ. Danh sách người dùng .40 thêm C13, giữ nguyên tài liệu .39.
+
+
+## Ghi chú triển khai 0.1.41
+
+`DevelopmentReport` là nguồn cấu trúc của danh mục C01–C13, M01–M08, D01, milestone và roadmap. Tổng nhóm tính từ Mode, không dùng số lỗi/đếm thao tác trong DOCX. Report Build chỉ nhận version/thời điểm/evidence; không nhận tài liệu, đường dẫn hoặc nội dung Word. Giữ thứ tự user chốt: thể thức, lỗi chữ cơ bản, ngữ cảnh/thư viện sau cùng. Khi thêm loại lỗi phải cập nhật danh mục, guide và kiểm thử, không coi nhóm là mọi trường hợp đã hỗ trợ.
+
+`ReportEvidence` kiểm JSON đúng version, số kiểm thử dương, commit/URL CI đúng định dạng. Workflow Tee log hai bài Core/WPF đã qua exitcode, lấy tổng thực tế, ghi build-checks.json và đưa vào publish folder. Bước riêng --verify-report-package chỉ kiểm manifest trong gói thật qua parser/renderer, không chạy lại toàn WPF; đồng thời xuất TXT mẫu cho ZIP/Release. File thông tin build không phải chữ ký/xác nhận Word; thiếu/sai không hiển thị số PASS. Không gán cứng số kiểm tra dự kiến cho version hiện tại.
+
+`ProgressReportWindow` chỉ đọc và cho xuất TXT bằng delegate. Không dùng MainWindow.Run cho việc xuất báo cáo vì handler lỗi đó xóa choices/anchors của tài liệu. Report tự xử lý lỗi I/O, không gọi Scan/Word. WordSession.SaveProgressReport tạo nguồn UTF8-BOM riêng trong thư mục phiên, gọi VerifiedSaveCopy với toàn bộ Source/Recovery/Undo bảo vệ, không Checkpoint hay đổi Changed/Undo; cleanup nguồn riêng bắt I/O/quyền và log độc lập để không biến xuất thành công thành lỗi dọn. Đuôi TXT bắt buộc; alias/hardlink vẫn bị guard theo danh tính, không chỉ nhìn đuôi.
+
+Core kiểm số nhóm và scope, evidence stale/malformed/negative/wrong URL, thứ tự roadmap và report không giả định Office PASS. WPF kiểm UI chỉ đọc, export trước mở Word, encoding/replace/locked target/hardlink/đuôi, giữ trạng thái/no Undo/stage. Office check khi có dirty edit kiểm không đổi story/Changed/checkpoint/nguồn và một Undo vẫn về đúng bản; chưa chạy Office 2021 trong môi trường CI. Không sửa quy tắc chữ/lặp/Line ở bản này. Hướng dẫn người dùng: REPORT-EXPORT.md.

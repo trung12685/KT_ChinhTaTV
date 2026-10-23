@@ -127,3 +127,10 @@ Core Windows giữ handle không cho xóa rollback thật và kiểm các lỗi 
 Chạy hết Kiểm tra Word tự động. Mẫu `repeated-text-input.docx` có hai đề xuất xóa cụm lặp, một spacing độc lập và hai cảnh báo “đều đều”, “nhà nhà” không được tích. Lỗi cố ý sau lần xóa đầu phải rollback cả nhóm, không tạo Undo. Sửa riêng một cụm phải giữ chữ/đậm/gạch chân lần đầu và gợi ý còn lại; Undo phục hồi. Sửa nhóm ba mục phải hết các mục đã sửa trong một lượt, giữ hai manual, giữ kiểu lần đầu sau spacing dịch CP. Lưu/mở và một Undo phục hồi toàn nhóm, nguồn không đổi. `repeated-text-fixed.docx` là bản lưu.
 
 Trên bản sao thực: thử cụm hai và ba lần, hai cụm độc lập, chọn riêng so với nhóm; xác nhận lặp có chủ ý trước khi xóa. Không kỳ vọng đối chiếu qua dấu câu/tab/ngắt đoạn hoặc cụm trên 8 tiếng, case khác, chính tả từ điển/ngữ cảnh. Sửa chữ/phông trước căn giữa/Line và quét lại theo số đo mới. Chưa có runtime Office 2021 cho .40.
+
+
+## Thử 0.1.41 — xem/xuất tiến độ và chức năng
+
+Ngay sau mở chương trình, chưa mở DOCX: Trợ giúp → Tiến độ và chức năng… phải có phiên bản, tổng nhóm 13/8/1, danh mục, mốc đã làm và bước tiếp theo; xuất TXT đọc đúng tiếng Việt. Nếu gói có build-checks.json đúng version, hiện số kiểm thử thực tế; thử bản sao thư mục thiếu file này phải báo chưa có thông tin, không tự ghi PASS. CI xác minh metadata trong thư mục publish và tạo báo cáo TXT mẫu.
+
+Khi đang sửa DOCX: mở/đóng/xuất báo cáo không làm quét lại, xóa danh sách/tích chọn, đổi chữ/Changed hoặc thêm Undo. Thử chọn đích đang khóa/không có quyền: chỉ báo lỗi trong cửa sổ báo cáo, đích cũ giữ nguyên; vẫn sửa/lưu/Undo tài liệu như trước. Report không phải thống kê lỗi đã sửa trong DOCX. Chạy toàn bộ Kiểm tra Word tự động; bài cuối kiểm xuất khi có dirty edit, checkpoint/hash và một Undo. Chưa có xác nhận runtime Office 2021 cho .41.

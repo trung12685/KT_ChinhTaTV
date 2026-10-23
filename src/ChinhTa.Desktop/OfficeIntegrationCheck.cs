@@ -594,6 +594,25 @@ public static class OfficeIntegrationCheck
                 !SaveDigest(repeatedSource).SequenceEqual(repeatedDigest))
                 throw new InvalidOperationException("Mở lại bản sửa lặp chưa đạt hoặc nguồn mẫu thay đổi");
             Pass(stage);
+            stage="Xuất tiến độ khi Word có thay đổi: giữ chữ, Changed, checkpoint và Undo";
+            test.Open(repeatedSource);string beforeReport=test.ReadCheckText();
+            test.Fix(test.Check().Where(i=>i.Kind==FixKind.RepeatedText && i.CanFix).OrderBy(i=>i.Start).First());
+            string reportWorking=test.ReadCheckText();byte[] reportCheckpoint=SaveDigest(test.RecoveryPath);
+            string programReport=DevelopmentReport.Build(typeof(OfficeIntegrationCheck).Assembly.GetName().Version!.ToString(3),DateTimeOffset.Now);
+            string programReportPath=Path.Combine(folder,"program-progress.txt");test.SaveProgressReport(programReportPath,programReport);
+            if(!test.Changed || test.ReadCheckText()!=reportWorking || File.ReadAllText(programReportPath)!=programReport ||
+                !SaveDigest(test.RecoveryPath).SequenceEqual(reportCheckpoint))
+                throw new InvalidOperationException("Xuất tiến độ làm đổi chữ/Changed/checkpoint hoặc nội dung báo cáo");
+            bool reportSourceBlocked=false,reportWorkingBlocked=false;
+            try{test.SaveProgressReport(test.Source,programReport);}catch(InvalidOperationException){reportSourceBlocked=true;}
+            try{test.SaveProgressReport(test.RecoveryPath,programReport);}catch(InvalidOperationException){reportWorkingBlocked=true;}
+            if(!reportSourceBlocked || !reportWorkingBlocked || test.ReadCheckText()!=reportWorking || !test.Changed ||
+                !SaveDigest(repeatedSource).SequenceEqual(repeatedDigest))
+                throw new InvalidOperationException("Xuất báo cáo chưa chặn nguồn/bản làm việc hoặc làm đổi trạng thái");
+            test.Undo();
+            if(test.ReadCheckText()!=beforeReport || test.Check().Count(i=>i.Kind==FixKind.RepeatedText && i.CanFix)!=2)
+                throw new InvalidOperationException("Xuất báo cáo đã thêm hoặc làm mất lượt Undo chữ trước đó");
+            Pass(stage);
             File.AppendAllText(report,"RESULT PASS\nKiểm thao tác Word/Line, vị trí nét XPS, sửa riêng/nhóm số-ngày, lưu/mở và Hoàn tác trên mẫu giả; không xác nhận mọi tài liệu.\n");
             return new(true,stage,folder);
         }
