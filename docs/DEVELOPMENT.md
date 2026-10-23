@@ -1,5 +1,11 @@
 # Tiếp tục phát triển Chính tả Việt
 
+## Mốc tiếp tục 0.1.59 — 24/10/2026 (UTC+7)
+
+DocumentTypeCatalog là nguồn chung: 27 administrative + 3 copy của NĐ30 PLIII.I PDF40, 1 user BCĐX. Exact abbreviations QyĐ/CTr/TTr/TrS; source/kind riêng, copy không EligibleHeading. Nghị quyết/Quyết định qualifier cá biệt thuộc reference, heading không thêm qualifier. Giấy uỷ/ủy quyền cùng entry nhưng C24 giữ nguyên cách đặt dấu. ShapeLineRules không giữ hashset13 rời; DocumentHeadingRules/WordSession dùng nguồn chung. Custom-name provenance đi theo citation/LineTarget.UserDefinedType, tooltip và TXT. AdministrativeHeaderRules chỉ miễn cờ lowercase cho prefix canonical, vẫn kiểm mã cơ quan và không tự đổi viết tắt theo title.
+
+DocumentTypeCatalogWindow read-only không gọi Word, menu Trợ giúp; TXT có toàn bộ bảng ba nguồn. Core đối chiếu31 viết tắt, 28 tên/case/font/Line/nguồn, alias/ngoại lệ, codecases; WPF reference-window thực + ảnh public reference. OfficeComponentCheck giả chuyển title sai sang Báo cáo đề xuất để kiểm source mới trong batch phông/Line/Undo/rollback/lưu-mở, CI chỉ biên dịch. [Chi tiết/checklist](CHANGES-0.1.59.md). Giữ24/8/1, XPS/proof/rollback; chưa Office2021 PASS hoặc khép lỗi .56.
+
 ## Mốc tiếp tục 0.1.58 — 24/10/2026 (UTC+7)
 
 Thêm FixKind.DocumentTypeText/C24 cho chính xác 13 tên loại đã qua cùng guard khối đầu Nhà nước của DocumentHeadingRules. Căn cứ NĐ30 PL I.II.5.b đã đối chiếu PDF 24. Thay đúng span tên (giữ ASCII spaces ngoài), ToUpperInvariant cùng độ dài; TextEditable bắt buộc, không nâng quyền qua FormatEditable. Không viết thường trích yếu, không chọn/đổi tên loại theo nội dung. BatchPlan kiểm payload và chỉ cho chia sẻ span với DocumentHeadingFormat; CurrentTextPlan quét lại trước ghi. Giữ range phông track qua thay chữ, expected story, rollback và một Undo.

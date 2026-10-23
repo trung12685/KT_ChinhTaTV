@@ -21,7 +21,7 @@ public static class AdministrativeHeaderRules
     private static bool Blank(string value)=>value.Length==0 || value.All(c=>c is '.' or '_' or '…');
     private static string Citation(bool date)=>date
         ? "NĐ 30/2020/NĐ-CP, Phụ lục I, Phần I.II.4.b–c; PDF trang 23. Chưa xác minh địa danh chính thức hoặc ngoại lệ riêng của đơn vị."
-        : "NĐ 30/2020/NĐ-CP, Phụ lục I, Phần I.II.3.a–c; PDF trang 22–23. Mã viết tắt do cơ quan quy định; chưa xác minh mã được cấp.";
+        : "NĐ 30/2020/NĐ-CP, Phụ lục I, Phần I.II.3.a–c; PDF trang 22–23. Chữ viết tắt tên loại theo PL III.I; mã cơ quan do cơ quan quy định, chưa xác minh mã được cấp.";
 
     public static bool IsCandidate(string text)=>NumberHint.IsMatch(Clean(text)) || DateHint.IsMatch(Clean(text));
     public static bool IsNumber(string text)=>NumberHint.IsMatch(Clean(text));
@@ -121,7 +121,10 @@ public static class AdministrativeHeaderRules
         var code=parsed.Groups["code"];
         foreach(Match separator in Hyphen.Matches(code.Value))
             Edit(p,false,baseIndex+code.Index+separator.Index,separator.Value,"-","Chuẩn hóa dấu nối trong ký hiệu",result);
-        if(code.Value.Any(char.IsLower))
+        var firstSeparator=Hyphen.Match(code.Value);
+        string lettersToCheck=firstSeparator.Success && DocumentTypeCatalog.IsKnownAbbreviation(code.Value[..firstSeparator.Index])
+            ?code.Value[(firstSeparator.Index+firstSeparator.Length)..]:code.Value;
+        if(lettersToCheck.Any(char.IsLower))
             result.Add(Notice(p,false,"Ký hiệu có chữ thường; đối chiếu quy định chữ in hoa và mã viết tắt của cơ quan. Chưa tự đổi mã."));
         return true;
     }

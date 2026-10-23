@@ -30,6 +30,7 @@ ComponentChecks.Run(Assert);
 OwnedLineFormatChecks.Run(Assert);
 RepairProgressChecks.Run(Assert);
 DocumentTypeTextChecks.Run(Assert);
+DocumentTypeCatalogChecks.Run(Assert);
 OutlineChecks.Run(Assert);
 HeadingPostSaveChecks.Run(Assert);
 CheckpointCleanupChecks.Run(Assert);

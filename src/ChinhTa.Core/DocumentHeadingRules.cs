@@ -9,11 +9,11 @@ public static class DocumentHeadingRules
     private static string Clean(string text)=>text.TrimEnd('\r','\a','\n');
     private static bool BodyMarker(string text)=>Regex.IsMatch(text.TrimStart(),
         @"^(?:Kính gửi|Căn cứ|Nơi nhận|Điều\s+[0-9]|Chương\s+[IVXLCDM0-9]+(?:[ .:]|$)|[IVXLCDM0-9]+[.)])",RegexOptions.IgnoreCase|RegexOptions.CultureInvariant);
-    private static Issue Manual(Paragraph p,string message,string? title=null)
+    private static Issue Manual(Paragraph p,string message,string? title=null,string? citation=null)
     {
         string text=Clean(p.Text);
         return new(p.Start,text.Length,text,text,message,false,FixKind.DocumentHeadingFormat,CanFix:false,
-            Citation:Citation,Title:title??"Kiểm tra tên loại/trích yếu");
+            Citation:citation??Citation,Title:title??"Kiểm tra tên loại/trích yếu");
     }
     public static IReadOnlyList<Issue> Check(IReadOnlyList<Paragraph> paragraphs,IReadOnlyList<LayoutParagraph> layout,DocumentProfile profile)
     {
@@ -27,21 +27,23 @@ public static class DocumentHeadingRules
         var types=first.Where(p=>!p.InTable && p.Start>headerEnd && ShapeLineRules.IsDocumentType(p.Text)).ToArray();
         if(types.Length==0)return [];
         var type=types[0];
+        string citation=DocumentTypeCatalog.WithSource(Citation,DocumentTypeCatalog.IsUserHeading(type.Text));
+        Issue Notice(Paragraph row,string message,string? label=null)=>Manual(row,message,label,citation);
         // A quoted/body heading after ordinary prose is not the front document title.
         if(first.Any(p=>p.Start>headerEnd && p.Start<type.Start && !p.InTable && !string.IsNullOrWhiteSpace(Clean(p.Text)) &&
             !AdministrativeHeaderRules.IsCandidate(p.Text)))return [];
         var targets=ShapeLineRules.Identify(layout,profile).Where(t=>t.Role==LineRole.Subject && t.RegionStart==type.Start).ToArray();
         var sourceType=layout.Where(p=>p.Start==type.Start && Clean(p.Text)==Clean(type.Text)).ToArray();
         if(types.Length!=1 || targets.Length!=1 || sourceType.Length!=1 || !(sourceType[0].UnindentedCenter??sourceType[0].Centered))
-            return [Manual(type,"Chưa xác định chắc khối tên loại/trích yếu hoặc chưa xác minh căn giữa không thụt lề. Giữ thủ công.")];
+            return [Notice(type,"Chưa xác định chắc khối tên loại/trích yếu hoặc chưa xác minh căn giữa không thụt lề. Giữ thủ công.")];
         var subject=layout.Where(p=>p.Page==1 && p.Start>type.Start && p.Start<=targets[0].Start).ToArray();
         var following=layout.Where(p=>p.Page==1 && p.Start>targets[0].Start && !string.IsNullOrWhiteSpace(Clean(p.Text))).FirstOrDefault();
         if(subject.Length<1 || subject.Any(p=>p.InTable || !(p.UnindentedCenter??p.Centered) || string.IsNullOrWhiteSpace(Clean(p.Text)) || BodyMarker(p.Text)) ||
             following is null || following.InTable || (following.ParagraphCentered??following.Centered) && !BodyMarker(following.Text))
-            return [Manual(type,"Chưa phân định chắc trích yếu với nội dung trong vùng đã nhận diện. Giữ thủ công; không tự định dạng nội dung.")];
+            return [Notice(type,"Chưa phân định chắc trích yếu với nội dung trong vùng đã nhận diện. Giữ thủ công; không tự định dạng nội dung.")];
         var rows=sourceType.Concat(subject).ToArray();
         if(rows.Any(row=>first.Count(p=>p.Start==row.Start && Clean(p.Text)==Clean(row.Text))!=1))
-            return [Manual(type,"Mốc chữ/range của tên loại hoặc trích yếu chưa khớp đủ; cần quét lại, không tự sửa.")];
+            return [Notice(type,"Mốc chữ/range của tên loại hoặc trích yếu chưa khớp đủ; cần quét lại, không tự sửa.")];
         var result=new List<Issue>();
         foreach(var row in rows)
         {
@@ -49,16 +51,16 @@ public static class DocumentHeadingRules
             bool isTitle=p.Start==type.Start;string text=Clean(p.Text),label=isTitle?"tên loại":"trích yếu";
             if(!p.FormatObserved || !(p.TextEditable || p.FormatEditable) || text.IndexOfAny(['\t','\f','\r','\n','\a'])>=0 || p.FormatMixed || p.BoldMixed)
             {
-                result.Add(Manual(p,"Chưa xác minh đủ chữ thuần/định dạng đồng nhất của "+label+". Có thể có trường, đối tượng nhúng hoặc kiểu chữ trộn; giữ thủ công.","Kiểm tra định dạng "+label));
+                result.Add(Notice(p,"Chưa xác minh đủ chữ thuần/định dạng đồng nhất của "+label+". Có thể có trường, đối tượng nhúng hoặc kiểu chữ trộn; giữ thủ công.","Kiểm tra định dạng "+label));
                 continue;
             }
             if(!float.IsFinite(p.Size) || p.Size<=0 || p.Size>1638 || string.IsNullOrWhiteSpace(p.Font))
-            {result.Add(Manual(p,"Chưa đọc được định dạng hợp lệ; giữ thủ công.","Kiểm tra định dạng "+label));continue;}
+            {result.Add(Notice(p,"Chưa đọc được định dạng hợp lệ; giữ thủ công.","Kiểm tra định dạng "+label));continue;}
             if(!p.Font.Equals("Times New Roman",StringComparison.OrdinalIgnoreCase) || p.Size<13 || p.Size>14 || p.Italic || !p.Bold || p.Color is not (0 or -16777216))
             {
                 float size=p.Size>=13 && p.Size<=14?p.Size:13;
                 result.Add(new(p.Start,text.Length,text,text,"Times New Roman, màu đen, cỡ 13–14, chữ đứng, đậm; giữ cỡ hợp lệ, nguyên văn, gạch chân và căn đoạn. Vị trí/nét kẻ kiểm riêng.",
-                    false,FixKind.DocumentHeadingFormat,Citation:Citation,Title:"Định dạng "+label,CharacterFormat:new(size,false,true)));
+                    false,FixKind.DocumentHeadingFormat,Citation:citation,Title:"Định dạng "+label,CharacterFormat:new(size,false,true)));
             }
             if(isTitle && text!=text.ToUpperInvariant())
             {
@@ -66,11 +68,11 @@ public static class DocumentHeadingRules
                 if(p.TextEditable && name==name.Trim() && ShapeLineRules.IsDocumentType(name) && name.ToUpperInvariant().Length==name.Length)
                     result.Add(new(p.Start+offset,name.Length,name,name.ToUpperInvariant(),
                         "Tên loại văn bản được trình bày bằng chữ in hoa; chỉ đổi hoa/thường của tên đã nhận diện, giữ trích yếu, khoảng trắng ngoài tên, phông và căn đoạn.",
-                        false,FixKind.DocumentTypeText,Citation:Citation,Title:"Tên loại văn bản chưa viết hoa"));
-                else result.Add(Manual(p,"Tên loại cần viết hoa nhưng chưa đủ bằng chứng để thay chữ an toàn; duyệt thủ công.","Kiểm tra cách viết tên loại"));
+                        false,FixKind.DocumentTypeText,Citation:citation,Title:"Tên loại văn bản chưa viết hoa"));
+                else result.Add(Notice(p,"Tên loại cần viết hoa nhưng chưa đủ bằng chứng để thay chữ an toàn; duyệt thủ công.","Kiểm tra cách viết tên loại"));
             }
             if(!isTitle && text.Any(char.IsLetter) && text==text.ToUpperInvariant())
-                result.Add(Manual(p,"Trích yếu đang toàn chữ hoa; cần duyệt cách viết, giữ tên riêng/mã viết tắt, chưa tự đổi chữ.","Kiểm tra cách viết trích yếu"));
+                result.Add(Notice(p,"Trích yếu đang toàn chữ hoa; cần duyệt cách viết, giữ tên riêng/mã viết tắt, chưa tự đổi chữ.","Kiểm tra cách viết trích yếu"));
         }
         return result;
     }

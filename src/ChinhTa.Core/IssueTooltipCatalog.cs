@@ -22,7 +22,7 @@ public static class IssueTooltipCatalog
         string title when title.Contains("trích yếu",StringComparison.Ordinal)=>LineRole.Subject,
         _=>null
     });
-    public static IssueTooltipInfo Describe(Issue issue)=>new(IssueReviewCatalog.Describe(issue).Label,Basis(issue),Action(issue));
+    public static IssueTooltipInfo Describe(Issue issue)=>new(IssueReviewCatalog.Describe(issue).Label,Basis(issue)+(issue.Citation?.Contains(DocumentTypeCatalog.UserNote,StringComparison.Ordinal)==true?" BCĐX là bổ sung theo yêu cầu người dùng.":""),Action(issue));
     private static string Basis(Issue issue)
     {
         if(issue.Kind==FixKind.OutlineOrder)
