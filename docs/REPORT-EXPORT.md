@@ -8,4 +8,6 @@ Bấm **Xuất báo cáo TXT…**, chọn thư mục/tên `.txt`. Tệp đọc �
 
 Gói Windows kèm `build-checks.json` để báo đúng số kiểm thử đã đạt của đúng phiên bản, cùng báo cáo TXT mẫu tạo ở CI. Giữ các tệp đi kèm khi giải nén. Nếu thiếu hoặc sai dữ liệu kiểm thử, báo cáo vẫn xem/xuất được nhưng ghi rõ chưa có thông tin phù hợp; không tự suy PASS. Đây là thông tin kiểm thử tự động đi kèm gói, không thay xác nhận Word/Office 2021 hoặc kết quả kiểm tài liệu thực.
 
-Thứ tự tiếp theo: hoàn thiện thể thức/độ ổn định; lỗi chữ và lặp cơ bản; ngữ cảnh/thư viện sau cùng. Các chức năng mới phải có mẫu và kiểm thử trước khi ghi vào danh mục. [Danh sách lỗi chi tiết hiện có](SUPPORTED-FIXES-0.1.40.md) và [kịch bản Windows/Office](WINDOWS-VALIDATION.md).
+Thứ tự tiếp theo: hoàn thiện thể thức/độ ổn định; lỗi chữ và lặp cơ bản; ngữ cảnh/thư viện sau cùng. Các chức năng mới phải có mẫu và kiểm thử trước khi ghi vào danh mục. [Danh sách lỗi chi tiết hiện có](SUPPORTED-FIXES-0.1.42.md) và [kịch bản Windows/Office](WINDOWS-VALIDATION.md).
+
+Từ .42 danh mục có 14 nhóm đề xuất sửa (thêm C14 về khoảng trắng quanh dấu phẩy/chấm phẩy), 8 nhóm thủ công và 1 minh họa. Đọc điều kiện của từng nhóm; không coi tổng nhóm là số lỗi trong văn bản.

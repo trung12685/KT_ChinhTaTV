@@ -613,6 +613,48 @@ public static class OfficeIntegrationCheck
             if(test.ReadCheckText()!=beforeReport || test.Check().Count(i=>i.Kind==FixKind.RepeatedText && i.CanFix)!=2)
                 throw new InvalidOperationException("Xuất báo cáo đã thêm hoặc làm mất lượt Undo chữ trước đó");
             Pass(stage);
+            stage="Dấu phẩy/chấm phẩy: nhận diện riêng và sửa nhóm với khoảng trắng/cụm lặp";
+            string punctuationSource=CreatePunctuationSample(positionSource,folder);
+            byte[] punctuationDigest=SaveDigest(punctuationSource);test.Open(punctuationSource);
+            string punctuationOriginal=test.ReadCheckText();
+            var punctuationEdits=test.Check().Where(i=>i.CanFix && i.Kind is FixKind.PunctuationSpace or FixKind.RepeatedText or FixKind.Text).ToArray();
+            var punctuationOnly=punctuationEdits.Where(i=>i.Kind==FixKind.PunctuationSpace).OrderBy(i=>i.Start).ToArray();
+            if(punctuationOnly.Length!=2 || punctuationEdits.Length!=4)
+                throw new InvalidOperationException("Chưa tách đúng dấu câu, cụm lặp và khoảng trắng; không được chạm dòng số/địa chỉ");
+            var punctuationProbe=new Issue(punctuationOnly[0].Start-"Nội dung".Length,"Nội dung".Length,"Nội dung","Nội dung","",false);
+            var punctuationDecoration=test.ReadCheckDecorations(punctuationProbe);
+            if(punctuationDecoration.Bold!=-1 || punctuationDecoration.Underline!=1)
+                throw new InvalidOperationException("Mẫu chữ trước dấu câu chưa có kiểu riêng");
+            test.Fix(punctuationOnly[0]);
+            if(test.ReadCheckText()!=punctuationOriginal.Replace("Nội dung  ,  báo cáo","Nội dung, báo cáo",StringComparison.Ordinal) ||
+                test.Check().Count(i=>i.CanFix && i.Kind==FixKind.PunctuationSpace)!=1 || test.ReadCheckDecorations(punctuationProbe)!=punctuationDecoration)
+                throw new InvalidOperationException("Sửa riêng dấu câu làm đổi phần không chọn/kiểu hoặc chưa bỏ mục đã sửa");
+            test.Undo();if(test.ReadCheckText()!=punctuationOriginal)throw new InvalidOperationException("Undo dấu câu chưa về nguyên bản");
+            Pass(stage);
+            test.Open(punctuationSource);
+            stage="Lỗi sau sửa dấu câu đầu tiên: phục hồi toàn nhóm, không tạo Undo";
+            bool punctuationRollback=false;
+            try{test.FixTextFailureProbe(punctuationEdits,3);}
+            catch(InvalidOperationException error) when(error.InnerException is OfficeTextProbeException){punctuationRollback=true;}
+            if(!punctuationRollback || test.ReadCheckText()!=punctuationOriginal || test.Changed ||
+                test.Check().Count(i=>i.CanFix && i.Kind==FixKind.PunctuationSpace)!=2)
+                throw new InvalidOperationException("Rollback nhóm dấu câu chưa giữ nguyên cả nhóm");
+            test.Undo();if(test.ReadCheckText()!=punctuationOriginal)throw new InvalidOperationException("Lượt dấu câu lỗi đã tạo Undo");
+            Pass(stage);
+            stage="Sửa cả nhóm dấu câu/chữ: quét hết mục đã sửa, một Undo, lưu và mở lại";
+            string punctuationExpected=punctuationOriginal.Replace("Nội dung  ,  báo cáo;công tác công tác đã  xong.","Nội dung, báo cáo; công tác đã xong.",StringComparison.Ordinal);
+            test.FixMany(test.Check().Where(i=>i.CanFix && i.Kind is FixKind.PunctuationSpace or FixKind.RepeatedText or FixKind.Text));
+            if(test.ReadCheckText()!=punctuationExpected || test.Check().Any(i=>i.CanFix && i.Kind is FixKind.PunctuationSpace or FixKind.RepeatedText or FixKind.Text) ||
+                test.ReadCheckDecorations(punctuationProbe)!=punctuationDecoration)
+                throw new InvalidOperationException("Nhóm dấu câu chưa đúng chữ/kiểu hoặc còn cảnh báo đã sửa");
+            string punctuationSaved=Path.Combine(folder,"punctuation-fixed.docx");test.SaveCopy(punctuationSaved);test.Undo();
+            if(test.ReadCheckText()!=punctuationOriginal || test.Check().Count(i=>i.CanFix && i.Kind==FixKind.PunctuationSpace)!=2)
+                throw new InvalidOperationException("Một Undo chưa trả đủ nhóm dấu câu/chữ");
+            test.Open(punctuationSaved);
+            if(test.ReadCheckText()!=punctuationExpected || test.Check().Any(i=>i.CanFix && i.Kind is FixKind.PunctuationSpace or FixKind.RepeatedText or FixKind.Text) ||
+                test.ReadCheckDecorations(punctuationProbe)!=punctuationDecoration || !SaveDigest(punctuationSource).SequenceEqual(punctuationDigest))
+                throw new InvalidOperationException("Bản lưu dấu câu đổi chữ/kiểu hoặc nguồn mẫu thay đổi");
+            Pass(stage);
             File.AppendAllText(report,"RESULT PASS\nKiểm thao tác Word/Line, vị trí nét XPS, sửa riêng/nhóm số-ngày, lưu/mở và Hoàn tác trên mẫu giả; không xác nhận mọi tài liệu.\n");
             return new(true,stage,folder);
         }
@@ -668,6 +710,23 @@ public static class OfficeIntegrationCheck
             other.Element(w+"rPr")!.Element(w+"b")!.SetAttributeValue(w+"val",1);run.AddAfterSelf(other);
         }
         entry.Delete();using(var stream=zip.CreateEntry("word/document.xml").Open())xml.Save(stream);return path;
+    }
+    private static string CreatePunctuationSample(string source,string folder)
+    {
+        string path=Path.Combine(folder,"punctuation-input.docx");File.Copy(source,path);
+        using var zip=ZipFile.Open(path,ZipArchiveMode.Update);var entry=zip.GetEntry("word/document.xml")!;
+        XDocument xml;using(var input=entry.Open())xml=XDocument.Load(input,LoadOptions.PreserveWhitespace);
+        XNamespace w="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+        XElement Run(string text,bool kept=false)=>new(w+"r",new XElement(w+"rPr",
+            new XElement(w+"rFonts",new XAttribute(w+"ascii","Times New Roman"),new XAttribute(w+"hAnsi","Times New Roman")),
+            new XElement(w+"b",new XAttribute(w+"val",kept?1:0)),new XElement(w+"sz",new XAttribute(w+"val",26)),
+            new XElement(w+"u",new XAttribute(w+"val",kept?"single":"none"))),
+            new XElement(w+"t",new XAttribute(XNamespace.Xml+"space","preserve"),text));
+        var rows=new[]{new XElement(w+"p",Run("Nội dung",true),Run("  ,  báo cáo;công tác công tác đã  xong.")),
+            new XElement(w+"p",Run("Giá trị 1,25; mã BC,AB; https://host/foo,bar; name,part@example.com."))};
+        var body=xml.Descendants(w+"body").Single();
+        foreach(var row in rows)if(body.Element(w+"sectPr") is XElement section)section.AddBeforeSelf(row);else body.Add(row);
+        entry.Delete();using(var output=zip.CreateEntry("word/document.xml").Open())xml.Save(output);return path;
     }
     private static string CreateRepeatedTextSample(string source,string folder)
     {

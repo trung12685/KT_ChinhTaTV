@@ -1,6 +1,6 @@
 > Cập nhật chốt bản 21/10/2026: 0.1.27 đạt 223 Core/OpenXML + 20 WPF trong CI Windows; người dùng xác nhận sửa cả ba đường cùng lúc chạy được trên Office 2021. Lưu/mở lại, một Undo và toàn bộ Office check của 0.1.27 chưa có xác nhận runtime riêng. Xem [biên bản](STATUS-0.1.27.md).
 >
-Để chọn từng nhóm lỗi khi kiểm tra, xem [Danh sách khả năng sửa 0.1.40](SUPPORTED-FIXES-0.1.40.md): C01–C13, các mục thủ công và bảng sửa riêng/nhóm/quét/Undo/lưu-mở. Danh sách mô tả chức năng đã lập trình, không phải xác nhận Office đã đạt.
+Để chọn từng nhóm lỗi khi kiểm tra, xem [Danh sách khả năng sửa 0.1.42](SUPPORTED-FIXES-0.1.42.md): C01–C14, các mục thủ công và bảng sửa riêng/nhóm/quét/Undo/lưu-mở. Danh sách mô tả chức năng đã lập trình, không phải xác nhận Office đã đạt.
 
 > Danh sách bên dưới là kịch bản kiểm tra tích lũy theo từng phiên bản, không phải bảng kết quả đã đạt.
 
@@ -134,3 +134,9 @@ Trên bản sao thực: thử cụm hai và ba lần, hai cụm độc lập, ch
 Ngay sau mở chương trình, chưa mở DOCX: Trợ giúp → Tiến độ và chức năng… phải có phiên bản, tổng nhóm 13/8/1, danh mục, mốc đã làm và bước tiếp theo; xuất TXT đọc đúng tiếng Việt. Nếu gói có build-checks.json đúng version, hiện số kiểm thử thực tế; thử bản sao thư mục thiếu file này phải báo chưa có thông tin, không tự ghi PASS. CI xác minh metadata trong thư mục publish và tạo báo cáo TXT mẫu.
 
 Khi đang sửa DOCX: mở/đóng/xuất báo cáo không làm quét lại, xóa danh sách/tích chọn, đổi chữ/Changed hoặc thêm Undo. Thử chọn đích đang khóa/không có quyền: chỉ báo lỗi trong cửa sổ báo cáo, đích cũ giữ nguyên; vẫn sửa/lưu/Undo tài liệu như trước. Report không phải thống kê lỗi đã sửa trong DOCX. Chạy toàn bộ Kiểm tra Word tự động; bài cuối kiểm xuất khi có dirty edit, checkpoint/hash và một Undo. Chưa có xác nhận runtime Office 2021 cho .41.
+
+## Bổ sung .42 — khoảng trắng quanh dấu phẩy/chấm phẩy (chưa xác nhận runtime)
+
+Chạy bài Word đầy đủ. Cuối bài có `punctuation-input.docx` và `punctuation-fixed.docx`: hai dấu câu, một cụm lặp, một khoảng trắng độc lập. Sửa riêng một dấu câu giữ các lỗi còn lại; lỗi cố ý sau lần sửa dấu câu đầu trong nhóm phải phục hồi toàn bộ, không tạo Undo. Sửa nhóm một lần phải quét hết mục đã sửa, giữ đậm/gạch chân chữ trước dấu câu, một Undo trả cả nhóm, lưu/mở đúng bản và hash nguồn không đổi. Đối chiếu dòng số/mã/địa chỉ không đổi. Thử thêm tab, NBSP, từ một chữ cái, trường cấu trúc và kế hoạch cũ; không cho sửa nếu không còn đủ điều kiện. Đọc giới hạn C14, không suy thành hỗ trợ mọi dấu câu.
+
+Trong Trợ giúp, báo cáo phải có C14 và mốc .42, đúng version và số kiểm CI đi kèm; xuất TXT phải giữ tài liệu, lựa chọn và Undo như .41. CI chỉ chứng minh Core/WPF/gói, chưa chứng minh Word/Office 2021.

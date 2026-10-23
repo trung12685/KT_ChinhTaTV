@@ -5,7 +5,7 @@ namespace ChinhTa.Core;
 public record Paragraph(int Start, string Text, bool Bold = false, float Size = 13,
     int Alignment = 1, string Font = "Times New Roman", bool Italic = false,
     int Color = 0, bool InTable = false, int Page = 1, bool FormatObserved = false, bool FormatMixed = false, bool TextEditable = true, bool BoldMixed = false);
-public enum FixKind { Text, NationalHeading, StateMotto, PartyHeading, Advisory, PageLayout, ShapeLine, AdministrativeNumber, AdministrativeDate, AdministrativeFormat, AdministrativePosition, DocumentHeadingFormat, RepeatedText }
+public enum FixKind { Text, NationalHeading, StateMotto, PartyHeading, Advisory, PageLayout, ShapeLine, AdministrativeNumber, AdministrativeDate, AdministrativeFormat, AdministrativePosition, DocumentHeadingFormat, RepeatedText, PunctuationSpace }
 public record HeadingFormat(float Size, int? Alignment = null)
 {
     public bool Matches(string font,float size,int bold,int italic,int color,int? alignment)=>
@@ -62,6 +62,12 @@ public static class Checker
                     char.IsUpper(word.Value[0]) ? "Đò" : "đò",
                     "Có thể là ‘con đò’. Đây là quy tắc minh họa, cần người dùng xác nhận.", false));
             }
+            var punctuation=PunctuationSpaceRules.Check(p);
+            // A punctuation span owns its adjacent spaces; do not offer an overlapping
+            // generic spacing write for the same characters in a multi-selection.
+            textIssues.RemoveAll(candidate=>punctuation.Any(r=>r.CanFix &&
+                candidate.Start<(long)r.Start+r.Length && (long)candidate.Start+candidate.Length>r.Start));
+            textIssues.AddRange(punctuation);
             var repetitions=RepeatedTextRules.Check(p);
             // One deletion may contain old spacing/demo candidates. Do not propose
             // overlapping writes; independently editable text in the retained copy stays.
