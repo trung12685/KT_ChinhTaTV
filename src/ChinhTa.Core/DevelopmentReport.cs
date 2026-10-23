@@ -55,6 +55,8 @@ public static class DevelopmentReport
             "Tạo Line thiếu hoặc đặt lại Line của ứng dụng. Đường cơ quan/trích yếu chấp nhận 1/3–1/2 dòng tham chiếu, tự tạo 3/7; tiêu ngữ theo bề rộng chữ. Kiểm nét XPS thật, không chỉ đếm Shape."),
         new("C13","Từ/cụm từ lặp liên tiếp",CapabilityMode.Reviewable,"Cùng đoạn, dấu cách thường, đúng chữ hoa/thường",
             "Cụm 2–8 tiếng: đề xuất xóa bản lặp, giữ lần đầu sau khi duyệt. Một tiếng như đều đều/nhà nhà, toàn chữ hoa hoặc dòng số/ngày giữ thủ công. Chưa suy nghĩa câu."),
+        new("C14","Khoảng trắng quanh dấu phẩy/chấm phẩy",CapabilityMode.Reviewable,"Giữa hai từ có ít nhất hai chữ cái, dấu cách thường",
+            "Đề xuất bỏ khoảng trắng trước và giữ một khoảng trắng sau dấu phẩy/chấm phẩy. Cần duyệt; bỏ qua dòng số/ngày, tab và dấu hiệu địa chỉ/đường dẫn/mã. Chưa mở rộng sang mọi dấu câu."),
         new("M01","Khổ giấy và lề",CapabilityMode.Manual,"Nhà nước/Đảng",
             "Cảnh báo A4/lề, trang ngang/lề đối xứng và ngoại lệ; chưa tự đổi thiết lập trang."),
         new("M02","Khác hàng hoặc vị trí dọc số/ngày",CapabilityMode.Manual,"Khi đo được mốc XPS",
@@ -83,7 +85,8 @@ public static class DevelopmentReport
         new("0.1.36–0.1.38","Định dạng tên loại/trích yếu; chặn sửa vòng vùng cấu trúc; kiểm lại phông và căn đoạn tiêu đề sau lưu."),
         new("0.1.39","Tách lỗi dọn backup khỏi kết quả checkpoint/Hoàn tác, giữ nguyên nguyên nhân lỗi thực."),
         new("0.1.40","Phát hiện lặp cơ học, đề xuất xóa phần lặp có duyệt, giữ kiểu lần đầu; từ láy/mã/header chưa rõ giữ thủ công."),
-        new("0.1.41","Thêm xem/xuất báo cáo tiến độ, danh mục loại lỗi, kết quả kiểm thử đi kèm gói và việc tiếp theo, không cần mở Word.")
+        new("0.1.41","Thêm xem/xuất báo cáo tiến độ, danh mục loại lỗi, kết quả kiểm thử đi kèm gói và việc tiếp theo, không cần mở Word."),
+        new("0.1.42","Thêm gợi ý khoảng trắng quanh dấu phẩy/chấm phẩy có giới hạn, gộp vùng khoảng trắng để sửa nhóm không chồng lấn; cập nhật danh mục và mẫu kiểm.")
     });
     public static IReadOnlyList<string> NextSteps { get; }=Array.AsReadOnly(new[]
     {

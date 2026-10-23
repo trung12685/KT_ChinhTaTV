@@ -10,7 +10,7 @@
 
 Mốc đã chốt: [0.1.27](STATUS-0.1.27.md), mã gói `1ec3092ccd68ed0acd8878b2737664116a6b11fe`, tag `v0.1.27`. Đọc biên bản này trước để phân biệt bằng chứng CI, xác nhận người dùng và kịch bản còn chờ. Phát triển từ `main` sau khi chốt, tạo nhánh mới; không tiếp tục phát hành vào tag hoặc ghi đè ZIP 0.1.27.
 
-Nhánh đang phát triển: `feature/progress-report-0.1.41`, từ 0.1.40 (`366b53b29d02c1c14dd2dd5fa0db2593089918a0`). Chuỗi bản thử dựa trên main đã chốt `da6cf3b0999dbfb60d16ab1eae9733b0f1f20c81`. Đọc các CHANGES và [phạm vi 0.1.41](CHANGES-0.1.41.md). Chưa nhập main hoặc coi CI là bằng chứng Office 2021.
+Nhánh đang phát triển: `feature/punctuation-spacing-0.1.42`, từ 0.1.41 (`d21be190f56e101201ae057f809e9e223b80b9c1`). Chuỗi bản thử dựa trên main đã chốt `da6cf3b0999dbfb60d16ab1eae9733b0f1f20c81`. Đọc các CHANGES và [phạm vi 0.1.42](CHANGES-0.1.42.md). Chưa nhập main hoặc coi CI là bằng chứng Office 2021.
 
 ## Bản đồ mã nguồn
 
@@ -75,7 +75,7 @@ Tài liệu riêng chỉ dùng cục bộ theo đường dẫn tùy chọn của
 dotnet publish src/ChinhTa.Desktop -c Release -r win-x64 --self-contained true -o artifacts/win-x64
 ```
 
-Kèm thư mục `samples`, ghi chú phiên bản, ZIP và SHA-256. Chạy kiểm thử trước khi phát hành. Khi tạo bản mới, cập nhật version trong csproj, tiêu đề UI, tên gói/tag, ghi chú và workflow Windows; không phát hành lại vào tag cũ. Workflow `windows-package.yml` gắn `feature/progress-report-0.1.41` và phát hành prerelease 0.1.41 sau kiểm thử. Mỗi phiên bản sau phải đổi nhánh/version và không ghi đè tag đã phát hành. Workflow `finalize-0.1.27.yml` chỉ chốt metadata của bản đã thử, có kiểm tag, digest, CI và thay đổi chỉ thuộc tài liệu/workflow được cho phép; không build hoặc thay asset.
+Kèm thư mục `samples`, ghi chú phiên bản, ZIP và SHA-256. Chạy kiểm thử trước khi phát hành. Khi tạo bản mới, cập nhật version trong csproj, tiêu đề UI, tên gói/tag, ghi chú và workflow Windows; không phát hành lại vào tag cũ. Workflow `windows-package.yml` gắn `feature/punctuation-spacing-0.1.42` và phát hành prerelease 0.1.42 sau kiểm thử. Mỗi phiên bản sau phải đổi nhánh/version và không ghi đè tag đã phát hành. Workflow `finalize-0.1.27.yml` chỉ chốt metadata của bản đã thử, có kiểm tag, digest, CI và thay đổi chỉ thuộc tài liệu/workflow được cho phép; không build hoặc thay asset.
 
 Khi nhận lỗi, lấy log đúng version và phân biệt lỗi đọc Word, ghép XML, CP/mốc, marker, candidate, nét XPS hay rollback. Các mã `Word.Preview.CpMapping`, `Word.Preview.Unmapped`, `Word.LineBatch.ReferenceBinding.*`, `Word.LineBatch.StoryBinding`, `Word.LineBatch.Rescan` ghi số liệu mà không ghi chữ tài liệu. Không kết luận nguyên nhân chỉ từ ngoại lệ tổng quát hoặc một điều kiện guard gộp.
 
@@ -231,3 +231,11 @@ Core kiểm ranh giới, Unicode, hai nhóm, 8 tiếng, từ láy/mã/header, ov
 `ProgressReportWindow` chỉ đọc và cho xuất TXT bằng delegate. Không dùng MainWindow.Run cho việc xuất báo cáo vì handler lỗi đó xóa choices/anchors của tài liệu. Report tự xử lý lỗi I/O, không gọi Scan/Word. WordSession.SaveProgressReport tạo nguồn UTF8-BOM riêng trong thư mục phiên, gọi VerifiedSaveCopy với toàn bộ Source/Recovery/Undo bảo vệ, không Checkpoint hay đổi Changed/Undo; cleanup nguồn riêng bắt I/O/quyền và log độc lập để không biến xuất thành công thành lỗi dọn. Đuôi TXT bắt buộc; alias/hardlink vẫn bị guard theo danh tính, không chỉ nhìn đuôi.
 
 Core kiểm số nhóm và scope, evidence stale/malformed/negative/wrong URL, thứ tự roadmap và report không giả định Office PASS. WPF kiểm UI chỉ đọc, export trước mở Word, encoding/replace/locked target/hardlink/đuôi, giữ trạng thái/no Undo/stage. Office check khi có dirty edit kiểm không đổi story/Changed/checkpoint/nguồn và một Undo vẫn về đúng bản; chưa chạy Office 2021 trong môi trường CI. Không sửa quy tắc chữ/lặp/Line ở bản này. Hướng dẫn người dùng: REPORT-EXPORT.md.
+
+## Ghi chú triển khai 0.1.42
+
+`PunctuationSpaceRules` duyệt dấu phẩy/chấm phẩy, gom ASCII space sát hai bên, xác minh hai từ có ≥2 chữ cái (hỗ trợ combining mark), ranh giới và ngoại lệ kỹ thuật/header/toàn hoa. Span có độ dài dương, chỉ gồm dấu câu + space; không cần cho phép insertion rỗng trong BatchPlan. Cố ý bỏ sót ngoài phạm vi, không dùng từ điển hay suy nghĩa. TextEditable=false trả manual cả đoạn; Checker vẫn áp gate cũ. Đối chiếu XML sâu chưa mở rộng.
+
+Checker nhường generic spacing chồng span cho C14, sau đó vẫn nhường span chứa trong deletion cụm lặp như cũ. BatchPlan cho punctuation chia sẻ CharacterFormat bao cả span. Không thay CurrentTextPlan/Word CP mapping, giao dịch, hậu kiểm story/phông, Undo hoặc nhánh Line. Office fixture dùng chữ trước dấu câu có đậm/gạch chân riêng; lỗi cố ý sau text edit thứ ba (dấu câu đầu trong thứ tự từ cuối) kiểm rollback nhóm hỗn hợp. Sau Undo sửa riêng, mở lại nguồn mẫu để baseline Changed=false trước fault probe.
+
+Cập nhật catalog C14/milestone, guide và báo cáo mẫu từ renderer/gói thực; workflow lấy số kiểm từ log đã đạt, không dự đoán trước. Chưa có xác nhận Word/Office 2021 cho .42; không merge main hoặc thay stable.
