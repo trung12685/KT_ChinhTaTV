@@ -79,7 +79,7 @@ public static class IssueReviewPanelChecks
             OpenTooltip(hover,Visuals<FrameworkElement>(row).Single(e=>ReferenceEquals(e.ToolTip,hover)));
             assert(((TextBlock)hover.Content).Text==selected.Tooltip && ((TextBlock)hover.Content).Text.Split('\n').Length==3 &&
                 !((TextBlock)hover.Content).Text.Contains(space.Message),
-                "The actual WPF hover binds the three concise blocks instead of the long selected detail");
+                "The actual WPF hover binds the three concise blocks instead of the long selected detail: "+((TextBlock)hover.Content).Text);
             hover.IsOpen=false;
             model.Groups.Single(g=>g.Items.Contains(selected)).IsChecked=true;
             assert(model.All.SelectedCount==2 && model.All.IsChecked is null,"A family checkbox uses the same real row choices");

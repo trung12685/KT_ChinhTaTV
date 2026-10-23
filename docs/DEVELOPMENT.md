@@ -308,7 +308,7 @@ CurrentTextPlan quét lại toàn ngữ cảnh trước checkpoint, nên thêm s
 ## Ghi chú triển khai 0.1.52
 
 - `IssueTooltipCatalog` chỉ tạo bản tóm tắt trình bày ba phần. Các nguồn đã biết có nội dung quy định theo `FORMAT-RULES.md` và ảnh PDF nguồn đã đối chiếu. Không suy khoản/điều không có trong phụ lục, không gọi NĐ30 là Thông tư. Nguồn chưa ánh xạ giữ tham chiếu và nhắc đối chiếu, không bịa nội dung.
-- `IssueChoice.Tooltip` tách khỏi `Detail`; template WPF bind tooltip ngắn, expander giữ toàn bộ mô tả/ngữ cảnh/số đo/căn cứ. Phân nhóm, CanFix, payload, chọn và giao dịch giữ nguyên.
+- `IssueChoice.Tooltip` tách khỏi `Detail`; template WPF bind tooltip ngắn qua PlacementTarget.DataContext (Popup có cây hiển thị riêng), expander giữ toàn bộ mô tả/ngữ cảnh/số đo/căn cứ. Phân nhóm, CanFix, payload, chọn và giao dịch giữ nguyên.
 - Mức Line 3/7 thuộc cấu hình (mặc định), dung sai/gap không đưa thành quy định pháp luật. Chiều dài tooltip lấy từ LineFix hiện tại, không tính lại hoặc ghi vào tài liệu.
 - Bộ kiểm tóm tắt kiểm nguồn/điểm/nội dung/đối tượng/cỡ chữ thực, các mục thủ công và nguồn chưa rõ. WPF mở tooltip thật, kiểm binding ba phần và xuất `issue-tooltip-preview.png` bằng dữ liệu giả; không lấy tài liệu riêng để làm ảnh.
 - Không thêm loại lỗi mới: 21 đề xuất, 8 thủ công, 1 minh họa. Chưa xác nhận runtime Office 2021 cho bản này. Main/tag/gói stable .27 giữ nguyên.
