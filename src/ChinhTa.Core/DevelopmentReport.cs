@@ -79,6 +79,9 @@ public static class DevelopmentReport
         new("C16","Khoảng trắng trước dấu kết câu cuối đoạn",CapabilityMode.Reviewable,"Một dấu .?! cuối đoạn, từ cuối ≥2 chữ cái thường và có từ trước",
             "Đề xuất xóa dấu cách ASCII trước dấu kết câu; giữ chữ, dấu câu, khoảng trắng sau. Bỏ qua số/ký hiệu, dấu hiệu kỹ thuật/header/ngày, chuỗi dấu và ranh giới chưa rõ. Cần duyệt; chưa kiểm dấu giữa câu hoặc tự thêm dấu/khoảng sau.",
             new ReportExample("Đã hoàn thành .","Đã hoàn thành.")),
+        new("C17","Khoảng trắng trước dấu hai chấm",CapabilityMode.Reviewable,"Hai từ kề nhau bên trái; từ cuối chữ thường; bên phải đã có dấu cách và từ rõ",
+            "Đề xuất xóa dấu cách ASCII trước dấu hai chấm; giữ chữ, dấu câu và khoảng sau. Bỏ qua số/giờ/tỉ lệ số hoặc La Mã, dấu hiệu kỹ thuật/header/ngày và mẫu chưa rõ. Cần duyệt; chưa thêm khoảng sau hay sửa mọi dấu hai chấm.",
+            new ReportExample("Ghi chú : nội dung","Ghi chú: nội dung")),
         new("M01","Khổ giấy và lề",CapabilityMode.Manual,"Nhà nước/Đảng",
             "Cảnh báo A4/lề, trang ngang/lề đối xứng và ngoại lệ; chưa tự đổi thiết lập trang.",
             new ReportExample("Văn bản Nhà nước trên A4 có lề trái 20 mm.","Cảnh báo đối chiếu quy định và ngoại lệ; chưa tự đổi khổ giấy/lề.")),
@@ -120,7 +123,8 @@ public static class DevelopmentReport
         new("0.1.42","Thêm gợi ý khoảng trắng quanh dấu phẩy/chấm phẩy có giới hạn, gộp vùng khoảng trắng để sửa nhóm không chồng lấn; cập nhật danh mục và mẫu kiểm."),
         new("0.1.43","Thêm khoảng trắng sát trong ngoặc tròn có điều kiện; giữ đề xuất dấu phẩy/chấm phẩy khi sửa ngoặc, kiểm nhóm/rollback và cập nhật báo cáo."),
         new("0.1.44","Thêm gợi ý khoảng trắng trước dấu kết câu cuối đoạn có điều kiện; sửa nhóm cùng ngoặc/dấu phẩy/cụm lặp, rollback và cập nhật báo cáo."),
-        new("0.1.45","Bổ sung ví dụ lỗi và kết quả/hướng xử lý cho từng nhóm đã hỗ trợ, chỉ cảnh báo, minh họa và các việc dự kiến trong báo cáo xem/xuất TXT.")
+        new("0.1.45","Bổ sung ví dụ lỗi và kết quả/hướng xử lý cho từng nhóm đã hỗ trợ, chỉ cảnh báo, minh họa và các việc dự kiến trong báo cáo xem/xuất TXT."),
+        new("0.1.46","Thêm gợi ý khoảng trắng trước dấu hai chấm trong nhãn/câu chữ đủ điều kiện, kiểm sửa nhóm/rollback và cập nhật ví dụ C17 trong báo cáo.")
     });
     public static IReadOnlyList<string> NextSteps { get; }=Array.AsReadOnly(new[]
     {

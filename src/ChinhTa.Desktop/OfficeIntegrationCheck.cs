@@ -750,6 +750,55 @@ public static class OfficeIntegrationCheck
                 test.ReadCheckDecorations(sentenceEndAfterProbe)!=sentenceEndDecoration || !SaveDigest(sentenceEndSource).SequenceEqual(sentenceEndDigest))
                 throw new InvalidOperationException("Bản lưu dấu kết câu chưa đúng chữ/kiểu hoặc nguồn mẫu thay đổi");
             Pass(stage);
+            stage="Dấu hai chấm: sửa riêng, giữ kiểu và khoảng trắng chưa chọn";
+            string colonSource=CreateColonSample(positionSource,folder);
+            byte[] colonDigest=SaveDigest(colonSource);test.Open(colonSource);
+            string colonOriginal=test.ReadCheckText();
+            var colonEdits=test.Check().Where(i=>i.CanFix && i.Kind is FixKind.ColonSpace or FixKind.SentenceEndSpace or FixKind.ParenthesisSpace or FixKind.PunctuationSpace or FixKind.RepeatedText or FixKind.Text).ToArray();
+            var colonOnly=colonEdits.Where(i=>i.Kind==FixKind.ColonSpace).OrderBy(i=>i.Start).ToArray();
+            if(colonOnly.Length!=2 || colonEdits.Length!=9)
+                throw new InvalidOperationException("Chưa phân biệt đúng hai dấu hai chấm và bảy lỗi độc lập hoặc mẫu giờ/tỉ lệ/đường dẫn bị sửa");
+            var colonOpen=colonEdits.Where(i=>i.Kind==FixKind.ParenthesisSpace).OrderBy(i=>i.Start).First();
+            var colonProbe=new Issue(colonOpen.Start+colonOpen.Length,"kế hoạch".Length,"kế hoạch","kế hoạch","",false);
+            var colonDecoration=test.ReadCheckDecorations(colonProbe);
+            if(colonDecoration.Bold!=-1 || colonDecoration.Underline!=1)
+                throw new InvalidOperationException("Mẫu chữ giữ lại chưa có kiểu riêng");
+            test.Fix(colonOnly[0]);
+            if(test.ReadCheckText()!=colonOriginal.Replace("Ghi chú  :  nội dung","Ghi chú:  nội dung",StringComparison.Ordinal) ||
+                test.Check().Count(i=>i.CanFix && i.Kind==FixKind.ColonSpace)!=1 ||
+                test.ReadCheckDecorations(colonProbe with {Start=colonProbe.Start-colonOnly[0].Length})!=colonDecoration)
+                throw new InvalidOperationException("Sửa riêng hai chấm đổi chữ/kiểu hoặc làm mất khoảng trắng chưa chọn");
+            test.Undo();if(test.ReadCheckText()!=colonOriginal)throw new InvalidOperationException("Undo hai chấm chưa về nguyên bản");
+            Pass(stage);
+            test.Open(colonSource);
+            stage="Lỗi giữa nhóm hai chấm/chữ: rollback toàn bộ, không tạo Undo";
+            bool colonRollback=false;
+            try{test.FixTextFailureProbe(colonEdits,4);}
+            catch(InvalidOperationException error) when(error.InnerException is OfficeTextProbeException){colonRollback=true;}
+            if(!colonRollback || test.ReadCheckText()!=colonOriginal || test.Changed || test.ReadCheckDecorations(colonProbe)!=colonDecoration ||
+                test.Check().Count(i=>i.CanFix && i.Kind==FixKind.ColonSpace)!=2)
+                throw new InvalidOperationException("Rollback nhóm hai chấm chưa giữ nguyên chữ/kiểu");
+            test.Undo();if(test.ReadCheckText()!=colonOriginal)throw new InvalidOperationException("Nhóm hai chấm lỗi đã tạo Undo");
+            Pass(stage);
+            stage="Sửa nhóm hai chấm/chữ: quét, một Undo, lưu/mở và giữ nguồn";
+            string colonExpected=colonOriginal.Replace("Ghi chú  :  nội dung  ( kế hoạch kế hoạch ) đã duyệt;hoàn thành  .","Ghi chú: nội dung (kế hoạch) đã duyệt; hoàn thành.",StringComparison.Ordinal)
+                .Replace("Kính gửi : cơ quan.","Kính gửi: cơ quan.",StringComparison.Ordinal);
+            var colonFresh=test.Check().Where(i=>i.CanFix && i.Kind is FixKind.ColonSpace or FixKind.SentenceEndSpace or FixKind.ParenthesisSpace or FixKind.PunctuationSpace or FixKind.RepeatedText or FixKind.Text).ToArray();
+            int colonShift=colonFresh.Where(i=>(long)i.Start+i.Length<=colonProbe.Start).Sum(i=>i.Replacement.Length-i.Length);
+            var colonAfterProbe=colonProbe with {Start=colonProbe.Start+colonShift};
+            test.FixMany(colonFresh);
+            if(test.ReadCheckText()!=colonExpected || test.Check().Any(i=>i.CanFix && i.Kind is FixKind.ColonSpace or FixKind.SentenceEndSpace or FixKind.ParenthesisSpace or FixKind.PunctuationSpace or FixKind.RepeatedText or FixKind.Text) ||
+                test.ReadCheckDecorations(colonAfterProbe)!=colonDecoration)
+                throw new InvalidOperationException("Nhóm hai chấm chưa đúng chữ/kiểu hoặc còn mục đã sửa");
+            string colonSaved=Path.Combine(folder,"colon-fixed.docx");test.SaveCopy(colonSaved);test.Undo();
+            if(test.ReadCheckText()!=colonOriginal || test.ReadCheckDecorations(colonProbe)!=colonDecoration ||
+                test.Check().Count(i=>i.CanFix && i.Kind==FixKind.ColonSpace)!=2)
+                throw new InvalidOperationException("Một Undo chưa phục hồi toàn nhóm hai chấm");
+            test.Open(colonSaved);
+            if(test.ReadCheckText()!=colonExpected || test.Check().Any(i=>i.CanFix && i.Kind is FixKind.ColonSpace or FixKind.SentenceEndSpace or FixKind.ParenthesisSpace or FixKind.PunctuationSpace or FixKind.RepeatedText or FixKind.Text) ||
+                test.ReadCheckDecorations(colonAfterProbe)!=colonDecoration || !SaveDigest(colonSource).SequenceEqual(colonDigest))
+                throw new InvalidOperationException("Bản lưu hai chấm chưa đúng chữ/kiểu hoặc nguồn mẫu thay đổi");
+            Pass(stage);
             File.AppendAllText(report,"RESULT PASS\nKiểm thao tác Word/Line, vị trí nét XPS, sửa riêng/nhóm số-ngày, lưu/mở và Hoàn tác trên mẫu giả; không xác nhận mọi tài liệu.\n");
             return new(true,stage,folder);
         }
@@ -805,6 +854,25 @@ public static class OfficeIntegrationCheck
             other.Element(w+"rPr")!.Element(w+"b")!.SetAttributeValue(w+"val",1);run.AddAfterSelf(other);
         }
         entry.Delete();using(var stream=zip.CreateEntry("word/document.xml").Open())xml.Save(stream);return path;
+    }
+    private static string CreateColonSample(string source,string folder)
+    {
+        string path=Path.Combine(folder,"colon-input.docx");File.Copy(source,path);
+        using var zip=ZipFile.Open(path,ZipArchiveMode.Update);var entry=zip.GetEntry("word/document.xml")!;
+        XDocument xml;using(var input=entry.Open())xml=XDocument.Load(input,LoadOptions.PreserveWhitespace);
+        XNamespace w="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+        XElement Run(string text,bool kept=false)=>new(w+"r",new XElement(w+"rPr",
+            new XElement(w+"rFonts",new XAttribute(w+"ascii","Times New Roman"),new XAttribute(w+"hAnsi","Times New Roman")),
+            new XElement(w+"b",new XAttribute(w+"val",kept?1:0)),new XElement(w+"sz",new XAttribute(w+"val",26)),
+            new XElement(w+"u",new XAttribute(w+"val",kept?"single":"none"))),
+            new XElement(w+"t",new XAttribute(XNamespace.Xml+"space","preserve"),text));
+        var rows=new[]{new XElement(w+"p",Run("Ghi chú  :  nội dung  ( "),Run("kế hoạch",true),Run(" kế hoạch ) đã duyệt;hoàn thành  .")),
+            new XElement(w+"p",Run("Kính gửi : cơ quan.")),new XElement(w+"p",Run("Giờ mở cửa 12 : 30.")),
+            new XElement(w+"p",Run("Tỉ lệ 1 : 2.")),new XElement(w+"p",Run("Truy cập http : host.")),
+            new XElement(w+"p",Run("Số:    /BC-ABC")),new XElement(w+"p",Run("Địa chỉ https://host/a và name@example.com."))};
+        var body=xml.Descendants(w+"body").Single();
+        foreach(var row in rows)if(body.Element(w+"sectPr") is XElement section)section.AddBeforeSelf(row);else body.Add(row);
+        entry.Delete();using(var output=zip.CreateEntry("word/document.xml").Open())xml.Save(output);return path;
     }
     private static string CreateSentenceEndSample(string source,string folder)
     {

@@ -1,6 +1,6 @@
 > Cập nhật chốt bản 21/10/2026: 0.1.27 đạt 223 Core/OpenXML + 20 WPF trong CI Windows; người dùng xác nhận sửa cả ba đường cùng lúc chạy được trên Office 2021. Lưu/mở lại, một Undo và toàn bộ Office check của 0.1.27 chưa có xác nhận runtime riêng. Xem [biên bản](STATUS-0.1.27.md).
 >
-Để chọn từng nhóm lỗi khi kiểm tra, xem [Danh sách khả năng sửa 0.1.44](SUPPORTED-FIXES-0.1.44.md): C01–C16, các mục thủ công và bảng sửa riêng/nhóm/quét/Undo/lưu-mở. Danh sách mô tả chức năng đã lập trình, không phải xác nhận Office đã đạt.
+Để chọn từng nhóm lỗi khi kiểm tra, xem [Danh sách khả năng sửa 0.1.46](SUPPORTED-FIXES-0.1.46.md): C01–C17, các mục thủ công và bảng sửa riêng/nhóm/quét/Undo/lưu-mở. Danh sách mô tả chức năng đã lập trình, không phải xác nhận Office đã đạt.
 
 > Danh sách bên dưới là kịch bản kiểm tra tích lũy theo từng phiên bản, không phải bảng kết quả đã đạt.
 
@@ -158,3 +158,9 @@ Thử Unicode tổ hợp/surrogate trước lỗi, khoảng trắng cuối và d
 Mở Trợ giúp → Tiến độ và chức năng… khi chưa mở Word: kiểm đủ ví dụ C01–C16/M01–M08/D01 và P01–P05 dự kiến, có kết quả/hướng xử lý và trạng thái chưa triển khai. C01 phải giữ 7 dấu cách giữa hôm/nay trong ví dụ trước sửa. Phần số/kiểu/vị trí phải giữ các điều kiện; trạng thái là tiến độ, không phải lịch sử sửa tài liệu.
 
 Xuất TXT rồi đọc lại: nguyên dấu cách, tiếng Việt và các ví dụ/phần dự kiến; dữ liệu kiểm thử phải đúng .45 hoặc ghi rõ thiếu nếu không có manifest phù hợp. Giữ nguyên lựa chọn/tài liệu/Changed/Undo, kiểm lưu đích lỗi/khóa như .41. Bài Word đã có kiểm xuất báo cáo khi có thay đổi; chưa xác nhận runtime toàn bộ trên Office 2021 cho .45.
+
+## Bổ sung .46 — dấu cách trước dấu hai chấm (chưa xác nhận runtime)
+
+Bài Word thêm `colon-input.docx`/`colon-fixed.docx`: hai C17 và bảy lỗi độc lập. Chọn riêng C17 giữ khoảng sau và các lỗi không chọn, giữ kiểu từ đầu trong ngoặc. Fault probe giữa nhóm phải phục hồi toàn chữ/kiểu, không tạo Undo. Sửa nhóm một lượt, quét hết đúng mục, một Undo trả cả nhóm, lưu/mở giữ chữ/kiểu/hash nguồn. Các dòng giờ/tỉ lệ/giao thức/địa chỉ/số trống nguyên vẹn.
+
+Thử `Ghi chú  :  nội dung`: C17 và gợi ý khoảng sau chọn độc lập, không chồng span. Kiểm tab/NBSP/control, số/La Mã, viết hoa, giao thức, thiếu space sau, từ quá ngắn và header/ngày không nhận C17. Báo cáo có C17, ví dụ trước/sau, mốc .46 và đúng thông tin kiểm thử gói; P01–P05 vẫn chưa triển khai. CI chưa thay xác nhận Word/Office 2021.
