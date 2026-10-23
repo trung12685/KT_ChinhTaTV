@@ -1,0 +1,14 @@
+<Window x:Class="ChinhTa.Desktop.ProgressReportWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="Tiến độ và chức năng" Width="960" Height="740" MinWidth="650" MinHeight="450" WindowStartupLocation="CenterOwner">
+<DockPanel Margin="16" Background="White">
+<StackPanel DockPanel.Dock="Top" Margin="0,0,0,12">
+<TextBlock Text="TIẾN ĐỘ VÀ CHỨC NĂNG" FontSize="22" FontWeight="Bold"/>
+<TextBlock x:Name="Summary" Margin="0,8,0,4" TextWrapping="Wrap" FontWeight="SemiBold"/>
+<TextBlock Text="Báo cáo năng lực chương trình; không phải kết quả kiểm tra hoặc số lỗi đã sửa trong tài liệu của bạn." TextWrapping="Wrap" Foreground="#475569"/>
+</StackPanel>
+<StackPanel DockPanel.Dock="Bottom" Margin="0,12,0,0">
+<TextBlock x:Name="ExportStatus" TextWrapping="Wrap" Foreground="#166534" Margin="0,0,0,8"/>
+<StackPanel Orientation="Horizontal" HorizontalAlignment="Right"><Button x:Name="ExportButton" Content="Xuất báo cáo TXT…" Click="ExportClick" Padding="16,8" Margin="0,0,8,0"/><Button Content="Đóng" Click="CloseClick" Padding="20,8" IsCancel="True"/></StackPanel>
+</StackPanel>
+<TextBox x:Name="ReportBody" IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" FontFamily="Segoe UI" FontSize="14" Padding="12" AcceptsReturn="True"/>
+</DockPanel>
+</Window>

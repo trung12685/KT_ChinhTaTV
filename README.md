@@ -6,6 +6,10 @@
 
 Ưu tiên đã thống nhất: **thể thức → lỗi chữ và lặp từ/cụm từ → ngữ cảnh và thư viện sau cùng**. Phần chính tả tiếng Việt đầy đủ còn cần xây dựng; không coi quy tắc minh họa hiện tại là bộ kiểm hoàn chỉnh.
 
+## Bản thử 0.1.41
+
+Thêm **Trợ giúp → Tiến độ và chức năng…** để xem/xuất TXT: phần đã làm, số nhóm và danh sách lỗi có điều kiện, kết quả kiểm thử kèm đúng gói, giới hạn và việc tiếp theo. Không cần mở DOCX/Word cho báo cáo; không đổi tài liệu hoặc Undo. [Tải bản thử](https://github.com/trung12685/KT_ChinhTaTV/releases/tag/v0.1.41) · [Cách dùng báo cáo](docs/REPORT-EXPORT.md) · [Nội dung .41](docs/CHANGES-0.1.41.md). Chưa xác nhận toàn bộ bài Office 2021; stable vẫn .27.
+
 ## Bản thử 0.1.40
 
 Phát hiện lặp liên tiếp trong cùng đoạn. Cụm 2–8 tiếng giống nhau có thể đề xuất xóa bản lặp sau khi duyệt, giữ chữ/kiểu của lần đầu; một tiếng lặp, chuỗi toàn chữ hoa và dòng số/ngày giữ thủ công. Không suy đoán nghĩa câu. [Tải bản thử](https://github.com/trung12685/KT_ChinhTaTV/releases/tag/v0.1.40) · [Nội dung và cách thử](docs/CHANGES-0.1.40.md). Chưa xác nhận runtime Office 2021; mốc ổn định vẫn 0.1.27.

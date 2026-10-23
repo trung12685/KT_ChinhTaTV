@@ -195,6 +195,13 @@ public partial class MainWindow : Window
             "Kiểm tra Word", MessageBoxButton.OK, result.Passed ? MessageBoxImage.Information : MessageBoxImage.Warning);
         Process.Start(new ProcessStartInfo { FileName = result.Folder, UseShellExecute = true });
     });
+    private void ProgressReportClick(object sender,RoutedEventArgs e)
+    {
+        hover.Stop();
+        // This independent report must not scan Word or clear the document issue list.
+        var report=new ProgressReportWindow(session.SaveProgressReport) {Owner=this};
+        report.ShowDialog();
+    }
     private void DiagnosticsFolderClick(object sender, RoutedEventArgs e)
     {
         string folder = Path.GetDirectoryName(Diagnostics.LogPath)!;

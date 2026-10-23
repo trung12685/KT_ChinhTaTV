@@ -23,6 +23,7 @@ StructuredTextChecks.Run(Assert);
 HeadingPostSaveChecks.Run(Assert);
 CheckpointCleanupChecks.Run(Assert);
 RepeatedTextChecks.Run(Assert);
+DevelopmentReportChecks.Run(Assert);
 var text = "Tôi đi trên một con đo. Đây  là văn bản.\r";
 var issues = Checker.Check([new(37, text)]);
 Assert(issues.Count == 2, "Hai lỗi minh họa");
