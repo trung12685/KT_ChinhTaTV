@@ -6,6 +6,10 @@
 
 Ưu tiên đã thống nhất: **thể thức → lỗi chữ và lặp từ/cụm từ → ngữ cảnh và thư viện sau cùng**. Phần chính tả tiếng Việt đầy đủ còn cần xây dựng; không coi quy tắc minh họa hiện tại là bộ kiểm hoàn chỉnh.
 
+## Đợt đang phát triển sau 0.1.59
+
+Theo yêu cầu người dùng, gom khoảng **5–10 bước có kiểm thử** rồi mới tạo bản tải Windows. Code hiện chuẩn bị .60, chưa phát hành; gói tải mới nhất vẫn .59. **B01**: đề xuất sửa hoa/thường của viết tắt đã biết (`TTR → TTr`, `CTR → CTr`, `QYĐ → QyĐ`), giữ số và mã cơ quan; BCĐX giữ nguồn bổ sung. [Nhật ký/việc tiếp theo](docs/BATCH-AFTER-0.1.59.md) · [Chu kỳ kiểm thử/phát hành](docs/RELEASE-CADENCE.md).
+
 ## Bản thử 0.1.59
 
 Cập nhật [đầy đủ tên loại/viết tắt](docs/DOCUMENT-TYPES.md) theo NĐ30 PL III.I trang 40: 27 tên hành chính, 3 loại bản sao; thêm **Báo cáo đề xuất — BCĐX** theo yêu cầu người dùng, tách nguồn. Giữ đúng QyĐ/CTr/TTr/TrS, không báo chữ thường chỉ vì các viết tắt đúng bảng. Có cửa sổ **Trợ giúp → Danh mục tên loại văn bản…** và danh mục trong TXT; dùng chung cho nhận diện/C24/phông/mốc trích yếu nhưng vẫn qua guard. Bản sao chưa áp thể thức văn bản gốc, không tự đổi viết tắt theo tên loại hoặc mã cơ quan. [Tải Windows](https://github.com/trung12685/KT_ChinhTaTV/releases/tag/v0.1.59) · [Nội dung/cách thử](docs/CHANGES-0.1.59.md). Giữ 24/8/1, popup/XPS/Undo/rollback, stable .27; chưa Office2021 PASS, lỗi cũ .56 chờ bằng chứng mới.

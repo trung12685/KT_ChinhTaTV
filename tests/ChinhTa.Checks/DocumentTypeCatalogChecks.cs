@@ -60,6 +60,47 @@ public static class DocumentTypeCatalogChecks
         string number=spaced[1].Text;
         foreach(var i in BatchPlan.Create(issues))number=number.Remove(i.Start-spaced[1].Start,i.Length).Insert(i.Start-spaced[1].Start,i.Replacement);
         assert(number=="Số: 03/TTr-ABC\r","Existing zero/separator repairs preserve the legal mixed-case abbreviation exactly");
+        foreach(var entry in DocumentTypeCatalog.Entries)
+        {
+            string wrong=entry.Abbreviation==entry.Abbreviation.ToUpperInvariant()?entry.Abbreviation.ToLowerInvariant():entry.Abbreviation.ToUpperInvariant();
+            var rows=Header("Số: 01/"+wrong+"-ABC-XYZ");
+            var fixes=Checker.Check(rows).Where(i=>i.Kind==FixKind.AdministrativeNumber).ToArray();
+            assert(fixes.Length==1 && fixes[0].CanFix && fixes[0].Original==wrong && fixes[0].Replacement==entry.Abbreviation &&
+                fixes[0].Start==rows[1].Start+"Số: 01/".Length,
+                "Case-only proposals use the exact catalog entry and exclude the number and every agency-code segment");
+            var fixedRows=rows.Select(p=>p==rows[1]?p with {Text=p.Text.Remove(fixes[0].Start-p.Start,fixes[0].Length).Insert(fixes[0].Start-p.Start,fixes[0].Replacement)}:p).ToArray();
+            assert(!Checker.Check(fixedRows).Any(i=>i.Kind==FixKind.AdministrativeNumber),
+                "Rescanning each repaired abbreviation is idempotent, including legal mixed-case and copy abbreviations");
+            var tooltip=IssueTooltipCatalog.Describe(fixes[0]);bool custom=entry.Source==DocumentTypeSource.UserSupplement;
+            assert(custom?tooltip.Basis.Contains("người dùng") && !tooltip.Basis.Contains("Nghị định"):
+                tooltip.Basis.Contains("Phụ lục III, phần I"),"Abbreviation tooltips retain the exact legal or user-supplement source");
+        }
+        foreach(string unknown in new[]{"CV","cv","BCDX","bcdx","QuyĐ","T.Tr","ABC","BCA"})
+            assert(!Checker.Check(Header("Số: 01/"+unknown+"-XYZ")).Any(i=>i.CanFix && i.Kind==FixKind.AdministrativeNumber),
+                "Unknown abbreviations, missing accents and agency identifiers are never inferred from the catalog");
+        var mixed=Header("số  :  3 / TTR – Abc-XYZ");
+        var mixedFixes=Checker.Check(mixed).Where(i=>i.Kind==FixKind.AdministrativeNumber && i.CanFix).ToArray();
+        var mixedPlan=BatchPlan.Create(mixedFixes);CurrentTextPlan.Validate(mixedPlan,Checker.Check(mixed));
+        string mixedNumber=mixed[1].Text;
+        foreach(var i in mixedPlan)mixedNumber=mixedNumber.Remove(i.Start-mixed[1].Start,i.Length).Insert(i.Start-mixed[1].Start,i.Replacement);
+        assert(mixedNumber=="Số: 03/TTr-Abc-XYZ\r","Abbreviation case repairs compose with label, zero and separators while preserving agency letters");
+        var remaining=Checker.Check(mixed.Select(p=>p==mixed[1]?p with {Text=mixedNumber}:p).ToArray());
+        assert(remaining.Count(i=>i.Kind==FixKind.AdministrativeNumber)==1 && remaining.Any(i=>i.Kind==FixKind.AdministrativeNumber && !i.CanFix),
+            "A real lowercase agency-code warning remains after all supported number edits");
+        var caseOnly=mixedPlan.Single(i=>i.Replacement=="TTr");
+        var locked=mixed.Select(p=>p==mixed[1]?p with {TextEditable=false}:p).ToArray();
+        bool stale=false;try{CurrentTextPlan.Validate([caseOnly],Checker.Check(locked));}catch(InvalidOperationException){stale=true;}
+        assert(stale,"A saved abbreviation proposal loses edit permission when the fresh XML/text proof no longer allows writing");
+        foreach(var rows in new[]{Header("Số:\t01/TTR-ABC"),Header("Số: 01/TTR-ABC").Select(p=>p with {Page=2}).ToArray(),locked})
+            assert(!Checker.Check(rows).Any(i=>i.CanFix && i.Kind==FixKind.AdministrativeNumber),
+                "Tabbed, second-page and unverified number rows cannot acquire abbreviation fixes");
+        string mutable=mixed[1].Text,original=mutable;int writes=0,restores=0;bool failed=false;
+        try{AtomicTextBatch.Apply(mixedPlan,i=>mutable.Substring(i.Start-mixed[1].Start,i.Length),i=>
+            {mutable=mutable.Remove(i.Start-mixed[1].Start,i.Length).Insert(i.Start-mixed[1].Start,i.Replacement);writes++;return i.Replacement;},
+            ()=>throw new IOException("synthetic save failure"),()=>{mutable=original;restores++;});}
+        catch(IOException){failed=true;}
+        assert(failed && writes==mixedPlan.Count && restores==1 && mutable==original,
+            "A failing final save restores the entire selected batch, including case and separator edits");
         string report=DevelopmentReport.Build("test",DateTimeOffset.UnixEpoch);
         assert(DocumentTypeCatalog.Entries.All(e=>report.Contains(e.Name+" — "+e.Abbreviation)) && report.Contains(DocumentTypeCatalog.UserNote),
             "The exported report contains the complete catalog with separate provenance and no invented statutory BCĐX entry");

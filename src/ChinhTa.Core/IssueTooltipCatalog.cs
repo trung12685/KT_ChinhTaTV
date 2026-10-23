@@ -63,7 +63,13 @@ public static class IssueTooltipCatalog
                     (!motto && issue.Format?.Alignment is not null?" Căn giữa trong ô theo yêu cầu người dùng.":"");
             }
             if(issue.Kind==FixKind.AdministrativeNumber)
+            {
+                if(issue.Original!=issue.Replacement && DocumentTypeCatalog.FindAbbreviation(issue.Original)?.Abbreviation==issue.Replacement)
+                    return DocumentTypeCatalog.FindAbbreviation(issue.Original)?.Source==DocumentTypeSource.UserSupplement
+                        ?"Danh mục người dùng bổ sung: giữ cách viết chữ viết tắt đã thống nhất."
+                        :"Nghị định 30/2020/NĐ-CP, Phụ lục III, phần I: giữ đúng cách viết chữ hoa/thường của chữ viết tắt tên loại trong bảng.";
                 return Decree+"mục II.3, điểm a–c: ghi Số:, số dưới 10 thêm 0; dùng / giữa số và ký hiệu, - giữa nhóm viết tắt, không cách chữ.";
+            }
             if(issue.Kind==FixKind.AdministrativeDate)
                 return Decree+"mục II.4, điểm b–c: sau địa danh có dấu phẩy; ghi đủ ngày, tháng, năm; ngày dưới 10 và tháng 1, 2 thêm 0.";
             if(issue.Kind==FixKind.AdministrativeFormat)

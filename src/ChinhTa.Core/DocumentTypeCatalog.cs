@@ -57,6 +57,8 @@ public static class DocumentTypeCatalog
         return Entries.SingleOrDefault(e=>e.NamedHeading && e.Heading.Equals(name,StringComparison.OrdinalIgnoreCase));
     }
     public static bool IsKnownAbbreviation(string text)=>Entries.Any(e=>e.Abbreviation.Equals(text,StringComparison.Ordinal));
+    // Case-only lookup: never expand, remove accents or guess an unknown code.
+    public static DocumentTypeEntry? FindAbbreviation(string text)=>Entries.SingleOrDefault(e=>e.Abbreviation.Equals(text,StringComparison.OrdinalIgnoreCase));
     public static bool IsUserHeading(string text)=>FindHeading(text)?.Source==DocumentTypeSource.UserSupplement;
     public static string WithSource(string citation,bool userSupplement)=>userSupplement?citation+" "+UserNote:citation;
 }

@@ -1,0 +1,55 @@
+name: Windows checks
+on:
+  push:
+    branches: [main, 'feature/**', 'fix/**']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: windows-checks-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  checks:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Core and OpenXML regression checks
+        shell: pwsh
+        run: |
+          New-Item artifacts -ItemType Directory -Force | Out-Null
+          dotnet run --project tests/ChinhTa.Checks -c Release | Tee-Object -FilePath artifacts/core-checks.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: WPF regression checks and application build
+        shell: pwsh
+        run: |
+          dotnet run --project tests/ChinhTa.DesktopChecks -c Release | Tee-Object -FilePath artifacts/wpf-checks.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Record check evidence
+        shell: pwsh
+        run: |
+          $core = [regex]::Match((Get-Content artifacts/core-checks.log -Raw), '(?m)^(\d+) checks passed\.\s*$')
+          $wpf = [regex]::Match((Get-Content artifacts/wpf-checks.log -Raw), '(?m)^(\d+) WPF checks passed\.\s*$')
+          if (-not $core.Success -or -not $wpf.Success) { throw 'Missing successful check totals' }
+          $project = [xml](Get-Content src/ChinhTa.Desktop/ChinhTa.Desktop.csproj -Raw)
+          @{
+            Version = [string]$project.Project.PropertyGroup.Version
+            CoreChecks = [int]$core.Groups[1].Value
+            WpfChecks = [int]$wpf.Groups[1].Value
+            Commit = $env:GITHUB_SHA
+            RunUrl = "https://github.com/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID"
+            Packaged = $false
+          } | ConvertTo-Json | Set-Content artifacts/check-evidence.json -Encoding utf8
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: checks-${{ github.sha }}
+          if-no-files-found: warn
+          path: |
+            artifacts/core-checks.log
+            artifacts/wpf-checks.log
+            artifacts/check-evidence.json

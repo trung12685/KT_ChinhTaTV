@@ -87,12 +87,12 @@ public static class AdministrativeHeaderRules
         return new(p.Start,text.Length,text,text,message,false,date?FixKind.AdministrativeDate:FixKind.AdministrativeNumber,
             CanFix:false,Citation:Citation(date),Title:date?"Kiểm tra địa danh, ngày tháng":"Kiểm tra số, ký hiệu văn bản");
     }
-    private static void Edit(Paragraph p,bool date,int offset,string original,string replacement,string title,List<Issue> result)
+    private static void Edit(Paragraph p,bool date,int offset,string original,string replacement,string title,List<Issue> result,string? citation=null)
     {
         if(original==replacement)return;
         if(original.Length==0)throw new InvalidOperationException("An administrative edit must retain a source anchor");
         result.Add(new(p.Start+offset,original.Length,original,replacement,title,false,
-            date?FixKind.AdministrativeDate:FixKind.AdministrativeNumber,Citation:Citation(date),Title:title));
+            date?FixKind.AdministrativeDate:FixKind.AdministrativeNumber,Citation:citation??Citation(date),Title:title));
     }
     private static bool CheckNumber(Paragraph p,List<Issue> result)
     {
@@ -122,7 +122,12 @@ public static class AdministrativeHeaderRules
         foreach(Match separator in Hyphen.Matches(code.Value))
             Edit(p,false,baseIndex+code.Index+separator.Index,separator.Value,"-","Chuẩn hóa dấu nối trong ký hiệu",result);
         var firstSeparator=Hyphen.Match(code.Value);
-        string lettersToCheck=firstSeparator.Success && DocumentTypeCatalog.IsKnownAbbreviation(code.Value[..firstSeparator.Index])
+        var type=firstSeparator.Success?DocumentTypeCatalog.FindAbbreviation(code.Value[..firstSeparator.Index]):null;
+        if(type is not null)
+            Edit(p,false,baseIndex+code.Index,code.Value[..firstSeparator.Index],type.Abbreviation,
+                "Sai hoa/thường viết tắt tên loại",result,
+                DocumentTypeCatalog.WithSource(Citation(false),type.Source==DocumentTypeSource.UserSupplement));
+        string lettersToCheck=type is not null
             ?code.Value[(firstSeparator.Index+firstSeparator.Length)..]:code.Value;
         if(lettersToCheck.Any(char.IsLower))
             result.Add(Notice(p,false,"Ký hiệu có chữ thường; đối chiếu quy định chữ in hoa và mã viết tắt của cơ quan. Chưa tự đổi mã."));

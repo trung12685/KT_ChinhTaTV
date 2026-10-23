@@ -57,3 +57,7 @@ Danh mục bản sao để tra cứu; chưa áp dụng tự động các quy t�
 Có thể xem trong **Trợ giúp → Danh mục tên loại văn bản…** hoặc báo cáo TXT. Một nguồn dữ liệu dùng cho tên loại/viết tắt/nguồn, nhận diện tên loại, kiểm phông, C24 và mốc trích yếu/Line. Có 28 tên hành chính/bổ sung có thể tham gia nhận diện; vẫn phải qua guard khối đầu/trích yếu/Word/XML hiện có. Danh mục đầy đủ không có nghĩa đã hỗ trợ mọi mẫu đặc thù như hợp đồng, biên bản, giấy/phiếu có bố cục khác hoặc bảng.
 
 Ở dòng Số, không báo “chữ thường” chỉ do chữ viết tắt tên loại đúng bảng như TTr/CTr/QyĐ/TrS. Phần mã cơ quan có chữ thường vẫn giữ cảnh báo. Chưa tự đổi chữ viết tắt theo tên loại hoặc đoán mã cơ quan; chuẩn hóa nhãn, số, dấu nối và khoảng trắng hiện có giữ nguyên. BCĐX là cấu hình bổ sung của người dùng, không coi là mục mới của Nghị định. Lỗi cũ trên Office2021 vẫn chờ bằng chứng runtime phù hợp.
+
+## Bổ sung chưa phát hành — B01 sau .59
+
+C05 có thể đề xuất sửa **hoa/thường** phần viết tắt đã khớp danh mục trong dòng Số nhận diện chắc: `TTR-ABC → TTr-ABC`, `QYĐ-ABC → QyĐ-ABC`. Chỉ sửa prefix, giữ số và mã cơ quan; không đổi BC thành KH theo tên loại, không suy đoán CV hoặc viết tắt thiếu dấu. BCĐX là bổ sung người dùng. Đây là code đang phát triển, chưa nằm trong ZIP .59. Xem [nhật ký](BATCH-AFTER-0.1.59.md).

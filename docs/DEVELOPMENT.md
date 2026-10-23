@@ -1,5 +1,13 @@
 # Tiếp tục phát triển Chính tả Việt
 
+## Chu kỳ mới sau 0.1.59 — 24/10/2026 (UTC+7)
+
+Theo yêu cầu mới, tích lũy khoảng **5–10 bước phát triển có kiểm thử** rồi mới tạo gói tải Windows. Mỗi bước vẫn ghi code, kết quả kiểm thử, giới hạn và việc tiếp theo vào [nhật ký đợt](BATCH-AFTER-0.1.59.md); không tính các thao tác commit/test/docs thành nhiều tính năng để đủ số. Đọc [quy trình phát hành](RELEASE-CADENCE.md) trước khi đóng gói.
+
+Nhánh `feature/format-batch-after-0.1.59` dựa trên commit .59 `03bf183746d37f0ca543f386faf8045f2ee9a090`. Code đang chuẩn bị .60, **chưa có gói .60**; gói tải mới nhất vẫn .59. Windows checks chạy khi push, chỉ kiểm thử/build/log; Windows package chỉ chạy khi chủ động tạo tag hoặc gọi thủ công, đòi ghi chú và checklist đúng phiên bản. Không tạo tag/phát hành trong bước này.
+
+B01 mở rộng C05: FindAbbreviation so sánh OrdinalIgnoreCase với danh mục, chỉ thay hoa/thường prefix đứng trước dấu nối đầu tiên; không đổi ký tự, dấu tiếng Việt, số hay mã cơ quan. Canonical QyĐ/CTr/TTr/TrS giữ nguyên. Unknown/CV/thiếu dấu/mẫu riêng, trang hai, tab, nhiều dòng ứng viên hoặc XML chưa đủ vẫn qua guard cũ. BCĐX giữ nguồn người dùng trong citation/tooltip. CurrentTextPlan, BatchPlan, AtomicTextBatch và hậu kiểm Word giữ nguyên. Lỗi .56 vẫn chờ bằng chứng runtime; không lấy CI làm Word PASS.
+
 ## Mốc tiếp tục 0.1.59 — 24/10/2026 (UTC+7)
 
 DocumentTypeCatalog là nguồn chung: 27 administrative + 3 copy của NĐ30 PLIII.I PDF40, 1 user BCĐX. Exact abbreviations QyĐ/CTr/TTr/TrS; source/kind riêng, copy không EligibleHeading. Nghị quyết/Quyết định qualifier cá biệt thuộc reference, heading không thêm qualifier. Giấy uỷ/ủy quyền cùng entry nhưng C24 giữ nguyên cách đặt dấu. ShapeLineRules không giữ hashset13 rời; DocumentHeadingRules/WordSession dùng nguồn chung. Custom-name provenance đi theo citation/LineTarget.UserDefinedType, tooltip và TXT. AdministrativeHeaderRules chỉ miễn cờ lowercase cho prefix canonical, vẫn kiểm mã cơ quan và không tự đổi viết tắt theo title.
@@ -36,7 +44,7 @@ Hồi quy dùng drawing từ DocxLineEditor, tái hiện lỗi trên map/guard .
 
 Mốc đã chốt: [0.1.27](STATUS-0.1.27.md), mã gói `1ec3092ccd68ed0acd8878b2737664116a6b11fe`, tag `v0.1.27`. Đọc biên bản này trước để phân biệt bằng chứng CI, xác nhận người dùng và kịch bản còn chờ. Phát triển từ `main` sau khi chốt, tạo nhánh mới; không tiếp tục phát hành vào tag hoặc ghi đè ZIP 0.1.27.
 
-Nhánh đang phát triển: `feature/component-roles-0.1.55`, từ 0.1.54 (`e0d5bac9c12d9dcebc53f109e1b29c3b2b79a3a2`). Chuỗi bản thử dựa trên main đã chốt `da6cf3b0999dbfb60d16ab1eae9733b0f1f20c81`. Đọc các CHANGES và [phạm vi 0.1.55](CHANGES-0.1.55.md). Chưa nhập main hoặc coi CI là bằng chứng Office 2021.
+Nhánh đang phát triển và nền chính xác được ghi ở đầu tài liệu và nhật ký đợt. Chuỗi bản thử dựa trên main đã chốt `da6cf3b0999dbfb60d16ab1eae9733b0f1f20c81`; chưa nhập main hoặc coi CI là bằng chứng Office 2021.
 
 ## Bản đồ mã nguồn
 
@@ -101,7 +109,7 @@ Tài liệu riêng chỉ dùng cục bộ theo đường dẫn tùy chọn của
 dotnet publish src/ChinhTa.Desktop -c Release -r win-x64 --self-contained true -o artifacts/win-x64
 ```
 
-Kèm thư mục `samples`, ghi chú phiên bản, ZIP và SHA-256. Chạy kiểm thử trước khi phát hành. Khi tạo bản mới, cập nhật version trong csproj, tiêu đề UI, tên gói/tag, ghi chú và workflow Windows; không phát hành lại vào tag cũ. Workflow `windows-package.yml` gắn `feature/component-roles-0.1.55` và phát hành prerelease 0.1.55 sau kiểm thử. Mỗi phiên bản sau phải đổi nhánh/version và không ghi đè tag đã phát hành. Workflow `finalize-0.1.27.yml` chỉ chốt metadata của bản đã thử, có kiểm tag, digest, CI và thay đổi chỉ thuộc tài liệu/workflow được cho phép; không build hoặc thay asset.
+Kèm thư mục `samples`, ghi chú phiên bản, ZIP và SHA-256. Chạy kiểm thử trước khi phát hành. Khi tạo bản mới, cập nhật version trong csproj, tiêu đề UI, tên gói/tag, ghi chú và workflow Windows; không phát hành lại vào tag cũ. Theo chu kỳ mới, `windows-checks.yml` kiểm thử mỗi bước trên nhánh, không publish/ZIP/release. `windows-package.yml` chỉ chạy thủ công hoặc khi push tag `v*`; đọc version/ghi chú/checklist từ commit hiện tại, chạy lại các kiểm bắt buộc rồi mới đóng gói. Xem RELEASE-CADENCE; không ghi đè tag/asset đã phát hành. Workflow `finalize-0.1.27.yml` chỉ chốt metadata của bản đã thử, có kiểm tag, digest, CI và thay đổi chỉ thuộc tài liệu/workflow được cho phép; không build hoặc thay asset.
 
 Khi nhận lỗi, lấy log đúng version và phân biệt lỗi đọc Word, ghép XML, CP/mốc, marker, candidate, nét XPS hay rollback. Các mã `Word.Preview.CpMapping`, `Word.Preview.Unmapped`, `Word.LineBatch.ReferenceBinding.*`, `Word.LineBatch.StoryBinding`, `Word.LineBatch.Rescan` ghi số liệu mà không ghi chữ tài liệu. Không kết luận nguyên nhân chỉ từ ngoại lệ tổng quát hoặc một điều kiện guard gộp.
 
