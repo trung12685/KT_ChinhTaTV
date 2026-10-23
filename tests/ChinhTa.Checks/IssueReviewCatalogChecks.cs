@@ -28,7 +28,7 @@ public static class IssueReviewCatalogChecks
             "Optional centering remains a reviewable presentation action");
         assert(IssueReviewCatalog.Describe(heading with {Citation=null}).Section==IssueReviewSection.ReviewSuggestion,"Missing regulatory evidence cannot produce a required-format label");
         assert(IssueReviewCatalog.Describe(space with {Original="đo",Replacement="đò"}).FamilyKey!="spacing","The demo spelling proposal is separate from generic spacing");
-        foreach(var kind in new[]{FixKind.RepeatedText,FixKind.PunctuationSpace,FixKind.ParenthesisSpace,FixKind.SentenceEndSpace,FixKind.ColonSpace,FixKind.SentenceInnerSpace,FixKind.SentenceAfterSpace})
+        foreach(var kind in new[]{FixKind.RepeatedText,FixKind.PunctuationSpace,FixKind.ParenthesisSpace,FixKind.SentenceEndSpace,FixKind.ColonSpace,FixKind.SentenceInnerSpace,FixKind.SentenceAfterSpace,FixKind.OutlineOrder,FixKind.OutlineMarker})
             assert(IssueReviewCatalog.Describe(space with {Kind=kind}).Section==IssueReviewSection.ReviewSuggestion,"Language and punctuation proposals always retain review status");
         string longTitle="  "+new string('a',150)+"\r\n\t cuối";
         var brief=IssueReviewCatalog.Describe(space with {Kind=FixKind.Advisory,CanFix=false,Title=longTitle});

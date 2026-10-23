@@ -36,6 +36,8 @@ public static class IssueReviewCatalog
             FixKind.DocumentHeadingFormat=>("document-font","Tên loại và trích yếu",33,issue.Title??"Tên loại/trích yếu chưa đúng"),
             FixKind.AdministrativePosition=>("position","Vị trí số và ngày tháng",34,issue.Title??"Kiểm tra vị trí số/ngày tháng"),
             FixKind.ShapeLine=>("lines","Đường kẻ",40,issue.Title??"Kiểm tra đường kẻ"),
+            FixKind.OutlineOrder=>("outline-order","Thứ tự các mục",45,issue.Title??"Kiểm tra thứ tự mục"),
+            FixKind.OutlineMarker=>("outline-marker","Dấu đầu dòng đứng một mình",46,issue.Title??"Kiểm tra dấu đầu dòng"),
             FixKind.RepeatedText=>("repeat","Từ, cụm từ lặp",50,"Lặp từ/cụm từ: "+Brief(issue.Original.Trim(),34)),
             FixKind.PunctuationSpace=>("comma","Dấu phẩy, chấm phẩy",60,issue.Title??"Khoảng trắng quanh dấu câu"),
             FixKind.ParenthesisSpace=>("parenthesis","Ngoặc tròn",61,"Khoảng trắng sát trong ngoặc tròn"),

@@ -1,3 +1,5 @@
+using System.Xml.Linq;
+
 namespace ChinhTa.Core;
 
 // Whole-main-story text eligibility, independent of header geometry and profile.
@@ -5,7 +7,7 @@ namespace ChinhTa.Core;
 public static class WordTextProof
 {
     public static IReadOnlySet<int> Read(string wordOpenXml,IReadOnlyList<WordParagraphSnapshot> live,
-        Action<WordXmlMappingException>? onMismatch=null)
+        Action<WordXmlMappingException>? onMismatch=null,Action<int,OutlineParagraphInfo>? onOutline=null)
     {
         int previousEnd=-1;
         foreach(var row in live)
@@ -15,10 +17,29 @@ public static class WordTextProof
             previousEnd=row.End;
         }
         var editable=new HashSet<int>();
-        WordXmlTableMap.Read(wordOpenXml,live,onMismatch??(_=>{}),
-            onTextEditable:(start,canEdit)=>{if(canEdit)editable.Add(start);},includeLayout:false);
+        if(onOutline is null)
+            WordXmlTableMap.Read(wordOpenXml,live,onMismatch??(_=>{}),
+                onTextEditable:(start,canEdit)=>{if(canEdit)editable.Add(start);},includeLayout:false);
+        else
+        {
+            var xml=XDocument.Parse(wordOpenXml);
+            XNamespace w="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+            var body=xml.Descendants(w+"document").Single().Element(w+"body")??throw new InvalidOperationException("Missing document body");
+            var ps=body.Descendants(w+"p")
+                .Where(p=>!p.Ancestors(w+"txbxContent").Any()).ToArray();
+            var evidence=new WordOutlineEvidence(xml);
+            var matched=new Dictionary<int,int>();
+            WordXmlTableMap.Read(xml,live,onMismatch??(_=>{}),(start,index)=>matched[start]=index,
+                (start,canEdit)=>
+                {
+                    if(canEdit)editable.Add(start);
+                    onOutline(start,evidence.Describe(ps[matched[start]],canEdit));
+                },includeLayout:false);
+        }
         return editable;
     }
-    public static IReadOnlyList<Paragraph> Apply(IEnumerable<Paragraph> paragraphs,IReadOnlySet<int> editableStarts)=>
-        paragraphs.Select(p=>p with {TextEditable=p.TextEditable && editableStarts.Contains(p.Start)}).ToArray();
+    public static IReadOnlyList<Paragraph> Apply(IEnumerable<Paragraph> paragraphs,IReadOnlySet<int> editableStarts,
+        IReadOnlyDictionary<int,OutlineParagraphInfo>? outline=null)=>
+        paragraphs.Select(p=>p with {TextEditable=p.TextEditable && editableStarts.Contains(p.Start),
+            Outline=outline is null?p.Outline:outline.TryGetValue(p.Start,out var info)?info:null}).ToArray();
 }

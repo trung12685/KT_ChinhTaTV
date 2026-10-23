@@ -1,7 +1,7 @@
 name: Windows package
 on:
   push:
-    branches: [feature/compact-issue-list-0.1.50]
+    branches: [feature/outline-context-0.1.51]
 permissions:
   contents: write
 jobs:
@@ -43,30 +43,32 @@ jobs:
         shell: pwsh
         run: |
           Copy-Item samples artifacts/win-x64/samples -Recurse -Force
-          Copy-Item docs/CHANGES-0.1.50.md artifacts/win-x64/
+          Copy-Item docs/CHANGES-0.1.51.md artifacts/win-x64/
           Copy-Item docs/REPORT-EXPORT.md artifacts/win-x64/
-          Copy-Item docs/SUPPORTED-FIXES-0.1.50.md artifacts/win-x64/
+          Copy-Item docs/ISSUE-LIST.md artifacts/win-x64/
+          Copy-Item docs/OUTLINE-CONTEXT.md artifacts/win-x64/
+          Copy-Item docs/SUPPORTED-FIXES-0.1.51.md artifacts/win-x64/
           Copy-Item artifacts/build-checks.json artifacts/win-x64/
       - name: Verify packaged report metadata
         run: dotnet run --project tests/ChinhTa.DesktopChecks -c Release -- --verify-report-package artifacts/win-x64
       - name: Archive and hash
         shell: pwsh
         run: |
-          Copy-Item artifacts/ChinhTaViet-0.1.50-tien-do.txt artifacts/win-x64/
-          Compress-Archive artifacts/win-x64/* artifacts/ChinhTaViet-0.1.50-win-x64.zip
-          Get-FileHash artifacts/ChinhTaViet-0.1.50-win-x64.zip -Algorithm SHA256 | Format-List | Out-File artifacts/SHA256.txt
+          Copy-Item artifacts/ChinhTaViet-0.1.51-tien-do.txt artifacts/win-x64/
+          Compress-Archive artifacts/win-x64/* artifacts/ChinhTaViet-0.1.51-win-x64.zip
+          Get-FileHash artifacts/ChinhTaViet-0.1.51-win-x64.zip -Algorithm SHA256 | Format-List | Out-File artifacts/SHA256.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: ChinhTaViet-0.1.50-win-x64
+          name: ChinhTaViet-0.1.51-win-x64
           path: |
             artifacts/*.zip
             artifacts/SHA256.txt
             artifacts/build-checks.json
-            artifacts/ChinhTaViet-0.1.50-tien-do.txt
+            artifacts/ChinhTaViet-0.1.51-tien-do.txt
             artifacts/issue-list-preview.png
       - name: Publish prerelease
         env:
           GH_TOKEN: ${{ github.token }}
         shell: pwsh
         run: |
-          gh release create v0.1.50 artifacts/ChinhTaViet-0.1.50-win-x64.zip artifacts/SHA256.txt artifacts/build-checks.json artifacts/ChinhTaViet-0.1.50-tien-do.txt artifacts/issue-list-preview.png --target $env:GITHUB_SHA --prerelease --title '0.1.50 — Danh sách lỗi gọn và chọn theo nhóm — bản thử' --notes-file docs/CHANGES-0.1.50.md
+          gh release create v0.1.51 artifacts/ChinhTaViet-0.1.51-win-x64.zip artifacts/SHA256.txt artifacts/build-checks.json artifacts/ChinhTaViet-0.1.51-tien-do.txt artifacts/issue-list-preview.png --target $env:GITHUB_SHA --prerelease --title '0.1.51 — Thứ tự mục và dấu đầu dòng theo mục cha — bản thử' --notes-file docs/CHANGES-0.1.51.md

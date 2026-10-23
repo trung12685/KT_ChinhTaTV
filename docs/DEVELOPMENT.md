@@ -10,7 +10,7 @@
 
 Mốc đã chốt: [0.1.27](STATUS-0.1.27.md), mã gói `1ec3092ccd68ed0acd8878b2737664116a6b11fe`, tag `v0.1.27`. Đọc biên bản này trước để phân biệt bằng chứng CI, xác nhận người dùng và kịch bản còn chờ. Phát triển từ `main` sau khi chốt, tạo nhánh mới; không tiếp tục phát hành vào tag hoặc ghi đè ZIP 0.1.27.
 
-Nhánh đang phát triển: `feature/compact-issue-list-0.1.50`, từ 0.1.49 (`227dc886598b8a13460e4a815ffefb787666468c`). Chuỗi bản thử dựa trên main đã chốt `da6cf3b0999dbfb60d16ab1eae9733b0f1f20c81`. Đọc các CHANGES và [phạm vi 0.1.50](CHANGES-0.1.50.md). Chưa nhập main hoặc coi CI là bằng chứng Office 2021.
+Nhánh đang phát triển: `feature/outline-context-0.1.51`, từ 0.1.50 (`bb1a8734cc35a8a8bb1c733e1ebb3e2072abb4cb`). Chuỗi bản thử dựa trên main đã chốt `da6cf3b0999dbfb60d16ab1eae9733b0f1f20c81`. Đọc các CHANGES và [phạm vi 0.1.51](CHANGES-0.1.51.md). Chưa nhập main hoặc coi CI là bằng chứng Office 2021.
 
 ## Bản đồ mã nguồn
 
@@ -75,7 +75,7 @@ Tài liệu riêng chỉ dùng cục bộ theo đường dẫn tùy chọn của
 dotnet publish src/ChinhTa.Desktop -c Release -r win-x64 --self-contained true -o artifacts/win-x64
 ```
 
-Kèm thư mục `samples`, ghi chú phiên bản, ZIP và SHA-256. Chạy kiểm thử trước khi phát hành. Khi tạo bản mới, cập nhật version trong csproj, tiêu đề UI, tên gói/tag, ghi chú và workflow Windows; không phát hành lại vào tag cũ. Workflow `windows-package.yml` gắn `feature/compact-issue-list-0.1.50` và phát hành prerelease 0.1.50 sau kiểm thử. Mỗi phiên bản sau phải đổi nhánh/version và không ghi đè tag đã phát hành. Workflow `finalize-0.1.27.yml` chỉ chốt metadata của bản đã thử, có kiểm tag, digest, CI và thay đổi chỉ thuộc tài liệu/workflow được cho phép; không build hoặc thay asset.
+Kèm thư mục `samples`, ghi chú phiên bản, ZIP và SHA-256. Chạy kiểm thử trước khi phát hành. Khi tạo bản mới, cập nhật version trong csproj, tiêu đề UI, tên gói/tag, ghi chú và workflow Windows; không phát hành lại vào tag cũ. Workflow `windows-package.yml` gắn `feature/outline-context-0.1.51` và phát hành prerelease 0.1.51 sau kiểm thử. Mỗi phiên bản sau phải đổi nhánh/version và không ghi đè tag đã phát hành. Workflow `finalize-0.1.27.yml` chỉ chốt metadata của bản đã thử, có kiểm tag, digest, CI và thay đổi chỉ thuộc tài liệu/workflow được cho phép; không build hoặc thay asset.
 
 Khi nhận lỗi, lấy log đúng version và phân biệt lỗi đọc Word, ghép XML, CP/mốc, marker, candidate, nét XPS hay rollback. Các mã `Word.Preview.CpMapping`, `Word.Preview.Unmapped`, `Word.LineBatch.ReferenceBinding.*`, `Word.LineBatch.StoryBinding`, `Word.LineBatch.Rescan` ghi số liệu mà không ghi chữ tài liệu. Không kết luận nguyên nhân chỉ từ ngoại lệ tổng quát hoặc một điều kiện guard gộp.
 
@@ -293,3 +293,13 @@ Append FixKind, thêm Checker/BatchPlan sharing như các rule chữ cũ; không
 `IssueReviewModel`/`IssueChoiceGroup` dùng cùng IssueChoice cho item/family/section/global; counters gia tăng O(1) mỗi thay đổi, không đếm lại cả danh sách trong từng event. Manual không tích được; tri-state phản ánh chọn một phần. Group expansion lưu trên model khi recycle. `IssueReviewPanel` dùng ListCollectionView hai cấp, virtualization when grouping, row28px, tooltip và chi tiết có thể mở bằng bàn phím. Snapshot PNG chỉ từ mẫu giả; không gửi nội dung tài liệu người dùng.
 
 MainWindow giữ các Issue gốc và anchors cho highlight/ConfirmFix; chọn đang xem độc lập tick. Scan/lỗi thay model mới, bỏ state cũ; FixChecked/FixAll/ConfirmFix vẫn cùng stage guard, sự duyệt và engine cũ. Không đổi WordSession, transaction/checkpoint/save/Line/XPS/Undo; không tự loại issue chỉ vì đã tick hoặc mang nhãn bắt buộc. Báo cáo thêm mốc .50, không thêm loại lỗi: vẫn19/8/1. Kiểm Core classification, model selection1200items, WPF bindings/layout/keyboard selection/manual/reset, tên Line thiếu và ảnh giả; CI không thay thế Word/Office2021.
+
+## Ghi chú triển khai 0.1.51
+
+Người dùng yêu cầu thêm ngữ cảnh cấu trúc trước phần ngữ nghĩa: thứ tự mục và dấu đơn theo mục cha. C20/C21 là thao tác chữ được duyệt, không phải kết luận pháp lý hoặc suy nghĩa. `OutlineRules` dựng cây theo La Mã→số→chữ→dash→plus và thụt lề đã quan sát; nhóm siblings trong từng parent, marker start/label/separator tách rõ. Có 1/a/I mới đề xuất thứ tự, không đổi nội dung/dấu phân cách; restart/mixedstyle/ambiguousalphabet/references giữ manual. Đếm singleton chỉ khi explicit parent complete, parent unknown chặn removal; + đếm riêng dưới từng dash. Generic spacing trùng deletion prefix được gộp, formatting-contained được BatchPlan cho chia sẻ; appended FixKind giữ các giá trị enum cũ.
+
+`WordOutlineEvidence` lấy từ live XML đã đối chiếu: ngoài bảng, không auto numPr trực tiếp/kế thừa, style chain/indent rõ; bookmark/field/link/control chưa hỗ trợ giữ thủ công. `WordXmlTableMap` có overload XDocument nội bộ, logic mapping/layout cũ giữ nguyên; text proof và outline dùng chung cây XML, không thêm COM getters. Header geometry vẫn parse riêng như .47 (hai parse tổng), không đưa tọa độ phỏng đoán vào ghi. Literal dẫn chiếu mục và REF/PAGEREF/NOTEREF chặn renumber có liên quan.
+
+Ngoại lệ hẹp cho tab: helper plain-text cũ được tái sử dụng, chỉ cho allowTabs trong outline evidence sau khi text/XML khớp. `TextEditable` chung vẫn false; `LabelThroughTabs` riêng cho marker-only edits, giữ leading/separator tabs. C21 không bỏ separator tab; leading mix space/tab không rõ giữ manual. Cấp cùng family so sánh XML indent khi prefix giống, hoặc độ dài prefix cùng loại whitespace, không giả tọa độ tab bằng720twips. Bản mẫu riêng được đọc kiểm tra, không đưa lên kho/release; kiểm Core dùng snapshot giả không là Word PASS.
+
+CurrentTextPlan quét lại toàn ngữ cảnh trước checkpoint, nên thêm sibling làm proposal cũ biến mất/bị từ chối. Transaction/checkpoint/save/Line/XPS/Undo không đổi. Office fixture giả có3 order+4 singleton+7 text edits, tab đầu các heading, CP probes từ Issue thật, kiểm single/stale-before-checkpoint/fault/oneUndo/save-reopen/styles/source hashes. C20/21 xuất hiện nhóm review trong UI .50; capability21/8/1 và báo cáo ví dụ nhiều đoạn. Ảnh CI thêm hai nhóm và nền sáng kín, guideISSUE-LIST/OUTLINE-CONTEXT được đưa vào gói. Word/Office2021 runtime chưa xác nhận.
