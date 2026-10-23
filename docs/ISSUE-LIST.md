@@ -4,11 +4,11 @@ Mỗi mục chỉ một dòng: **checkbox · tên lỗi · trang**. Bỏ câu �
 
 ## Ba phần
 
-- **Bắt buộc sửa**: yêu cầu thể thức thuộc phạm vi đã hỗ trợ, có căn cứ và đủ điều kiện đưa gợi ý. Bạn vẫn duyệt trước khi ghi; không chặn lưu nếu chưa sửa.
+- **Bắt buộc sửa**: yêu cầu thể thức có căn cứ, hoặc C20/C21 theo lựa chọn người dùng từ .56, đã đủ điều kiện đưa gợi ý. Bạn vẫn duyệt trước khi ghi; không chặn lưu nếu chưa sửa.
 - **Đề xuất sửa — cần duyệt**: lỗi chữ, dấu câu, bố cục hoặc số đo cần xem lại theo ngữ cảnh. Không đồng nghĩa tự động chắc chắn đúng.
 - **Chưa tự sửa — chỉ cảnh báo**: vùng/chức năng chưa có điều kiện sửa. Checkbox bị vô hiệu hóa và không được chọn qua nhóm/tất cả.
 
-Phân loại thận trọng: geometry Line/căn giữa theo cấu hình người dùng ở phần cần duyệt; thiếu Line đã xác định có căn cứ có thể ở thể thức. Mục bị chặn do field/XML/nét chưa chắc luôn thủ công. Một nhóm trên màn hình không phải một loại lỗi mới trong danh mục năng lực của chương trình.
+Phân loại thận trọng: geometry Line/căn giữa theo cấu hình người dùng ở phần cần duyệt; thiếu Line đã xác định có căn cứ có thể ở thể thức. Mục bị chặn do field/XML/nét chưa chắc luôn thủ công. C20/C21 chỉ chuyển phần khi CanFix; mục cấu trúc chưa rõ vẫn thủ công. Việc chuyển phần không tạo căn cứ pháp lý mới. Một nhóm trên màn hình không phải một loại lỗi mới trong danh mục năng lực của chương trình.
 
 ## Chọn và xem
 
@@ -39,3 +39,5 @@ Ví dụ (chiều dài cụ thể phụ thuộc số đo của từng dòng):
 > Cách xử lý: Kẻ đường ngang dài 95.2 pt, căn theo dòng chữ; mức tự sửa theo cấu hình (mặc định 3/7).
 
 Nguồn Nhà nước là Nghị định, nguồn Đảng là Hướng dẫn; không thay tên thành Thông tư. Các quy tắc khoảng trắng/lặp từ ghi quy tắc ứng dụng, thứ tự mục/dấu đầu dòng ghi theo yêu cầu người dùng. Mục chưa đủ điều kiện ghi hướng xử lý thủ công; số đo/cấu hình không thành câu chữ của quy định. Tooltip không làm mục thủ công trở thành sửa được.
+
+Từ .56, đoạn có Line nổi do ứng dụng tạo vẫn được kiểm/sửa phông nếu chữ đã khớp XML, Line có dấu nhận diện/cấu trúc hợp lệ và không chứa chữ. Quyền sửa chữ thông thường qua đối tượng vẫn đóng; hình/Line lạ, dấu nhận diện trùng/sai hoặc vùng chưa khớp vẫn thủ công. Không ẩn cảnh báo dựa lịch sử đã bấm sửa.

@@ -1,5 +1,11 @@
 # Tiếp tục phát triển Chính tả Việt
 
+## Mốc tiếp tục 0.1.56
+
+Từ .55, sửa cảnh báo phông mới sau chèn Line ở cơ quan/trích yếu: `OwnedLineFormatProof` cấp riêng FormatEditable cho đoạn XML/live khớp có Line nổi của ứng dụng, marker/ID/vai trò duy nhất, không chứa chữ và run riêng. TextEditable qua drawing vẫn false; ComponentRules dùng hai quyền riêng cho phông/chữ. Không xóa run thật, không thay kiểm nét XPS hay giới hạn hình học. C20/C21 CanFix chuyển Bắt buộc sửa theo lựa chọn người dùng, không đổi căn cứ/CanFix/duyệt.
+
+Hồi quy dùng drawing từ DocxLineEditor, tái hiện lỗi trên map/guard .55, chặn foreign/inline/embedded/ID/role sai; bài Office giả có cả ba Line, phông sai, rollback sau Line, Undo, lưu/mở. Chưa chạy runtime Office 2021; xem [ghi chú và checklist .56](CHANGES-0.1.56.md). Các bước tiếp: nhận kết quả đúng phiên bản trên Office 2021, tiếp tục hoàn thiện thể thức/lỗi chữ trong phạm vi chắc chắn; ngữ nghĩa/từ điển sau cùng. Dữ liệu người dùng ở ngoài kho và release.
+
 ## Thứ tự ưu tiên theo người dùng — 23/10/2026
 
 1. Hoàn thiện các kiểm/sửa thể thức theo nguồn hiện có, giữ bằng chứng và hồi quy.

@@ -14,6 +14,17 @@ internal static class OfficeComponentCheck
         test.Profile=DocumentProfile.State;test.Open(good);
         if(test.Check().Any(Component))throw new InvalidOperationException("Mẫu đúng còn cảnh báo tên cơ quan/trích yếu/nơi nhận.");
         pass("Thành phần đúng: cơ quan chủ quản/ban hành, trích yếu xuống đoạn, Kính gửi căn giữa và ba gạch nơi nhận không bị báo sai");
+        string goodText=test.ReadCheckText();var allLines=ReadLines(test);
+        if(allLines.Length!=3)throw new InvalidOperationException("Mẫu đúng chưa nhận đủ ba Line thiếu từ số đo XPS.");
+        test.FixSelection(allLines);
+        if(test.Check().Any(Component) || test.ReadCheckText()!=goodText || test.CheckUndoCount!=1)
+            throw new InvalidOperationException("Sau ba Line, thành phần đúng bị cảnh báo giả hoặc chữ/Undo thay đổi.");
+        string withLines=Path.Combine(folder,"components-good-three-lines.docx");test.SaveCopy(withLines);
+        test.Undo();if(test.ReadCheckText()!=goodText)throw new InvalidOperationException("Undo ba Line thay đổi chữ mẫu đúng.");
+        test.Open(withLines);
+        if(test.Check().Any(Component) || test.ReadCheckText()!=goodText)
+            throw new InvalidOperationException("Mở lại ba Line sinh cảnh báo giả về cơ quan/trích yếu.");
+        pass("Thành phần đúng sau sửa cả ba Line: quét, lưu/mở và một Undo không sinh cảnh báo phông giả");
         test.Open(bad);string original=test.ReadCheckText();var plan=test.Check().Where(i=>i.CanFix && Component(i)).ToArray();
         if(!plan.Any(i=>i.Kind==FixKind.AgencyFormat) || !plan.Any(i=>i.Kind==FixKind.RecipientFormat) || !plan.Any(i=>i.Original.Contains('\v')))
             throw new InvalidOperationException("Mẫu sai chưa tạo đủ đề xuất mới hoặc chưa cho sửa phông giữ ngắt dòng.");
@@ -35,19 +46,37 @@ internal static class OfficeComponentCheck
         pass("Thành phần: sửa nhóm, giữ ngắt dòng, quét, một Undo và lưu/mở với nguồn nguyên vẹn");
         string longer=Create(modern,folder,true,true);test.Open(longer);var found=test.Check();
         var edits=found.Where(i=>i.CanFix && Component(i)).ToArray();
-        var anchors=new Dictionary<Issue,PreviewAnchor>();string previewPath=test.ExportPreview(test.LineTargets.Select(t=>t.Probe).ToArray(),anchors);
-        Issue line;
+        var lines=ReadLines(test,deferComponents:true);
+        if(lines.Length!=3)throw new InvalidOperationException("Mẫu phông sai chưa nhận đủ ba Line thiếu.");
+        string longOriginal=test.ReadCheckText();var selected=edits.Concat(lines).ToArray();
+        bool rolledBack=false;
+        try{test.FixStagedFailureProbe(selected,3);}catch(InvalidOperationException error) when(error.InnerException is OfficeStagedProbeException){rolledBack=true;}
+        if(!rolledBack || test.ReadCheckText()!=longOriginal || test.CheckUndoCount!=0 || test.Changed)
+            throw new InvalidOperationException("Rollback phông và ba Line chưa phục hồi toàn bộ.");
+        pass("Phông và ba Line: lỗi sau chèn Line phục hồi cả lượt, không tạo Undo");
+        found=test.Check();edits=found.Where(i=>i.CanFix && Component(i)).ToArray();lines=ReadLines(test,deferComponents:true);
+        test.FixSelection(edits.Concat(lines));
+        if(test.Check().Any(Component) || test.CheckUndoCount!=1)throw new InvalidOperationException("Hậu kiểm phông cơ quan/trích yếu/nơi nhận sau ba Line chưa qua.");
+        string allFixed=Path.Combine(folder,"components-all-fixed.docx");test.SaveCopy(allFixed);
+        test.Undo();if(test.ReadCheckText()!=longOriginal)throw new InvalidOperationException("Undo nhóm nơi nhận dài/Line chưa về nguyên bản.");
+        test.Open(allFixed);
+        if(test.Check().Any(Component))throw new InvalidOperationException("Mở lại phông và ba Line còn cảnh báo thành phần.");
+        pass("Phông cơ quan/trích yếu/nơi nhận sau đoạn 40: sửa cùng cả ba Line, quét, một Undo và lưu/mở");
+    }
+    private static Issue[] ReadLines(WordSession test,bool deferComponents=false)
+    {
+        var found=test.Check();var anchors=new Dictionary<Issue,PreviewAnchor>();
+        string path=test.ExportPreview(test.LineTargets.Select(t=>t.Probe).ToArray(),anchors);
         try
         {
-            using var xps=new System.Windows.Xps.Packaging.XpsDocument(previewPath,FileAccess.Read);
-            line=LineInspection.Inspect(xps.GetFixedDocumentSequence(),new PreviewHighlighter(),test.LineTargets,test.LineShapes,anchors,found,
-                LinePolicy.Decree30,test.HasGroupedShapes,test.VerifiedLineEdits).Select(e=>e.Issue).First(i=>i.CanFix && i.LineFix is not null);
+            using var xps=new System.Windows.Xps.Packaging.XpsDocument(path,FileAccess.Read);
+            // Test-only deferred intent: selected component edits run before fresh
+            // Line measurements in FixStaged. Do not change the production UI gate.
+            var blockers=deferComponents?found.Where(i=>!i.CanFix || i.Kind is not (FixKind.AgencyFormat or FixKind.AgencyText or FixKind.RecipientFormat or FixKind.RecipientText or FixKind.DocumentHeadingFormat)).ToArray():found;
+            return LineInspection.Inspect(xps.GetFixedDocumentSequence(),new PreviewHighlighter(),test.LineTargets,test.LineShapes,anchors,blockers,
+                LinePolicy.Decree30,test.HasGroupedShapes,test.VerifiedLineEdits).Select(e=>e.Issue).Where(i=>i.CanFix && i.LineFix is not null).ToArray();
         }
-        finally{if(File.Exists(previewPath))File.Delete(previewPath);}
-        string longOriginal=test.ReadCheckText();test.FixSelection(edits.Append(line));
-        if(test.Check().Any(Component) || test.CheckUndoCount!=1)throw new InvalidOperationException("Hậu kiểm phông nơi nhận sau đoạn 40 chưa qua cùng lượt Line.");
-        test.Undo();if(test.ReadCheckText()!=longOriginal)throw new InvalidOperationException("Undo nhóm nơi nhận dài/Line chưa về nguyên bản.");
-        pass("Nơi nhận sau đoạn 40: sửa cùng Line, hậu kiểm phông toàn thân đã có proof và một Undo");
+        finally{if(File.Exists(path))File.Delete(path);}
     }
     private static string Create(string source,string folder,bool bad,bool longBody=false)
     {

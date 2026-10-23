@@ -3,7 +3,7 @@ using ChinhTa.Core;
 
 public static class ComponentChecks
 {
-    public static (Paragraph[] Rows,LayoutParagraph[] Layout) Sample(bool softBreak=false,int subjects=2,bool recipients=true,bool automatic=false,int padding=0)
+    public static (Paragraph[] Rows,LayoutParagraph[] Layout) Sample(bool softBreak=false,int subjects=2,bool recipients=true,bool automatic=false,int padding=0,Action<XDocument>? changeXml=null)
     {
         XNamespace w="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
         XElement P(string text)=>new(w+"p",new XElement(w+"r",text.Split('\v').SelectMany((s,i)=>i==0?
@@ -17,7 +17,7 @@ public static class ComponentChecks
         body.Add(P(""),P("Kính gửi: đơn vị mẫu"),P("Nội dung bình thường."));
         for(int i=0;i<padding;i++)body.Add(P("Đoạn nội dung độc lập thứ "+i+"."));
         if(recipients)body.Add(new XElement(w+"tbl",new XElement(w+"tr",receiver,new XElement(w+"tc",P("TRƯỞNG ĐƠN VỊ")))));
-        var xml=new XDocument(new XElement(w+"document",body));var ps=body.Descendants(w+"p").ToArray();int cp=0;
+        var xml=new XDocument(new XElement(w+"document",body));changeXml?.Invoke(xml);var ps=body.Descendants(w+"p").ToArray();int cp=0;
         var live=new List<WordParagraphSnapshot>();var rows=new List<Paragraph>();
         foreach(var p in ps)
         {

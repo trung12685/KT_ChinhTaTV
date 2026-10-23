@@ -41,6 +41,13 @@ public static class IssueReviewModelChecks
         assert(anchored.Tooltip==IssueTooltipCatalog.Describe(a).Text && !anchored.Tooltip.Contains("long detail") &&
             !anchored.Tooltip.Contains("Hôm nay") && anchored.Detail.Contains("long detail"),
             "Compact tooltip uses the summary while the full selected detail retains diagnostics and context");
+        var outline=line with {Kind=FixKind.OutlineOrder,LineFix=null,Citation=null,Original="5",Replacement="3"};
+        var marker=outline with {Kind=FixKind.OutlineMarker,Start=120,Original="- ",Replacement=""};
+        var mixedSelection=new IssueReviewModel([line,outline,marker,marker with {Start=150,CanFix=false}]);
+        mixedSelection.Sections.Single(s=>s.Title==IssueReviewCatalog.SectionTitle(IssueReviewSection.RequiredFormat)).IsChecked=true;
+        assert(mixedSelection.All.SelectedCount==3 && mixedSelection.Choices.Where(c=>c.Issue.CanFix).All(c=>c.IsChecked) &&
+            mixedSelection.Choices.Where(c=>!c.Issue.CanFix).All(c=>!c.IsChecked),
+            "Required-section selection covers missing Line plus proven order/marker while ambiguous outline stays manual");
         var empty=new IssueReviewModel([]);
         assert(!empty.All.CanSelect && empty.All.IsChecked==false && empty.Groups.Count==0,"An empty scan has no selectable phantom group");
         var many=new IssueReviewModel(Enumerable.Range(0,1200).Select(i=>a with {Start=i*3}));

@@ -61,6 +61,12 @@ public static class IssueReviewPanelChecks
                 Visuals<TextBlock>(panel).Any(t=>t.Text=="ĐỀ XUẤT SỬA — CẦN DUYỆT") &&
                 Visuals<TextBlock>(panel).Any(t=>t.Text=="CHƯA TỰ SỬA — CHỈ CẢNH BÁO"),
                 "All three section headers render through the actual grouped templates");
+            var required=model.Sections.Single(s=>s.Title==IssueReviewCatalog.SectionTitle(IssueReviewSection.RequiredFormat));
+            required.IsChecked=true;
+            assert(required.SelectedCount==5 && model.All.SelectedCount==5 &&
+                panel.Choices.Where(c=>c.Issue.Kind is FixKind.OutlineOrder or FixKind.OutlineMarker).All(c=>c.IsChecked),
+                "The rendered required section selects all three missing Lines plus proven order and singleton-marker repairs");
+            required.IsChecked=false;
             var rows=Visuals<ListBoxItem>(list).ToArray();
             assert(rows.Length>0 && rows.All(r=>r.ActualHeight<=29 && r.ActualHeight>=26),"Rendered issue rows occupy one compact 28-pixel line");
             assert(!Visuals<CheckBox>(panel).Any(c=>c.Content is string text && text.Contains("Chọn để sửa hàng loạt")),

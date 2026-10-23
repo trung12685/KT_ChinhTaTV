@@ -25,6 +25,7 @@ public static class WordXmlTableMap
         var paragraphs = body.Descendants(W + "p").Where(p => !p.Ancestors(W + "txbxContent").Any()).ToArray();
         live = AlignBodyBlanks(paragraphs, live);
         int verified = Math.Min(paragraphs.Length, live.Count);
+        var formatLines=onFormatEditable is null?new HashSet<XElement>():OwnedLineFormatProof.Read(xml);
         var result = new List<LayoutParagraph>();
         // Validate the entire prefix before allowing any cell/shape operation.
         for (int i = 0; i < verified; i++)
@@ -45,7 +46,7 @@ public static class WordXmlTableMap
                 onMismatch(error); verified = i; break;
             }
             onParagraphMatched?.Invoke(live[i].Start, i);
-            onFormatEditable?.Invoke(live[i].Start,IsPlainText(p,allowTextBreaks:true));
+            onFormatEditable?.Invoke(live[i].Start,OwnedLineFormatProof.IsFormatText(p,formatLines));
             if(onTextEditable is not null)
             {
                 bool editable=IsPlainText(p);

@@ -28,8 +28,17 @@ public static class IssueReviewCatalogChecks
             "Optional centering remains a reviewable presentation action");
         assert(IssueReviewCatalog.Describe(heading with {Citation=null}).Section==IssueReviewSection.ReviewSuggestion,"Missing regulatory evidence cannot produce a required-format label");
         assert(IssueReviewCatalog.Describe(space with {Original="đo",Replacement="đò"}).FamilyKey!="spacing","The demo spelling proposal is separate from generic spacing");
-        foreach(var kind in new[]{FixKind.RepeatedText,FixKind.PunctuationSpace,FixKind.ParenthesisSpace,FixKind.SentenceEndSpace,FixKind.ColonSpace,FixKind.SentenceInnerSpace,FixKind.SentenceAfterSpace,FixKind.OutlineOrder,FixKind.OutlineMarker})
+        foreach(var kind in new[]{FixKind.RepeatedText,FixKind.PunctuationSpace,FixKind.ParenthesisSpace,FixKind.SentenceEndSpace,FixKind.ColonSpace,FixKind.SentenceInnerSpace,FixKind.SentenceAfterSpace})
             assert(IssueReviewCatalog.Describe(space with {Kind=kind}).Section==IssueReviewSection.ReviewSuggestion,"Language and punctuation proposals always retain review status");
+        foreach(var kind in new[]{FixKind.OutlineOrder,FixKind.OutlineMarker})
+        {
+            var item=space with {Kind=kind};
+            assert(IssueReviewCatalog.Describe(item).Section==IssueReviewSection.RequiredFormat,
+                "Repairable outline order and singleton markers follow the user's required-section preference without a regulatory citation");
+            assert(IssueReviewCatalog.Describe(item with {CanFix=false}).Section==IssueReviewSection.ManualWarning,
+                "An ambiguous outline remains manual even when the repairable family is required by user preference");
+            assert(item.Citation is null && !item.BatchSafe,"The outline display preference grants neither legal evidence nor new repair eligibility");
+        }
         string longTitle="  "+new string('a',150)+"\r\n\t cuối";
         var brief=IssueReviewCatalog.Describe(space with {Kind=FixKind.Advisory,CanFix=false,Title=longTitle});
         assert(brief.Label.Length<=88 && !brief.Label.Any(char.IsControl) && brief.Label.EndsWith("…"),"Long or multiline titles are bounded single-line labels without altering the original detail");

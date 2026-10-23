@@ -2,9 +2,13 @@
 
 Ứng dụng C# / WPF chạy trên Windows với Microsoft Word desktop, làm việc offline trên bản sao DOCX và xem trước bằng XPS. Không gửi nội dung tài liệu tới dịch vụ AI.
 
-**[Danh sách các nhóm sửa hiện có và bảng kiểm tổng thể](docs/SUPPORTED-FIXES-0.1.55.md)** — gồm điều kiện, ví dụ, ngoại lệ ô trống và các mục chỉ cảnh báo.
+**[Danh sách các nhóm sửa hiện có và bảng kiểm tổng thể](docs/SUPPORTED-FIXES-0.1.56.md)** — gồm điều kiện, ví dụ, ngoại lệ ô trống và các mục chỉ cảnh báo.
 
 Ưu tiên đã thống nhất: **thể thức → lỗi chữ và lặp từ/cụm từ → ngữ cảnh và thư viện sau cùng**. Phần chính tả tiếng Việt đầy đủ còn cần xây dựng; không coi quy tắc minh họa hiện tại là bộ kiểm hoàn chỉnh.
+
+## Bản thử 0.1.56
+
+Sửa cảnh báo phông giả tại cơ quan/trích yếu sau chèn cả ba Line: chứng minh định dạng riêng cho Line nổi của ứng dụng đã xác minh, giữ chặn sửa chữ qua đối tượng. C20/C21 đủ điều kiện chuyển sang **Bắt buộc sửa** theo yêu cầu người dùng, vẫn duyệt trước khi ghi. [Tải Windows](https://github.com/trung12685/KT_ChinhTaTV/releases/tag/v0.1.56) · [Nội dung và cách thử](docs/CHANGES-0.1.56.md). Giữ kiểm nét XPS, một Undo/rollback, danh mục 23/8/1; chưa xác nhận runtime Office 2021, stable .27 giữ nguyên.
 
 ## Bản thử 0.1.55
 
