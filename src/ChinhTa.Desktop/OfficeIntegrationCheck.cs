@@ -799,6 +799,72 @@ public static class OfficeIntegrationCheck
                 test.ReadCheckDecorations(colonAfterProbe)!=colonDecoration || !SaveDigest(colonSource).SequenceEqual(colonDigest))
                 throw new InvalidOperationException("Bản lưu hai chấm chưa đúng chữ/kiểu hoặc nguồn mẫu thay đổi");
             Pass(stage);
+            stage="Đối chiếu XML sau đoạn 40: ba chế độ, liên kết thủ công và từ chối kế hoạch cũ";
+            string bodyPlain=CreateBodyProofSample(positionSource,folder,"plain");
+            string bodyLink=CreateBodyProofSample(positionSource,folder,"link");
+            string bodyComplex=CreateBodyProofSample(positionSource,folder,"complex");
+            byte[] bodyPlainDigest=SaveDigest(bodyPlain),bodyLinkDigest=SaveDigest(bodyLink),bodyComplexDigest=SaveDigest(bodyComplex);
+            const string bodyNeighbor="Nội dung  ( kế hoạch kế hoạch ) đã duyệt;hoàn thành  .";
+            foreach(var bodyProfile in Enum.GetValues<DocumentProfile>())
+            {
+                test.Profile=bodyProfile;test.Open(bodyPlain);
+                var staleBody=test.Check().Single(i=>i.CanFix && i.Kind==FixKind.ColonSpace);
+                test.Open(bodyLink);string bodyOriginal=test.ReadCheckText();byte[] bodyCheckpoint=SaveDigest(test.RecoveryPath);
+                var bodyFound=test.Check();
+                if(!bodyFound.Any(i=>!i.CanFix && i.Original=="Ghi chú : nội dung") ||
+                    bodyFound.Count(i=>i.CanFix && i.Kind is FixKind.SentenceEndSpace or FixKind.ParenthesisSpace or FixKind.PunctuationSpace or FixKind.RepeatedText or FixKind.Text)!=6)
+                    throw new InvalidOperationException("Vùng liên kết sau đoạn 40 chưa giữ thủ công hoặc chữ thuần bên cạnh bị chặn trong "+bodyProfile);
+                bool staleBodyBlocked=false;
+                try{test.Fix(staleBody);}catch(InvalidOperationException){staleBodyBlocked=true;}
+                if(!staleBodyBlocked || test.Changed || test.ReadCheckText()!=bodyOriginal || !SaveDigest(test.RecoveryPath).SequenceEqual(bodyCheckpoint))
+                    throw new InvalidOperationException("Kế hoạch cũ đã ghi hoặc tạo checkpoint khi vùng chữ trở thành liên kết trong "+bodyProfile);
+                test.Undo();if(test.ReadCheckText()!=bodyOriginal)throw new InvalidOperationException("Kế hoạch cũ bị chặn đã tạo Undo");
+                Pass(stage+" — "+bodyProfile);
+            }
+            test.Profile=DocumentProfile.State;test.Open(bodyLink);
+            string bodyBaseline=test.ReadCheckText();
+            var bodyEdits=test.Check().Where(i=>i.CanFix && i.Kind is FixKind.SentenceEndSpace or FixKind.ParenthesisSpace or FixKind.PunctuationSpace or FixKind.RepeatedText or FixKind.Text).ToArray();
+            var bodyRepeat=bodyEdits.Single(i=>i.Kind==FixKind.RepeatedText);
+            var bodyProbe=new Issue(bodyRepeat.Start-"kế hoạch".Length,"kế hoạch".Length,"kế hoạch","kế hoạch","",false);
+            var bodyDecoration=test.ReadCheckDecorations(bodyProbe);
+            if(bodyDecoration.Bold!=-1 || bodyDecoration.Underline!=1)throw new InvalidOperationException("Mẫu chữ thuần phía sau chưa có kiểu riêng");
+            stage="Lỗi giữa nhóm chữ sau đoạn 40: giữ liên kết, rollback và không tạo Undo";
+            bool bodyRollback=false;
+            try{test.FixTextFailureProbe(bodyEdits,2);}
+            catch(InvalidOperationException error) when(error.InnerException is OfficeTextProbeException){bodyRollback=true;}
+            if(!bodyRollback || test.Changed || test.ReadCheckText()!=bodyBaseline || test.ReadCheckDecorations(bodyProbe)!=bodyDecoration ||
+                !test.Check().Any(i=>!i.CanFix && i.Original=="Ghi chú : nội dung"))
+                throw new InvalidOperationException("Rollback sau đoạn 40 chưa giữ đủ chữ/kiểu hoặc vùng liên kết");
+            test.Undo();if(test.ReadCheckText()!=bodyBaseline)throw new InvalidOperationException("Nhóm chữ sau đoạn 40 bị lỗi đã tạo Undo");
+            Pass(stage);
+            stage="Sửa nhóm chữ thuần sau đoạn 40: liên kết nguyên, quét, một Undo, lưu/mở";
+            bodyEdits=test.Check().Where(i=>i.CanFix && i.Kind is FixKind.SentenceEndSpace or FixKind.ParenthesisSpace or FixKind.PunctuationSpace or FixKind.RepeatedText or FixKind.Text).ToArray();
+            int bodyShift=bodyEdits.Where(i=>(long)i.Start+i.Length<=bodyProbe.Start).Sum(i=>i.Replacement.Length-i.Length);
+            var bodyAfterProbe=bodyProbe with {Start=bodyProbe.Start+bodyShift};
+            string bodyExpected=bodyBaseline.Replace(bodyNeighbor,"Nội dung (kế hoạch) đã duyệt; hoàn thành.",StringComparison.Ordinal);
+            test.FixMany(bodyEdits);string bodySaved=Path.Combine(folder,"body-proof-fixed.docx");test.SaveCopy(bodySaved);
+            if(test.ReadCheckText()!=bodyExpected || test.ReadCheckDecorations(bodyAfterProbe)!=bodyDecoration ||
+                test.Check().Any(i=>i.CanFix && i.Kind is FixKind.SentenceEndSpace or FixKind.ParenthesisSpace or FixKind.PunctuationSpace or FixKind.RepeatedText or FixKind.Text))
+                throw new InvalidOperationException("Nhóm chữ thuần sau đoạn 40 chưa đúng hoặc còn mục đã sửa");
+            VerifyBodyProofLink(bodySaved);test.Undo();
+            if(test.ReadCheckText()!=bodyBaseline || test.ReadCheckDecorations(bodyProbe)!=bodyDecoration)
+                throw new InvalidOperationException("Một Undo chưa phục hồi toàn nhóm chữ sau đoạn 40");
+            test.Open(bodySaved);
+            if(test.ReadCheckText()!=bodyExpected || !test.Check().Any(i=>!i.CanFix && i.Original=="Ghi chú : nội dung"))
+                throw new InvalidOperationException("Mở lại bản sửa sau đoạn 40 chưa đúng hoặc liên kết không còn giữ thủ công");
+            VerifyBodyProofLink(bodySaved);Pass(stage);
+            stage="Field phức tạp sau đoạn 40: chặn phần chưa chứng minh ở cả ba chế độ";
+            foreach(var bodyProfile in Enum.GetValues<DocumentProfile>())
+            {
+                test.Profile=bodyProfile;test.Open(bodyComplex);var complexFound=test.Check();
+                if(!complexFound.Any(i=>!i.CanFix && i.Title=="Chưa đối chiếu đầy đủ vùng sửa chữ") ||
+                    !complexFound.Any(i=>!i.CanFix && i.Original==bodyNeighbor) ||
+                    complexFound.Any(i=>i.CanFix && i.Kind is FixKind.SentenceEndSpace or FixKind.ParenthesisSpace or FixKind.PunctuationSpace or FixKind.RepeatedText or FixKind.Text) || test.Changed)
+                    throw new InvalidOperationException("Field phức tạp chưa chặn đủ phần chữ phía sau trong "+bodyProfile);
+            }
+            if(!SaveDigest(bodyPlain).SequenceEqual(bodyPlainDigest) || !SaveDigest(bodyLink).SequenceEqual(bodyLinkDigest) ||
+                !SaveDigest(bodyComplex).SequenceEqual(bodyComplexDigest))throw new InvalidOperationException("Nguồn mẫu đối chiếu toàn thân đã bị thay đổi");
+            test.Profile=DocumentProfile.State;Pass(stage);
             File.AppendAllText(report,"RESULT PASS\nKiểm thao tác Word/Line, vị trí nét XPS, sửa riêng/nhóm số-ngày, lưu/mở và Hoàn tác trên mẫu giả; không xác nhận mọi tài liệu.\n");
             return new(true,stage,folder);
         }
@@ -854,6 +920,53 @@ public static class OfficeIntegrationCheck
             other.Element(w+"rPr")!.Element(w+"b")!.SetAttributeValue(w+"val",1);run.AddAfterSelf(other);
         }
         entry.Delete();using(var stream=zip.CreateEntry("word/document.xml").Open())xml.Save(stream);return path;
+    }
+    private static string CreateBodyProofSample(string source,string folder,string kind)
+    {
+        string path=Path.Combine(folder,"body-proof-"+kind+".docx");File.Copy(source,path);
+        using var zip=ZipFile.Open(path,ZipArchiveMode.Update);var entry=zip.GetEntry("word/document.xml")!;
+        XDocument xml;using(var input=entry.Open())xml=XDocument.Load(input,LoadOptions.PreserveWhitespace);
+        XNamespace w="http://schemas.openxmlformats.org/wordprocessingml/2006/main",r="http://schemas.openxmlformats.org/officeDocument/2006/relationships";
+        XElement Run(string text,bool kept=false)=>new(w+"r",new XElement(w+"rPr",
+            new XElement(w+"rFonts",new XAttribute(w+"ascii","Times New Roman"),new XAttribute(w+"hAnsi","Times New Roman")),
+            new XElement(w+"b",new XAttribute(w+"val",kept?1:0)),new XElement(w+"sz",new XAttribute(w+"val",26)),
+            new XElement(w+"u",new XAttribute(w+"val",kept?"single":"none"))),
+            new XElement(w+"t",new XAttribute(XNamespace.Xml+"space","preserve"),text));
+        var rows=Enumerable.Range(1,45).Select(i=>new XElement(w+"p",Run("Đoạn đối chiếu "+i+"."))).ToList();
+        XElement target=kind switch {
+            "plain"=>new(w+"p",Run("Ghi chú : nội dung")),
+            "link"=>new(w+"p",new XElement(w+"hyperlink",new XAttribute(r+"id","rIdBodyProofCheck"),Run("Ghi chú : nội dung"))),
+            "complex"=>new(w+"p",new XElement(w+"r",new XElement(w+"fldChar",new XAttribute(w+"fldCharType","begin"))),
+                new XElement(w+"r",new XElement(w+"instrText",new XAttribute(XNamespace.Xml+"space","preserve")," QUOTE \"Vùng kiểm tra field\" ")),
+                new XElement(w+"r",new XElement(w+"fldChar",new XAttribute(w+"fldCharType","separate"))),Run("Vùng kiểm tra field"),
+                new XElement(w+"r",new XElement(w+"fldChar",new XAttribute(w+"fldCharType","end")))),
+            _=>throw new InvalidOperationException("Mẫu đối chiếu không hợp lệ") };
+        rows.Add(target);rows.Add(new XElement(w+"p",Run("Nội dung  ( "),Run("kế hoạch",true),Run(" kế hoạch ) đã duyệt;hoàn thành  .")));
+        var body=xml.Descendants(w+"body").Single();
+        foreach(var row in rows)if(body.Element(w+"sectPr") is XElement section)section.AddBeforeSelf(row);else body.Add(row);
+        entry.Delete();using(var output=zip.CreateEntry("word/document.xml").Open())xml.Save(output);
+        if(kind=="link")
+        {
+            XNamespace rel="http://schemas.openxmlformats.org/package/2006/relationships";
+            var relEntry=zip.GetEntry("word/_rels/document.xml.rels")!;XDocument relationships;
+            using(var input=relEntry.Open())relationships=XDocument.Load(input);
+            relationships.Root!.Add(new XElement(rel+"Relationship",new XAttribute("Id","rIdBodyProofCheck"),
+                new XAttribute("Type",r.NamespaceName+"/hyperlink"),new XAttribute("Target","https://example.invalid/body-proof"),new XAttribute("TargetMode","External")));
+            relEntry.Delete();using(var output=zip.CreateEntry("word/_rels/document.xml.rels").Open())relationships.Save(output);
+        }
+        return path;
+    }
+    private static void VerifyBodyProofLink(string path)
+    {
+        using var zip=ZipFile.OpenRead(path);XDocument document,relationships;
+        using(var input=zip.GetEntry("word/document.xml")!.Open())document=XDocument.Load(input);
+        using(var input=zip.GetEntry("word/_rels/document.xml.rels")!.Open())relationships=XDocument.Load(input);
+        XNamespace w="http://schemas.openxmlformats.org/wordprocessingml/2006/main",r="http://schemas.openxmlformats.org/officeDocument/2006/relationships";
+        var link=document.Descendants(w+"hyperlink").SingleOrDefault(e=>string.Concat(e.Descendants(w+"t").Select(t=>t.Value))=="Ghi chú : nội dung");
+        string? id=(string?)link?.Attribute(r+"id");
+        if(id is null || !relationships.Root!.Elements().Any(e=>(string?)e.Attribute("Id")==id &&
+            (string?)e.Attribute("Target")=="https://example.invalid/body-proof" && (string?)e.Attribute("TargetMode")=="External"))
+            throw new InvalidOperationException("Bản lưu đã làm mất chữ/quan hệ của liên kết được giữ thủ công");
     }
     private static string CreateColonSample(string source,string folder)
     {

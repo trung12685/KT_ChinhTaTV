@@ -97,7 +97,10 @@ public sealed partial class WordSession : IDisposable
         var paragraphs = new List<Paragraph>();
         IReadOnlyList<LayoutParagraph> headerLayout = [];
         var liveLayout = new List<WordParagraphSnapshot>();
-        var editableHeaderStarts=new HashSet<int>();
+        var liveText=new List<WordParagraphSnapshot>();
+        IReadOnlySet<int> editableStarts=new HashSet<int>();
+        bool textProofUnavailable=false;
+        WordXmlMappingException? textProofWarning=null;
         bool lineLayoutUnavailable = false;
         WordXmlMappingException? mappingWarning = null;
         dynamic ps = document!.Paragraphs;
@@ -117,6 +120,9 @@ public sealed partial class WordSession : IDisposable
                         snapshot=ReadLayout(r,start,text);
                         liveLayout.Add(snapshot);
                     }
+                    // Only the existing header prefix needs COM geometry. Every body
+                    // paragraph supplies its actual End for the independent XML text proof.
+                    liveText.Add(snapshot??new WordParagraphSnapshot(start,(int)r.End,text,0,false,false));
                     bool documentHeading=Profile==DocumentProfile.State && i<=40 && !HeadingRules.IsCandidate(text,Profile) && snapshot is {InTable:false} &&
                         (ShapeLineRules.IsDocumentType(text) || snapshot.ParagraphCentered==true);
                     if (documentHeading || HeadingRules.IsCandidate(text, Profile) ||
@@ -147,37 +153,72 @@ public sealed partial class WordSession : IDisposable
             }
         }
         finally { Release(ps); }
-        if (liveLayout.Count > 0)
+        string? bodyXml=null;
+        if(liveText.Count>0)
         {
-            dynamic content = document!.Content;
+            dynamic content=document!.Content;
             try
             {
-                // Current in-memory document, including unsaved edits; no per-paragraph Tables/Cells calls.
-                string xml = (string)content.WordOpenXML;
-                headerLayout = WordXmlTableMap.Read(xml, liveLayout, warning =>
-                {
-                    mappingWarning = warning;
-                    Diagnostics.Write("Word.XmlTableMap." + warning.DiagnosticCode, warning);
-                },onTextEditable:(start,editable)=>{if(editable)editableHeaderStarts.Add(start);});
-                lineLayoutUnavailable = headerLayout.Count == 0;
+                // One read of current in-memory XML, including unsaved edits.
+                bodyXml=(string?)content.WordOpenXML;
+                if(string.IsNullOrWhiteSpace(bodyXml))throw new InvalidOperationException("Missing current document XML");
             }
-            catch (Exception ex) when (ex is InvalidOperationException or System.Xml.XmlException ||
-                ex is COMException ce && ce.HResult == unchecked((int)0x800A1735))
+            catch(Exception ex) when(ex is InvalidOperationException or System.Xml.XmlException ||
+                ex is COMException ce && ce.HResult==unchecked((int)0x800A1735))
             {
-                Diagnostics.Write("Word.XmlTableMap.Unavailable", ex);
-                lineLayoutUnavailable = true;
+                bodyXml=null;
+                Diagnostics.Write("Word.TextProof.Unavailable",ex);
+                textProofUnavailable=true;
+                if(liveLayout.Count>0)
+                {Diagnostics.Write("Word.XmlTableMap.Unavailable",ex);lineLayoutUnavailable=true;}
             }
-            finally { if (Marshal.IsComObject(content)) Marshal.ReleaseComObject(content); }
+            finally{Release(content);}
         }
-        lastLayout = liveLayout.ToArray();
-        for(int i=0;i<paragraphs.Count;i++)
-            if(Profile==DocumentProfile.State && (i<40 || AdministrativeHeaderRules.IsCandidate(paragraphs[i].Text)))
-                paragraphs[i]=paragraphs[i] with {TextEditable=editableHeaderStarts.Contains(paragraphs[i].Start)};
+        if(bodyXml is not null)
+        {
+            try
+            {
+                editableStarts=WordTextProof.Read(bodyXml,liveText,warning=>
+                {
+                    textProofWarning=warning;
+                    Diagnostics.Write("Word.TextProof."+warning.DiagnosticCode,warning);
+                });
+            }
+            catch(Exception ex) when(ex is InvalidOperationException or System.Xml.XmlException)
+            {
+                Diagnostics.Write("Word.TextProof.Unavailable",ex);textProofUnavailable=true;
+            }
+            // Preserve the existing geometry prefix and mismatch handling. The whole-
+            // body text proof never broadens table/Line operations to later paragraphs.
+            if(liveLayout.Count>0)
+            {
+                try
+                {
+                    headerLayout=WordXmlTableMap.Read(bodyXml,liveLayout,warning=>
+                    {
+                        mappingWarning=warning;
+                        Diagnostics.Write("Word.XmlTableMap."+warning.DiagnosticCode,warning);
+                    });
+                    lineLayoutUnavailable=headerLayout.Count==0;
+                }
+                catch(Exception ex) when(ex is InvalidOperationException or System.Xml.XmlException)
+                {
+                    Diagnostics.Write("Word.XmlTableMap.Unavailable",ex);lineLayoutUnavailable=true;
+                }
+            }
+        }
+        lastLayout=liveLayout.ToArray();
+        paragraphs=WordTextProof.Apply(paragraphs,editableStarts).ToList();
         LineTargets = lineLayoutUnavailable ? [] : ShapeLineRules.Identify(headerLayout, Profile);
         AdministrativePositionTargets=AdministrativePositionRules.Identify(paragraphs,headerLayout,Profile);
         LineShapes = ReadLineShapes();
         var issues = Checker.Check(paragraphs, Profile).ToList();
         issues.AddRange(DocumentHeadingRules.Check(paragraphs,headerLayout,Profile));
+        if((textProofUnavailable || textProofWarning is not null) && paragraphs.FirstOrDefault(p=>p.Text.Length>0) is Paragraph textReference)
+            issues.Add(new(textReference.Start,textReference.Text.Length,textReference.Text,textReference.Text,
+                "Chưa đối chiếu được toàn bộ phần thân để sửa chữ/phông. Các đoạn đã xác minh vẫn được xét; đoạn chưa xác minh giữ kiểm tra thủ công. "+
+                (textProofWarning is null?"Không đọc/đối chiếu được XML hiện tại.":"Mã kiểm tra: "+textProofWarning.DiagnosticCode+"."),
+                false,FixKind.Advisory,CanFix:false,Title:"Chưa đối chiếu đầy đủ vùng sửa chữ"));
         if ((lineLayoutUnavailable || mappingWarning is not null && LineTargets.Count < 3) && paragraphs.FirstOrDefault(p => p.Text.Length > 0) is Paragraph first)
             issues.Add(new(first.Start, first.Text.Length, first.Text, first.Text,
                 "Chưa đối chiếu đủ các mốc đường kẻ. " +
