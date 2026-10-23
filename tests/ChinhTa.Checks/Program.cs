@@ -22,6 +22,7 @@ DocumentHeadingChecks.Run(Assert);
 StructuredTextChecks.Run(Assert);
 WholeBodyTextProofChecks.Run(Assert);
 SentenceInnerSpaceChecks.Run(Assert);
+SentenceAfterSpaceChecks.Run(Assert);
 HeadingPostSaveChecks.Run(Assert);
 CheckpointCleanupChecks.Run(Assert);
 RepeatedTextChecks.Run(Assert);
