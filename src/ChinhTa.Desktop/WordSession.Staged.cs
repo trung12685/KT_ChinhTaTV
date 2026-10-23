@@ -55,7 +55,7 @@ public sealed partial class WordSession
     {
         foreach(var proof in formats)
         {
-            var matches=lastLayout.Where(p=>p.Text.TrimEnd('\r','\a','\n')==proof.Text &&
+            var matches=lastFormatLayout.Where(p=>p.Text.TrimEnd('\r','\a','\n')==proof.Text &&
                 ReadPrefix(proof.Issue with {Start=p.Start})==proof.Prefix).ToArray();
             if(matches.Length!=1)throw new InvalidOperationException("Chưa đối chiếu lại được vùng phông sau các nhóm sửa.");
             dynamic range=document!.Range(matches[0].Start,matches[0].Start+proof.Text.Length);

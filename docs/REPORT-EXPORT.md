@@ -47,3 +47,5 @@ Từ .52, lịch sử có mốc tooltip ngắn ba phần và căn cứ có nội
 Từ .53, báo cáo ghi mốc sửa nhiều nhóm có đo lại, một Undo/rollback cả lượt; giữ 21/8/1 và ví dụ. Không dùng số loại lỗi làm số lỗi đã sửa trong tài liệu.
 
 Từ .54 có C22 tên cơ quan và C23 nơi nhận, với ví dụ, tổng 23/8/1. Mốc .54 ghi nhận diện trích yếu và tách thông tin phạm vi XML.
+
+Mốc .55 hoàn thiện hậu kiểm phông nơi nhận sau đoạn 40 trong lượt nhiều nhóm.

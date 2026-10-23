@@ -33,10 +33,25 @@ internal static class OfficeComponentCheck
         if(test.ReadCheckText()!=expected || test.Check().Any(Component) || !System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(bad)).SequenceEqual(sourceHash))
             throw new InvalidOperationException("Lưu/mở thành phần chưa đúng hoặc nguồn mẫu bị đổi.");
         pass("Thành phần: sửa nhóm, giữ ngắt dòng, quét, một Undo và lưu/mở với nguồn nguyên vẹn");
+        string longer=Create(modern,folder,true,true);test.Open(longer);var found=test.Check();
+        var edits=found.Where(i=>i.CanFix && Component(i)).ToArray();
+        var anchors=new Dictionary<Issue,PreviewAnchor>();string previewPath=test.ExportPreview(test.LineTargets.Select(t=>t.Probe).ToArray(),anchors);
+        Issue line;
+        try
+        {
+            using var xps=new System.Windows.Xps.Packaging.XpsDocument(previewPath,FileAccess.Read);
+            line=LineInspection.Inspect(xps.GetFixedDocumentSequence(),new PreviewHighlighter(),test.LineTargets,test.LineShapes,anchors,found,
+                LinePolicy.Decree30,test.HasGroupedShapes,test.VerifiedLineEdits).Select(e=>e.Issue).First(i=>i.CanFix && i.LineFix is not null);
+        }
+        finally{if(File.Exists(previewPath))File.Delete(previewPath);}
+        string longOriginal=test.ReadCheckText();test.FixSelection(edits.Append(line));
+        if(test.Check().Any(Component) || test.CheckUndoCount!=1)throw new InvalidOperationException("Hậu kiểm phông nơi nhận sau đoạn 40 chưa qua cùng lượt Line.");
+        test.Undo();if(test.ReadCheckText()!=longOriginal)throw new InvalidOperationException("Undo nhóm nơi nhận dài/Line chưa về nguyên bản.");
+        pass("Nơi nhận sau đoạn 40: sửa cùng Line, hậu kiểm phông toàn thân đã có proof và một Undo");
     }
-    private static string Create(string source,string folder,bool bad)
+    private static string Create(string source,string folder,bool bad,bool longBody=false)
     {
-        string path=Path.Combine(folder,bad?"components-bad.docx":"components-good.docx");File.Copy(source,path);
+        string path=Path.Combine(folder,longBody?"components-long.docx":bad?"components-bad.docx":"components-good.docx");File.Copy(source,path);
         using var zip=ZipFile.Open(path,ZipArchiveMode.Update);var entry=zip.GetEntry("word/document.xml")!;
         XDocument xml;using(var s=entry.Open())xml=XDocument.Load(s,LoadOptions.PreserveWhitespace);
         XNamespace w="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
@@ -62,7 +77,9 @@ internal static class OfficeComponentCheck
         var table=new XElement(w+"tbl",new XElement(w+"tblPr"),new XElement(w+"tblGrid",new XElement(w+"gridCol",new XAttribute(w+"w",4000)),new XElement(w+"gridCol",new XAttribute(w+"w",4000))),
             new XElement(w+"tr",new XElement(w+"tc",Row("Nơi nhận:",bad?14:12,!bad,!bad),Row("- Như trên;",11),
                 Row(bad?"Mục thử nghiệm.":"- Mục thử nghiệm;",bad?14:11,broken:bad),Row("- Lưu: VT, TEST.",11)),new XElement(w+"tc",Row("TRƯỞNG ĐƠN VỊ",13,true))));
-        var body=xml.Descendants(w+"body").Single();if(body.Element(w+"sectPr") is XElement section)section.AddBeforeSelf(table);else body.Add(table);
+        var body=xml.Descendants(w+"body").Single();
+        if(longBody)for(int i=0;i<45;i++){var row=Row("Nội dung bổ sung thứ "+i+".",14);if(body.Element(w+"sectPr") is XElement s)s.AddBeforeSelf(row);else body.Add(row);}
+        if(body.Element(w+"sectPr") is XElement section)section.AddBeforeSelf(table);else body.Add(table);
         entry.Delete();using(var output=zip.CreateEntry("word/document.xml").Open())xml.Save(output);return path;
     }
 }

@@ -10,7 +10,7 @@
 
 Mốc đã chốt: [0.1.27](STATUS-0.1.27.md), mã gói `1ec3092ccd68ed0acd8878b2737664116a6b11fe`, tag `v0.1.27`. Đọc biên bản này trước để phân biệt bằng chứng CI, xác nhận người dùng và kịch bản còn chờ. Phát triển từ `main` sau khi chốt, tạo nhánh mới; không tiếp tục phát hành vào tag hoặc ghi đè ZIP 0.1.27.
 
-Nhánh đang phát triển: `feature/component-roles-0.1.54`, từ 0.1.53 (`ddf74552dce9fbc58e0dea46dfc90f0db69ca865`). Chuỗi bản thử dựa trên main đã chốt `da6cf3b0999dbfb60d16ab1eae9733b0f1f20c81`. Đọc các CHANGES và [phạm vi 0.1.54](CHANGES-0.1.54.md). Chưa nhập main hoặc coi CI là bằng chứng Office 2021.
+Nhánh đang phát triển: `feature/component-roles-0.1.55`, từ 0.1.54 (`e0d5bac9c12d9dcebc53f109e1b29c3b2b79a3a2`). Chuỗi bản thử dựa trên main đã chốt `da6cf3b0999dbfb60d16ab1eae9733b0f1f20c81`. Đọc các CHANGES và [phạm vi 0.1.55](CHANGES-0.1.55.md). Chưa nhập main hoặc coi CI là bằng chứng Office 2021.
 
 ## Bản đồ mã nguồn
 
@@ -75,7 +75,7 @@ Tài liệu riêng chỉ dùng cục bộ theo đường dẫn tùy chọn của
 dotnet publish src/ChinhTa.Desktop -c Release -r win-x64 --self-contained true -o artifacts/win-x64
 ```
 
-Kèm thư mục `samples`, ghi chú phiên bản, ZIP và SHA-256. Chạy kiểm thử trước khi phát hành. Khi tạo bản mới, cập nhật version trong csproj, tiêu đề UI, tên gói/tag, ghi chú và workflow Windows; không phát hành lại vào tag cũ. Workflow `windows-package.yml` gắn `feature/component-roles-0.1.54` và phát hành prerelease 0.1.54 sau kiểm thử. Mỗi phiên bản sau phải đổi nhánh/version và không ghi đè tag đã phát hành. Workflow `finalize-0.1.27.yml` chỉ chốt metadata của bản đã thử, có kiểm tag, digest, CI và thay đổi chỉ thuộc tài liệu/workflow được cho phép; không build hoặc thay asset.
+Kèm thư mục `samples`, ghi chú phiên bản, ZIP và SHA-256. Chạy kiểm thử trước khi phát hành. Khi tạo bản mới, cập nhật version trong csproj, tiêu đề UI, tên gói/tag, ghi chú và workflow Windows; không phát hành lại vào tag cũ. Workflow `windows-package.yml` gắn `feature/component-roles-0.1.55` và phát hành prerelease 0.1.55 sau kiểm thử. Mỗi phiên bản sau phải đổi nhánh/version và không ghi đè tag đã phát hành. Workflow `finalize-0.1.27.yml` chỉ chốt metadata của bản đã thử, có kiểm tag, digest, CI và thay đổi chỉ thuộc tài liệu/workflow được cho phép; không build hoặc thay asset.
 
 Khi nhận lỗi, lấy log đúng version và phân biệt lỗi đọc Word, ghép XML, CP/mốc, marker, candidate, nét XPS hay rollback. Các mã `Word.Preview.CpMapping`, `Word.Preview.Unmapped`, `Word.LineBatch.ReferenceBinding.*`, `Word.LineBatch.StoryBinding`, `Word.LineBatch.Rescan` ghi số liệu mà không ghi chữ tài liệu. Không kết luận nguyên nhân chỉ từ ngoại lệ tổng quát hoặc một điều kiện guard gộp.
 
@@ -334,3 +334,8 @@ CurrentTextPlan quét lại toàn ngữ cảnh trước checkpoint, nên thêm s
 - Cảnh báo toàn phần XML chuyển sang CoverageNotice/CoverageInfo riêng, không neo tùy tiện vào BỘ CÔNG AN hay cộng vào danh sách lỗi. Không coi thiếu căn cứ của thông báo kỹ thuật là vi phạm pháp lý; vẫn thể hiện chưa kiểm đủ nếu thật sự mất proof. Chưa có log mới để kết luận nguyên nhân XML của lần chạy Office người dùng.
 - Kiểm riêng DOCX mới chỉ bằng XML và CP/trang mô phỏng: 0 cảnh báo component/trích yếu/nơi nhận, vẫn giữ 1 thứ tự sai và 1 dấu đơn thân bài; nguồn không đổi. Đây không là PASS Word. Không đưa file/đoạn riêng vào repo/gói. Unit fixtures dùng tên giả; OfficeComponentCheck thêm mẫu đúng/sai, ngắt dòng, sửa nhóm/fault/Undo/lưu-mở nhưng chưa chạy Word tại đây.
 - Danh mục 23 đề xuất/8 thủ công/1 minh họa, có ví dụ C22/C23; main và stable .27 giữ nguyên.
+
+
+## Ghi chú triển khai 0.1.55
+
+Kiểm toàn thân mới của C23 có thể đi qua đoạn 40; hậu kiểm cuối .53 cũ dùng lastLayout (chỉ header geometry) nên không tìm được font recipient dài sau Line mở lại. Thêm lastFormatLayout lấy đúng liveText đã có TextEditable/FormatEditable proof toàn thân. VerifyStagedFormats dùng prefix Word thật và danh sách này; không thêm COM getters/không mở rộng phép đo Line. Mất proof sau mở lại vẫn fail/rollback. Test Core cho recipient sau đoạn 40; OfficeComponentCheck thêm sửa font recipient dài cùng Line và một Undo (mới biên dịch, chưa runtime Word). 23/8/1 giữ nguyên; .54 là mốc nội bộ đã CI đạt, tag/gói không ghi đè, .55 là gói gửi người dùng.
