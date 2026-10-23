@@ -10,7 +10,7 @@
 
 Mốc đã chốt: [0.1.27](STATUS-0.1.27.md), mã gói `1ec3092ccd68ed0acd8878b2737664116a6b11fe`, tag `v0.1.27`. Đọc biên bản này trước để phân biệt bằng chứng CI, xác nhận người dùng và kịch bản còn chờ. Phát triển từ `main` sau khi chốt, tạo nhánh mới; không tiếp tục phát hành vào tag hoặc ghi đè ZIP 0.1.27.
 
-Nhánh đang phát triển: `feature/sentence-end-spacing-0.1.44`, từ 0.1.43 (`dd95a1dc1c62beca90d3ef9544913f36907aeb2b`). Chuỗi bản thử dựa trên main đã chốt `da6cf3b0999dbfb60d16ab1eae9733b0f1f20c81`. Đọc các CHANGES và [phạm vi 0.1.44](CHANGES-0.1.44.md). Chưa nhập main hoặc coi CI là bằng chứng Office 2021.
+Nhánh đang phát triển: `feature/report-examples-0.1.45`, từ 0.1.44 (`009b8c806a6b17897ab70b75551fde7d435ff0be`). Chuỗi bản thử dựa trên main đã chốt `da6cf3b0999dbfb60d16ab1eae9733b0f1f20c81`. Đọc các CHANGES và [phạm vi 0.1.45](CHANGES-0.1.45.md). Chưa nhập main hoặc coi CI là bằng chứng Office 2021.
 
 ## Bản đồ mã nguồn
 
@@ -75,7 +75,7 @@ Tài liệu riêng chỉ dùng cục bộ theo đường dẫn tùy chọn của
 dotnet publish src/ChinhTa.Desktop -c Release -r win-x64 --self-contained true -o artifacts/win-x64
 ```
 
-Kèm thư mục `samples`, ghi chú phiên bản, ZIP và SHA-256. Chạy kiểm thử trước khi phát hành. Khi tạo bản mới, cập nhật version trong csproj, tiêu đề UI, tên gói/tag, ghi chú và workflow Windows; không phát hành lại vào tag cũ. Workflow `windows-package.yml` gắn `feature/sentence-end-spacing-0.1.44` và phát hành prerelease 0.1.44 sau kiểm thử. Mỗi phiên bản sau phải đổi nhánh/version và không ghi đè tag đã phát hành. Workflow `finalize-0.1.27.yml` chỉ chốt metadata của bản đã thử, có kiểm tag, digest, CI và thay đổi chỉ thuộc tài liệu/workflow được cho phép; không build hoặc thay asset.
+Kèm thư mục `samples`, ghi chú phiên bản, ZIP và SHA-256. Chạy kiểm thử trước khi phát hành. Khi tạo bản mới, cập nhật version trong csproj, tiêu đề UI, tên gói/tag, ghi chú và workflow Windows; không phát hành lại vào tag cũ. Workflow `windows-package.yml` gắn `feature/report-examples-0.1.45` và phát hành prerelease 0.1.45 sau kiểm thử. Mỗi phiên bản sau phải đổi nhánh/version và không ghi đè tag đã phát hành. Workflow `finalize-0.1.27.yml` chỉ chốt metadata của bản đã thử, có kiểm tag, digest, CI và thay đổi chỉ thuộc tài liệu/workflow được cho phép; không build hoặc thay asset.
 
 Khi nhận lỗi, lấy log đúng version và phân biệt lỗi đọc Word, ghép XML, CP/mốc, marker, candidate, nét XPS hay rollback. Các mã `Word.Preview.CpMapping`, `Word.Preview.Unmapped`, `Word.LineBatch.ReferenceBinding.*`, `Word.LineBatch.StoryBinding`, `Word.LineBatch.Rescan` ghi số liệu mà không ghi chữ tài liệu. Không kết luận nguyên nhân chỉ từ ngoại lệ tổng quát hoặc một điều kiện guard gộp.
 
@@ -253,3 +253,9 @@ Office fixture có đậm/gạch chân từ đầu trong ngoặc; CP của probe
 `SentenceEndSpaceRules` chỉ dò một dấu .?! cuối đoạn sau khi bỏ terminator/ASCII trailing space khỏi vùng xét (không sửa chúng). Span chỉ là ASCII space ngay trước dấu; last word ≥2 chữ cái thường, có word prefix, ranh giới rõ, không Roman hoặc token sau chấm/chuỗi dấu. Bỏ qua technical markers/control/header/date words với regex tuyến tính; chưa là recognizer viết tắt/ngữ nghĩa đầy đủ. Chấp nhận bỏ sót để giữ phạm vi hẹp. TextEditable=false trả manual cả đoạn; không mở rộng giới hạn XML hiện có.
 
 Gộp C16 vào đường punctuation hiện tại để suppress generic spaces chồng span; hỗ trợ full CharacterFormat trong BatchPlan. Replacement rỗng có Suggestion rõ; dùng normalization range.Text=null, whole-story proof, rollback/Undo cũ. Không thay Line/XPS/save/checkpoint. Office fixture có ba C16 + năm edits khác, style ở từ giữ lại, fault ngay write đầu (C16 ở cuối tài liệu); sau Undo riêng mở lại source để baseline Changed=false. CP probe lấy từ parenthesis issue thật và delta ASCII phía trước, không dùng string.IndexOf làm Word CP. Thêm C16/milestone/guide/metadata gói; chưa có xác nhận runtime Office.
+
+## Ghi chú triển khai 0.1.45
+
+`ReportExample(Before,Outcome)` là tham số bắt buộc của mỗi `ReportCapability`; thêm loại mới phải cung cấp ví dụ. Phông/vị trí mô tả định dạng/số đo; text đơn giản có kết quả nguyên văn. `ReportPlannedWork` riêng chứa P01–P05 và ví dụ/hướng nghiên cứu, không cộng vào CapabilityMode hoặc giả làm CanFix. Giữ thứ tự thể thức → chữ cơ bản → ngữ cảnh sau cùng. Báo cáo phân biệt trạng thái phát triển với lịch sử tài liệu; toàn bộ mẫu giả, không đọc DOCX.
+
+Build render ví dụ từ cùng dữ liệu cho UI/TXT, không Trim/normalize dấu cách. [TAB] là ký hiệu hiển thị. Đối chiếu các ví dụ text C01/C05/C06/C13–C16 với Checker/BatchPlan/ExpectedStory, ví dụ dự kiến chưa có CanFix; kiểm render đủ ví dụ/trạng thái và unique milestone. WPF hiện có kiểm cửa sổ chỉ đọc/UTF-8 nguyên văn, mở rộng kiểm hiện ví dụ. Không thay engine hoặc tạo thêm Office scenario; bài Word xuất khi Changed/Undo đã có vẫn áp dụng. Workflow tạo sample TXT từ renderer/gói thực và giữ guide chức năng .44 vì engine không đổi. Chưa có runtime Office cho .45.

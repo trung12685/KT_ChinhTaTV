@@ -1,7 +1,7 @@
 name: Windows package
 on:
   push:
-    branches: [feature/sentence-end-spacing-0.1.44]
+    branches: [feature/report-examples-0.1.45]
 permissions:
   contents: write
 jobs:
@@ -43,7 +43,7 @@ jobs:
         shell: pwsh
         run: |
           Copy-Item samples artifacts/win-x64/samples -Recurse -Force
-          Copy-Item docs/CHANGES-0.1.44.md artifacts/win-x64/
+          Copy-Item docs/CHANGES-0.1.45.md artifacts/win-x64/
           Copy-Item docs/REPORT-EXPORT.md artifacts/win-x64/
           Copy-Item docs/SUPPORTED-FIXES-0.1.44.md artifacts/win-x64/
           Copy-Item artifacts/build-checks.json artifacts/win-x64/
@@ -52,20 +52,20 @@ jobs:
       - name: Archive and hash
         shell: pwsh
         run: |
-          Copy-Item artifacts/ChinhTaViet-0.1.44-tien-do.txt artifacts/win-x64/
-          Compress-Archive artifacts/win-x64/* artifacts/ChinhTaViet-0.1.44-win-x64.zip
-          Get-FileHash artifacts/ChinhTaViet-0.1.44-win-x64.zip -Algorithm SHA256 | Format-List | Out-File artifacts/SHA256.txt
+          Copy-Item artifacts/ChinhTaViet-0.1.45-tien-do.txt artifacts/win-x64/
+          Compress-Archive artifacts/win-x64/* artifacts/ChinhTaViet-0.1.45-win-x64.zip
+          Get-FileHash artifacts/ChinhTaViet-0.1.45-win-x64.zip -Algorithm SHA256 | Format-List | Out-File artifacts/SHA256.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: ChinhTaViet-0.1.44-win-x64
+          name: ChinhTaViet-0.1.45-win-x64
           path: |
             artifacts/*.zip
             artifacts/SHA256.txt
             artifacts/build-checks.json
-            artifacts/ChinhTaViet-0.1.44-tien-do.txt
+            artifacts/ChinhTaViet-0.1.45-tien-do.txt
       - name: Publish prerelease
         env:
           GH_TOKEN: ${{ github.token }}
         shell: pwsh
         run: |
-          gh release create v0.1.44 artifacts/ChinhTaViet-0.1.44-win-x64.zip artifacts/SHA256.txt artifacts/build-checks.json artifacts/ChinhTaViet-0.1.44-tien-do.txt --target $env:GITHUB_SHA --prerelease --title '0.1.44 — Khoảng trắng trước dấu kết câu — bản thử' --notes-file docs/CHANGES-0.1.44.md
+          gh release create v0.1.45 artifacts/ChinhTaViet-0.1.45-win-x64.zip artifacts/SHA256.txt artifacts/build-checks.json artifacts/ChinhTaViet-0.1.45-tien-do.txt --target $env:GITHUB_SHA --prerelease --title '0.1.45 — Ví dụ lỗi trong báo cáo tiến độ — bản thử' --notes-file docs/CHANGES-0.1.45.md
