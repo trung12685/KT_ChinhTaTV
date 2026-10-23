@@ -56,6 +56,58 @@ public static class OwnedLineFormatChecks
                 assert(Checker.Check(sample.Rows).All(i=>i.Kind is not (FixKind.AgencyFormat or FixKind.DocumentHeadingFormat)),
                     "The ordinary checker does not gain a new text-write path through an owned Line");
             }
+            XNamespace mc="http://schemas.openxmlformats.org/markup-compatibility/2006",v="urn:schemas-microsoft-com:vml";
+            foreach(bool merge in new[]{false,true})
+            foreach(bool wrapper in new[]{false,true})
+            {
+                var roundTrip=ComponentChecks.Sample(changeXml:xml=>
+                {
+                    Attach(xml);
+                    foreach(var d in xml.Descendants(w+"drawing").ToArray())
+                    {
+                        XElement container=d;
+                        if(wrapper)
+                        {
+                            var ac=new XElement(mc+"AlternateContent",new XAttribute(XNamespace.Xmlns+"wps","http://schemas.microsoft.com/office/word/2010/wordprocessingShape"),
+                                new XElement(mc+"Choice",new XAttribute("Requires","wps"),new XElement(d)),
+                                new XElement(mc+"Fallback",new XElement(w+"pict",new XElement(v+"line"))));
+                            d.ReplaceWith(ac);container=ac;
+                        }
+                        if(merge)
+                        {
+                            var oldRun=container.Parent!;var textRun=oldRun.Parent!.Elements(w+"r").First(x=>x.Element(w+"t") is not null);
+                            container.Remove();textRun.Add(container);oldRun.Remove();
+                        }
+                    }
+                });
+                assert(ComponentRules.Check(roundTrip.Rows,roundTrip.Layout,DocumentProfile.State).Count==0 &&
+                    DocumentHeadingRules.Check(roundTrip.Rows,roundTrip.Layout,DocumentProfile.State).Count==0,
+                    "Word-style compatibility wrappers and merged text/drawing runs do not invent format defects");
+                assert(roundTrip.Rows.Where(p=>p.Text.StartsWith("ĐƠN VỊ BAN HÀNH") || p.Text.StartsWith("trong giai đoạn")).All(p=>p.FormatEditable && !p.TextEditable),
+                    "Round-trip proof preserves visible text while ordinary replacement through drawings stays closed");
+            }
+            var control=ComponentChecks.Sample(changeXml:xml=>
+            {
+                Attach(xml);var p=xml.Descendants(w+"p").First();
+                var cell=p.Parent!;var controlled=p.ElementsAfterSelf(w+"p").First();
+                controlled.Remove();cell.AddFirst(new XElement(w+"sdt",new XElement(w+"sdtContent",controlled)));
+            });
+            assert(!control.Rows.Single(p=>p.Text.StartsWith("ĐƠN VỊ BAN HÀNH")).FormatEditable,
+                "A proven owned Line inside a content control cannot lose the ancestor safety guard when cloning proof XML");
+            foreach(string badFallback in new[]{"text","image","object","rectangle"})
+            {
+                var unsafeSample=ComponentChecks.Sample(changeXml:xml=>
+                {
+                    Attach(xml);var d=xml.Descendants(w+"drawing").First();
+                    var content=badFallback=="rectangle"?new XElement(v+"shape",new XAttribute("type","#_x0000_t75")):
+                        new XElement(v+"line",badFallback=="text"?new XElement(v+"textbox","hidden text"):
+                            badFallback=="image"?new XElement(v+"imagedata"):new XElement(w+"object"));
+                    d.ReplaceWith(new XElement(mc+"AlternateContent",new XAttribute(XNamespace.Xmlns+"wps","http://schemas.microsoft.com/office/word/2010/wordprocessingShape"),
+                        new XElement(mc+"Choice",new XAttribute("Requires","wps"),new XElement(d)),new XElement(mc+"Fallback",new XElement(w+"pict",content))));
+                });
+                assert(!unsafeSample.Rows.Single(p=>p.Text.StartsWith("ĐƠN VỊ BAN HÀNH")).FormatEditable,
+                    "A compatibility branch containing text, image, object or a non-line cannot gain format proof");
+            }
             foreach(var mutate in new Action<XElement>[]
             {
                 d=>d.Descendants(wp+"docPr").Single().SetAttributeValue("descr","Foreign.Line"),

@@ -1,5 +1,11 @@
 # Tiếp tục phát triển Chính tả Việt
 
+## Mốc tiếp tục 0.1.57
+
+Phản hồi lặp lại sau .56 chưa có log/DOCX sau sửa hoặc xác nhận bản đang chạy, không kết luận root cause thực tế đã được khép lại. Bổ sung nhánh Word AlternateContent/Choice wps + fallback Line không chữ và run gộp trong OwnedLineFormatProof, không bỏ run chứa chữ. VisibleFormatReader dùng actual Characters Range khi Font vùng không xác định, đối chiếu toàn chuỗi; dùng cả khi hậu kiểm phông nhiều nhóm. C20/C21 CanFix vẫn Bắt buộc sửa; phiên bản UI lấy từ assembly, log thêm MVID Desktop/Core và cờ định dạng khi manual.
+
+RepairProgressTracker/WordSession.Progress chỉ quan sát giao dịch; cập nhật bước sửa/đo/kiểm/phục hồi, số hậu kiểm tạm thời. RepairProgressDialog có STA riêng cho popup/heartbeat, COM giữ STA hiện có; không async Word hoặc bơm reentrant UI. Giao diện chính bị khóa trong lượt; chỉ hoàn tất sau EditThenScan và Scan thành công, rollback reset đếm. Xem [nội dung .57](CHANGES-0.1.57.md). Kiểm Core/COM giả/WPF thực không thay runtime Office2021. Tiếp theo cần log đúng phiên bản, DOCX sau sửa và bài Kiểm tra Word; bảo toàn nét XPS, một Undo/rollback, chưa mở ngữ nghĩa/thư viện.
+
 ## Mốc tiếp tục 0.1.56
 
 Từ .55, sửa cảnh báo phông mới sau chèn Line ở cơ quan/trích yếu: `OwnedLineFormatProof` cấp riêng FormatEditable cho đoạn XML/live khớp có Line nổi của ứng dụng, marker/ID/vai trò duy nhất, không chứa chữ và run riêng. TextEditable qua drawing vẫn false; ComponentRules dùng hai quyền riêng cho phông/chữ. Không xóa run thật, không thay kiểm nét XPS hay giới hạn hình học. C20/C21 CanFix chuyển Bắt buộc sửa theo lựa chọn người dùng, không đổi căn cứ/CanFix/duyệt.

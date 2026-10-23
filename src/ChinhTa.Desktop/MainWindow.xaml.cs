@@ -24,6 +24,9 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        string version=typeof(MainWindow).Assembly.GetName().Version?.ToString(3)??"chưa rõ";
+        Title="Chính tả Việt — Bản thử nghiệm "+version;BuildVersion.Text="Bản "+version;
+        Diagnostics.Write("UI.Start",null,$"DesktopModule={typeof(MainWindow).Module.ModuleVersionId}; CoreModule={typeof(Checker).Module.ModuleVersionId}");
         Review.ActiveIssueChanged+=Queue;
         ProfilePicker.SelectedIndex = 0;
         hover.Tick += (_, _) => { hover.Stop(); if (pending is not null) Run(() => ShowPreview(pending)); };
@@ -165,10 +168,22 @@ public partial class MainWindow : Window
             MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes) return;
         Run(() =>
         {
-            RepairBatchResult? result=null;
-            EditThenScan.Run(()=>result=session.FixSelection(selected),Scan);
-            Status.Text=$"Đã áp dụng {result!.Applied} gợi ý. "+
-                (result.AlreadySatisfied>0?$"{result.AlreadySatisfied} mục đã đạt sau đo lại. ":"")+Status.Text;
+            using var progress=new RepairProgressDialog(new System.Windows.Interop.WindowInteropHelper(this).Handle,
+                typeof(MainWindow).Assembly.GetName().Version?.ToString(3)??"chưa rõ",selected.Count);
+            var previous=session.ProgressReporter;bool enabled=IsEnabled;IsEnabled=false;
+            try
+            {
+                session.ProgressReporter=progress.Report;RepairBatchResult? result=null;
+                EditThenScan.Run(()=>result=session.FixSelection(selected),()=>
+                {
+                    progress.Report(new(RepairActivity.Rescanning,selected.Count,selected.Count,"Đã sửa; đang quét lại và dựng trang để cập nhật danh sách lỗi."));
+                    Scan();
+                });
+                progress.Report(new(RepairActivity.Completed,selected.Count,selected.Count,"Đã hoàn tất hậu kiểm và quét lại."));
+                Status.Text=$"Đã áp dụng {result!.Applied} gợi ý. "+
+                    (result.AlreadySatisfied>0?$"{result.AlreadySatisfied} mục đã đạt sau đo lại. ":"")+Status.Text;
+            }
+            finally{session.ProgressReporter=previous;IsEnabled=enabled;}
         });
     }
     private void OfficeCheckClick(object sender, RoutedEventArgs e) => Run(() =>

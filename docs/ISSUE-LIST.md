@@ -41,3 +41,7 @@ Ví dụ (chiều dài cụ thể phụ thuộc số đo của từng dòng):
 Nguồn Nhà nước là Nghị định, nguồn Đảng là Hướng dẫn; không thay tên thành Thông tư. Các quy tắc khoảng trắng/lặp từ ghi quy tắc ứng dụng, thứ tự mục/dấu đầu dòng ghi theo yêu cầu người dùng. Mục chưa đủ điều kiện ghi hướng xử lý thủ công; số đo/cấu hình không thành câu chữ của quy định. Tooltip không làm mục thủ công trở thành sửa được.
 
 Từ .56, đoạn có Line nổi do ứng dụng tạo vẫn được kiểm/sửa phông nếu chữ đã khớp XML, Line có dấu nhận diện/cấu trúc hợp lệ và không chứa chữ. Quyền sửa chữ thông thường qua đối tượng vẫn đóng; hình/Line lạ, dấu nhận diện trùng/sai hoặc vùng chưa khớp vẫn thủ công. Không ẩn cảnh báo dựa lịch sử đã bấm sửa.
+
+## Tiến độ từ .57
+
+Sau duyệt sửa xuất hiện cửa sổ có bước hiện tại, số mục đã hậu kiểm/tổng mục chọn và thời gian chờ. Bộ đếm tạm thời không bảo đảm cả lượt đạt; thanh chưa hoàn tất trước hậu kiểm/quét lại. Khi phục hồi, số đếm tạm thời về 0. Cửa sổ vẫn cập nhật khi Word đang xử lý, không dự đoán thời gian còn lại hoặc tự hủy giao dịch. Phiên bản lấy từ chương trình đang chạy nằm cạnh Loại văn bản và trên cửa sổ này. Xem [ghi chú .57](CHANGES-0.1.57.md).
