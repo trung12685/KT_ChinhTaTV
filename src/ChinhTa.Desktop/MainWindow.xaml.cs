@@ -20,10 +20,11 @@ public partial class MainWindow : Window
     private Issue? displayed;
     private readonly Dictionary<Issue, PreviewAnchor> anchors = new();
     private readonly PreviewHighlighter highlighter = new();
-    private IReadOnlyList<IssueChoice> choices = [];
+    private IReadOnlyList<IssueChoice> choices=>Review.Choices;
     public MainWindow()
     {
         InitializeComponent();
+        Review.ActiveIssueChanged+=Queue;
         ProfilePicker.SelectedIndex = 0;
         hover.Tick += (_, _) => { hover.Stop(); if (pending is not null) Run(() => ShowPreview(pending)); };
     }
@@ -47,9 +48,7 @@ public partial class MainWindow : Window
             pending = displayed = null;
             anchors.Clear();
             highlighter.Clear();
-            choices = [];
-            Issues.ItemsSource = null;
-            UpdateCheckedCount();
+            Review.LoadIssues([]);
             Status.Text=ex is ScanAfterEditException?ex.Message:
                 "Thao tác chưa hoàn tất. Danh sách lỗi cũ đã được xóa; hãy Quét lại trước khi sửa tiếp.";
             string message = ex is ScanAfterEditException?ex.Message:WordConnectionPolicy.IsDisconnected(ex)
@@ -68,14 +67,13 @@ public partial class MainWindow : Window
     {
         var dialog = new OpenFileDialog { Filter = "Word (*.docx)|*.docx" };
         if (dialog.ShowDialog(this) != true || !CanDiscard()) return;
-        Run(() => { pending = displayed = null; anchors.Clear(); ClosePreview(); Issues.ItemsSource = null; session.Open(dialog.FileName); Scan(); });
+        Run(() => { pending = displayed = null; anchors.Clear(); ClosePreview(); Review.LoadIssues([]); session.Open(dialog.FileName); Scan(); });
     }
     private void ScanClick(object sender, RoutedEventArgs e) { if (session.IsOpen) Run(Scan); }
     private void Scan()
     {
         hover.Stop();pending = displayed = null;
-        Issues.SelectedItem=null;Issues.ItemsSource=null;choices=[];
-        UpdateCheckedCount();
+        Review.LoadIssues([]);
         var timer = Stopwatch.StartNew();
         var found = session.Check().ToList();
         double checkSeconds = timer.Elapsed.TotalSeconds;
@@ -94,9 +92,7 @@ public partial class MainWindow : Window
             foreach(var entry in AdministrativePositionInspection.Inspect(sequence,highlighter,session.AdministrativePositionTargets,anchors))
             {found.Add(entry.Issue);anchors[entry.Issue]=entry.Anchor;}
         }
-        choices = found.OrderBy(i => i.Start).Select(issue => new IssueChoice(issue)).ToArray();
-        Issues.ItemsSource = choices;
-        UpdateCheckedCount();
+        Review.LoadIssues(found,anchors);
         Status.Text = $"{Path.GetFileName(session.Source)} — {found.Count} cảnh báo. " +
             $"Quét: {checkSeconds:F1}s; dựng trang: {timer.Elapsed.TotalSeconds - checkSeconds:F1}s. " +
             "Chọn hoặc rê chuột lên lỗi để đánh dấu riêng, không xuất lại Word." +
@@ -120,28 +116,21 @@ public partial class MainWindow : Window
         bool marked = !pageWarning && highlighter.Show(document, anchor);
         if (issue.LineFix is ShapeLineFix lineFix) highlighter.ShowLineSuggestion(document,anchor.Page,lineFix);
         displayed = issue;
-        Status.Text = $"Trang {anchor.Page} — {issue.Message} Gợi ý: {issue.Suggestion}. " +
+        Status.Text = $"Trang {anchor.Page} — {IssueReviewCatalog.Describe(issue).Label}. " +
             (pageWarning ? "Cảnh báo thiết lập trang, không đánh dấu ký tự. " : marked ? $"Đánh dấu: {timer.Elapsed.TotalMilliseconds:F0} ms." :
-            "Chưa ánh xạ chắc chắn được vị trí trên trang này; không đánh dấu để tránh nhầm.") + " " + issue.Citation + (issue.LineFix is not null ? " Vạch cam là vị trí đề xuất, chưa ghi vào Word." : "");
+            "Chưa ánh xạ chắc chắn được vị trí trên trang này; không đánh dấu để tránh nhầm.") + (issue.LineFix is not null ? " Vạch cam là vị trí đề xuất, chưa ghi vào Word." : "");
     }
     private void Queue(Issue issue) { pending = issue; hover.Stop(); hover.Start(); }
-    private void IssueHover(object sender, MouseEventArgs e)
-    {
-        if (sender is FrameworkElement { DataContext: IssueChoice choice })
-        { Issues.SelectedItem = choice; Queue(choice.Issue); }
-    }
-    private void IssueSelected(object sender, SelectionChangedEventArgs e)
-    { if (Issues.SelectedItem is IssueChoice choice) Queue(choice.Issue); }
     private void FixClick(object sender, RoutedEventArgs e)
     {
-        if (Issues.SelectedItem is not IssueChoice choice) return;
-        if (!choice.Issue.CanFix)
+        if (Review.SelectedIssue is not Issue issue) return;
+        if (!issue.CanFix)
         {
-            MessageBox.Show(this, "Mục này chỉ cảnh báo để kiểm tra thủ công.\n\n" + choice.Issue.Message + "\n" + choice.Issue.Citation,
+            MessageBox.Show(this, "Mục này chỉ cảnh báo để kiểm tra thủ công.\n\n" + issue.Message + "\n" + issue.Citation,
                 "Kiểm tra thể thức");
             return;
         }
-        ConfirmFix([choice.Issue]);
+        ConfirmFix([issue]);
     }
     private void FixCheckedClick(object sender, RoutedEventArgs e) =>
         ConfirmFix(choices.Where(x => x.IsChecked).Select(x => x.Issue).ToArray());
@@ -207,19 +196,6 @@ public partial class MainWindow : Window
         string folder = Path.GetDirectoryName(Diagnostics.LogPath)!;
         Directory.CreateDirectory(folder);
         Process.Start(new ProcessStartInfo { FileName = folder, UseShellExecute = true });
-    }
-    private void UpdateCheckedCount()
-    {
-        if (CheckedCount is not null) CheckedCount.Text = $"Đã tích: {choices.Count(x => x.IsChecked)}/{choices.Count(x => x.Issue.CanFix)} mục sửa được; {choices.Count(x => !x.Issue.CanFix)} cảnh báo thủ công";
-    }
-    private void CheckChanged(object sender, RoutedEventArgs e) =>
-        Dispatcher.BeginInvoke(new Action(UpdateCheckedCount));
-    private void CheckAllClick(object sender, RoutedEventArgs e) => SetChecked(true);
-    private void UncheckAllClick(object sender, RoutedEventArgs e) => SetChecked(false);
-    private void SetChecked(bool value)
-    {
-        foreach (var choice in choices) choice.IsChecked = value;
-        UpdateCheckedCount();
     }
     private void UndoClick(object sender, RoutedEventArgs e)
     { if (session.IsOpen) Run(() => { session.Undo(); Scan(); }); }

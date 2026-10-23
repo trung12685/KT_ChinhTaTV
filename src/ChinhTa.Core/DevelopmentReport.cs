@@ -133,7 +133,8 @@ public static class DevelopmentReport
         new("0.1.46","Thêm gợi ý khoảng trắng trước dấu hai chấm trong nhãn/câu chữ đủ điều kiện, kiểm sửa nhóm/rollback và cập nhật ví dụ C17 trong báo cáo."),
         new("0.1.47","Mở rộng đối chiếu XML cho vùng sửa chữ toàn thân và ba chế độ; chặn vùng chưa chứng minh, giữ phép đo đầu trang và kiểm giao dịch hiện có."),
         new("0.1.48","Thêm gợi ý bỏ dấu cách trước dấu kết câu giữa đoạn có ranh giới rõ; sửa chung lỗi chữ, kiểm rollback và bổ sung ví dụ C18."),
-        new("0.1.49","Thêm gợi ý thiếu khoảng sau dấu kết câu giữa đoạn; chọn riêng trước/sau hoặc sửa hai phía một lượt, giữ chữ/kiểu, kiểm giao dịch và ví dụ C19.")
+        new("0.1.49","Thêm gợi ý thiếu khoảng sau dấu kết câu giữa đoạn; chọn riêng trước/sau hoặc sửa hai phía một lượt, giữ chữ/kiểu, kiểm giao dịch và ví dụ C19."),
+        new("0.1.50","Thu gọn danh sách lỗi một dòng, gom nhóm có checkbox từng mục/nhóm/tất cả, chia thể thức cần sửa/gợi ý cần duyệt/cảnh báo thủ công; chi tiết ở tooltip và khung mở rộng.")
     });
     public static IReadOnlyList<string> NextSteps { get; }=Array.AsReadOnly(new[]
     {

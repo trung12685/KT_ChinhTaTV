@@ -1,0 +1,65 @@
+using System.Text.RegularExpressions;
+
+namespace ChinhTa.Core;
+
+public enum IssueReviewSection { RequiredFormat, ReviewSuggestion, ManualWarning }
+public sealed record IssueReviewInfo(IssueReviewSection Section,string FamilyKey,string Family,int Order,string Label);
+
+// Presentation only: classifications never grant CanFix or replace current-plan checks.
+public static class IssueReviewCatalog
+{
+    public static string SectionTitle(IssueReviewSection section)=>section switch
+    {
+        IssueReviewSection.RequiredFormat=>"BẮT BUỘC SỬA",
+        IssueReviewSection.ReviewSuggestion=>"ĐỀ XUẤT SỬA — CẦN DUYỆT",
+        _=>"CHƯA TỰ SỬA — CHỈ CẢNH BÁO"
+    };
+    public static string SectionDetail(IssueReviewSection section)=>section switch
+    {
+        IssueReviewSection.RequiredFormat=>"Yêu cầu thể thức có căn cứ và đủ điều kiện đề xuất sửa. Bạn vẫn duyệt trước khi áp dụng; mục này không chặn lưu tài liệu.",
+        IssueReviewSection.ReviewSuggestion=>"Đã hỗ trợ đề xuất sửa — cần duyệt. Gợi ý chữ, dấu câu, bố cục hoặc số đo cần xem lại theo ngữ cảnh.",
+        _=>"Chưa tự sửa — chỉ cảnh báo. Không tích để sửa tự động; xem chi tiết và đối chiếu trong Word."
+    };
+    public static IssueReviewInfo Describe(Issue issue)
+    {
+        bool space=issue.Kind==FixKind.Text && issue.Original.Length>0 && issue.Original.All(c=>c==' ') && issue.Replacement==" ";
+        var (key,family,order,label)=issue.Kind switch
+        {
+            FixKind.Text when space=>("spacing","Khoảng trắng thừa",10,"Khoảng trắng thừa"),
+            FixKind.Text=>("spelling","Gợi ý chính tả",90,"Gợi ý chính tả: "+Brief(issue.Original,20)+" → "+Brief(issue.Replacement,20)),
+            FixKind.NationalHeading=>("national","Quốc hiệu",20,"Quốc hiệu chưa đúng thể thức"),
+            FixKind.StateMotto=>("motto","Tiêu ngữ",21,"Tiêu ngữ chưa đúng thể thức"),
+            FixKind.PartyHeading=>("party","Tiêu đề Đảng",22,"Tiêu đề Đảng chưa đúng thể thức"),
+            FixKind.AdministrativeNumber=>("number","Số, ký hiệu",30,issue.Title??"Cách ghi số, ký hiệu"),
+            FixKind.AdministrativeDate=>("date","Địa danh, ngày tháng",31,issue.Title??"Cách ghi địa danh, ngày tháng"),
+            FixKind.AdministrativeFormat=>("admin-font","Phông số và ngày tháng",32,issue.Title??"Phông số/ngày tháng chưa đúng"),
+            FixKind.DocumentHeadingFormat=>("document-font","Tên loại và trích yếu",33,issue.Title??"Tên loại/trích yếu chưa đúng"),
+            FixKind.AdministrativePosition=>("position","Vị trí số và ngày tháng",34,issue.Title??"Kiểm tra vị trí số/ngày tháng"),
+            FixKind.ShapeLine=>("lines","Đường kẻ",40,issue.Title??"Kiểm tra đường kẻ"),
+            FixKind.RepeatedText=>("repeat","Từ, cụm từ lặp",50,"Lặp từ/cụm từ: "+Brief(issue.Original.Trim(),34)),
+            FixKind.PunctuationSpace=>("comma","Dấu phẩy, chấm phẩy",60,issue.Title??"Khoảng trắng quanh dấu câu"),
+            FixKind.ParenthesisSpace=>("parenthesis","Ngoặc tròn",61,"Khoảng trắng sát trong ngoặc tròn"),
+            FixKind.SentenceEndSpace=>("sentence-end","Dấu kết câu cuối đoạn",62,"Thừa khoảng trước dấu kết câu cuối đoạn"),
+            FixKind.ColonSpace=>("colon","Dấu hai chấm",63,"Thừa khoảng trước dấu hai chấm"),
+            FixKind.SentenceInnerSpace=>("sentence-before","Khoảng trước dấu kết câu",64,"Thừa khoảng trước dấu kết câu"),
+            FixKind.SentenceAfterSpace=>("sentence-after","Khoảng sau dấu kết câu",65,"Thiếu khoảng sau dấu kết câu"),
+            FixKind.PageLayout=>("page","Khổ giấy và lề",70,issue.Title??"Kiểm tra khổ giấy/lề"),
+            _=>("notice:"+(issue.Title??"other"),Brief(issue.Title??"Kiểm tra thủ công",60),80,issue.Title??"Kiểm tra thủ công")
+        };
+        bool cited=!string.IsNullOrWhiteSpace(issue.Citation);
+        // Geometry/centering based on user tolerances remains reviewable. Only a
+        // verified missing Line joins the required-format section here.
+        bool required=cited && (issue.Kind is FixKind.AdministrativeNumber or FixKind.AdministrativeDate or
+            FixKind.AdministrativeFormat or FixKind.DocumentHeadingFormat ||
+            issue.Kind is FixKind.NationalHeading or FixKind.StateMotto or FixKind.PartyHeading &&
+                (issue.Format is {Alignment:null} || issue.Original!=issue.Replacement) ||
+            issue.Kind==FixKind.ShapeLine && issue.LineFix is {ShapeId:null});
+        var section=!issue.CanFix?IssueReviewSection.ManualWarning:required?IssueReviewSection.RequiredFormat:IssueReviewSection.ReviewSuggestion;
+        return new(section,key,family,order,Brief(label,88));
+    }
+    public static string Brief(string value,int length)
+    {
+        string clean=Regex.Replace(value,@"[\s\p{Cc}]+"," ").Trim();
+        return clean.Length>length?clean[..Math.Max(0,length-1)]+"…":clean;
+    }
+}
