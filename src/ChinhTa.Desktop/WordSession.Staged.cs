@@ -10,9 +10,16 @@ public sealed partial class WordSession
     public RepairBatchResult FixSelection(IEnumerable<Issue> selection)
     {
         var plan=StagedRepairBatch.Prepare(selection);
-        if(plan.Select(StagedRepairBatch.Stage).Distinct().Count()>1)return FixStaged(plan);
-        FixManyCore(plan,true);
-        return new(plan.Count,plan.Count,0);
+        repairProgress=new(plan.Count,ProgressReporter);
+        try
+        {
+            Progress(RepairActivity.Preparing,"Đối chiếu lại các mục đã chọn và tạo bản phục hồi.");
+            if(plan.Select(StagedRepairBatch.Stage).Distinct().Count()>1)return FixStaged(plan);
+            Progress(RepairActivity.Editing,"Đang sửa "+(plan.Count>0?StageLabel(StagedRepairBatch.Stage(plan[0])):"các mục đã chọn")+".");
+            FixManyCore(plan,true);repairProgress.Confirm(plan.Count);
+            return new(plan.Count,plan.Count,0);
+        }
+        finally{repairProgress=null;}
     }
     internal void FixStagedFailureProbe(IEnumerable<Issue> selection,int afterStage)
     {
@@ -59,19 +66,18 @@ public sealed partial class WordSession
                 ReadPrefix(proof.Issue with {Start=p.Start})==proof.Prefix).ToArray();
             if(matches.Length!=1)throw new InvalidOperationException("Chưa đối chiếu lại được vùng phông sau các nhóm sửa.");
             dynamic range=document!.Range(matches[0].Start,matches[0].Start+proof.Text.Length);
-            dynamic? font=null,paragraph=null;
+            dynamic? paragraph=null;
             try
             {
-                font=range.Font;int? alignment=null;
+                int? alignment=null;
                 if(proof.Issue.Format?.Alignment is not null){paragraph=range.ParagraphFormat;alignment=(int)paragraph.Alignment;}
-                string name=(string?)font.Name??"";float size=(float)font.Size;
-                int bold=(int)font.Bold,italic=(int)font.Italic,color=(int)font.Color;
-                bool correct=proof.Issue.CharacterFormat is CharacterFormat character?character.Matches(name,size,italic,color,bold):
-                    proof.Issue.Format is HeadingFormat heading && heading.Matches(name,size,bold,italic,color,alignment);
+                var observed=VisibleFormatReader.Read((object)range,proof.Text,allowCharacterFallback:true);
+                bool correct=observed.All(f=>f.Known && (proof.Issue.CharacterFormat is CharacterFormat character?character.Matches(f.Name,f.Size,f.Italic,f.Color,f.Bold):
+                    proof.Issue.Format is HeadingFormat heading && heading.Matches(f.Name,f.Size,f.Bold,f.Italic,f.Color,alignment)));
                 if((string)range.Text!=proof.Text || !correct)
                     throw new InvalidOperationException("Phông sau các nhóm sửa không còn khớp đề xuất; phải khôi phục cả lượt.");
             }
-            finally{Release(paragraph);Release(font);Release(range);}
+            finally{Release(paragraph);Release(range);}
         }
     }
     private RepairBatchResult FixStaged(IReadOnlyList<Issue> selected,int? failAfterStage=null)
@@ -113,19 +119,27 @@ public sealed partial class WordSession
             var result=StagedRepairBatch.Apply(requests,
                 stage=>
                 {
+                    Progress(RepairActivity.Measuring,"Đo lại trước nhóm "+StageLabel(stage)+".");
                     review=ReadStagedReview(expected);
                     if(stage==RepairStage.Line)beforeLines=review.Centers;
                 },
-                request=>StagedGeometryResolver.Resolve(request,review??throw new InvalidOperationException("Chưa đo lại nhóm sửa.")),
+                request=>
+                {
+                    var resolved=StagedGeometryResolver.Resolve(request,review??throw new InvalidOperationException("Chưa đo lại nhóm sửa."));
+                    if(resolved is null)repairProgress?.Confirm(1);
+                    return resolved;
+                },
                 plan=>
                 {
-                    FixManyCore(plan,true);
+                    Progress(RepairActivity.Editing,"Đang sửa "+StageLabel(StagedRepairBatch.Stage(plan[0]))+".");
+                    FixManyCore(plan,true);repairProgress?.Confirm(plan.Count);
                     Diagnostics.Write("Word.StagedBatch.StageVerified",null,$"Stage={StagedRepairBatch.Stage(plan[0])}; Selected={plan.Count}");
                     completed++;
                     if((int)StagedRepairBatch.Stage(plan[0])+1==failAfterStage)throw new OfficeStagedProbeException();
                 },
                 ()=>
                 {
+                    Progress(RepairActivity.Verifying,"Kiểm lại cả lượt: chữ, phông, tâm dòng và nét XPS.");
                     // One final measurement checks the selected centers again after Line
                     // insertion/reopen, and every selected Line against its current text.
                     review=ReadStagedReview(expected);
@@ -142,6 +156,7 @@ public sealed partial class WordSession
                 },
                 ()=>
                 {
+                    Progress(RepairActivity.Restoring,"Chưa đạt hậu kiểm; đang phục hồi cả lượt sửa.");
                     SwapCheckpoint(RecoveryPath,before,CloseConnection,Connect);
                     if(ReadStoryText()!=original)throw new InvalidOperationException("Chưa xác minh được chữ sau phục hồi nhiều nhóm.");
                     restored=true;

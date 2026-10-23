@@ -220,7 +220,7 @@ public sealed partial class WordSession : IDisposable
             var observed=ObserveComponent(component.Row);
             int index=paragraphs.FindIndex(p=>p.Start==component.Row.Start);paragraphs[index]=observed;
         }
-        foreach(var row in paragraphs.Where(p=>p.FormatEditable && (p.Text.Contains('\v') || !p.TextEditable) && p.Page==1 && !p.InTable && p.Alignment==1).ToArray())
+        foreach(var row in paragraphs.Where(p=>p.FormatEditable && (p.Text.Contains('\v') || !p.TextEditable) && p.Page==1 && (!p.InTable && p.Alignment==1 || HeadingRules.IsCandidate(p.Text,Profile))).ToArray())
         {
             int index=paragraphs.FindIndex(p=>p.Start==row.Start);paragraphs[index]=ObserveComponent(row);
         }
@@ -230,6 +230,12 @@ public sealed partial class WordSession : IDisposable
         var issues = Checker.Check(paragraphs, Profile).ToList();
         issues.AddRange(DocumentHeadingRules.Check(paragraphs,headerLayout,Profile));
         issues.AddRange(ComponentRules.Check(paragraphs,headerLayout,Profile));
+        foreach(var issue in issues.Where(i=>!i.CanFix && i.Kind is FixKind.AgencyFormat or FixKind.DocumentHeadingFormat))
+        {
+            var row=paragraphs.FirstOrDefault(p=>p.Start==issue.Start);
+            if(row is not null)Diagnostics.Write("Word.Component.Unverified",null,
+                $"Kind={issue.Kind}; Start={row.Start}; TextEditable={row.TextEditable}; FormatEditable={row.FormatEditable}; Observed={row.FormatObserved}; Mixed={row.FormatMixed}; BoldMixed={row.BoldMixed}; Tnr={row.Font.Equals("Times New Roman",StringComparison.OrdinalIgnoreCase)}; Size={row.Size}; Bold={row.Bold}; Italic={row.Italic}; Color={row.Color}");
+        }
         if(textProofUnavailable || textProofWarning is not null)
             CoverageNotice="Chưa đối chiếu đầy đủ một phần tài liệu để sửa chữ. Đây là phạm vi kiểm tra, không phải lỗi của dòng đầu. "+
                 (textProofWarning is null?"Không đọc/đối chiếu được XML hiện tại.":"Mã kiểm tra: "+textProofWarning.DiagnosticCode+".");
@@ -605,6 +611,7 @@ public sealed partial class WordSession : IDisposable
                 AtomicLineBatch.Apply(RecoveryPath,before,plan,
                     (item,step)=>
                     {
+                        Progress(RepairActivity.Editing,"Đang sửa "+IssueReviewCatalog.Describe(item).Label.ToLowerInvariant()+".");
                         Issue current=item;
                         if(verifyReference)
                         {
@@ -616,9 +623,10 @@ public sealed partial class WordSession : IDisposable
                         foreach(var completed in ApplyLinePackage([current],step,verifyReference:verifyReference))
                             accepted[completed.LineFix!.Role]=completed;
                     },
-                    ()=>SwapCheckpoint(RecoveryPath,before,CloseDocumentOnly,Connect),
+                    ()=>{Progress(RepairActivity.Restoring,"Đang phục hồi cả nhóm đường kẻ.");SwapCheckpoint(RecoveryPath,before,CloseDocumentOnly,Connect);},
                     ()=>
                     {
+                        Progress(RepairActivity.Verifying,"Kiểm vị trí và nét thật của nhóm đường kẻ trên XPS.");
                         if(verifyReference && ReadRemainingLines(plan,accepted,expectedText).Repairs.Count>0)
                             throw new InvalidOperationException("Còn cảnh báo ở Line vừa sửa sau lượt đo lại; phải khôi phục cả lượt.");
                         VerifyLineResult(accepted.Values.ToArray(),verifyReference:verifyReference);
@@ -673,6 +681,7 @@ public sealed partial class WordSession : IDisposable
             {
                 AtomicTextBatch.Apply(plan,ReadIssueText,item=>
                 {
+                    Progress(RepairActivity.Editing,"Đang sửa "+IssueReviewCatalog.Describe(item).Family.ToLowerInvariant()+$" ({applied+1}/{plan.Count} trong nhóm).");
                     started=true;snapshotCurrent=false;Changed=true;
                     verifiedLineEdits.Clear();
                     dynamic range=document!.Range(item.Start,item.Start+item.Length);
@@ -712,6 +721,7 @@ public sealed partial class WordSession : IDisposable
                     finally{Release(range);}
                 },()=>
                 {
+                    Progress(RepairActivity.Verifying,"Đang lưu và kiểm lại chữ/phông của nhóm vừa sửa.");
                     Checkpoint();
                     if(driftHeading)
                     {
@@ -744,6 +754,7 @@ public sealed partial class WordSession : IDisposable
                     }
                 },()=>
                 {
+                    Progress(RepairActivity.Restoring,"Chưa đạt hậu kiểm; đang phục hồi nhóm chữ/phông.");
                     // Close this private Word instance, including a disconnected COM server.
                     foreach(var styled in formatRanges)Release(styled.Range);
                     formatRanges.Clear();

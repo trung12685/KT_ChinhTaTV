@@ -152,7 +152,8 @@ public static class DevelopmentReport
         new("0.1.53","Chọn nhiều nhóm một lượt: sửa chữ/phông, đo lại, căn giữa và Line theo đúng mục đã chọn; một Undo, hậu kiểm nét/phông/vị trí và rollback toàn bộ nếu bước sau lỗi."),
         new("0.1.54","Nhận diện trích yếu nhiều đoạn/ngắt dòng và Kính gửi căn giữa; tên cơ quan C22, nơi nhận 9b C23 theo NĐ30; tách thông tin phạm vi XML khỏi lỗi dòng đầu, giữ sửa nhóm/rollback."),
         new("0.1.55","Hậu kiểm phông trong lượt nhiều nhóm dùng toàn thân đã xác minh XML, gồm nơi nhận sau đoạn 40; không mở rộng phạm vi đo Line/căn giữa."),
-        new("0.1.56","Sửa cảnh báo phông giả ở cơ quan/trích yếu sau chèn Line: proof định dạng riêng cho Line nổi của ứng dụng đã xác minh, không mở sửa chữ qua đối tượng. C20/C21 đủ điều kiện chuyển Bắt buộc sửa theo yêu cầu người dùng; giữ duyệt, kiểm nét XPS, một Undo/rollback.")
+        new("0.1.56","Sửa cảnh báo phông giả ở cơ quan/trích yếu sau chèn Line: proof định dạng riêng cho Line nổi của ứng dụng đã xác minh, không mở sửa chữ qua đối tượng. C20/C21 đủ điều kiện chuyển Bắt buộc sửa theo yêu cầu người dùng; giữ duyệt, kiểm nét XPS, một Undo/rollback."),
+        new("0.1.57","Thêm cửa sổ tiến độ độc lập khi sửa: bước hiện tại, số mục hậu kiểm tạm thời, thời gian chờ, đo lại/quét lại/phục hồi; chưa hoàn tất trước quét lại. Mở proof định dạng cho Line trong nhánh tương thích/run gộp, đọc từng ký tự Word khi phông vùng bị trộn; giữ kiểm nét và rollback, chưa xác nhận runtime Office 2021.")
     });
     public static IReadOnlyList<string> NextSteps { get; }=Array.AsReadOnly(new[]
     {

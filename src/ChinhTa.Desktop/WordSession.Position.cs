@@ -46,6 +46,7 @@ public sealed partial class WordSession
         {
             AtomicTextBatch.Apply(plan,ReadIssueText,item=>
             {
+                Progress(RepairActivity.Editing,$"Đang căn giữa dòng {applied+1}/{plan.Count} trong nhóm.");
                 started=true;Changed=true;snapshotCurrent=false;verifiedLineEdits.Clear();
                 dynamic range=document!.Range(item.Start,item.Start+item.Length);
                 try
@@ -72,11 +73,13 @@ public sealed partial class WordSession
                     finally{Release(range);}
                 }
                 Checkpoint();
+                Progress(RepairActivity.Verifying,"Đang kiểm tâm dòng và bố cục trên XPS.");
                 var after=ReadCenteringEvidence(driftUnselected?"position-unselected-drift.xps":null);
                 if(ReadStoryText()!=original || !AdministrativeCentering.VerifyBatch(measured,after,plan.Select(i=>i.CenterFix!.Role).ToArray()))
                     throw new PositionVerificationException();
             },()=>
             {
+                Progress(RepairActivity.Restoring,"Đang phục hồi cả nhóm căn giữa.");
                 SwapCheckpoint(RecoveryPath,before,CloseConnection,Connect);
                 var restoredEvidence=ReadCenteringEvidence();
                 if(ReadStoryText()!=original || !AdministrativeCentering.VerifyRestored(measured,restoredEvidence))
