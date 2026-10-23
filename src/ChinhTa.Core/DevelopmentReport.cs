@@ -150,7 +150,8 @@ public static class DevelopmentReport
         new("0.1.51","Thêm ngữ cảnh cấu trúc cho thứ tự mục gõ tay và dấu đầu dòng đơn trong từng mục cha; bằng chứng XML, sửa nhóm/rollback và ví dụ C20/C21."),
         new("0.1.52","Rút tooltip còn Lỗi — Căn cứ — Cách xử lý; nêu đúng vị trí và nội dung quy định, phân biệt cấu hình người dùng; giữ số đo/ngữ cảnh đầy đủ trong Chi tiết lỗi."),
         new("0.1.53","Chọn nhiều nhóm một lượt: sửa chữ/phông, đo lại, căn giữa và Line theo đúng mục đã chọn; một Undo, hậu kiểm nét/phông/vị trí và rollback toàn bộ nếu bước sau lỗi."),
-        new("0.1.54","Nhận diện trích yếu nhiều đoạn/ngắt dòng và Kính gửi căn giữa; tên cơ quan C22, nơi nhận 9b C23 theo NĐ30; tách thông tin phạm vi XML khỏi lỗi dòng đầu, giữ sửa nhóm/rollback.")
+        new("0.1.54","Nhận diện trích yếu nhiều đoạn/ngắt dòng và Kính gửi căn giữa; tên cơ quan C22, nơi nhận 9b C23 theo NĐ30; tách thông tin phạm vi XML khỏi lỗi dòng đầu, giữ sửa nhóm/rollback."),
+        new("0.1.55","Hậu kiểm phông trong lượt nhiều nhóm dùng toàn thân đã xác minh XML, gồm nơi nhận sau đoạn 40; không mở rộng phạm vi đo Line/căn giữa.")
     });
     public static IReadOnlyList<string> NextSteps { get; }=Array.AsReadOnly(new[]
     {

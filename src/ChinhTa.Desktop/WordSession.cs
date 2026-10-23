@@ -14,6 +14,7 @@ public sealed partial class WordSession : IDisposable
     private bool snapshotCurrent = true;
     private readonly Stack<string> undoCheckpoints = new();
     private IReadOnlyList<WordParagraphSnapshot> lastLayout = [];
+    private IReadOnlyList<WordParagraphSnapshot> lastFormatLayout = [];
     private readonly Dictionary<LineRole,Issue> verifiedLineEdits = new();
     public IReadOnlyList<Issue> VerifiedLineEdits => verifiedLineEdits.Values.ToArray();
     public IReadOnlyList<LineTarget> LineTargets { get; private set; } = [];
@@ -49,7 +50,7 @@ public sealed partial class WordSession : IDisposable
         // Do not reuse an RCW from a Word process that has already exited.
         CloseConnection();
         undoCheckpoints.Clear();verifiedLineEdits.Clear();
-        lastLayout = [];AdministrativePositionTargets=[];
+        lastLayout = [];lastFormatLayout=[];AdministrativePositionTargets=[];
         Source = Path.GetFullPath(path);
         Changed = false;
         Recovered = false;
@@ -212,6 +213,7 @@ public sealed partial class WordSession : IDisposable
             }
         }
         lastLayout=liveLayout.ToArray();
+        lastFormatLayout=liveText.Where(p=>editableStarts.Contains(p.Start) || formatEditableStarts.Contains(p.Start)).ToArray();
         paragraphs=WordTextProof.Apply(paragraphs,editableStarts,outlineEvidence,formatEditableStarts).ToList();
         foreach(var component in ComponentRules.Identify(paragraphs,headerLayout,Profile))
         {

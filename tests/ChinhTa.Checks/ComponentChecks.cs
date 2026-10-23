@@ -3,7 +3,7 @@ using ChinhTa.Core;
 
 public static class ComponentChecks
 {
-    public static (Paragraph[] Rows,LayoutParagraph[] Layout) Sample(bool softBreak=false,int subjects=2,bool recipients=true,bool automatic=false)
+    public static (Paragraph[] Rows,LayoutParagraph[] Layout) Sample(bool softBreak=false,int subjects=2,bool recipients=true,bool automatic=false,int padding=0)
     {
         XNamespace w="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
         XElement P(string text)=>new(w+"p",new XElement(w+"r",text.Split('\v').SelectMany((s,i)=>i==0?
@@ -15,6 +15,7 @@ public static class ComponentChecks
             new XElement(w+"tc",P(Checker.Heading),P(HeadingRules.Motto)))),P("BÁO CÁO"));
         for(int i=0;i<subjects;i++)body.Add(P(i==0?softBreak?"Mang lại bình\vyên cho nhân dân":"Tổng hợp kết quả công tác ":"trong giai đoạn thử nghiệm"));
         body.Add(P(""),P("Kính gửi: đơn vị mẫu"),P("Nội dung bình thường."));
+        for(int i=0;i<padding;i++)body.Add(P("Đoạn nội dung độc lập thứ "+i+"."));
         if(recipients)body.Add(new XElement(w+"tbl",new XElement(w+"tr",receiver,new XElement(w+"tc",P("TRƯỞNG ĐƠN VỊ")))));
         var xml=new XDocument(new XElement(w+"document",body));var ps=body.Descendants(w+"p").ToArray();int cp=0;
         var live=new List<WordParagraphSnapshot>();var rows=new List<Paragraph>();
@@ -101,6 +102,11 @@ public static class ComponentChecks
             WordTextProof.Read(xml.ToString(),[new(0,text.Length,text,1,false,true)],onFormatEditable:(start,ok)=>{if(ok)eligible.Add(start);});
             assert(eligible.Count==0,"Page/column breaks, tabs and embedded objects cannot gain discretionary-break format eligibility");
         }
+        var longDoc=Sample(padding:50);
+        var longRecipients=ComponentRules.Identify(longDoc.Rows,longDoc.Layout,DocumentProfile.State).Where(t=>t.Role is ComponentRole.RecipientLabel or ComponentRole.RecipientItem).ToArray();
+        assert(longRecipients.Length==4 && longRecipients.All(t=>Array.FindIndex(longDoc.Rows,p=>p.Start==t.Row.Start)>40) &&
+            ComponentRules.Check(longDoc.Rows,longDoc.Layout,DocumentProfile.State).Count==0,
+            "Recipients after paragraph 40 retain full-body XML proof and their actual font-role classification");
         bool Reject(Issue issue){try{BatchPlan.Create([issue]);return false;}catch(InvalidOperationException){return true;}}
         var wrong=new Issue(0,3,"ABC","ABC","",false,FixKind.AgencyFormat,CharacterFormat:new(11,false,null,ComponentRole.RecipientItem));
         assert(Reject(wrong) && Reject(wrong with {Kind=FixKind.DocumentHeadingFormat}),"A font role cannot be transplanted onto a different repair kind");
