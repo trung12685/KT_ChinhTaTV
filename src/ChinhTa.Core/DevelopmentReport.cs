@@ -56,7 +56,7 @@ public static class DevelopmentReport
             "Times New Roman, đen, nghiêng, cỡ 13–14; giữ cỡ hợp lệ, đậm/gạch chân và chữ. Căn giữa là chức năng riêng.",
             new ReportExample("Dòng Hà Nội, ngày 03 tháng 3 năm 2026 dùng Arial, đỏ, đứng, cỡ 12.","Giữ nguyên chữ; đề xuất Times New Roman, đen, nghiêng, cỡ 13; nếu cỡ 13–14 đã hợp lệ thì giữ cỡ.")),
         new("C09","Phông tên loại văn bản",CapabilityMode.Reviewable,"Đầu Nhà nước, khối tên loại/trích yếu chắc chắn",
-            "Times New Roman, đen, đứng, đậm, cỡ 13–14. Hiện dùng 13 tên loại; chưa áp cho Công văn/V/v. Viết hoa tên loại có điều kiện theo C24 riêng.",
+            "Times New Roman, đen, đứng, đậm, cỡ 13–14. Danh mục có 27 tên hành chính theo PL III.I và Báo cáo đề xuất/BCĐX do người dùng bổ sung; vẫn cần khối/trích yếu đủ chắc, chưa áp cho Công văn/V/v hoặc thể thức bản sao. Viết hoa tên loại có điều kiện theo C24 riêng.",
             new ReportExample("Tên loại BÁO CÁO dùng Arial, đỏ, nghiêng, cỡ 12.","Giữ nguyên chữ; đề xuất Times New Roman, đen, đứng, đậm, cỡ 13 khi khối tên loại được nhận diện chắc chắn.")),
         new("C10","Phông trích yếu",CapabilityMode.Reviewable,"Khối dưới tên loại, có ranh giới rõ trong vùng đầu trang đã đối chiếu",
             "Times New Roman, đen, đứng, đậm, cỡ 13–14; giữ nguyên văn, cỡ hợp lệ, gạch chân/căn đoạn. Chưa tự viết thường trích yếu toàn chữ hoa.",
@@ -100,8 +100,8 @@ public static class DevelopmentReport
         new("C23","Nơi nhận tại ô 9b",CapabilityMode.Reviewable,"Nhà nước, nhãn Nơi nhận và dòng Lưu cùng vùng XML đã nhận diện",
             "NĐ30 PL I.I.4 và II.9.d: nhãn cỡ 12 nghiêng đậm; danh sách cỡ 11 đứng, có gạch đầu dòng, cuối dòng ;, dòng Lưu kết thúc bằng chấm. Không áp quy tắc dấu đơn/thứ tự mục thân bài cho danh sách này. Chưa đo đủ vị trí lề/hàng, không đoán đơn vị nhận hoặc số bản lưu.",
             new ReportExample("Nơi nhận: cỡ 14 đứng; một dòng ghi Đơn vị mẫu.","Nhãn cỡ 12 nghiêng đậm; danh sách cỡ 11 đứng; sửa dòng thành - Đơn vị mẫu; khi đã xác minh có dòng Lưu cuối khối.")),
-        new("C24","Viết hoa tên loại văn bản",CapabilityMode.Reviewable,"Nhà nước, tên loại thuộc 13 mẫu đã nhận diện chắc trong khối đầu trang",
-            "Theo NĐ30 PL I.II.5.b: tên loại in hoa. Chỉ đổi hoa/thường tên chính xác, có proof chữ thuần và định dạng đồng nhất; giữ khoảng trắng ngoài tên, trích yếu nhiều đoạn, phông và căn đoạn. Không suy đoán tên loại từ nội dung, không tự viết thường trích yếu hoặc áp cho Công văn/V/v, bảng/field/drawing/vùng chưa rõ. Có thể chọn chung sửa phông, một Undo/rollback.",
+        new("C24","Viết hoa tên loại văn bản",CapabilityMode.Reviewable,"Nhà nước, tên loại thuộc danh mục hành chính/bổ sung đã nhận diện chắc trong khối đầu trang",
+            "Theo NĐ30 PL I.II.5.b: tên loại in hoa. 27 tên theo PL III.I và Báo cáo đề xuất/BCĐX theo yêu cầu người dùng; không nhận tên bản sao theo mẫu văn bản gốc. Chỉ đổi hoa/thường tên chính xác, có proof chữ thuần và định dạng đồng nhất; giữ khoảng trắng ngoài tên, trích yếu nhiều đoạn, phông và căn đoạn. Không suy đoán tên loại từ nội dung, không tự viết thường trích yếu hoặc áp cho Công văn/V/v, bảng/field/drawing/vùng chưa rõ. Có thể chọn chung sửa phông, một Undo/rollback.",
             new ReportExample("Báo cáo","BÁO CÁO")),
         new("M01","Khổ giấy và lề",CapabilityMode.Manual,"Nhà nước/Đảng",
             "Cảnh báo A4/lề, trang ngang/lề đối xứng và ngoại lệ; chưa tự đổi thiết lập trang.",
@@ -157,7 +157,8 @@ public static class DevelopmentReport
         new("0.1.55","Hậu kiểm phông trong lượt nhiều nhóm dùng toàn thân đã xác minh XML, gồm nơi nhận sau đoạn 40; không mở rộng phạm vi đo Line/căn giữa."),
         new("0.1.56","Sửa cảnh báo phông giả ở cơ quan/trích yếu sau chèn Line: proof định dạng riêng cho Line nổi của ứng dụng đã xác minh, không mở sửa chữ qua đối tượng. C20/C21 đủ điều kiện chuyển Bắt buộc sửa theo yêu cầu người dùng; giữ duyệt, kiểm nét XPS, một Undo/rollback."),
         new("0.1.57","Thêm cửa sổ tiến độ độc lập khi sửa: bước hiện tại, số mục hậu kiểm tạm thời, thời gian chờ, đo lại/quét lại/phục hồi; chưa hoàn tất trước quét lại. Mở proof định dạng cho Line trong nhánh tương thích/run gộp, đọc từng ký tự Word khi phông vùng bị trộn; giữ kiểm nét và rollback, chưa xác nhận runtime Office 2021."),
-        new("0.1.58","Thêm C24 viết hoa chính xác tên loại văn bản đã nhận diện chắc theo NĐ30 II.5.b; giữ trích yếu, khoảng ngoài tên, phông/căn đoạn, chặn trường/đối tượng/vùng chưa rõ; sửa chung phông, quét lại và một Undo/rollback. Lỗi cơ quan/trích yếu trên .56 vẫn chờ bằng chứng runtime .57 hoặc mới hơn.")
+        new("0.1.58","Thêm C24 viết hoa chính xác tên loại văn bản đã nhận diện chắc theo NĐ30 II.5.b; giữ trích yếu, khoảng ngoài tên, phông/căn đoạn, chặn trường/đối tượng/vùng chưa rõ; sửa chung phông, quét lại và một Undo/rollback. Lỗi cơ quan/trích yếu trên .56 vẫn chờ bằng chứng runtime .57 hoặc mới hơn."),
+        new("0.1.59","Danh mục đủ 27 tên hành chính/3 bản sao theo NĐ30 PL III.I trang 40; thêm Báo cáo đề xuất/BCĐX theo người dùng, tách nguồn. Dùng chung nhận diện/C24/phông/mốc trích yếu, không áp thể thức gốc cho bản sao; sửa cảnh báo nhầm chữ thường ở QyĐ/CTr/TTr/TrS, giữ mã cơ quan. Có cửa sổ tra cứu và danh mục đầy đủ trong TXT.")
     });
     public static IReadOnlyList<string> NextSteps { get; }=Array.AsReadOnly(new[]
     {
@@ -206,6 +207,15 @@ public static class DevelopmentReport
             }
             Line();
         }
+        Line("DANH MỤC TÊN LOẠI VÀ CHỮ VIẾT TẮT");
+        Line(DocumentTypeCatalog.Citation);
+        foreach(var source in Enum.GetValues<DocumentTypeSource>())
+        {
+            Line(source switch {DocumentTypeSource.DecreeAdministrative=>"27 TÊN LOẠI HÀNH CHÍNH THEO NGHỊ ĐỊNH",DocumentTypeSource.DecreeCopy=>"3 LOẠI BẢN SAO THEO NGHỊ ĐỊNH",_=>"BỔ SUNG THEO YÊU CẦU NGƯỜI DÙNG"});
+            foreach(var item in DocumentTypeCatalog.Entries.Where(e=>e.Source==source))Line("  "+item.Name+" — "+item.Abbreviation);
+        }
+        Line(DocumentTypeCatalog.UserNote);
+        Line("Danh mục đầy đủ không có nghĩa đã kiểm mọi mẫu đặc thù. Bản sao có thể thức riêng; chưa tự đổi chữ viết tắt theo tên loại hoặc mã cơ quan. Giữ đúng QyĐ, CTr, TTr, TrS.");Line();
         Line("CÁC NỘI DUNG ĐÃ LÀM");
         foreach(var item in Milestones)Line(item.Version+": "+item.Detail);
         Line();Line("GIỚI HẠN CÒN LẠI");

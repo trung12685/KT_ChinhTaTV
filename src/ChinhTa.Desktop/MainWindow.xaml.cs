@@ -205,6 +205,10 @@ public partial class MainWindow : Window
         var report=new ProgressReportWindow(session.SaveProgressReport) {Owner=this};
         report.ShowDialog();
     }
+    private void DocumentTypesClick(object sender,RoutedEventArgs e)
+    {
+        hover.Stop();new DocumentTypeCatalogWindow{Owner=this}.ShowDialog();
+    }
     private void DiagnosticsFolderClick(object sender, RoutedEventArgs e)
     {
         string folder = Path.GetDirectoryName(Diagnostics.LogPath)!;

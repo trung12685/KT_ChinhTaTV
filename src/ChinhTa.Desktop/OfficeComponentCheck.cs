@@ -34,7 +34,7 @@ internal static class OfficeComponentCheck
             throw new InvalidOperationException("Rollback nhóm cơ quan/nơi nhận/trích yếu chưa về nguyên bản.");
         pass("Thành phần sai: lỗi giữa lượt phục hồi toàn bộ và không tạo Undo");
         plan=test.Check().Where(i=>i.CanFix && Component(i)).ToArray();test.FixMany(plan);
-        string expected=original.Replace("Báo cáo","BÁO CÁO",StringComparison.Ordinal).Replace("cơ quan chủ quản","CƠ QUAN CHỦ QUẢN",StringComparison.Ordinal)
+        string expected=original.Replace("Báo cáo đề xuất","BÁO CÁO ĐỀ XUẤT",StringComparison.Ordinal).Replace("cơ quan chủ quản","CƠ QUAN CHỦ QUẢN",StringComparison.Ordinal)
             .Replace("đơn vị ban hành","ĐƠN VỊ BAN HÀNH",StringComparison.Ordinal).Replace("Mục thử nghiệm.","- Mục thử nghiệm;",StringComparison.Ordinal);
         if(test.ReadCheckText()!=expected || test.Check().Any(Component) || !test.ReadCheckText().Contains('\v') || test.CheckUndoCount!=1)
             throw new InvalidOperationException("Sửa thành phần chưa đúng chữ/phông/dấu hoặc làm mất ngắt dòng.");
@@ -97,7 +97,7 @@ internal static class OfficeComponentCheck
         }
         var title=xml.Descendants(w+"p").Single(p=>string.Concat(p.Descendants(w+"t").Select(t=>t.Value))=="BÁO CÁO");
         var subject=title.ElementsAfterSelf(w+"p").First();
-        if(bad)title.Descendants(w+"t").Single().Value="Báo cáo";
+        if(bad)title.Descendants(w+"t").Single().Value="Báo cáo đề xuất";
         var first=Row("Mang lại bình",bad?12:14,true,center:true,broken:bad);
         if(bad)first.Add(new XElement(w+"r",new XElement(w+"br")),Run("yên cho nhân dân",12,true,false,true));
         else first=Row("Mang lại bình ",14,true,center:true);

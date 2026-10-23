@@ -3,7 +3,7 @@ namespace ChinhTa.Core;
 public enum LineRole { Agency, Motto, Subject }
 public record LayoutParagraph(int Start, string Text, int Page, bool InTable, int CellStart,
     int CellEnd, bool Centered, int TableStart = -1, bool? ParagraphCentered = null,bool? UnindentedCenter=null);
-public record LineTarget(LineRole Role, int Start, string Text, int RegionStart, int RegionEnd, bool Centered)
+public record LineTarget(LineRole Role, int Start, string Text, int RegionStart, int RegionEnd, bool Centered,bool UserDefinedType=false)
 {
     public string Label => Role switch { LineRole.Agency => "cơ quan ban hành", LineRole.Motto => "tiêu ngữ", _ => "trích yếu" };
     public Issue Probe => new(Start, Text.Length, Text, Text, "Đang kiểm tra Shape Line.", false,
@@ -19,10 +19,8 @@ public record ShapeLineFix(int? ShapeId, double Left, double Top, double Width, 
 
 public static class ShapeLineRules
 {
-    private static readonly HashSet<string> Types = new(StringComparer.OrdinalIgnoreCase)
-    { "BÁO CÁO", "THÔNG BÁO", "KẾ HOẠCH", "TỜ TRÌNH", "QUYẾT ĐỊNH", "NGHỊ QUYẾT", "HƯỚNG DẪN", "CHỈ THỊ", "CHƯƠNG TRÌNH", "PHƯƠNG ÁN", "ĐỀ ÁN", "QUY CHẾ", "QUY ĐỊNH" };
     private static string Clean(string text) => text.TrimEnd('\r', '\a', '\n');
-    public static bool IsDocumentType(string text)=>Types.Contains(Clean(text).Trim());
+    public static bool IsDocumentType(string text)=>DocumentTypeCatalog.FindHeading(text) is not null;
     public static IReadOnlyList<LineTarget> Identify(IReadOnlyList<LayoutParagraph> paragraphs, DocumentProfile profile)
     {
         if (profile != DocumentProfile.State) return [];
@@ -48,7 +46,7 @@ public static class ShapeLineRules
                 }
             }
         }
-        var types = first.Select((p,i) => (p,i)).Where(x => !x.p.InTable && Types.Contains(Clean(x.p.Text).Trim())).ToArray();
+        var types = first.Select((p,i) => (p,i)).Where(x => !x.p.InTable && IsDocumentType(x.p.Text)).ToArray();
         if (types.Length == 1)
         {
             var (type, index) = types[0];
@@ -66,12 +64,13 @@ public static class ShapeLineRules
                 { bounded = last is not null; break; }
                 last = p; end = p.Start + p.Text.Length;
             }
-            if (last is not null && bounded) targets.Add(new(LineRole.Subject, last.Start, Clean(last.Text), type.Start, end + 1, last.Centered));
+            if (last is not null && bounded) targets.Add(new(LineRole.Subject, last.Start, Clean(last.Text), type.Start, end + 1, last.Centered,DocumentTypeCatalog.IsUserHeading(type.Text)));
         }
         return targets.OrderBy(t => t.Start).ToArray();
     }
     public static IReadOnlyList<LineRole> UnidentifiedRoles(IReadOnlyList<LineTarget> targets) =>
         Enum.GetValues<LineRole>().Where(role => !targets.Any(t => t.Role == role)).ToArray();
+    public static string Citation(LineTarget target)=>DocumentTypeCatalog.WithSource(Citation(target.Role),target.UserDefinedType);
     public static string Citation(LineRole role) => role switch
     {
         LineRole.Agency => "NĐ30, PL I, Phần I.II.2.b (PDF 22).",

@@ -96,3 +96,5 @@ Tự sửa chỉ định dạng ký tự của dòng đã xác minh: giữ cỡ 
 ## Bổ sung .54 — cơ quan, trích yếu, nơi nhận
 
 Đọc lại ảnh PDF22: II.2.b tên chủ quản in hoa 12–13 đứng; tên ban hành in hoa 12–13 đứng đậm; font đen theo I.4. PDF24 II.5.b không đặt tối đa bốn đoạn trích yếu; ngắt dòng/đoạn không tự là lỗi. PDF28 II.9.d/ô9b: Nơi nhận: một dòng riêng 12 nghiêng đậm; danh sách 11 đứng, gạch đầu dòng, cuối dòng chấm phẩy; dòng cuối Lưu: có VT, đơn vị và số bản lưu, kết thúc bằng chấm. .54 không đoán tên/mã/số bản; kiểm phần nhận diện/phông/dash/dấu câu trong phạm vi đã ghi, chưa đo đủ lề/hàng. Nguồn là Nghị định 30/2020/NĐ-CP.
+
+Từ .59, [DocumentTypeCatalog/danh mục](DOCUMENT-TYPES.md) chép đủ PLIII.I PDF40, giữ exact QyĐ/CTr/TTr/TrS. Báo cáo đề xuất — BCĐX là bổ sung theo yêu cầu người dùng, không đặt vào nguồn NĐ30. Copy entries chỉ tra cứu, chưa dùng thể thức tên loại/trích yếu/Line của văn bản gốc; danh mục không chứng minh đã hỗ trợ mọi mẫu đặc thù.

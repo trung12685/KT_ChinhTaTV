@@ -15,7 +15,7 @@ public static class LineInspection
         {
             bool hasAnchor = anchors.TryGetValue(target.Probe, out var anchor);
             anchor ??= new PreviewAnchor(1, target.Text, 0, target.Text.Length);
-            string citation = ShapeLineRules.Citation(target.Role) +
+            string citation = ShapeLineRules.Citation(target) +
                 (target.Role == LineRole.Motto ? " Độ dài bằng dòng tiêu ngữ (dung sai đo 5% và 1 pt)." : " Độ dài theo NĐ30.") +
                 " Khoảng cách và dung sai đo/tâm theo cấu hình người dùng.";
             Issue Notice(string message, ShapeLineFix? fix = null) => target.Probe with
