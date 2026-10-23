@@ -33,3 +33,5 @@ Ví dụ phông/vị trí nêu cả kiểu hoặc số đo. [TAB] chỉ là ký 
 Từ .46 có 17 nhóm đề xuất sửa, thêm C17: `Ghi chú : nội dung` → `Ghi chú: nội dung` theo điều kiện. Mỗi mục mới tiếp tục có ví dụ và kết quả/hướng xử lý; 8 nhóm thủ công, 1 minh họa và 5 hướng dự kiến giữ trạng thái riêng.
 
 Từ .47, M07 ghi đối chiếu XML vùng sửa chữ toàn thân ở ba chế độ. Field phức tạp/lệch XML có thể làm các đoạn phía sau phải kiểm tra thủ công; header/footer/textbox và đo tọa độ có phạm vi riêng. Danh mục vẫn 17 nhóm đề xuất/8 thủ công/1 minh họa; ví dụ và trạng thái dự kiến giữ rõ như .45.
+
+Từ .48 có thêm C18 với ví dụ `Đã hoàn thành . Tiếp tục báo cáo` → `Đã hoàn thành. Tiếp tục báo cáo`; tổng 18 nhóm có thể đề xuất, 8 thủ công, 1 minh họa. P03 còn nghiên cứu thiếu khoảng sau dấu (`Đã hoàn thành.Tiếp tục báo cáo`), chưa chuyển thành khả năng đã hỗ trợ. Giới hạn/ngoại lệ C18 ghi riêng trong báo cáo và [nội dung .48](CHANGES-0.1.48.md).

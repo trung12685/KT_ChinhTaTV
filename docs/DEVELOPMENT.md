@@ -10,7 +10,7 @@
 
 Mốc đã chốt: [0.1.27](STATUS-0.1.27.md), mã gói `1ec3092ccd68ed0acd8878b2737664116a6b11fe`, tag `v0.1.27`. Đọc biên bản này trước để phân biệt bằng chứng CI, xác nhận người dùng và kịch bản còn chờ. Phát triển từ `main` sau khi chốt, tạo nhánh mới; không tiếp tục phát hành vào tag hoặc ghi đè ZIP 0.1.27.
 
-Nhánh đang phát triển: `fix/whole-body-text-proof-0.1.47`, từ 0.1.46 (`54dafb525513106261916139d6bab23b73039116`). Chuỗi bản thử dựa trên main đã chốt `da6cf3b0999dbfb60d16ab1eae9733b0f1f20c81`. Đọc các CHANGES và [phạm vi 0.1.47](CHANGES-0.1.47.md). Chưa nhập main hoặc coi CI là bằng chứng Office 2021.
+Nhánh đang phát triển: `feature/inner-sentence-spacing-0.1.48`, từ 0.1.47 (`3aa1214b1c07766b7c05c243ece8c3a735d1fdd2`). Chuỗi bản thử dựa trên main đã chốt `da6cf3b0999dbfb60d16ab1eae9733b0f1f20c81`. Đọc các CHANGES và [phạm vi 0.1.48](CHANGES-0.1.48.md). Chưa nhập main hoặc coi CI là bằng chứng Office 2021.
 
 ## Bản đồ mã nguồn
 
@@ -75,7 +75,7 @@ Tài liệu riêng chỉ dùng cục bộ theo đường dẫn tùy chọn của
 dotnet publish src/ChinhTa.Desktop -c Release -r win-x64 --self-contained true -o artifacts/win-x64
 ```
 
-Kèm thư mục `samples`, ghi chú phiên bản, ZIP và SHA-256. Chạy kiểm thử trước khi phát hành. Khi tạo bản mới, cập nhật version trong csproj, tiêu đề UI, tên gói/tag, ghi chú và workflow Windows; không phát hành lại vào tag cũ. Workflow `windows-package.yml` gắn `fix/whole-body-text-proof-0.1.47` và phát hành prerelease 0.1.47 sau kiểm thử. Mỗi phiên bản sau phải đổi nhánh/version và không ghi đè tag đã phát hành. Workflow `finalize-0.1.27.yml` chỉ chốt metadata của bản đã thử, có kiểm tag, digest, CI và thay đổi chỉ thuộc tài liệu/workflow được cho phép; không build hoặc thay asset.
+Kèm thư mục `samples`, ghi chú phiên bản, ZIP và SHA-256. Chạy kiểm thử trước khi phát hành. Khi tạo bản mới, cập nhật version trong csproj, tiêu đề UI, tên gói/tag, ghi chú và workflow Windows; không phát hành lại vào tag cũ. Workflow `windows-package.yml` gắn `feature/inner-sentence-spacing-0.1.48` và phát hành prerelease 0.1.48 sau kiểm thử. Mỗi phiên bản sau phải đổi nhánh/version và không ghi đè tag đã phát hành. Workflow `finalize-0.1.27.yml` chỉ chốt metadata của bản đã thử, có kiểm tag, digest, CI và thay đổi chỉ thuộc tài liệu/workflow được cho phép; không build hoặc thay asset.
 
 Khi nhận lỗi, lấy log đúng version và phân biệt lỗi đọc Word, ghép XML, CP/mốc, marker, candidate, nét XPS hay rollback. Các mã `Word.Preview.CpMapping`, `Word.Preview.Unmapped`, `Word.LineBatch.ReferenceBinding.*`, `Word.LineBatch.StoryBinding`, `Word.LineBatch.Rescan` ghi số liệu mà không ghi chữ tài liệu. Không kết luận nguyên nhân chỉ từ ngoại lệ tổng quát hoặc một điều kiện guard gộp.
 
@@ -273,3 +273,9 @@ Gộp C17 trong đường punctuation suppression, cho chia sẻ full CharacterF
 CheckCore lấy liveText toàn thân, dùng snapshot layout cũ nếu có, chỉ thêm Range.End cho các đoạn khác; không thêm đọc page/alignment/table ngoài phạm vi cũ. WordOpenXML đọc một lần từ Content hiện tại. Text proof và header geometry chạy riêng từ cùng chuỗi XML, giữ header liveLayout/lastLayout 40 đoạn đầu State và thuật toán Line cũ; hai parse XML thuần, chưa benchmark COM. Lỗi XML/unsupported-read được log bằng mã/stack; text proof unavailable giữ empty. RPC/COM lỗi khác tiếp tục theo chính sách read recovery có sẵn, không nuốt thành PASS. Cảnh báo coverage chữ riêng không trộn lỗi mapping body với mốc Line.
 
 Core kiểm sau 40/ba profile/các cấu trúc đã nhận ra, prefix stop, XML thiếu/hỏng, range bất hợp lệ, stale batch và 1.200 dòng giả. Office tạo nguồn plain/link/complex có 45 padding rows; ba mode kiểm eligibility/stale-before-write, State kiểm nhóm/fault/Undo/save/reopen/retained style và relationship hyperlink. CP lấy từ issue thật/delta ASCII, không IndexOf story; hash nguồn giữ nguyên. Không coi các test Core là số đo Word hoặc xác nhận Office. Danh mục 17/8/1, cập nhật M07/example/milestone/guide; chưa thêm rule lỗi mới, chưa hỗ trợ sửa field/control/header/footer/textbox.
+
+## Ghi chú triển khai 0.1.48
+
+C18 `SentenceInnerSpaceRules` chỉ xóa ASCII space trước một dấu .?! giữa đoạn. Hai từ trái có ≥2 chữ cái, từ cuối thường/không La Mã/không viết tắt trong danh sách; biên trước cặp cho phép space/phẩy/chấm phẩy để sửa nhóm không cần lượt hai sau C14. Từ phải đã ngăn space, viết hoa chữ đầu, phần còn lại thường, ≥2 chữ cái; biên sau space hoặc hết đoạn. Bỏ qua header/ngày, control/NBSP, dấu hiệu kỹ thuật, viết tắt/đuôi tệp phổ biến. Danh sách này hữu hạn, chưa kiểm toàn bộ viết tắt hoặc chính tả/ngữ nghĩa.
+
+Thêm FixKind cuối enum; Checker gộp span punctuation tránh chồng C01, repetitions có quyền giữ deletion như trước, BatchPlan cho chia sẻ CharacterFormat. Không đổi CP mapping/WordSession/Line/XPS/save/transaction/checkpoint; bảo vệ XML toàn thân .47 vẫn áp dụng. Core kiểm span chính xác, Unicode, ngoại lệ, sửa riêng giữ mục chưa chọn, nhiều dấu cùng đoạn, nhóm hỗn hợp, stale/manual/style/fault rollback. Office fixture giả có ba C18 + chín lỗi độc lập, kiểm riêng/nhóm/fault/Undo/lưu-mở/kiểu và hash nguồn; probe từ issue Word thật + delta ASCII. Chưa chạy runtime Word/Office 2021. Báo cáo tăng 18/8/1; P03 đổi ví dụ sang thiếu khoảng sau, vẫn chưa triển khai.

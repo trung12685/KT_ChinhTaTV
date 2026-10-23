@@ -82,6 +82,9 @@ public static class DevelopmentReport
         new("C17","Khoảng trắng trước dấu hai chấm",CapabilityMode.Reviewable,"Hai từ kề nhau bên trái; từ cuối chữ thường; bên phải đã có dấu cách và từ rõ",
             "Đề xuất xóa dấu cách ASCII trước dấu hai chấm; giữ chữ, dấu câu và khoảng sau. Bỏ qua số/giờ/tỉ lệ số hoặc La Mã, dấu hiệu kỹ thuật/header/ngày và mẫu chưa rõ. Cần duyệt; chưa thêm khoảng sau hay sửa mọi dấu hai chấm.",
             new ReportExample("Ghi chú : nội dung","Ghi chú: nội dung")),
+        new("C18","Khoảng trắng trước dấu kết câu giữa đoạn",CapabilityMode.Reviewable,"Một dấu .?! giữa đoạn; hai từ trái rõ, từ phải viết hoa đầu và đã có dấu cách",
+            "Đề xuất xóa dấu cách ASCII trước dấu; giữ chữ, dấu câu và khoảng sau. Bỏ qua số, viết tắt/đuôi tệp phổ biến, dấu hiệu kỹ thuật/header/ngày, chuỗi dấu và vùng chưa cho phép sửa. Cần duyệt; chưa kiểm mọi viết tắt hoặc thêm dấu/khoảng sau.",
+            new ReportExample("Đã hoàn thành . Tiếp tục báo cáo","Đã hoàn thành. Tiếp tục báo cáo")),
         new("M01","Khổ giấy và lề",CapabilityMode.Manual,"Nhà nước/Đảng",
             "Cảnh báo A4/lề, trang ngang/lề đối xứng và ngoại lệ; chưa tự đổi thiết lập trang.",
             new ReportExample("Văn bản Nhà nước trên A4 có lề trái 20 mm.","Cảnh báo đối chiếu quy định và ngoại lệ; chưa tự đổi khổ giấy/lề.")),
@@ -125,7 +128,8 @@ public static class DevelopmentReport
         new("0.1.44","Thêm gợi ý khoảng trắng trước dấu kết câu cuối đoạn có điều kiện; sửa nhóm cùng ngoặc/dấu phẩy/cụm lặp, rollback và cập nhật báo cáo."),
         new("0.1.45","Bổ sung ví dụ lỗi và kết quả/hướng xử lý cho từng nhóm đã hỗ trợ, chỉ cảnh báo, minh họa và các việc dự kiến trong báo cáo xem/xuất TXT."),
         new("0.1.46","Thêm gợi ý khoảng trắng trước dấu hai chấm trong nhãn/câu chữ đủ điều kiện, kiểm sửa nhóm/rollback và cập nhật ví dụ C17 trong báo cáo."),
-        new("0.1.47","Mở rộng đối chiếu XML cho vùng sửa chữ toàn thân và ba chế độ; chặn vùng chưa chứng minh, giữ phép đo đầu trang và kiểm giao dịch hiện có.")
+        new("0.1.47","Mở rộng đối chiếu XML cho vùng sửa chữ toàn thân và ba chế độ; chặn vùng chưa chứng minh, giữ phép đo đầu trang và kiểm giao dịch hiện có."),
+        new("0.1.48","Thêm gợi ý bỏ dấu cách trước dấu kết câu giữa đoạn có ranh giới rõ; sửa chung lỗi chữ, kiểm rollback và bổ sung ví dụ C18.")
     });
     public static IReadOnlyList<string> NextSteps { get; }=Array.AsReadOnly(new[]
     {
@@ -137,7 +141,7 @@ public static class DevelopmentReport
     {
         new("P01","Vị trí dọc số/ngày",new ReportExample("Dòng số và dòng ngày lệch hàng 12 pt.","Hoàn thiện nhận diện, căn cứ, phép đo và hậu kiểm trước khi cho phép dịch dọc; hiện chưa có nút tự sửa phần này.")),
         new("P02","Thể thức các vùng còn thiếu",new ReportExample("Đoạn thân bài hoặc phần chữ ký dùng Arial màu đỏ.","Tiếp tục xác minh quy định và nhận diện từng vùng trước khi bổ sung sửa phông/kiểu. Chưa tự áp phông cho toàn bộ thân bài/chữ ký/nơi nhận.")),
-        new("P03","Dấu câu ngoài phạm vi hiện tại",new ReportExample("Nội dung . Tiếp theo","Nghiên cứu khoảng trắng với dấu giữa câu, viết tắt và ngoại lệ; C16 hiện chỉ xét dấu cuối đoạn đủ điều kiện, chưa sửa ví dụ này.")),
+        new("P03","Dấu câu ngoài phạm vi hiện tại",new ReportExample("Đã hoàn thành.Tiếp tục báo cáo","Nghiên cứu thêm khoảng sau dấu kết câu, viết tắt và ngoại lệ; C16/C18 hiện chỉ bỏ khoảng trước dấu đủ điều kiện, chưa sửa ví dụ thiếu khoảng sau này.")),
         new("P04","Chính tả qua dữ liệu kiểm chứng",new ReportExample("Tôi xẽ gửi báo cáo.","Cần dữ liệu từ và mẫu ngoại lệ trước khi đề xuất xẽ → sẽ; hiện chưa có quy tắc sửa ví dụ này. Chưa coi chương trình là bộ kiểm chính tả đầy đủ.")),
         new("P05","Ngữ cảnh và từ dễ nhầm — làm sau cùng",new ReportExample("Anh ấy giành thời gian đọc sách.","Nghiên cứu ngữ cảnh giành/dành và thư viện sau phần thể thức/lỗi chữ cơ bản; chưa có gợi ý tự động cho ví dụ này."))
     });

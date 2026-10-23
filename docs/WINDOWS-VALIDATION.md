@@ -170,3 +170,7 @@ Thử `Ghi chú  :  nội dung`: C17 và gợi ý khoảng sau chọn độc l�
 Bài Word tạo ba mẫu body-proof-plain/link/complex sau 45 đoạn đệm. Ở cả ba chế độ, plain có gợi ý, hyperlink giữ thủ công và đoạn thuần kế bên vẫn có sáu gợi ý. Lựa chọn từ mẫu plain không được ghi/checkpoint/Undo khi mở bản cùng chữ nhưng có hyperlink. Kiểm fault nhóm, giữ kiểu từ đầu, sửa/quét/một Undo/lưu-mở mẫu body-proof-fixed, nguyên quan hệ hyperlink và hash nguồn. Field phức tạp phải báo giới hạn và giữ đoạn phía sau thủ công ở ba chế độ.
 
 Đọc XML hiện tại gồm thay đổi chưa lưu, thử XML thiếu/lệch/không đọc được và bảo đảm không dùng mặc định cho phép ghi. Theo dõi thời gian quét tài liệu dài trên Word thực, chưa có số đo runtime ở cloud. Đo Line/căn giữa/phông đặc thù vẫn theo phạm vi đầu văn bản cũ; chạy lại toàn bộ bài Office và các kịch bản XPS/rollback cũ trước khi xác nhận. Báo cáo có M07 mới/mốc .47, 17/8/1 giữ nguyên. CI không có Word.
+
+## Bản thử 0.1.48 — dấu kết câu giữa đoạn
+
+Bài Kiểm tra Word tự động có thêm nguồn giả `sentence-inner-input.docx`: ba C18 và chín lỗi chữ độc lập. Sửa riêng phải giữ khoảng sau dấu và các lỗi chưa chọn; chữ `kế hoạch` đậm/gạch chân không đổi. Fault sau bốn writes phải phục hồi cả lượt, Changed=false và không có Undo mới. Nhóm mới quét hết đúng mục một lượt, một Undo trả cả nhóm; lưu/mở giữ chữ/kiểu/nguồn. Đối chiếu thêm số, `tp`, `Docx`, URL và ô số trống không nhận C18. Bài này cần Word thực tế; CI Windows chỉ kiểm Core/WPF/gói và biên dịch kịch bản, chưa xác nhận Office 2021. [Phạm vi .48](CHANGES-0.1.48.md).
