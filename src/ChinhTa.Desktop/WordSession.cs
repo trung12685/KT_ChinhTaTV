@@ -99,6 +99,7 @@ public sealed partial class WordSession : IDisposable
         var liveLayout = new List<WordParagraphSnapshot>();
         var liveText=new List<WordParagraphSnapshot>();
         IReadOnlySet<int> editableStarts=new HashSet<int>();
+        var outlineEvidence=new Dictionary<int,OutlineParagraphInfo>();
         bool textProofUnavailable=false;
         WordXmlMappingException? textProofWarning=null;
         bool lineLayoutUnavailable = false;
@@ -182,11 +183,11 @@ public sealed partial class WordSession : IDisposable
                 {
                     textProofWarning=warning;
                     Diagnostics.Write("Word.TextProof."+warning.DiagnosticCode,warning);
-                });
+                },(start,info)=>outlineEvidence[start]=info);
             }
             catch(Exception ex) when(ex is InvalidOperationException or System.Xml.XmlException)
             {
-                Diagnostics.Write("Word.TextProof.Unavailable",ex);textProofUnavailable=true;
+                Diagnostics.Write("Word.TextProof.Unavailable",ex);textProofUnavailable=true;outlineEvidence.Clear();
             }
             // Preserve the existing geometry prefix and mismatch handling. The whole-
             // body text proof never broadens table/Line operations to later paragraphs.
@@ -208,7 +209,7 @@ public sealed partial class WordSession : IDisposable
             }
         }
         lastLayout=liveLayout.ToArray();
-        paragraphs=WordTextProof.Apply(paragraphs,editableStarts).ToList();
+        paragraphs=WordTextProof.Apply(paragraphs,editableStarts,outlineEvidence).ToList();
         LineTargets = lineLayoutUnavailable ? [] : ShapeLineRules.Identify(headerLayout, Profile);
         AdministrativePositionTargets=AdministrativePositionRules.Identify(paragraphs,headerLayout,Profile);
         LineShapes = ReadLineShapes();

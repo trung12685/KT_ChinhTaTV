@@ -4,8 +4,8 @@ namespace ChinhTa.Core;
 
 public record Paragraph(int Start, string Text, bool Bold = false, float Size = 13,
     int Alignment = 1, string Font = "Times New Roman", bool Italic = false,
-    int Color = 0, bool InTable = false, int Page = 1, bool FormatObserved = false, bool FormatMixed = false, bool TextEditable = true, bool BoldMixed = false);
-public enum FixKind { Text, NationalHeading, StateMotto, PartyHeading, Advisory, PageLayout, ShapeLine, AdministrativeNumber, AdministrativeDate, AdministrativeFormat, AdministrativePosition, DocumentHeadingFormat, RepeatedText, PunctuationSpace, ParenthesisSpace, SentenceEndSpace, ColonSpace, SentenceInnerSpace, SentenceAfterSpace }
+    int Color = 0, bool InTable = false, int Page = 1, bool FormatObserved = false, bool FormatMixed = false, bool TextEditable = true, bool BoldMixed = false, OutlineParagraphInfo? Outline = null);
+public enum FixKind { Text, NationalHeading, StateMotto, PartyHeading, Advisory, PageLayout, ShapeLine, AdministrativeNumber, AdministrativeDate, AdministrativeFormat, AdministrativePosition, DocumentHeadingFormat, RepeatedText, PunctuationSpace, ParenthesisSpace, SentenceEndSpace, ColonSpace, SentenceInnerSpace, SentenceAfterSpace, OutlineOrder, OutlineMarker }
 public record HeadingFormat(float Size, int? Alignment = null)
 {
     public bool Matches(string font,float size,int bold,int italic,int color,int? alignment)=>
@@ -31,6 +31,8 @@ public record Issue(int Start, int Length, string Original, string Replacement,
         : LineFix is not null ? "Tạo/đặt lại Shape Line theo số đo và cấu hình đã chọn."
         : CenterFix is not null ? "Căn giữa trong ô đã xác minh, bỏ thụt lề ngang; giữ nguyên chữ và khoảng cách dọc."
         : CharacterFormat is not null ? $"Times New Roman, màu đen, cỡ {CharacterFormat.Size:0.#}, chữ {(CharacterFormat.Italic?"nghiêng":"đứng")}{(CharacterFormat.Bold==true?", đậm":"")}; giữ nguyên chữ."
+        : Kind==FixKind.OutlineOrder ? $"Đổi ký hiệu mục {Original} → {Replacement}; giữ nội dung, cần duyệt thứ tự và dẫn chiếu."
+        : Kind==FixKind.OutlineMarker ? "Bỏ dấu đầu dòng và dấu cách phân cách; giữ nội dung và thụt đầu dòng, cần duyệt mục cha."
         : Kind==FixKind.SentenceAfterSpace ? "Thêm một dấu cách sau dấu kết câu; giữ chữ, dấu câu và khoảng trước, cần duyệt cả câu."
         : Kind==FixKind.SentenceInnerSpace ? "Xóa dấu cách trước dấu kết câu giữa đoạn; giữ chữ và dấu câu, cần duyệt cả câu."
         : Kind==FixKind.ColonSpace ? "Xóa dấu cách trước dấu hai chấm; giữ chữ và dấu câu, cần duyệt cả câu."
@@ -48,6 +50,8 @@ public static class Checker
     {
         var result = new List<Issue>();
         var items = paragraphs.ToArray();
+        var outline=OutlineRules.Check(items);
+        var outlineOwners=outline.Where(f=>f.Issue.CanFix).ToLookup(f=>f.ParagraphStart);
         var administrative=AdministrativeHeaderRules.Check(items,profile);
         var administrativeStarts=AdministrativeHeaderRules.Identify(items,profile).Select(p=>p.Start).ToHashSet();
         var protectedAdministrative=items.Where(p=>administrativeStarts.Contains(p.Start) && (!p.TextEditable || p.Text.Contains('\t')))
@@ -79,6 +83,8 @@ public static class Checker
             textIssues.RemoveAll(candidate=>repetitions.Any(r=>r.CanFix &&
                 candidate.Start<(long)r.Start+r.Length && (long)candidate.Start+candidate.Length>r.Start));
             textIssues.AddRange(repetitions);
+            textIssues.RemoveAll(candidate=>outlineOwners[p.Start].Any(f=>
+                candidate.Start<(long)f.Issue.Start+f.Issue.Length && (long)candidate.Start+candidate.Length>f.Issue.Start));
             if(p.TextEditable && !protectedAdministrative.Contains(p.Start)) result.AddRange(textIssues);
             else if(textIssues.Count>0)
             {
@@ -105,6 +111,7 @@ public static class Checker
         }
         result.AddRange(HeadingRules.CheckConsistency(items, profile));
         result.AddRange(administrative);
+        result.AddRange(outline.Select(f=>f.Issue));
         return result.OrderBy(x => x.Start).ToArray();
     }
 }

@@ -88,6 +88,12 @@ public static class DevelopmentReport
         new("C19","Thiếu khoảng trắng sau dấu kết câu",CapabilityMode.Reviewable,"Một dấu .?! giữa đoạn; hai từ trái rõ và từ phải viết hoa đầu",
             "Đề xuất thêm một dấu cách ASCII sau dấu; giữ chữ, dấu câu và khoảng trước chưa chọn. Có thể chọn cùng C18 để sửa hai phía một lượt. Bỏ qua số, viết tắt/đuôi tệp phổ biến, dấu hiệu kỹ thuật/header/ngày, chuỗi dấu và vùng chưa cho phép sửa. Cần duyệt; chưa sửa mọi dấu câu hoặc tự viết hoa.",
             new ReportExample("Đã hoàn thành.Tiếp tục báo cáo","Đã hoàn thành. Tiếp tục báo cáo")),
+        new("C20","Thứ tự mục gõ tay",CapabilityMode.Reviewable,"Đầu đoạn thân đã xác minh XML; cùng mục cha/cấp, có mốc 1/a/I",
+            "Đề xuất đổi nhãn 1,2,4 thành 1,2,3; tương tự a), b), d) hoặc I., II., IV. Giữ dấu phân cách, tiêu đề và nội dung. Tách các mục cha; danh sách tự động/bảng/cấp chưa rõ, bắt đầu lại, chữ cái hoặc dẫn chiếu chưa chắc giữ thủ công. Cần duyệt, không suy đoán nội dung bị thiếu.",
+            new ReportExample("1. Tình hình\n2. Kết quả công tác\n4. Đề xuất","1. Tình hình\n2. Kết quả công tác\n3. Đề xuất")),
+        new("C21","Dấu đầu dòng đứng một mình",CapabilityMode.Reviewable,"Dấu -, –/— hoặc + gõ tay trong mục cha xác định trọn vẹn",
+            "Nếu cùng cấp trong mục cha chỉ có một dấu, đề xuất bỏ dấu và dấu cách phân cách; giữ nội dung/thụt đầu dòng. Dấu + đếm riêng dưới từng dấu - hoặc mục cha khác. Có từ hai dấu cùng cấp thì giữ; mục cha chưa rõ/cấu trúc chưa hỗ trợ giữ thủ công. Đây là lựa chọn trình bày theo yêu cầu người dùng.",
+            new ReportExample("1. Nội dung chính\n- Nội dung riêng\n2. Mục khác","1. Nội dung chính\nNội dung riêng\n2. Mục khác")),
         new("M01","Khổ giấy và lề",CapabilityMode.Manual,"Nhà nước/Đảng",
             "Cảnh báo A4/lề, trang ngang/lề đối xứng và ngoại lệ; chưa tự đổi thiết lập trang.",
             new ReportExample("Văn bản Nhà nước trên A4 có lề trái 20 mm.","Cảnh báo đối chiếu quy định và ngoại lệ; chưa tự đổi khổ giấy/lề.")),
@@ -107,7 +113,7 @@ public static class DevelopmentReport
             "Tab liên tiếp, tab/khoảng trắng đầu đoạn căn giữa; không tự xóa tab hoặc thụt lề.",
             new ReportExample("[TAB][TAB]Nội dung","Trong chế độ cá nhân: cảnh báo tab liên tiếp; không tự xóa vì có thể dùng để dàn bố cục.")),
         new("M07","Vùng cấu trúc hoặc kiểu chưa rõ",CapabilityMode.Manual,"Trong phạm vi đã đối chiếu",
-            "Field/control/liên kết/đối tượng hoặc kiểu trộn có thể giữ thủ công. Đối chiếu XML phần thân ở cả ba chế độ, kể cả sau đoạn 40; vùng chưa chứng minh giữ thủ công. Field phức tạp hoặc lệch XML có thể chặn các đoạn sau. Đo tọa độ/phông đặc thù đầu Nhà nước vẫn có phạm vi riêng.",
+            "Field/control/liên kết/đối tượng hoặc kiểu trộn có thể giữ thủ công. Đối chiếu XML phần thân ở cả ba chế độ, kể cả sau đoạn 40; vùng chưa chứng minh giữ thủ công. Field phức tạp hoặc lệch XML có thể chặn các đoạn sau. Đo tọa độ/phông đặc thù đầu Nhà nước vẫn có phạm vi riêng. Thứ tự mục/dấu đầu dòng cần bằng chứng thân ngoài bảng; danh sách tự động hoặc kiểu/cấp chưa rõ giữ thủ công.",
             new ReportExample("Nội dung  báo cáo nằm trong field/control/liên kết chưa được phép sửa chữ.","Giữ thủ công để bảo vệ cấu trúc; không chuyển thành sửa được chỉ vì thấy khoảng trắng thừa.")),
         new("M08","Nét/Shape chưa ghép chắc chắn",CapabilityMode.Manual,"Đường kẻ",
             "Line không có dấu của ứng dụng, nhóm Shape, border, nét chồng hoặc thiếu mốc/số đo; không tạo thêm để làm mất cảnh báo.",
@@ -134,7 +140,8 @@ public static class DevelopmentReport
         new("0.1.47","Mở rộng đối chiếu XML cho vùng sửa chữ toàn thân và ba chế độ; chặn vùng chưa chứng minh, giữ phép đo đầu trang và kiểm giao dịch hiện có."),
         new("0.1.48","Thêm gợi ý bỏ dấu cách trước dấu kết câu giữa đoạn có ranh giới rõ; sửa chung lỗi chữ, kiểm rollback và bổ sung ví dụ C18."),
         new("0.1.49","Thêm gợi ý thiếu khoảng sau dấu kết câu giữa đoạn; chọn riêng trước/sau hoặc sửa hai phía một lượt, giữ chữ/kiểu, kiểm giao dịch và ví dụ C19."),
-        new("0.1.50","Thu gọn danh sách lỗi một dòng, gom nhóm có checkbox từng mục/nhóm/tất cả, chia thể thức cần sửa/gợi ý cần duyệt/cảnh báo thủ công; chi tiết ở tooltip và khung mở rộng.")
+        new("0.1.50","Thu gọn danh sách lỗi một dòng, gom nhóm có checkbox từng mục/nhóm/tất cả, chia thể thức cần sửa/gợi ý cần duyệt/cảnh báo thủ công; chi tiết ở tooltip và khung mở rộng."),
+        new("0.1.51","Thêm ngữ cảnh cấu trúc cho thứ tự mục gõ tay và dấu đầu dòng đơn trong từng mục cha; bằng chứng XML, sửa nhóm/rollback và ví dụ C20/C21.")
     });
     public static IReadOnlyList<string> NextSteps { get; }=Array.AsReadOnly(new[]
     {
@@ -159,7 +166,8 @@ public static class DevelopmentReport
         Line("Phiên bản: "+version);Line("Tạo lúc: "+created.ToString("yyyy-MM-dd HH:mm zzz",System.Globalization.CultureInfo.InvariantCulture));
         Line("Báo cáo năng lực chương trình; không phải số lỗi đã sửa trong tài liệu đang mở.");
         Line("Trạng thái đã hỗ trợ/chưa tự sửa/dự kiến là tiến độ phát triển, không phải lịch sử sửa tài liệu.");
-        Line("Ví dụ dùng dữ liệu giả để minh họa điều kiện; [TAB] là ký hiệu tab. Dấu cách trong ví dụ được giữ nguyên.");Line();
+        Line("Ví dụ dùng dữ liệu giả để minh họa điều kiện; [TAB] là ký hiệu tab. Dấu cách trong ví dụ được giữ nguyên.");
+        Line("Các dòng của ví dụ thứ tự mục/dấu đầu dòng thể hiện các đoạn riêng, không ghép chung một đoạn.");Line();
         Line($"TỔNG QUAN: {Count(CapabilityMode.Reviewable)} nhóm có thể đề xuất sửa; {Count(CapabilityMode.Manual)} nhóm chỉ cảnh báo; {Count(CapabilityMode.Demonstration)} quy tắc minh họa.");
         Line("Sửa được khi nhận diện đủ chắc chắn và người dùng duyệt. Không có cảnh báo không đồng nghĩa đúng toàn bộ thể thức/chính tả.");Line();
         Line("KẾT QUẢ KIỂM THỬ ĐI KÈM GÓI");

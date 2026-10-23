@@ -42,7 +42,9 @@ public static class IssueReviewPanelChecks
             var missing=Line(LineRole.Agency,100);
             var manual=new Issue(200,3,"ABC","ABC","Có đối tượng chưa ghép chắc chắn; không tạo thêm đường chồng.",false,FixKind.ShapeLine,CanFix:false,Title:"Kiểm tra đường kẻ dưới tiêu ngữ");
             var warnings=new[]{space,space with {Start=30},repeat,missing,Line(LineRole.Motto,110),Line(LineRole.Subject,120),manual,
-                new Issue(300,3,"ABC","ABC","Kiểm tra lề trái theo quy định và ngoại lệ.",false,FixKind.PageLayout,CanFix:false,Title:"Lề trái chưa phù hợp")};
+                new Issue(300,3,"ABC","ABC","Kiểm tra lề trái theo quy định và ngoại lệ.",false,FixKind.PageLayout,CanFix:false,Title:"Lề trái chưa phù hợp"),
+                new Issue(350,1,"4","3","Vị trí thứ ba trong cùng mục cha; giữ nội dung, cần duyệt dẫn chiếu.",false,FixKind.OutlineOrder,Title:"Thứ tự mục: 4 → 3"),
+                new Issue(380,2,"+ ","","Chỉ có một dấu + trong mục cha; giữ nội dung và thụt đầu dòng.",false,FixKind.OutlineMarker,Title:"Dấu + đứng một mình trong mục")};
             var anchors=warnings.ToDictionary(i=>i,i=>new PreviewAnchor(i.Start<100?2:1,source,Math.Min(i.Start,source.Length),Math.Min(i.Length,source.Length-Math.Min(i.Start,source.Length))));
             var panel=new IssueReviewPanel();panel.LoadIssues(warnings,anchors);Layout(panel);
             var list=(ListBox)panel.FindName("IssueList");var all=(CheckBox)panel.FindName("AllCheck");var model=(IssueReviewModel)panel.DataContext;
@@ -70,7 +72,7 @@ public static class IssueReviewPanelChecks
             assert(model.All.SelectedCount==2 && model.All.IsChecked is null,"A family checkbox uses the same real row choices");
             var lineGroup=model.Groups.Single(g=>g.Items.Any(c=>c.Issue==missing));lineGroup.IsExpanded=false;Layout(panel);
             all.SetCurrentValue(ToggleButton.IsCheckedProperty,true);
-            assert(model.All.SelectedCount==6 && lineGroup.SelectedCount==3 && panel.Choices.Where(c=>!c.Issue.CanFix).All(c=>!c.IsChecked),
+            assert(model.All.SelectedCount==8 && lineGroup.SelectedCount==3 && panel.Choices.Where(c=>!c.Issue.CanFix).All(c=>!c.IsChecked),
                 "Select all reaches collapsed groups and leaves manual warnings unchecked");
             all.SetCurrentValue(ToggleButton.IsCheckedProperty,false);
             assert(panel.Choices.All(c=>!c.IsChecked),"Global clearing resets every checked row through actual WPF binding");

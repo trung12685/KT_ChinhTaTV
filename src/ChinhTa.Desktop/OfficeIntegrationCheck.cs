@@ -913,6 +913,77 @@ public static class OfficeIntegrationCheck
                 test.ReadCheckDecorations(sentenceAfterRightFixed)!=sentenceAfterRightStyle || test.ReadCheckDecorations(sentenceAfterLeftFixed)!=sentenceAfterLeftStyle || !SaveDigest(sentenceAfterSource).SequenceEqual(sentenceAfterDigest))
                 throw new InvalidOperationException("Bản lưu thiếu khoảng sau dấu kết câu chưa đúng chữ/kiểu hoặc nguồn mẫu thay đổi");
             Pass(stage);
+            stage="Cấu trúc mục: ba chế độ, thứ tự theo mục cha và dấu đầu dòng đơn";
+            string outlineSource=CreateOutlineSample(positionSource,folder,false);
+            string outlineExtra=CreateOutlineSample(positionSource,folder,true);
+            byte[] outlineDigest=SaveDigest(outlineSource),outlineExtraDigest=SaveDigest(outlineExtra);
+            bool OutlineEdit(Issue issue)=>issue.CanFix && issue.Kind is FixKind.OutlineOrder or FixKind.OutlineMarker or FixKind.Text or FixKind.RepeatedText or FixKind.PunctuationSpace or FixKind.ParenthesisSpace or FixKind.SentenceEndSpace or FixKind.SentenceInnerSpace or FixKind.SentenceAfterSpace or FixKind.ColonSpace;
+            foreach(var outlineProfile in Enum.GetValues<DocumentProfile>())
+            {
+                test.Profile=outlineProfile;test.Open(outlineSource);var outlineFound=test.Check();
+                if(outlineFound.Count(i=>i.CanFix && i.Kind==FixKind.OutlineOrder)!=3 || outlineFound.Count(i=>i.CanFix && i.Kind==FixKind.OutlineMarker)!=4)
+                    throw new InvalidOperationException("Chưa tách đúng thứ tự/dấu đơn theo mục cha trong "+outlineProfile);
+            }
+            test.Profile=DocumentProfile.State;test.Open(outlineSource);
+            string outlineOriginal=test.ReadCheckText();var outlineAll=test.Check().Where(OutlineEdit).ToArray();
+            if(outlineAll.Length!=14)throw new InvalidOperationException("Chưa nhận đúng nhóm cấu trúc/chữ mẫu");
+            var outlineOrder=outlineAll.Where(i=>i.Kind==FixKind.OutlineOrder).OrderBy(i=>i.Start).ToArray();
+            var outlineMarker=outlineAll.Where(i=>i.Kind==FixKind.OutlineMarker).OrderBy(i=>i.Start).ToArray();
+            var outlineOpen=outlineAll.Where(i=>i.Kind==FixKind.ParenthesisSpace).OrderBy(i=>i.Start).First();
+            var outlineProbe=new Issue(outlineOpen.Start+outlineOpen.Length,"kế hoạch".Length,"kế hoạch","kế hoạch","",false);
+            var outlineRoman=outlineOrder.Single(i=>i.Original=="IV");
+            var outlineRomanProbe=new Issue(outlineRoman.Start+outlineRoman.Length+2,"Kiến".Length,"Kiến","Kiến","",false);
+            var outlineDecoration=test.ReadCheckDecorations(outlineProbe);var outlineRomanDecoration=test.ReadCheckDecorations(outlineRomanProbe);
+            if(outlineDecoration.Bold!=-1 || outlineDecoration.Underline!=1 || outlineRomanDecoration.Bold!=-1)
+                throw new InvalidOperationException("Mẫu cấu trúc chưa có kiểu chữ giữ lại");
+            stage="Cấu trúc mục: sửa riêng giữ nội dung, dấu khác và kiểu";
+            test.Fix(outlineOrder[0]);
+            if(test.ReadCheckText()!=outlineOriginal.Replace("4. Đề xuất","3. Đề xuất",StringComparison.Ordinal) ||
+                test.Check().Count(i=>i.CanFix && i.Kind==FixKind.OutlineOrder)!=2 || test.ReadCheckDecorations(outlineProbe)!=outlineDecoration)
+                throw new InvalidOperationException("Sửa riêng số mục làm thay nội dung hoặc mục chưa chọn");
+            test.Undo();if(test.ReadCheckText()!=outlineOriginal)throw new InvalidOperationException("Undo số mục chưa về nguyên bản");
+            test.Open(outlineSource);test.Fix(outlineMarker[0]);
+            if(test.ReadCheckText()!=outlineOriginal.Replace("+ Nội dung  ( kế hoạch kế hoạch )","Nội dung  ( kế hoạch kế hoạch )",StringComparison.Ordinal) ||
+                test.ReadCheckDecorations(outlineProbe with {Start=outlineProbe.Start-outlineMarker[0].Length})!=outlineDecoration)
+                throw new InvalidOperationException("Bỏ riêng dấu + đổi nội dung hoặc kiểu giữ lại");
+            test.Undo();if(test.ReadCheckText()!=outlineOriginal)throw new InvalidOperationException("Undo dấu đơn chưa về nguyên bản");
+            Pass(stage);
+            stage="Cấu trúc mục: thêm dấu cùng cấp làm lựa chọn cũ hết hiệu lực trước checkpoint";
+            test.Open(outlineExtra);string outlineChanged=test.ReadCheckText();byte[] outlineCheckpoint=SaveDigest(test.RecoveryPath);bool outlineStale=false;
+            try{test.FixMany([outlineMarker[0]]);}catch(InvalidOperationException){outlineStale=true;}
+            if(!outlineStale || test.Changed || test.ReadCheckText()!=outlineChanged || !SaveDigest(test.RecoveryPath).SequenceEqual(outlineCheckpoint))
+                throw new InvalidOperationException("Lựa chọn dấu đơn cũ vượt kiểm ngữ cảnh mới hoặc đã ghi checkpoint");
+            test.Undo();if(test.ReadCheckText()!=outlineChanged)throw new InvalidOperationException("Từ chối lựa chọn cũ đã tạo Undo");
+            Pass(stage);
+            stage="Cấu trúc mục: lỗi giữa nhóm phục hồi toàn bộ chữ/kiểu, không tạo Undo";
+            test.Open(outlineSource);bool outlineRollback=false;
+            try{test.FixTextFailureProbe(outlineAll,4);}catch(InvalidOperationException error) when(error.InnerException is OfficeTextProbeException){outlineRollback=true;}
+            if(!outlineRollback || test.Changed || test.ReadCheckText()!=outlineOriginal || test.ReadCheckDecorations(outlineProbe)!=outlineDecoration ||
+                test.ReadCheckDecorations(outlineRomanProbe)!=outlineRomanDecoration)
+                throw new InvalidOperationException("Rollback cấu trúc/chữ chưa giữ toàn bộ nguyên bản");
+            test.Undo();if(test.ReadCheckText()!=outlineOriginal)throw new InvalidOperationException("Lượt cấu trúc lỗi đã tạo Undo");
+            Pass(stage);
+            stage="Cấu trúc mục: sửa nhóm một lượt, một Undo, lưu/mở và giữ nguồn";
+            string outlineExpected=outlineOriginal.Replace("4. Đề xuất","3. Đề xuất",StringComparison.Ordinal)
+                .Replace("IV. Kiến nghị","III. Kiến nghị",StringComparison.Ordinal).Replace("d) Đề xuất","c) Đề xuất",StringComparison.Ordinal)
+                .Replace("+ Nội dung  ( kế hoạch kế hoạch ) đã duyệt;hoàn thành  .Tiếp tục báo cáo","Nội dung (kế hoạch) đã duyệt; hoàn thành. Tiếp tục báo cáo",StringComparison.Ordinal)
+                .Replace("+ Nội dung riêng","Nội dung riêng",StringComparison.Ordinal).Replace("- Nội dung đơn","Nội dung đơn",StringComparison.Ordinal)
+                .Replace("- Nhánh bổ sung","Nhánh bổ sung",StringComparison.Ordinal);
+            outlineAll=test.Check().Where(OutlineEdit).ToArray();
+            var outlineFixedProbe=outlineProbe with {Start=outlineProbe.Start+outlineAll.Where(i=>(long)i.Start+i.Length<=outlineProbe.Start).Sum(i=>i.Replacement.Length-i.Length)};
+            var outlineFixedRomanProbe=outlineRomanProbe with {Start=outlineRomanProbe.Start+outlineAll.Where(i=>(long)i.Start+i.Length<=outlineRomanProbe.Start).Sum(i=>i.Replacement.Length-i.Length)};
+            test.FixMany(outlineAll);
+            if(test.ReadCheckText()!=outlineExpected || test.Check().Any(OutlineEdit) || test.ReadCheckDecorations(outlineFixedProbe)!=outlineDecoration ||
+                test.ReadCheckDecorations(outlineFixedRomanProbe)!=outlineRomanDecoration)
+                throw new InvalidOperationException("Sửa nhóm cấu trúc còn mục đã sửa hoặc đổi chữ/kiểu không chọn");
+            string outlineSaved=Path.Combine(folder,"outline-fixed.docx");test.SaveCopy(outlineSaved);test.Undo();
+            if(test.ReadCheckText()!=outlineOriginal || test.ReadCheckDecorations(outlineProbe)!=outlineDecoration || test.ReadCheckDecorations(outlineRomanProbe)!=outlineRomanDecoration)
+                throw new InvalidOperationException("Một Undo chưa phục hồi toàn lượt cấu trúc");
+            test.Open(outlineSaved);
+            if(test.ReadCheckText()!=outlineExpected || test.Check().Any(OutlineEdit) || test.ReadCheckDecorations(outlineFixedProbe)!=outlineDecoration ||
+                test.ReadCheckDecorations(outlineFixedRomanProbe)!=outlineRomanDecoration || !SaveDigest(outlineSource).SequenceEqual(outlineDigest) || !SaveDigest(outlineExtra).SequenceEqual(outlineExtraDigest))
+                throw new InvalidOperationException("Bản lưu cấu trúc chưa đúng hoặc nguồn mẫu bị đổi");
+            Pass(stage);
             stage="Đối chiếu XML sau đoạn 40: ba chế độ, liên kết thủ công và từ chối kế hoạch cũ";
             string bodyPlain=CreateBodyProofSample(positionSource,folder,"plain");
             string bodyLink=CreateBodyProofSample(positionSource,folder,"link");
@@ -1081,6 +1152,29 @@ public static class OfficeIntegrationCheck
         if(id is null || !relationships.Root!.Elements().Any(e=>(string?)e.Attribute("Id")==id &&
             (string?)e.Attribute("Target")=="https://example.invalid/body-proof" && (string?)e.Attribute("TargetMode")=="External"))
             throw new InvalidOperationException("Bản lưu đã làm mất chữ/quan hệ của liên kết được giữ thủ công");
+    }
+    private static string CreateOutlineSample(string source,string folder,bool extra)
+    {
+        string path=Path.Combine(folder,extra?"outline-extra-input.docx":"outline-input.docx");File.Copy(source,path);
+        using var zip=ZipFile.Open(path,ZipArchiveMode.Update);var entry=zip.GetEntry("word/document.xml")!;
+        XDocument xml;using(var input=entry.Open())xml=XDocument.Load(input,LoadOptions.PreserveWhitespace);
+        XNamespace w="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+        XElement Run(string text,bool kept=false)=>new(w+"r",new XElement(w+"rPr",
+            new XElement(w+"rFonts",new XAttribute(w+"ascii","Times New Roman"),new XAttribute(w+"hAnsi","Times New Roman")),
+            new XElement(w+"b",new XAttribute(w+"val",kept?1:0)),new XElement(w+"sz",new XAttribute(w+"val",26)),
+            new XElement(w+"u",new XAttribute(w+"val",kept?"single":"none"))),
+            text.Split('\t').SelectMany((part,index)=>index==0?new[]{new XElement(w+"t",new XAttribute(XNamespace.Xml+"space","preserve"),part)}:
+                new[]{new XElement(w+"tab"),new XElement(w+"t",new XAttribute(XNamespace.Xml+"space","preserve"),part)}));
+        XElement Row(string text)=>new(w+"p",Run(text));
+        var rows=new List<XElement>{Row("\tI. Tình hình"),Row("\t1. Nội dung thứ nhất"),Row("\t2. Kết quả công tác"),Row("\t4. Đề xuất"),
+            Row("\tII. Kết quả"),Row("1. Nội dung chính"),Row("- Nhánh đầu"),new(w+"p",Run("+ Nội dung  ( "),Run("kế hoạch",true),Run(" kế hoạch ) đã duyệt;hoàn thành  .Tiếp tục báo cáo"))};
+        if(extra)rows.Add(Row("+ Nội dung thêm cùng cấp"));
+        rows.AddRange(new[]{Row("- Nhánh hai"),Row("+ Nội dung riêng"),Row("2. Mục khác"),Row("- Nội dung đơn"),Row("3. Mục bổ sung"),
+            Row("- Nhánh bổ sung"),Row("+ Nội dung giữ một"),Row("+ Nội dung giữ hai"),new XElement(w+"p",Run("\tIV. "),Run("Kiến nghị",true)),
+            Row("a) Tình hình"),Row("b) Kết quả công tác"),Row("d) Đề xuất")});
+        var body=xml.Descendants(w+"body").Single();foreach(var row in rows)
+            if(body.Element(w+"sectPr") is XElement section)section.AddBeforeSelf(row);else body.Add(row);
+        entry.Delete();using(var output=zip.CreateEntry("word/document.xml").Open())xml.Save(output);return path;
     }
     private static string CreateColonSample(string source,string folder)
     {

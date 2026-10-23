@@ -16,8 +16,10 @@ public static class WordXmlTableMap
     private static readonly HashSet<XName> UnsafeTextNames=new(){W+"sdt",W+"fldSimple",W+"hyperlink",W+"drawing",W+"pict",W+"object",W+"smartTag",W+"tab",W+"br",W+"cr"};
     private static string Clean(string text) => text.TrimEnd('\r', '\a').Replace('\u2011', '\u001e').Replace('\u00ad', '\u001f');
     public static IReadOnlyList<LayoutParagraph> Read(string wordOpenXml, IReadOnlyList<WordParagraphSnapshot> live, Action<WordXmlMappingException>? onMismatch = null, Action<int, int>? onParagraphMatched = null, Action<int,bool>? onTextEditable = null, bool includeLayout = true)
+        => Read(XDocument.Parse(wordOpenXml),live,onMismatch,onParagraphMatched,onTextEditable,includeLayout);
+    internal static IReadOnlyList<LayoutParagraph> Read(XDocument xml,IReadOnlyList<WordParagraphSnapshot> live,
+        Action<WordXmlMappingException>? onMismatch,Action<int,int>? onParagraphMatched,Action<int,bool>? onTextEditable,bool includeLayout)
     {
-        var xml = XDocument.Parse(wordOpenXml);
         var body = xml.Descendants(W + "document").Single().Element(W + "body")
             ?? throw new InvalidOperationException("Missing document body");
         var paragraphs = body.Descendants(W + "p").Where(p => !p.Ancestors(W + "txbxContent").Any()).ToArray();
@@ -45,9 +47,7 @@ public static class WordXmlTableMap
             onParagraphMatched?.Invoke(live[i].Start, i);
             if(onTextEditable is not null)
             {
-                bool editable=!p.Ancestors(W+"sdt").Any() && !p.Descendants().Any(e=>
-                    UnsafeTextNames.Contains(e.Name) && (e.Name!=W+"tab" || e.Parent?.Name==W+"r") ||
-                    e.Name.NamespaceName=="http://schemas.openxmlformats.org/officeDocument/2006/math");
+                bool editable=IsPlainText(p);
                 onTextEditable(live[i].Start,editable);
             }
         }
@@ -91,6 +91,9 @@ public static class WordXmlTableMap
         }
         return result;
     }
+    internal static bool IsPlainText(XElement p,bool allowTabs=false)=>!p.Ancestors(W+"sdt").Any() && !p.Descendants().Any(e=>
+        UnsafeTextNames.Contains(e.Name) && (e.Name!=W+"tab" || e.Parent?.Name==W+"r" && !allowTabs) ||
+        e.Name.NamespaceName=="http://schemas.openxmlformats.org/officeDocument/2006/math");
     private static string TextOf(XElement p)
     {
         return string.Concat(p.Descendants().Where(e => e.Parent?.Name == W + "r" &&
