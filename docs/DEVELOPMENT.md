@@ -10,7 +10,7 @@
 
 Mốc đã chốt: [0.1.27](STATUS-0.1.27.md), mã gói `1ec3092ccd68ed0acd8878b2737664116a6b11fe`, tag `v0.1.27`. Đọc biên bản này trước để phân biệt bằng chứng CI, xác nhận người dùng và kịch bản còn chờ. Phát triển từ `main` sau khi chốt, tạo nhánh mới; không tiếp tục phát hành vào tag hoặc ghi đè ZIP 0.1.27.
 
-Nhánh đang phát triển: `feature/after-sentence-spacing-0.1.49`, từ 0.1.48 (`e54eaff0ad1f0454e70256be7beb43932acfec1d`). Chuỗi bản thử dựa trên main đã chốt `da6cf3b0999dbfb60d16ab1eae9733b0f1f20c81`. Đọc các CHANGES và [phạm vi 0.1.49](CHANGES-0.1.49.md). Chưa nhập main hoặc coi CI là bằng chứng Office 2021.
+Nhánh đang phát triển: `feature/compact-issue-list-0.1.50`, từ 0.1.49 (`227dc886598b8a13460e4a815ffefb787666468c`). Chuỗi bản thử dựa trên main đã chốt `da6cf3b0999dbfb60d16ab1eae9733b0f1f20c81`. Đọc các CHANGES và [phạm vi 0.1.50](CHANGES-0.1.50.md). Chưa nhập main hoặc coi CI là bằng chứng Office 2021.
 
 ## Bản đồ mã nguồn
 
@@ -75,7 +75,7 @@ Tài liệu riêng chỉ dùng cục bộ theo đường dẫn tùy chọn của
 dotnet publish src/ChinhTa.Desktop -c Release -r win-x64 --self-contained true -o artifacts/win-x64
 ```
 
-Kèm thư mục `samples`, ghi chú phiên bản, ZIP và SHA-256. Chạy kiểm thử trước khi phát hành. Khi tạo bản mới, cập nhật version trong csproj, tiêu đề UI, tên gói/tag, ghi chú và workflow Windows; không phát hành lại vào tag cũ. Workflow `windows-package.yml` gắn `feature/after-sentence-spacing-0.1.49` và phát hành prerelease 0.1.49 sau kiểm thử. Mỗi phiên bản sau phải đổi nhánh/version và không ghi đè tag đã phát hành. Workflow `finalize-0.1.27.yml` chỉ chốt metadata của bản đã thử, có kiểm tag, digest, CI và thay đổi chỉ thuộc tài liệu/workflow được cho phép; không build hoặc thay asset.
+Kèm thư mục `samples`, ghi chú phiên bản, ZIP và SHA-256. Chạy kiểm thử trước khi phát hành. Khi tạo bản mới, cập nhật version trong csproj, tiêu đề UI, tên gói/tag, ghi chú và workflow Windows; không phát hành lại vào tag cũ. Workflow `windows-package.yml` gắn `feature/compact-issue-list-0.1.50` và phát hành prerelease 0.1.50 sau kiểm thử. Mỗi phiên bản sau phải đổi nhánh/version và không ghi đè tag đã phát hành. Workflow `finalize-0.1.27.yml` chỉ chốt metadata của bản đã thử, có kiểm tag, digest, CI và thay đổi chỉ thuộc tài liệu/workflow được cho phép; không build hoặc thay asset.
 
 Khi nhận lỗi, lấy log đúng version và phân biệt lỗi đọc Word, ghép XML, CP/mốc, marker, candidate, nét XPS hay rollback. Các mã `Word.Preview.CpMapping`, `Word.Preview.Unmapped`, `Word.LineBatch.ReferenceBinding.*`, `Word.LineBatch.StoryBinding`, `Word.LineBatch.Rescan` ghi số liệu mà không ghi chữ tài liệu. Không kết luận nguyên nhân chỉ từ ngoại lệ tổng quát hoặc một điều kiện guard gộp.
 
@@ -285,3 +285,11 @@ Thêm FixKind cuối enum; Checker gộp span punctuation tránh chồng C01, re
 C19 `SentenceAfterSpaceRules` dùng range dấu câu dài 1 (không tạo anchor chèn dài 0), replacement là cùng dấu + ASCII space; không ghi lại hai từ bên cạnh. Tách ngữ cảnh C18 sang `SentenceSpaceContext` dùng chung blacklist/ràng buộc cũ; C18 bỏ điều kiện đã có space sau, vì C19 xử lý phần đó độc lập. Pre-gap kết thúc ngay trước mark, C19 bắt đầu tại mark nên hai span kề nhau, không chồng và chạy được một lượt theo CP giảm dần. Chọn riêng mỗi phía giữ mục chưa chọn.
 
 Append FixKind, thêm Checker/BatchPlan sharing như các rule chữ cũ; không đổi WordSession, CP mapping, transaction/checkpoint/save/Line/XPS. Kiểm Core cho chèn + xóa cùng nhóm, Unicode, scope/gates/stale, giữ lỗi chưa chọn, phông chứa toàn đoạn và fault ở nhiều điểm. Bài Word giả có ba C19 + chín mục độc lập, trong đó C18 sát C19. Probe kiểu từ `Tiếp` ngay sau dấu và `thành` ngay trước gap, ngoài probe giữ cụm `kế hoạch`; lấy CP từ issue thật, delta là các chèn/xóa ASCII trước probe. Kiểm riêng/nhóm/fault/Undo/lưu-mở/nguồn. Chưa chạy Word thực tế. Báo cáo 19/8/1, ví dụ C19, mốc .49, P03 vẫn dự kiến nhưng dùng chữ sau viết thường chưa hỗ trợ.
+
+## Ghi chú triển khai 0.1.50
+
+`IssueReviewCatalog` là metadata trình bày thuần: ba section, family/order/label. Không đổi CanFix/BatchSafe/payload. RequiredFormat là allowlist có citation; heading căn trong ô mà chữ giữ nguyên được phân loại thận trọng là cần duyệt, căn giữa và geometry Line theo cấu hình vẫn cần duyệt. CanFix=false luôn ở ManualWarning. LineInspection chỉ thêm Title từ nhánh xác định thiếu, có sẵn sai hoặc chưa khớp nét; thuật toán/điều kiện đo giữ nguyên.
+
+`IssueReviewModel`/`IssueChoiceGroup` dùng cùng IssueChoice cho item/family/section/global; counters gia tăng O(1) mỗi thay đổi, không đếm lại cả danh sách trong từng event. Manual không tích được; tri-state phản ánh chọn một phần. Group expansion lưu trên model khi recycle. `IssueReviewPanel` dùng ListCollectionView hai cấp, virtualization when grouping, row28px, tooltip và chi tiết có thể mở bằng bàn phím. Snapshot PNG chỉ từ mẫu giả; không gửi nội dung tài liệu người dùng.
+
+MainWindow giữ các Issue gốc và anchors cho highlight/ConfirmFix; chọn đang xem độc lập tick. Scan/lỗi thay model mới, bỏ state cũ; FixChecked/FixAll/ConfirmFix vẫn cùng stage guard, sự duyệt và engine cũ. Không đổi WordSession, transaction/checkpoint/save/Line/XPS/Undo; không tự loại issue chỉ vì đã tick hoặc mang nhãn bắt buộc. Báo cáo thêm mốc .50, không thêm loại lỗi: vẫn19/8/1. Kiểm Core classification, model selection1200items, WPF bindings/layout/keyboard selection/manual/reset, tên Line thiếu và ảnh giả; CI không thay thế Word/Office2021.

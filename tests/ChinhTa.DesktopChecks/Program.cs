@@ -81,6 +81,10 @@ static class Program
         lineCanvas.UpdateLayout();
         var known=new[]{new WordLineShape(1,0,1,new(proposed.Left,proposed.Top,proposed.Width),true)};
         var anchors=new Dictionary<Issue,PreviewAnchor>{{target.Probe,anchor}};
+        var absent=LineInspection.Inspect(Page(clip),new PreviewHighlighter(),[target],[],anchors,[],LinePolicy.Decree30,false).Single().Issue;
+        Assert(absent.Title=="Thiếu đường kẻ dưới tiêu ngữ" && absent.CanFix,
+            "A verified absent Line has a concise missing-Line title from the absence branch");
+
         var refreshed=LineInspection.Inspect(linePage,highlighter,[target],known,anchors,[],LinePolicy.Decree30,true);
         Assert(refreshed.Count==0,"A verified corrected owned Line disappears after rescan despite unrelated unmapped shapes");
         var confirmed=target.Probe with {CanFix=true,LineFix=proposed};
@@ -168,6 +172,7 @@ static class Program
             "A CP-to-string mismatch reproduces a short Motto even after glyph-advance measurement is fixed");
         AdministrativePositionDesktopChecks.Run(Assert);
         ProgressReportDesktopChecks.Run(Assert);
+        IssueReviewPanelChecks.Run(Assert);
         Console.WriteLine($"{checks} WPF checks passed.");
     }
 }

@@ -178,3 +178,9 @@ Bài Kiểm tra Word tự động có thêm nguồn giả `sentence-inner-input.
 ## Bản thử 0.1.49 — thiếu khoảng sau dấu kết câu
 
 Bài Word thêm nguồn giả `sentence-after-input.docx`: ba C19 + chín mục độc lập; một C18 nằm ngay sát C19 ở `hoàn thành  .Tiếp`. Chọn riêng C19 giữ C18 và các mục chưa chọn, kiểm `Tiếp` đậm/gạch chân ngay sau dấu và `thành` ngay trước gap cùng cụm `kế hoạch`. Lỗi sau bốn writes phục hồi chữ/kiểu/Changed và không thêm Undo. Sửa nhóm quét hết đúng mục một lần; một Undo, lưu/mở và hash nguồn giữ đúng. Thử riêng C18 cũng phải giữ C19 chưa chọn. Kiểm số/viết tắt/đuôi tệp/URL/tab/NBSP/chữ sau viết thường không nhận C19. CI kiểm Core/WPF/gói và biên dịch kịch bản; chưa xác nhận Word/Office 2021. [Phạm vi .49](CHANGES-0.1.49.md).
+
+## Bản thử 0.1.50 — danh sách lỗi một dòng và chọn theo nhóm
+
+WPF checks dựng panel thật với dữ liệu giả: ba section, grouping hai cấp, row28px, checkbox không có câu Chọn để sửa hàng loạt, tri-state đồng bộ item/family/section/all, nhóm thu gọn vẫn chọn được qua all, manual disabled, chọn đang xem không đổi tick, tooltip/details/citation và quét lại xóa selection/check/detail cũ. Binding errors phải bằng0. Model kiểm1200items không dựa container đang nhìn thấy. LineInspection kiểm nhánh thiếu có Title đúng; hậu kiểm nét cũ giữ nguyên. Ảnh `issue-list-preview.png` đi kèm release được render từ panel/dữ liệu giả trong Windows CI, không phải ảnh Word hoặc chứng minh Office2021.
+
+Khi dùng tài liệu thật: tích riêng, tích nhóm, tích cả phần, all/bỏall; kiểm đếm partial và manual không tích. Thu gọn/mở nhóm, chọn bằng bàn phím, rê chuột, mở Chi tiết, sửa riêng/nhóm đúng stage rồi quét, Undo/lưu-mở; lỗi thật đã hết phải biến mất từ kết quả scan mới. Không đổi thứ tự ghi/chọn CP hoặc tính sửa được do sắp xếp màn hình. Chưa xác nhận bài Word đầy đủ cho .50.

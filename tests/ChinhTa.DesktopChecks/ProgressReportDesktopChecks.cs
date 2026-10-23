@@ -27,7 +27,7 @@ public static class ProgressReportDesktopChecks
         try
         {
             using var session=new WordSession();
-            string text=DevelopmentReport.Build("0.1.49",new DateTimeOffset(2026,10,23,10,0,0,TimeSpan.FromHours(7)));
+            string text=DevelopmentReport.Build("0.1.50",new DateTimeOffset(2026,10,23,10,0,0,TimeSpan.FromHours(7)));
             string saved=Path.Combine(folder,"báo-cáo.txt");session.SaveProgressReport(saved,text);
             byte[] bytes=File.ReadAllBytes(saved);
             assert(File.ReadAllText(saved)==text && bytes.Take(3).SequenceEqual(new byte[]{0xef,0xbb,0xbf}) &&

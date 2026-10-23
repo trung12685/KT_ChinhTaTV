@@ -38,6 +38,7 @@ public static class LineInspection
             var pageShapes = shapes.Where(s => s.Page == anchor.Page).ToArray();
             var own = pageShapes.Where(s => IsInRegion(s, target)).ToArray();
             bool allAssigned = !hasGroupedShapes && pageShapes.All(s => targets.Count(t => IsInRegion(s,t)) == 1);
+            bool missing=own.Length==0 && allAssigned;
             ShapeLineFix? fix;
             string[] errors;
             if (own.Length == 0 && allAssigned)
@@ -52,7 +53,7 @@ public static class LineInspection
                     bool overlapping = otherIssues.Any(i => i.CanFix && i.Start < target.Start + target.Text.Length && (long)i.Start + i.Length > target.Start);
                     var correction = ShapeLineRules.Evaluate(target, reference, null, own[0].Id, policy).Fix;
                     result.Add((Notice("Shape đã tồn tại nhưng nét trên trang chưa khớp tọa độ khai báo hoặc chưa hiển thị. Cần đặt lại vị trí theo dòng mốc; chưa coi là đúng thể thức.",
-                        overlapping ? null : correction), anchor));
+                        overlapping ? null : correction) with {Title="Đường kẻ dưới "+target.Label+" chưa hiển thị đúng"}, anchor));
                     continue;
                 }
                 (fix, errors) = ShapeLineRules.Evaluate(target, reference, actual, own[0].Id, policy);
@@ -76,7 +77,8 @@ public static class LineInspection
                 $"đề xuất dài {fix.Width:F1} pt, cách dưới {fix.Top - reference.Bottom:F1} pt. " +
                 (foreign ? "Line có sẵn không có dấu nhận diện của ứng dụng; cần chỉnh thủ công trong Word." :
                     blocked ? "Sửa nội dung/định dạng trong vùng trước rồi quét lại để đo đúng." : "Có thể tạo/đặt lại Line mà không thay nội dung chữ.");
-            result.Add((Notice(message, blocked ? null : fix), anchor));
+            result.Add((Notice(message, blocked ? null : fix) with
+                {Title=(missing?"Thiếu đường kẻ dưới ":"Đường kẻ dưới ")+target.Label+(missing?"":" chưa đúng")}, anchor));
         }
         return result;
     }
