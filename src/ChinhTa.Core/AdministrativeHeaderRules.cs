@@ -134,9 +134,10 @@ public static class AdministrativeHeaderRules
             Edit(p,false,baseIndex+code.Index,code.Value[..firstSeparator.Index],type.Abbreviation,
                 "Sai hoa/thường viết tắt tên loại",result,
                 DocumentTypeCatalog.WithSource(Citation(false),type.Source==DocumentTypeSource.UserSupplement));
-        else if(type is not null && code.Value[..firstSeparator.Index]!=type.Abbreviation)
-            result.Add(Notice(p,false,"Chưa đối chiếu được viết tắt với một tên loại duy nhất ở đầu văn bản; không đổi mã cơ quan hoặc đoán loại văn bản."));
-        string lettersToCheck=type is not null
+        // A catalog-shaped prefix may be an agency code in a Công văn. Without
+        // the corresponding title, retain the old uppercase-code check only;
+        // do not invent a type/casing warning for an otherwise uppercase code.
+        string lettersToCheck=type is not null && (type==namedType || code.Value[..firstSeparator.Index]==type.Abbreviation)
             ?code.Value[(firstSeparator.Index+firstSeparator.Length)..]:code.Value;
         if(lettersToCheck.Any(char.IsLower))
             result.Add(Notice(p,false,"Ký hiệu có chữ thường; đối chiếu quy định chữ in hoa và mã viết tắt của cơ quan. Chưa tự đổi mã."));

@@ -4,7 +4,7 @@ Nền: `03bf183746d37f0ca543f386faf8045f2ee9a090` (.59). Nhánh: `feature/format
 
 ## B01 — Hoa/thường của viết tắt tên loại
 
-Mở rộng C05, không thêm nhóm đếm mới. Chỉ nhận prefix trước dấu nối đầu tiên trong dòng Số Nhà nước đã qua parser và đối chiếu XML/chữ thuần. So khớp danh mục bằng OrdinalIgnoreCase, không sửa ký tự khác ngoài hoa/thường. Bắt buộc một tên loại tương ứng duy nhất, chữ thuần, trước phần nội dung trong 40 đoạn đầu; ví dụ TTR chỉ được đề xuất thành TTr khi nhận diện TỜ TRÌNH. Thiếu, trùng hoặc không khớp tên loại thì giữ thủ công, tránh đổi mã cơ quan trong công văn.
+Mở rộng C05, không thêm nhóm đếm mới. Chỉ nhận prefix trước dấu nối đầu tiên trong dòng Số Nhà nước đã qua parser và đối chiếu XML/chữ thuần. So khớp danh mục bằng OrdinalIgnoreCase, không sửa ký tự khác ngoài hoa/thường. Bắt buộc một tên loại tương ứng duy nhất, chữ thuần, trước phần nội dung trong 40 đoạn đầu; ví dụ TTR chỉ được đề xuất thành TTr khi nhận diện TỜ TRÌNH. Thiếu, trùng hoặc không khớp tên loại thì không sửa viết tắt, tránh đổi mã cơ quan trong công văn. Mã toàn hoa chưa đối chiếu được tên loại không sinh cảnh báo case mới; chữ thường chưa đủ điều kiện vẫn qua cảnh báo mã cũ.
 
 | Trước | Khi duyệt sửa |
 |---|---|

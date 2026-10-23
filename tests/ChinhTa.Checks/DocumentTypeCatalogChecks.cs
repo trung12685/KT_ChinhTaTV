@@ -106,8 +106,8 @@ public static class DocumentTypeCatalogChecks
         assert(failed && writes==mixedPlan.Count && restores==1 && mutable==original,
             "A failing final save restores the entire selected batch, including case and separator edits");
         foreach(string title in new[]{"Công văn","V/v phối hợp công tác","BÁO CÁO","Nội dung thường."})
-            assert(!Checker.Check(Header("Số: 01/TTR-ABC",title)).Any(i=>i.CanFix && i.Kind==FixKind.AdministrativeNumber),
-                "Without the corresponding named type, a coincidentally catalogued agency prefix is never rewritten");
+            assert(!Checker.Check(Header("Số: 01/TTR-ABC",title)).Any(i=>i.Kind==FixKind.AdministrativeNumber),
+                "Without the corresponding named type, an uppercase agency prefix is neither rewritten nor falsely warned about");
         var repeatedTitle=Header("Số: 01/TTR-ABC","TỜ TRÌNH").Append(new Paragraph(999,"TỜ TRÌNH\r")).ToArray();
         assert(!Checker.Check(repeatedTitle).Any(i=>i.CanFix && i.Kind==FixKind.AdministrativeNumber),
             "Two named-type candidates cannot authorize an abbreviation edit");
