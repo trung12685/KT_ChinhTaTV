@@ -44,8 +44,8 @@ public static class DevelopmentReport
             "Chuẩn hóa dòng ĐẢNG CỘNG SẢN VIỆT NAM đã nhận diện và phông đen, đậm, đứng, cỡ 15. Chưa tự đặt vị trí toàn trang.",
             new ReportExample("đảng cộng sản việt nam","ĐẢNG CỘNG SẢN VIỆT NAM; phông Times New Roman, đen, đậm, đứng, cỡ 15 trong chế độ Đảng.")),
         new("C05","Cách ghi số/ký hiệu",CapabilityMode.Reviewable,"Đầu văn bản Nhà nước nhận diện được",
-            "Nhãn Số:, dấu /, dấu nối, khoảng trắng; thêm 0 cho số 1–9. Chuẩn hóa hoa/thường của viết tắt đã khớp danh mục, ví dụ TTR → TTr, CTR → CTr, QYĐ → QyĐ; BCĐX do người dùng bổ sung. Giữ số và mã cơ quan, không suy đoán loại văn bản hoặc viết tắt chưa biết.",
-            new ReportExample("số  :  3 / TTR – ABC","Số: 03/TTr-ABC")),
+            "Nhãn Số:, dấu /, dấu nối, khoảng trắng; thêm 0 cho số 1–9. Chuẩn hóa hoa/thường của viết tắt đã khớp danh mục và tên loại duy nhất ở đầu văn bản, ví dụ TTR → TTr, CTR → CTr, QYĐ → QyĐ; BCĐX do người dùng bổ sung. Giữ số và mã cơ quan, không suy đoán loại văn bản hoặc viết tắt chưa biết.",
+            new ReportExample("số  :  3 / bc – ABC","Số: 03/BC-ABC")),
         new("C06","Cách ghi địa danh/ngày tháng",CapabilityMode.Reviewable,"Đầu Nhà nước, mẫu rõ và ngày lịch hợp lệ",
             "Dấu phẩy, nhãn ngày/tháng/năm và khoảng trắng; thêm 0 trước ngày 1–9, tháng 1–2. Giữ trường chưa điền, không chọn ngày hay địa danh thay người dùng.",
             new ReportExample("Hà Nội  Ngày3  Tháng1  Năm2026","Hà Nội, ngày 03 tháng 01 năm 2026")),
@@ -159,7 +159,7 @@ public static class DevelopmentReport
         new("0.1.57","Thêm cửa sổ tiến độ độc lập khi sửa: bước hiện tại, số mục hậu kiểm tạm thời, thời gian chờ, đo lại/quét lại/phục hồi; chưa hoàn tất trước quét lại. Mở proof định dạng cho Line trong nhánh tương thích/run gộp, đọc từng ký tự Word khi phông vùng bị trộn; giữ kiểm nét và rollback, chưa xác nhận runtime Office 2021."),
         new("0.1.58","Thêm C24 viết hoa chính xác tên loại văn bản đã nhận diện chắc theo NĐ30 II.5.b; giữ trích yếu, khoảng ngoài tên, phông/căn đoạn, chặn trường/đối tượng/vùng chưa rõ; sửa chung phông, quét lại và một Undo/rollback. Lỗi cơ quan/trích yếu trên .56 vẫn chờ bằng chứng runtime .57 hoặc mới hơn."),
         new("0.1.59","Danh mục đủ 27 tên hành chính/3 bản sao theo NĐ30 PL III.I trang 40; thêm Báo cáo đề xuất/BCĐX theo người dùng, tách nguồn. Dùng chung nhận diện/C24/phông/mốc trích yếu, không áp thể thức gốc cho bản sao; sửa cảnh báo nhầm chữ thường ở QyĐ/CTr/TTr/TrS, giữ mã cơ quan. Có cửa sổ tra cứu và danh mục đầy đủ trong TXT."),
-        new("0.1.60 — đang phát triển","B01: chuẩn hóa hoa/thường viết tắt tên loại đã khớp danh mục trong dòng Số; giữ số/mã cơ quan, nguồn BCĐX, guard sửa chữ và rollback. Gom 5–10 bước mới đóng gói Windows; kiểm thử mỗi bước, chưa phát hành .60.")
+        new("0.1.60 — đang phát triển","B01: chuẩn hóa hoa/thường viết tắt tên loại đã khớp danh mục trong dòng Số; đối chiếu một tên loại tương ứng duy nhất để tránh đổi mã cơ quan; giữ số/mã, nguồn BCĐX, guard sửa chữ và rollback. Gom 5–10 bước mới đóng gói Windows; kiểm thử mỗi bước, chưa phát hành .60.")
     });
     public static IReadOnlyList<string> NextSteps { get; }=Array.AsReadOnly(new[]
     {

@@ -44,6 +44,13 @@ public static class AdministrativeHeaderRules
     public static IReadOnlyList<Issue> Check(IReadOnlyList<Paragraph> paragraphs,DocumentProfile profile)
     {
         var header=Identify(paragraphs,profile);
+        var front=paragraphs.Take(40).Where(p=>p.Page==1).ToArray();
+        var titles=front.Select((p,i)=>(p,i)).Where(x=>!x.p.InTable && DocumentTypeCatalog.FindHeading(x.p.Text) is not null).ToArray();
+        int lastHeading=Array.FindLastIndex(front,p=>HeadingRules.IsCandidate(p.Text,profile));
+        var namedType=titles.Length==1 && lastHeading>=0 && titles[0].i>lastHeading && titles[0].p.TextEditable &&
+            !front.Skip(lastHeading+1).Take(titles[0].i-lastHeading-1).Any(p=>!p.InTable &&
+                !string.IsNullOrWhiteSpace(Clean(p.Text)) && !IsCandidate(p.Text))
+                ?DocumentTypeCatalog.FindHeading(titles[0].p.Text):null;
         var result=new List<Issue>();
         foreach(bool date in new[]{false,true})
         {
@@ -60,7 +67,7 @@ public static class AdministrativeHeaderRules
                 result.Add(Notice(p,date,"Chưa xác minh được dòng chữ thuần để sửa an toàn (có thể có trường tự động, control, liên kết hoặc tab bố cục). Chỉnh thủ công; giữ nguyên nội dung và cấu trúc."));
                 continue;
             }
-            bool known=date?CheckDate(p,result):CheckNumber(p,result);
+            bool known=date?CheckDate(p,result):CheckNumber(p,result,namedType);
             if(p.FormatObserved && (p.FormatMixed || p.Font!="Times New Roman" ||
                 p.Color is not (0 or -16777216) || !float.IsFinite(p.Size) ||
                 (date ? p.Size<12.99f || p.Size>14.01f || !p.Italic : Math.Abs(p.Size-13)>.01f || p.Italic)))
@@ -94,7 +101,7 @@ public static class AdministrativeHeaderRules
         result.Add(new(p.Start+offset,original.Length,original,replacement,title,false,
             date?FixKind.AdministrativeDate:FixKind.AdministrativeNumber,Citation:citation??Citation(date),Title:title));
     }
-    private static bool CheckNumber(Paragraph p,List<Issue> result)
+    private static bool CheckNumber(Paragraph p,List<Issue> result,DocumentTypeEntry? namedType)
     {
         string text=Clean(p.Text);
         var prefix=NumberPrefix.Match(text);
@@ -123,10 +130,12 @@ public static class AdministrativeHeaderRules
             Edit(p,false,baseIndex+code.Index+separator.Index,separator.Value,"-","Chuẩn hóa dấu nối trong ký hiệu",result);
         var firstSeparator=Hyphen.Match(code.Value);
         var type=firstSeparator.Success?DocumentTypeCatalog.FindAbbreviation(code.Value[..firstSeparator.Index]):null;
-        if(type is not null)
+        if(type is not null && type==namedType)
             Edit(p,false,baseIndex+code.Index,code.Value[..firstSeparator.Index],type.Abbreviation,
                 "Sai hoa/thường viết tắt tên loại",result,
                 DocumentTypeCatalog.WithSource(Citation(false),type.Source==DocumentTypeSource.UserSupplement));
+        else if(type is not null && code.Value[..firstSeparator.Index]!=type.Abbreviation)
+            result.Add(Notice(p,false,"Chưa đối chiếu được viết tắt với một tên loại duy nhất ở đầu văn bản; không đổi mã cơ quan hoặc đoán loại văn bản."));
         string lettersToCheck=type is not null
             ?code.Value[(firstSeparator.Index+firstSeparator.Length)..]:code.Value;
         if(lettersToCheck.Any(char.IsLower))

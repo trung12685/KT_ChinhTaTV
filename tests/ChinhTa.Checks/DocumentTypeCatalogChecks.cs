@@ -63,14 +63,18 @@ public static class DocumentTypeCatalogChecks
         foreach(var entry in DocumentTypeCatalog.Entries)
         {
             string wrong=entry.Abbreviation==entry.Abbreviation.ToUpperInvariant()?entry.Abbreviation.ToLowerInvariant():entry.Abbreviation.ToUpperInvariant();
-            var rows=Header("Số: 01/"+wrong+"-ABC-XYZ");
+            var rows=Header("Số: 01/"+wrong+"-ABC-XYZ",entry.Heading);
             var fixes=Checker.Check(rows).Where(i=>i.Kind==FixKind.AdministrativeNumber).ToArray();
+            if(!entry.NamedHeading)
+            {
+                assert(fixes.All(i=>!i.CanFix),"Copy abbreviations cannot use original-document heading recognition to rewrite a code");continue;
+            }
             assert(fixes.Length==1 && fixes[0].CanFix && fixes[0].Original==wrong && fixes[0].Replacement==entry.Abbreviation &&
                 fixes[0].Start==rows[1].Start+"Số: 01/".Length,
                 "Case-only proposals use the exact catalog entry and exclude the number and every agency-code segment");
             var fixedRows=rows.Select(p=>p==rows[1]?p with {Text=p.Text.Remove(fixes[0].Start-p.Start,fixes[0].Length).Insert(fixes[0].Start-p.Start,fixes[0].Replacement)}:p).ToArray();
             assert(!Checker.Check(fixedRows).Any(i=>i.Kind==FixKind.AdministrativeNumber),
-                "Rescanning each repaired abbreviation is idempotent, including legal mixed-case and copy abbreviations");
+                "Rescanning each repaired abbreviation is idempotent, including legal mixed-case and the user addition");
             var tooltip=IssueTooltipCatalog.Describe(fixes[0]);bool custom=entry.Source==DocumentTypeSource.UserSupplement;
             assert(custom?tooltip.Basis.Contains("người dùng") && !tooltip.Basis.Contains("Nghị định"):
                 tooltip.Basis.Contains("Phụ lục III, phần I"),"Abbreviation tooltips retain the exact legal or user-supplement source");
@@ -78,7 +82,7 @@ public static class DocumentTypeCatalogChecks
         foreach(string unknown in new[]{"CV","cv","BCDX","bcdx","QuyĐ","T.Tr","ABC","BCA"})
             assert(!Checker.Check(Header("Số: 01/"+unknown+"-XYZ")).Any(i=>i.CanFix && i.Kind==FixKind.AdministrativeNumber),
                 "Unknown abbreviations, missing accents and agency identifiers are never inferred from the catalog");
-        var mixed=Header("số  :  3 / TTR – Abc-XYZ");
+        var mixed=Header("số  :  3 / TTR – Abc-XYZ","TỜ TRÌNH");
         var mixedFixes=Checker.Check(mixed).Where(i=>i.Kind==FixKind.AdministrativeNumber && i.CanFix).ToArray();
         var mixedPlan=BatchPlan.Create(mixedFixes);CurrentTextPlan.Validate(mixedPlan,Checker.Check(mixed));
         string mixedNumber=mixed[1].Text;
@@ -101,13 +105,22 @@ public static class DocumentTypeCatalogChecks
         catch(IOException){failed=true;}
         assert(failed && writes==mixedPlan.Count && restores==1 && mutable==original,
             "A failing final save restores the entire selected batch, including case and separator edits");
+        foreach(string title in new[]{"Công văn","V/v phối hợp công tác","BÁO CÁO","Nội dung thường."})
+            assert(!Checker.Check(Header("Số: 01/TTR-ABC",title)).Any(i=>i.CanFix && i.Kind==FixKind.AdministrativeNumber),
+                "Without the corresponding named type, a coincidentally catalogued agency prefix is never rewritten");
+        var repeatedTitle=Header("Số: 01/TTR-ABC","TỜ TRÌNH").Append(new Paragraph(999,"TỜ TRÌNH\r")).ToArray();
+        assert(!Checker.Check(repeatedTitle).Any(i=>i.CanFix && i.Kind==FixKind.AdministrativeNumber),
+            "Two named-type candidates cannot authorize an abbreviation edit");
+        var bodyTitle=Header("Số: 01/TTR-ABC","Nội dung mở đầu.").Append(new Paragraph(999,"TỜ TRÌNH\r")).ToArray();
+        assert(!Checker.Check(bodyTitle).Any(i=>i.CanFix && i.Kind==FixKind.AdministrativeNumber),
+            "A later named type inside prose cannot authorize a header-code edit");
         string report=DevelopmentReport.Build("test",DateTimeOffset.UnixEpoch);
         assert(DocumentTypeCatalog.Entries.All(e=>report.Contains(e.Name+" — "+e.Abbreviation)) && report.Contains(DocumentTypeCatalog.UserNote),
             "The exported report contains the complete catalog with separate provenance and no invented statutory BCĐX entry");
     }
-    private static Paragraph[] Header(string number)
+    private static Paragraph[] Header(string number,string title="BÁO CÁO")
     {
-        string[] text=["CƠ QUAN MẪU",number,Checker.Heading,HeadingRules.Motto,"Hà Nội, ngày 03 tháng 3 năm 2026","BÁO CÁO","Nội dung."];
+        string[] text=["CƠ QUAN MẪU",number,Checker.Heading,HeadingRules.Motto,"Hà Nội, ngày 03 tháng 3 năm 2026",title,"Nội dung."];
         int cp=0;return text.Select((t,i)=>{var p=new Paragraph(cp,t+"\r",Bold:i<5,Size:i==3?14:13,InTable:i<5);cp+=t.Length+1;return p;}).ToArray();
     }
 }

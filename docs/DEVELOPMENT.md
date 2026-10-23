@@ -6,7 +6,7 @@ Theo yêu cầu mới, tích lũy khoảng **5–10 bước phát triển có ki
 
 Nhánh `feature/format-batch-after-0.1.59` dựa trên commit .59 `03bf183746d37f0ca543f386faf8045f2ee9a090`. Code đang chuẩn bị .60, **chưa có gói .60**; gói tải mới nhất vẫn .59. Windows checks chạy khi push, chỉ kiểm thử/build/log; Windows package chỉ chạy khi chủ động tạo tag hoặc gọi thủ công, đòi ghi chú và checklist đúng phiên bản. Không tạo tag/phát hành trong bước này.
 
-B01 mở rộng C05: FindAbbreviation so sánh OrdinalIgnoreCase với danh mục, chỉ thay hoa/thường prefix đứng trước dấu nối đầu tiên; không đổi ký tự, dấu tiếng Việt, số hay mã cơ quan. Canonical QyĐ/CTr/TTr/TrS giữ nguyên. Unknown/CV/thiếu dấu/mẫu riêng, trang hai, tab, nhiều dòng ứng viên hoặc XML chưa đủ vẫn qua guard cũ. BCĐX giữ nguồn người dùng trong citation/tooltip. CurrentTextPlan, BatchPlan, AtomicTextBatch và hậu kiểm Word giữ nguyên. Lỗi .56 vẫn chờ bằng chứng runtime; không lấy CI làm Word PASS.
+B01 mở rộng C05: FindAbbreviation so sánh OrdinalIgnoreCase với danh mục, chỉ thay hoa/thường prefix đứng trước dấu nối đầu tiên; không đổi ký tự, dấu tiếng Việt, số hay mã cơ quan. Chỉ sửa khi có một tên loại tương ứng duy nhất ở đầu văn bản, chữ thuần và trước nội dung; thiếu/trùng/khác tên thì giữ thủ công, tránh đổi mã cơ quan của công văn. Bản sao chưa được cấp quyền sửa mã theo nhận diện tên loại gốc. Canonical QyĐ/CTr/TTr/TrS giữ nguyên. Unknown/CV/thiếu dấu/mẫu riêng, trang hai, tab, nhiều dòng ứng viên hoặc XML chưa đủ vẫn qua guard cũ. BCĐX giữ nguồn người dùng trong citation/tooltip. CurrentTextPlan, BatchPlan, AtomicTextBatch và hậu kiểm Word giữ nguyên. Lỗi .56 vẫn chờ bằng chứng runtime; không lấy CI làm Word PASS.
 
 ## Mốc tiếp tục 0.1.59 — 24/10/2026 (UTC+7)
 

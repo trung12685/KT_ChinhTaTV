@@ -60,4 +60,4 @@ Có thể xem trong **Trợ giúp → Danh mục tên loại văn bản…** ho�
 
 ## Bổ sung chưa phát hành — B01 sau .59
 
-C05 có thể đề xuất sửa **hoa/thường** phần viết tắt đã khớp danh mục trong dòng Số nhận diện chắc: `TTR-ABC → TTr-ABC`, `QYĐ-ABC → QyĐ-ABC`. Chỉ sửa prefix, giữ số và mã cơ quan; không đổi BC thành KH theo tên loại, không suy đoán CV hoặc viết tắt thiếu dấu. BCĐX là bổ sung người dùng. Đây là code đang phát triển, chưa nằm trong ZIP .59. Xem [nhật ký](BATCH-AFTER-0.1.59.md).
+C05 có thể đề xuất sửa **hoa/thường** phần viết tắt đã khớp danh mục trong dòng Số nhận diện chắc: `TTR-ABC → TTr-ABC`, `QYĐ-ABC → QyĐ-ABC`. Chỉ sửa prefix khi đối chiếu được một tên loại tương ứng duy nhất ở đầu văn bản, giữ số và mã cơ quan; không đổi BC thành KH theo tên loại, không suy đoán CV hoặc viết tắt thiếu dấu. BCĐX là bổ sung người dùng. Đây là code đang phát triển, chưa nằm trong ZIP .59. Xem [nhật ký](BATCH-AFTER-0.1.59.md).
