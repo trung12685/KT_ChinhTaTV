@@ -655,6 +655,53 @@ public static class OfficeIntegrationCheck
                 test.ReadCheckDecorations(punctuationProbe)!=punctuationDecoration || !SaveDigest(punctuationSource).SequenceEqual(punctuationDigest))
                 throw new InvalidOperationException("Bản lưu dấu câu đổi chữ/kiểu hoặc nguồn mẫu thay đổi");
             Pass(stage);
+            stage="Ngoặc tròn: sửa riêng khoảng trắng, giữ kiểu và các mục không chọn";
+            string parenthesisSource=CreateParenthesisSample(positionSource,folder);
+            byte[] parenthesisDigest=SaveDigest(parenthesisSource);test.Open(parenthesisSource);
+            string parenthesisOriginal=test.ReadCheckText();
+            var parenthesisEdits=test.Check().Where(i=>i.CanFix && i.Kind is FixKind.ParenthesisSpace or FixKind.PunctuationSpace or FixKind.RepeatedText or FixKind.Text).ToArray();
+            var parenthesisOnly=parenthesisEdits.Where(i=>i.Kind==FixKind.ParenthesisSpace).OrderBy(i=>i.Start).ToArray();
+            if(parenthesisOnly.Length!=2 || parenthesisEdits.Length!=5)
+                throw new InvalidOperationException("Chưa phân biệt đúng hai mép ngoặc, dấu câu, cụm lặp, khoảng trắng hoặc ô trống bị sửa");
+            var parenthesisProbe=new Issue(parenthesisOnly[0].Start+parenthesisOnly[0].Length,"kế hoạch".Length,"kế hoạch","kế hoạch","",false);
+            var parenthesisDecoration=test.ReadCheckDecorations(parenthesisProbe);
+            if(parenthesisDecoration.Bold!=-1 || parenthesisDecoration.Underline!=1)
+                throw new InvalidOperationException("Mẫu chữ giữ lại trong ngoặc chưa có kiểu riêng");
+            test.Fix(parenthesisOnly[0]);
+            if(test.ReadCheckText()!=parenthesisOriginal.Replace("Nội dung  (  kế hoạch","Nội dung  (kế hoạch",StringComparison.Ordinal) ||
+                test.Check().Count(i=>i.CanFix && i.Kind==FixKind.ParenthesisSpace)!=1 ||
+                test.ReadCheckDecorations(parenthesisProbe with {Start=parenthesisProbe.Start-parenthesisOnly[0].Length})!=parenthesisDecoration)
+                throw new InvalidOperationException("Sửa riêng mép ngoặc chưa đúng chữ/kiểu hoặc đã làm mất mục không chọn");
+            test.Undo();if(test.ReadCheckText()!=parenthesisOriginal)throw new InvalidOperationException("Undo sửa riêng ngoặc chưa về nguyên bản");
+            Pass(stage);
+            test.Open(parenthesisSource);
+            stage="Lỗi sau xóa mép ngoặc đầu trong nhóm: rollback đủ chữ/kiểu, không tạo Undo";
+            bool parenthesisRollback=false;
+            try{test.FixTextFailureProbe(parenthesisEdits,2);}
+            catch(InvalidOperationException error) when(error.InnerException is OfficeTextProbeException){parenthesisRollback=true;}
+            if(!parenthesisRollback || test.ReadCheckText()!=parenthesisOriginal || test.Changed ||
+                test.ReadCheckDecorations(parenthesisProbe)!=parenthesisDecoration || test.Check().Count(i=>i.CanFix && i.Kind==FixKind.ParenthesisSpace)!=2)
+                throw new InvalidOperationException("Rollback nhóm ngoặc chưa giữ nguyên toàn chữ/kiểu");
+            test.Undo();if(test.ReadCheckText()!=parenthesisOriginal)throw new InvalidOperationException("Nhóm ngoặc lỗi đã tạo Undo");
+            Pass(stage);
+            stage="Sửa nhóm ngoặc/chữ: quét, một Undo, lưu/mở, giữ ô trống và nguồn";
+            string parenthesisExpected=parenthesisOriginal.Replace("Nội dung  (  kế hoạch kế hoạch  ) đã duyệt;hoàn thành.","Nội dung (kế hoạch) đã duyệt; hoàn thành.",StringComparison.Ordinal);
+            var parenthesisFresh=test.Check().Where(i=>i.CanFix && i.Kind is FixKind.ParenthesisSpace or FixKind.PunctuationSpace or FixKind.RepeatedText or FixKind.Text).ToArray();
+            int parenthesisShift=parenthesisFresh.Where(i=>(long)i.Start+i.Length<=parenthesisProbe.Start).Sum(i=>i.Replacement.Length-i.Length);
+            var parenthesisAfterProbe=parenthesisProbe with {Start=parenthesisProbe.Start+parenthesisShift};
+            test.FixMany(parenthesisFresh);
+            if(test.ReadCheckText()!=parenthesisExpected || test.Check().Any(i=>i.CanFix && i.Kind is FixKind.ParenthesisSpace or FixKind.PunctuationSpace or FixKind.RepeatedText or FixKind.Text) ||
+                test.ReadCheckDecorations(parenthesisAfterProbe)!=parenthesisDecoration)
+                throw new InvalidOperationException("Nhóm ngoặc chưa đúng chữ/kiểu/ô trống hoặc còn mục đã sửa");
+            string parenthesisSaved=Path.Combine(folder,"parenthesis-fixed.docx");test.SaveCopy(parenthesisSaved);test.Undo();
+            if(test.ReadCheckText()!=parenthesisOriginal || test.ReadCheckDecorations(parenthesisProbe)!=parenthesisDecoration ||
+                test.Check().Count(i=>i.CanFix && i.Kind==FixKind.ParenthesisSpace)!=2)
+                throw new InvalidOperationException("Một Undo chưa phục hồi cả nhóm ngoặc/chữ/kiểu");
+            test.Open(parenthesisSaved);
+            if(test.ReadCheckText()!=parenthesisExpected || test.Check().Any(i=>i.CanFix && i.Kind is FixKind.ParenthesisSpace or FixKind.PunctuationSpace or FixKind.RepeatedText or FixKind.Text) ||
+                test.ReadCheckDecorations(parenthesisAfterProbe)!=parenthesisDecoration || !SaveDigest(parenthesisSource).SequenceEqual(parenthesisDigest))
+                throw new InvalidOperationException("Bản lưu ngoặc chưa đúng chữ/kiểu hoặc nguồn mẫu thay đổi");
+            Pass(stage);
             File.AppendAllText(report,"RESULT PASS\nKiểm thao tác Word/Line, vị trí nét XPS, sửa riêng/nhóm số-ngày, lưu/mở và Hoàn tác trên mẫu giả; không xác nhận mọi tài liệu.\n");
             return new(true,stage,folder);
         }
@@ -710,6 +757,23 @@ public static class OfficeIntegrationCheck
             other.Element(w+"rPr")!.Element(w+"b")!.SetAttributeValue(w+"val",1);run.AddAfterSelf(other);
         }
         entry.Delete();using(var stream=zip.CreateEntry("word/document.xml").Open())xml.Save(stream);return path;
+    }
+    private static string CreateParenthesisSample(string source,string folder)
+    {
+        string path=Path.Combine(folder,"parenthesis-input.docx");File.Copy(source,path);
+        using var zip=ZipFile.Open(path,ZipArchiveMode.Update);var entry=zip.GetEntry("word/document.xml")!;
+        XDocument xml;using(var input=entry.Open())xml=XDocument.Load(input,LoadOptions.PreserveWhitespace);
+        XNamespace w="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+        XElement Run(string text,bool kept=false)=>new(w+"r",new XElement(w+"rPr",
+            new XElement(w+"rFonts",new XAttribute(w+"ascii","Times New Roman"),new XAttribute(w+"hAnsi","Times New Roman")),
+            new XElement(w+"b",new XAttribute(w+"val",kept?1:0)),new XElement(w+"sz",new XAttribute(w+"val",26)),
+            new XElement(w+"u",new XAttribute(w+"val",kept?"single":"none"))),
+            new XElement(w+"t",new XAttribute(XNamespace.Xml+"space","preserve"),text));
+        var rows=new[]{new XElement(w+"p",Run("Nội dung  (  "),Run("kế hoạch",true),Run(" kế hoạch  ) đã duyệt;hoàn thành.")),
+            new XElement(w+"p",Run("Biểu mẫu (    ); số ( 12 ); mã ( ABC ); công thức ( x + y )."))};
+        var body=xml.Descendants(w+"body").Single();
+        foreach(var row in rows)if(body.Element(w+"sectPr") is XElement section)section.AddBeforeSelf(row);else body.Add(row);
+        entry.Delete();using(var output=zip.CreateEntry("word/document.xml").Open())xml.Save(output);return path;
     }
     private static string CreatePunctuationSample(string source,string folder)
     {
