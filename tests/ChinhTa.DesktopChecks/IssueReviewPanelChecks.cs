@@ -26,6 +26,13 @@ public static class IssueReviewPanelChecks
     }
     private static void Layout(FrameworkElement element)
     {element.Measure(new Size(470,840));element.Arrange(new Rect(0,0,470,840));element.UpdateLayout();element.Dispatcher.Invoke(()=>{},DispatcherPriority.ContextIdle);}
+    private static void OpenTooltip(ToolTip tooltip,FrameworkElement target)
+    {
+        tooltip.PlacementTarget=target;tooltip.IsOpen=true;
+        tooltip.Dispatcher.Invoke(()=>{},DispatcherPriority.ContextIdle);
+        tooltip.Measure(new Size(460,double.PositiveInfinity));
+        tooltip.Arrange(new Rect(new Point(),tooltip.DesiredSize));tooltip.UpdateLayout();
+    }
     public static void Run(Action<bool,string> assert)
     {
         IssueReviewModelChecks.Run(assert);
@@ -67,7 +74,13 @@ public static class IssueReviewPanelChecks
             assert(ReferenceEquals(panel.SelectedIssue,space) && ReferenceEquals(active,space) && model.All.SelectedCount==1,
                 "Keyboard or pointer selection highlights the original Issue independently of checked membership");
             assert(((TextBlock)panel.FindName("DetailText")).Text.Contains(space.Message) && selected.Detail.Contains("Hôm nay") &&
-                Visuals<FrameworkElement>(row).Any(e=>e.ToolTip is ToolTip),"Selected details and hover tooltip retain the full message and local context outside the compact row");
+                Visuals<FrameworkElement>(row).Any(e=>e.ToolTip is ToolTip),"Selected details retain the full message and local context outside the compact row");
+            var hover=Visuals<FrameworkElement>(row).Select(e=>e.ToolTip).OfType<ToolTip>().Single();
+            OpenTooltip(hover,Visuals<FrameworkElement>(row).Single(e=>ReferenceEquals(e.ToolTip,hover)));
+            assert(((TextBlock)hover.Content).Text==selected.Tooltip && ((TextBlock)hover.Content).Text.Split('\n').Length==3 &&
+                !((TextBlock)hover.Content).Text.Contains(space.Message),
+                "The actual WPF hover binds the three concise blocks instead of the long selected detail: "+((TextBlock)hover.Content).Text);
+            hover.IsOpen=false;
             model.Groups.Single(g=>g.Items.Contains(selected)).IsChecked=true;
             assert(model.All.SelectedCount==2 && model.All.IsChecked is null,"A family checkbox uses the same real row choices");
             var lineGroup=model.Groups.Single(g=>g.Items.Any(c=>c.Issue==missing));lineGroup.IsExpanded=false;Layout(panel);
@@ -92,6 +105,18 @@ public static class IssueReviewPanelChecks
             var png=new PngBitmapEncoder();png.Frames.Add(BitmapFrame.Create(screenshot));
             using(var output=File.Create(Path.Combine(folder,"issue-list-preview.png")))png.Save(output);
             assert(new FileInfo(Path.Combine(folder,"issue-list-preview.png")).Length>1000,"The Windows preview image renders from synthetic issues without opening Word or private documents");
+            var lineChoice=panel.Choices.Single(c=>c.Issue==missing);
+            list.ScrollIntoView(lineChoice);Layout(panel);
+            var lineRow=Visuals<ListBoxItem>(list).Single(r=>ReferenceEquals(r.DataContext,lineChoice));
+            var lineTooltip=Visuals<FrameworkElement>(lineRow).Select(e=>e.ToolTip).OfType<ToolTip>().Single();
+            OpenTooltip(lineTooltip,Visuals<FrameworkElement>(lineRow).Single(e=>ReferenceEquals(e.ToolTip,lineTooltip)));
+            assert(((TextBlock)lineTooltip.Content).Text==lineChoice.Tooltip && lineChoice.Tooltip.Contains("II.2, điểm b"),
+                "A real Line tooltip shows its own appendix provision and concrete correction");
+            var tooltipImage=new RenderTargetBitmap(Math.Max(1,(int)Math.Ceiling(lineTooltip.ActualWidth)),Math.Max(1,(int)Math.Ceiling(lineTooltip.ActualHeight)),96,96,PixelFormats.Pbgra32);
+            tooltipImage.Render(lineTooltip);
+            var tooltipPng=new PngBitmapEncoder();tooltipPng.Frames.Add(BitmapFrame.Create(tooltipImage));
+            using(var output=File.Create(Path.Combine(folder,"issue-tooltip-preview.png")))tooltipPng.Save(output);
+            lineTooltip.IsOpen=false;
             assert(trace.Errors.Count==0,"Grouped row and header bindings have no WPF binding errors: "+string.Join(" | ",trace.Errors.Take(3)));
         }
         finally

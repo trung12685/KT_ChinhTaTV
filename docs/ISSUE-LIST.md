@@ -1,6 +1,6 @@
 # Danh sách lỗi từ 0.1.50
 
-Mỗi mục chỉ một dòng: **checkbox · tên lỗi · trang**. Bỏ câu “Chọn để sửa hàng loạt”. Rê chuột xem mô tả đầy đủ, gợi ý, số đo, ngữ cảnh và căn cứ; hoặc chọn bằng chuột/bàn phím rồi mở **Chi tiết lỗi** bên dưới. Câu dài hiển thị dấu …, không bị mất nội dung trong chi tiết.
+Mỗi mục chỉ một dòng: **checkbox · tên lỗi · trang**. Bỏ câu “Chọn để sửa hàng loạt”. Từ .52, rê chuột xem ba phần ngắn **Lỗi — Căn cứ — Cách xử lý**. Căn cứ gồm vị trí và nội dung quy định; cách xử lý nêu thay đổi/chiều dài đề xuất. Chọn bằng chuột/bàn phím rồi mở **Chi tiết lỗi** để xem đầy đủ số đo, ngữ cảnh và mô tả. Câu dài hiển thị dấu …, không bị mất nội dung trong chi tiết.
 
 ## Ba phần
 
@@ -26,3 +26,16 @@ Sau sửa/Undo/quét lại, danh sách được dựng từ kết quả mới v�
 - Trường hợp chưa xác minh vẫn là kiểm tra thủ công; không gán thiếu chỉ dựa số Shape.
 
 Chi tiết vẫn có số đo/căn cứ và phép đo thực tế; kiểm XPS, rollback, Undo và lưu bản sao giữ nguyên. Ảnh xem trước trên release dùng dữ liệu giả trong Windows CI; chưa là xác nhận Word/Office2021.
+
+
+## Tooltip từ 0.1.52
+
+Ví dụ (chiều dài cụ thể phụ thuộc số đo của từng dòng):
+
+> Lỗi: Thiếu đường kẻ dưới cơ quan ban hành
+>
+> Căn cứ: Nghị định 30/2020/NĐ-CP, Phụ lục I, Phần I, mục II.2, điểm b: dưới tên cơ quan có đường kẻ ngang, nét liền, dài 1/3–1/2 dòng chữ, đặt cân đối.
+>
+> Cách xử lý: Kẻ đường ngang dài 95.2 pt, căn theo dòng chữ; mức tự sửa theo cấu hình (mặc định 3/7).
+
+Nguồn Nhà nước là Nghị định, nguồn Đảng là Hướng dẫn; không thay tên thành Thông tư. Các quy tắc khoảng trắng/lặp từ ghi quy tắc ứng dụng, thứ tự mục/dấu đầu dòng ghi theo yêu cầu người dùng. Mục chưa đủ điều kiện ghi hướng xử lý thủ công; số đo/cấu hình không thành câu chữ của quy định. Tooltip không làm mục thủ công trở thành sửa được.

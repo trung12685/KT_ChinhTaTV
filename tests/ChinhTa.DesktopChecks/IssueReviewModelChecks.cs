@@ -38,6 +38,9 @@ public static class IssueReviewModelChecks
             "Compact rows retain page, context, details and an accessible selection name outside the visible label");
         assert(new IssueChoice(line).Detail.Contains("NĐ30") && new IssueChoice(a,new(1,"abc",99,2)).Context==a.Original.Trim(),
             "Citation details are retained and invalid context bounds fall back safely");
+        assert(anchored.Tooltip==IssueTooltipCatalog.Describe(a).Text && !anchored.Tooltip.Contains("long detail") &&
+            !anchored.Tooltip.Contains("Hôm nay") && anchored.Detail.Contains("long detail"),
+            "Compact tooltip uses the summary while the full selected detail retains diagnostics and context");
         var empty=new IssueReviewModel([]);
         assert(!empty.All.CanSelect && empty.All.IsChecked==false && empty.Groups.Count==0,"An empty scan has no selectable phantom group");
         var many=new IssueReviewModel(Enumerable.Range(0,1200).Select(i=>a with {Start=i*3}));
