@@ -101,7 +101,7 @@ public static class DevelopmentReport
             "Tab liên tiếp, tab/khoảng trắng đầu đoạn căn giữa; không tự xóa tab hoặc thụt lề.",
             new ReportExample("[TAB][TAB]Nội dung","Trong chế độ cá nhân: cảnh báo tab liên tiếp; không tự xóa vì có thể dùng để dàn bố cục.")),
         new("M07","Vùng cấu trúc hoặc kiểu chưa rõ",CapabilityMode.Manual,"Trong phạm vi đã đối chiếu",
-            "Field/control/liên kết/đối tượng hoặc kiểu trộn có thể giữ thủ công. Bảo vệ XML sâu hiện chỉ 40 đoạn đầu Nhà nước, chưa phủ mọi trang/profile.",
+            "Field/control/liên kết/đối tượng hoặc kiểu trộn có thể giữ thủ công. Đối chiếu XML phần thân ở cả ba chế độ, kể cả sau đoạn 40; vùng chưa chứng minh giữ thủ công. Field phức tạp hoặc lệch XML có thể chặn các đoạn sau. Đo tọa độ/phông đặc thù đầu Nhà nước vẫn có phạm vi riêng.",
             new ReportExample("Nội dung  báo cáo nằm trong field/control/liên kết chưa được phép sửa chữ.","Giữ thủ công để bảo vệ cấu trúc; không chuyển thành sửa được chỉ vì thấy khoảng trắng thừa.")),
         new("M08","Nét/Shape chưa ghép chắc chắn",CapabilityMode.Manual,"Đường kẻ",
             "Line không có dấu của ứng dụng, nhóm Shape, border, nét chồng hoặc thiếu mốc/số đo; không tạo thêm để làm mất cảnh báo.",
@@ -124,7 +124,8 @@ public static class DevelopmentReport
         new("0.1.43","Thêm khoảng trắng sát trong ngoặc tròn có điều kiện; giữ đề xuất dấu phẩy/chấm phẩy khi sửa ngoặc, kiểm nhóm/rollback và cập nhật báo cáo."),
         new("0.1.44","Thêm gợi ý khoảng trắng trước dấu kết câu cuối đoạn có điều kiện; sửa nhóm cùng ngoặc/dấu phẩy/cụm lặp, rollback và cập nhật báo cáo."),
         new("0.1.45","Bổ sung ví dụ lỗi và kết quả/hướng xử lý cho từng nhóm đã hỗ trợ, chỉ cảnh báo, minh họa và các việc dự kiến trong báo cáo xem/xuất TXT."),
-        new("0.1.46","Thêm gợi ý khoảng trắng trước dấu hai chấm trong nhãn/câu chữ đủ điều kiện, kiểm sửa nhóm/rollback và cập nhật ví dụ C17 trong báo cáo.")
+        new("0.1.46","Thêm gợi ý khoảng trắng trước dấu hai chấm trong nhãn/câu chữ đủ điều kiện, kiểm sửa nhóm/rollback và cập nhật ví dụ C17 trong báo cáo."),
+        new("0.1.47","Mở rộng đối chiếu XML cho vùng sửa chữ toàn thân và ba chế độ; chặn vùng chưa chứng minh, giữ phép đo đầu trang và kiểm giao dịch hiện có.")
     });
     public static IReadOnlyList<string> NextSteps { get; }=Array.AsReadOnly(new[]
     {

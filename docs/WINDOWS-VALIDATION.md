@@ -1,6 +1,6 @@
 > Cập nhật chốt bản 21/10/2026: 0.1.27 đạt 223 Core/OpenXML + 20 WPF trong CI Windows; người dùng xác nhận sửa cả ba đường cùng lúc chạy được trên Office 2021. Lưu/mở lại, một Undo và toàn bộ Office check của 0.1.27 chưa có xác nhận runtime riêng. Xem [biên bản](STATUS-0.1.27.md).
 >
-Để chọn từng nhóm lỗi khi kiểm tra, xem [Danh sách khả năng sửa 0.1.46](SUPPORTED-FIXES-0.1.46.md): C01–C17, các mục thủ công và bảng sửa riêng/nhóm/quét/Undo/lưu-mở. Danh sách mô tả chức năng đã lập trình, không phải xác nhận Office đã đạt.
+Để chọn từng nhóm lỗi khi kiểm tra, xem [Danh sách khả năng sửa 0.1.47](SUPPORTED-FIXES-0.1.47.md): C01–C17, các mục thủ công và bảng sửa riêng/nhóm/quét/Undo/lưu-mở. Danh sách mô tả chức năng đã lập trình, không phải xác nhận Office đã đạt.
 
 > Danh sách bên dưới là kịch bản kiểm tra tích lũy theo từng phiên bản, không phải bảng kết quả đã đạt.
 
@@ -164,3 +164,9 @@ Xuất TXT rồi đọc lại: nguyên dấu cách, tiếng Việt và các ví 
 Bài Word thêm `colon-input.docx`/`colon-fixed.docx`: hai C17 và bảy lỗi độc lập. Chọn riêng C17 giữ khoảng sau và các lỗi không chọn, giữ kiểu từ đầu trong ngoặc. Fault probe giữa nhóm phải phục hồi toàn chữ/kiểu, không tạo Undo. Sửa nhóm một lượt, quét hết đúng mục, một Undo trả cả nhóm, lưu/mở giữ chữ/kiểu/hash nguồn. Các dòng giờ/tỉ lệ/giao thức/địa chỉ/số trống nguyên vẹn.
 
 Thử `Ghi chú  :  nội dung`: C17 và gợi ý khoảng sau chọn độc lập, không chồng span. Kiểm tab/NBSP/control, số/La Mã, viết hoa, giao thức, thiếu space sau, từ quá ngắn và header/ngày không nhận C17. Báo cáo có C17, ví dụ trước/sau, mốc .46 và đúng thông tin kiểm thử gói; P01–P05 vẫn chưa triển khai. CI chưa thay xác nhận Word/Office 2021.
+
+## Bổ sung .47 — bằng chứng XML toàn thân (chưa xác nhận runtime)
+
+Bài Word tạo ba mẫu body-proof-plain/link/complex sau 45 đoạn đệm. Ở cả ba chế độ, plain có gợi ý, hyperlink giữ thủ công và đoạn thuần kế bên vẫn có sáu gợi ý. Lựa chọn từ mẫu plain không được ghi/checkpoint/Undo khi mở bản cùng chữ nhưng có hyperlink. Kiểm fault nhóm, giữ kiểu từ đầu, sửa/quét/một Undo/lưu-mở mẫu body-proof-fixed, nguyên quan hệ hyperlink và hash nguồn. Field phức tạp phải báo giới hạn và giữ đoạn phía sau thủ công ở ba chế độ.
+
+Đọc XML hiện tại gồm thay đổi chưa lưu, thử XML thiếu/lệch/không đọc được và bảo đảm không dùng mặc định cho phép ghi. Theo dõi thời gian quét tài liệu dài trên Word thực, chưa có số đo runtime ở cloud. Đo Line/căn giữa/phông đặc thù vẫn theo phạm vi đầu văn bản cũ; chạy lại toàn bộ bài Office và các kịch bản XPS/rollback cũ trước khi xác nhận. Báo cáo có M07 mới/mốc .47, 17/8/1 giữ nguyên. CI không có Word.
