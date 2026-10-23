@@ -546,6 +546,54 @@ public static class OfficeIntegrationCheck
             if(test.ReadCheckText()!=cleanupBaseline || !SaveDigest(cleanupSource).SequenceEqual(cleanupSourceDigest))
                 throw new InvalidOperationException("Hết lượt Hoàn tác phải giữ nguyên trạng thái và nguồn mẫu");
             Pass(stage);
+            stage="Lặp cụm từ: hai đề xuất xóa, giữ từ láy và không chồng lỗi khoảng trắng";
+            string repeatedSource=CreateRepeatedTextSample(positionSource,folder);
+            byte[] repeatedDigest=SaveDigest(repeatedSource);test.Profile=DocumentProfile.State;test.Open(repeatedSource);
+            string repeatedOriginal=test.ReadCheckText();
+            var repeatedFound=test.Check();
+            var repeatedEdits=repeatedFound.Where(i=>i.CanFix && i.Kind is FixKind.RepeatedText or FixKind.Text).ToArray();
+            var repeatedOnly=repeatedEdits.Where(i=>i.Kind==FixKind.RepeatedText).OrderBy(i=>i.Start).ToArray();
+            if(repeatedOnly.Length!=2 || repeatedEdits.Length!=3 || repeatedFound.Count(i=>i.Kind==FixKind.RepeatedText && !i.CanFix)!=2)
+                throw new InvalidOperationException("Chưa phân biệt đủ cụm lặp, khoảng trắng và từ láy thủ công");
+            var retainedProbe=new Issue(repeatedOnly[0].Start-"kế hoạch".Length,"kế hoạch".Length,"kế hoạch","kế hoạch","",false);
+            var retainedDecorations=test.ReadCheckDecorations(retainedProbe);
+            if(retainedDecorations.Bold!=-1 || retainedDecorations.Underline!=1)
+                throw new InvalidOperationException("Mẫu phần giữ lại chưa có đậm/gạch chân riêng");
+            Pass(stage);
+            stage="Lỗi sau xóa cụm lặp đầu tiên: rollback đủ chữ và không tạo Undo";
+            bool repeatRollback=false;
+            try{test.FixTextFailureProbe(repeatedEdits,1);}
+            catch(InvalidOperationException error) when(error.InnerException is OfficeTextProbeException){repeatRollback=true;}
+            if(!repeatRollback || test.ReadCheckText()!=repeatedOriginal || test.Changed ||
+                test.Check().Count(i=>i.Kind==FixKind.RepeatedText && i.CanFix)!=2)
+                throw new InvalidOperationException("Rollback sau xóa cụm lặp chưa giữ nguyên cả nhóm");
+            test.Undo();if(test.ReadCheckText()!=repeatedOriginal)throw new InvalidOperationException("Nhóm lặp thất bại không được tạo Undo");
+            Pass(stage);
+            stage="Sửa riêng một cụm lặp, giữ nguyên kiểu lần đầu và Undo";
+            test.Fix(test.Check().Where(i=>i.Kind==FixKind.RepeatedText && i.CanFix).OrderBy(i=>i.Start).First());
+            if(test.ReadCheckText()!=repeatedOriginal.Replace("kế hoạch kế hoạch","kế hoạch",StringComparison.Ordinal) ||
+                test.Check().Count(i=>i.Kind==FixKind.RepeatedText && i.CanFix)!=1 || test.ReadCheckDecorations(retainedProbe)!=retainedDecorations)
+                throw new InvalidOperationException("Sửa riêng cụm lặp chưa đúng chữ/kiểu hoặc mục đã sửa còn hiện");
+            test.Undo();if(test.ReadCheckText()!=repeatedOriginal)throw new InvalidOperationException("Undo sửa riêng cụm lặp chưa về nguyên bản");
+            Pass(stage);
+            stage="Sửa nhóm lặp và khoảng trắng: một lượt, lưu/mở và một Undo";
+            var repeatFresh=test.Check().Where(i=>i.CanFix && i.Kind is FixKind.RepeatedText or FixKind.Text).ToArray();
+            string repeatedExpected=repeatedOriginal.Replace("Nội dung  kế hoạch kế hoạch đã được duyệt.","Nội dung kế hoạch đã được duyệt.",StringComparison.Ordinal)
+                .Replace("công tác công tác công tác","công tác",StringComparison.Ordinal);
+            test.FixMany(repeatFresh);var repeatAfter=test.Check();
+            if(test.ReadCheckText()!=repeatedExpected || repeatAfter.Any(i=>i.CanFix && i.Kind is FixKind.RepeatedText or FixKind.Text) ||
+                repeatAfter.Count(i=>i.Kind==FixKind.RepeatedText && !i.CanFix)!=2 ||
+                test.ReadCheckDecorations(retainedProbe with {Start=retainedProbe.Start-1})!=retainedDecorations)
+                throw new InvalidOperationException("Sửa nhóm lặp chưa hết mục đã sửa, làm đổi kiểu giữ lại hoặc xóa từ láy thủ công");
+            string repeatedSaved=Path.Combine(folder,"repeated-text-fixed.docx");test.SaveCopy(repeatedSaved);
+            test.Undo();
+            if(test.ReadCheckText()!=repeatedOriginal || test.Check().Count(i=>i.Kind==FixKind.RepeatedText && i.CanFix)!=2)
+                throw new InvalidOperationException("Một Undo chưa phục hồi toàn nhóm lặp/khoảng trắng");
+            test.Open(repeatedSaved);
+            if(test.ReadCheckText()!=repeatedExpected || test.Check().Any(i=>i.CanFix && i.Kind is FixKind.RepeatedText or FixKind.Text) ||
+                !SaveDigest(repeatedSource).SequenceEqual(repeatedDigest))
+                throw new InvalidOperationException("Mở lại bản sửa lặp chưa đạt hoặc nguồn mẫu thay đổi");
+            Pass(stage);
             File.AppendAllText(report,"RESULT PASS\nKiểm thao tác Word/Line, vị trí nét XPS, sửa riêng/nhóm số-ngày, lưu/mở và Hoàn tác trên mẫu giả; không xác nhận mọi tài liệu.\n");
             return new(true,stage,folder);
         }
@@ -601,6 +649,22 @@ public static class OfficeIntegrationCheck
             other.Element(w+"rPr")!.Element(w+"b")!.SetAttributeValue(w+"val",1);run.AddAfterSelf(other);
         }
         entry.Delete();using(var stream=zip.CreateEntry("word/document.xml").Open())xml.Save(stream);return path;
+    }
+    private static string CreateRepeatedTextSample(string source,string folder)
+    {
+        string path=Path.Combine(folder,"repeated-text-input.docx");File.Copy(source,path);
+        using var zip=ZipFile.Open(path,ZipArchiveMode.Update);var entry=zip.GetEntry("word/document.xml")!;
+        XDocument xml;using(var input=entry.Open())xml=XDocument.Load(input,LoadOptions.PreserveWhitespace);
+        XNamespace w="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+        XElement Run(string text,bool kept=false)=>new(w+"r",new XElement(w+"rPr",new XElement(w+"rFonts",new XAttribute(w+"ascii","Times New Roman"),new XAttribute(w+"hAnsi","Times New Roman")),
+            new XElement(w+"b",new XAttribute(w+"val",kept?1:0)),new XElement(w+"sz",new XAttribute(w+"val",26)),
+            new XElement(w+"u",new XAttribute(w+"val",kept?"single":"none"))),new XElement(w+"t",new XAttribute(XNamespace.Xml+"space","preserve"),text));
+        var rows=new[]{new XElement(w+"p",Run("Nội dung  "),Run("kế hoạch",true),Run(" kế hoạch đã được duyệt.")),
+            new XElement(w+"p",Run("Báo cáo công tác công tác công tác đã hoàn thành.")),
+            new XElement(w+"p",Run("Nhịp sống đều đều, nhà nhà vui vẻ."))};
+        var body=xml.Descendants(w+"body").Single();
+        foreach(var row in rows)if(body.Element(w+"sectPr") is XElement section)section.AddBeforeSelf(row);else body.Add(row);
+        entry.Delete();using(var output=zip.CreateEntry("word/document.xml").Open())xml.Save(output);return path;
     }
     private static string CreateLegacyHeadingSample(string source,string folder,DocumentProfile profile)
     {

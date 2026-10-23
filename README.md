@@ -2,7 +2,13 @@
 
 Ứng dụng C# / WPF chạy trên Windows với Microsoft Word desktop, làm việc offline trên bản sao DOCX và xem trước bằng XPS. Không gửi nội dung tài liệu tới dịch vụ AI.
 
-**[Danh sách lỗi có thể sửa và bảng kiểm tổng thể cho 0.1.39](docs/SUPPORTED-FIXES-0.1.39.md)** — gồm điều kiện, ví dụ, ngoại lệ ô trống và các mục chỉ cảnh báo.
+**[Danh sách lỗi có thể sửa và bảng kiểm tổng thể cho 0.1.40](docs/SUPPORTED-FIXES-0.1.40.md)** — gồm điều kiện, ví dụ, ngoại lệ ô trống và các mục chỉ cảnh báo.
+
+Ưu tiên đã thống nhất: **thể thức → lỗi chữ và lặp từ/cụm từ → ngữ cảnh và thư viện sau cùng**. Phần chính tả tiếng Việt đầy đủ còn cần xây dựng; không coi quy tắc minh họa hiện tại là bộ kiểm hoàn chỉnh.
+
+## Bản thử 0.1.40
+
+Phát hiện lặp liên tiếp trong cùng đoạn. Cụm 2–8 tiếng giống nhau có thể đề xuất xóa bản lặp sau khi duyệt, giữ chữ/kiểu của lần đầu; một tiếng lặp, chuỗi toàn chữ hoa và dòng số/ngày giữ thủ công. Không suy đoán nghĩa câu. [Tải bản thử](https://github.com/trung12685/KT_ChinhTaTV/releases/tag/v0.1.40) · [Nội dung và cách thử](docs/CHANGES-0.1.40.md). Chưa xác nhận runtime Office 2021; mốc ổn định vẫn 0.1.27.
 
 ## Bản thử 0.1.39
 

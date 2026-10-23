@@ -5,7 +5,7 @@ namespace ChinhTa.Core;
 public record Paragraph(int Start, string Text, bool Bold = false, float Size = 13,
     int Alignment = 1, string Font = "Times New Roman", bool Italic = false,
     int Color = 0, bool InTable = false, int Page = 1, bool FormatObserved = false, bool FormatMixed = false, bool TextEditable = true, bool BoldMixed = false);
-public enum FixKind { Text, NationalHeading, StateMotto, PartyHeading, Advisory, PageLayout, ShapeLine, AdministrativeNumber, AdministrativeDate, AdministrativeFormat, AdministrativePosition, DocumentHeadingFormat }
+public enum FixKind { Text, NationalHeading, StateMotto, PartyHeading, Advisory, PageLayout, ShapeLine, AdministrativeNumber, AdministrativeDate, AdministrativeFormat, AdministrativePosition, DocumentHeadingFormat, RepeatedText }
 public record HeadingFormat(float Size, int? Alignment = null)
 {
     public bool Matches(string font,float size,int bold,int italic,int color,int? alignment)=>
@@ -31,6 +31,7 @@ public record Issue(int Start, int Length, string Original, string Replacement,
         : LineFix is not null ? "Tạo/đặt lại Shape Line theo số đo và cấu hình đã chọn."
         : CenterFix is not null ? "Căn giữa trong ô đã xác minh, bỏ thụt lề ngang; giữ nguyên chữ và khoảng cách dọc."
         : CharacterFormat is not null ? $"Times New Roman, màu đen, cỡ {CharacterFormat.Size:0.#}, chữ {(CharacterFormat.Italic?"nghiêng":"đứng")}{(CharacterFormat.Bold==true?", đậm":"")}; giữ nguyên chữ."
+        : Kind==FixKind.RepeatedText ? "Xóa phần lặp đã đánh dấu, giữ lần đầu; cần duyệt cả câu."
         : Format is null ? Replacement
         : Original == Replacement ? "Sửa định dạng theo mô tả." : Replacement + " — sửa định dạng theo mô tả.";
 }
@@ -61,6 +62,12 @@ public static class Checker
                     char.IsUpper(word.Value[0]) ? "Đò" : "đò",
                     "Có thể là ‘con đò’. Đây là quy tắc minh họa, cần người dùng xác nhận.", false));
             }
+            var repetitions=RepeatedTextRules.Check(p);
+            // One deletion may contain old spacing/demo candidates. Do not propose
+            // overlapping writes; independently editable text in the retained copy stays.
+            textIssues.RemoveAll(candidate=>repetitions.Any(r=>r.CanFix &&
+                candidate.Start<(long)r.Start+r.Length && (long)candidate.Start+candidate.Length>r.Start));
+            textIssues.AddRange(repetitions);
             if(p.TextEditable && !protectedAdministrative.Contains(p.Start)) result.AddRange(textIssues);
             else if(textIssues.Count>0)
             {

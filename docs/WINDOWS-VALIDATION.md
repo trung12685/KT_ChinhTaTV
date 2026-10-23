@@ -1,6 +1,6 @@
 > Cập nhật chốt bản 21/10/2026: 0.1.27 đạt 223 Core/OpenXML + 20 WPF trong CI Windows; người dùng xác nhận sửa cả ba đường cùng lúc chạy được trên Office 2021. Lưu/mở lại, một Undo và toàn bộ Office check của 0.1.27 chưa có xác nhận runtime riêng. Xem [biên bản](STATUS-0.1.27.md).
 >
-Để chọn từng nhóm lỗi khi kiểm tra, xem [Danh sách khả năng sửa 0.1.39](SUPPORTED-FIXES-0.1.39.md): C01–C12, các mục thủ công và bảng sửa riêng/nhóm/quét/Undo/lưu-mở. Danh sách mô tả chức năng đã lập trình, không phải xác nhận Office đã đạt.
+Để chọn từng nhóm lỗi khi kiểm tra, xem [Danh sách khả năng sửa 0.1.40](SUPPORTED-FIXES-0.1.40.md): C01–C13, các mục thủ công và bảng sửa riêng/nhóm/quét/Undo/lưu-mở. Danh sách mô tả chức năng đã lập trình, không phải xác nhận Office đã đạt.
 
 > Danh sách bên dưới là kịch bản kiểm tra tích lũy theo từng phiên bản, không phải bảng kết quả đã đạt.
 
@@ -120,3 +120,10 @@ Sửa nhóm bình thường phải đổi đúng chữ/kiểu yêu cầu; dấu 
 Chạy hết Kiểm tra Word tự động. Bài cuối tạo hai lượt sửa tiêu đề độc lập trên mẫu giả; lần Undo đầu gây lỗi I/O chỉ ở dọn backup. Phải trả về thành công, giữ backup, Changed=true, chữ/cảnh báo đúng trạng thái sau lượt sửa đầu. Undo tiếp theo về nguyên bản; Undo khi hết stack không đổi; nguồn giữ hash. Log có Word.CheckpointCleanup.Retained, không ghi nội dung hoặc đường dẫn người dùng.
 
 Core Windows giữ handle không cho xóa rollback thật và kiểm các lỗi đóng/chép/mở/restore cùng cleanup. Đây là test file; CI không có Word. Thử thao tác sửa nhiều lượt, Hoàn tác từng lượt, lưu/mở và các bài nét XPS cũ trên bản sao. Chưa có xác nhận runtime Office 2021 cho .39; không tự tạo khóa/xóa tệp tài liệu thật để thử lỗi này.
+
+
+## Thử 0.1.40 — từ/cụm từ lặp
+
+Chạy hết Kiểm tra Word tự động. Mẫu `repeated-text-input.docx` có hai đề xuất xóa cụm lặp, một spacing độc lập và hai cảnh báo “đều đều”, “nhà nhà” không được tích. Lỗi cố ý sau lần xóa đầu phải rollback cả nhóm, không tạo Undo. Sửa riêng một cụm phải giữ chữ/đậm/gạch chân lần đầu và gợi ý còn lại; Undo phục hồi. Sửa nhóm ba mục phải hết các mục đã sửa trong một lượt, giữ hai manual, giữ kiểu lần đầu sau spacing dịch CP. Lưu/mở và một Undo phục hồi toàn nhóm, nguồn không đổi. `repeated-text-fixed.docx` là bản lưu.
+
+Trên bản sao thực: thử cụm hai và ba lần, hai cụm độc lập, chọn riêng so với nhóm; xác nhận lặp có chủ ý trước khi xóa. Không kỳ vọng đối chiếu qua dấu câu/tab/ngắt đoạn hoặc cụm trên 8 tiếng, case khác, chính tả từ điển/ngữ cảnh. Sửa chữ/phông trước căn giữa/Line và quét lại theo số đo mới. Chưa có runtime Office 2021 cho .40.
