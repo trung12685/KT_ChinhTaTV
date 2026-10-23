@@ -47,16 +47,17 @@ public static class DocumentTypeCatalogChecks
             assert(!ShapeLineRules.IsDocumentType(wrong),"Unknown names, arbitrary prose, Công văn and copy names do not become named original-document titles");
         foreach(string abbreviation in new[]{"QyĐ","CTr","TTr","TrS","BCĐX"})
         {
-            var rows=Header("Số: 01/"+abbreviation+"-ABC");
+            string title=DocumentTypeCatalog.FindAbbreviation(abbreviation)!.Heading;
+            var rows=Header("Số: 01/"+abbreviation+"-ABC",title);
             assert(!Checker.Check(rows).Any(i=>i.Kind==FixKind.AdministrativeNumber),
                 "An exact mixed-case reference abbreviation alone cannot create a false lowercase-code warning");
-            var bad=Header("Số: 01/"+abbreviation+"-Abc");
+            var bad=Header("Số: 01/"+abbreviation+"-Abc",title);
             assert(Checker.Check(bad).Any(i=>i.Kind==FixKind.AdministrativeNumber && !i.CanFix && i.Message.Contains("chữ thường")),
                 "Accepting the type abbreviation never hides lowercase letters in the agency-code suffix");
         }
         assert(Checker.Check(Header("Số: 01/QuyĐ-ABC")).Any(i=>i.Kind==FixKind.AdministrativeNumber && !i.CanFix),
             "QuyĐ is not silently accepted as the exact QyĐ spelling from the signed table");
-        var spaced=Header("Số: 3 / TTr – ABC");var issues=Checker.Check(spaced).Where(i=>i.Kind==FixKind.AdministrativeNumber).ToArray();
+        var spaced=Header("Số: 3 / TTr – ABC","TỜ TRÌNH");var issues=Checker.Check(spaced).Where(i=>i.Kind==FixKind.AdministrativeNumber).ToArray();
         string number=spaced[1].Text;
         foreach(var i in BatchPlan.Create(issues))number=number.Remove(i.Start-spaced[1].Start,i.Length).Insert(i.Start-spaced[1].Start,i.Replacement);
         assert(number=="Số: 03/TTr-ABC\r","Existing zero/separator repairs preserve the legal mixed-case abbreviation exactly");
@@ -105,7 +106,7 @@ public static class DocumentTypeCatalogChecks
         catch(IOException){failed=true;}
         assert(failed && writes==mixedPlan.Count && restores==1 && mutable==original,
             "A failing final save restores the entire selected batch, including case and separator edits");
-        foreach(string title in new[]{"Công văn","V/v phối hợp công tác","BÁO CÁO","Nội dung thường."})
+        foreach(string title in new[]{"Công văn","V/v phối hợp công tác","Mục đề xuất","Nội dung thường."})
             assert(!Checker.Check(Header("Số: 01/TTR-ABC",title)).Any(i=>i.Kind==FixKind.AdministrativeNumber),
                 "Without the corresponding named type, an uppercase agency prefix is neither rewritten nor falsely warned about");
         var repeatedTitle=Header("Số: 01/TTR-ABC","TỜ TRÌNH").Append(new Paragraph(999,"TỜ TRÌNH\r")).ToArray();

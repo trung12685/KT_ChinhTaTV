@@ -97,7 +97,14 @@ internal static class OfficeComponentCheck
         }
         var title=xml.Descendants(w+"p").Single(p=>string.Concat(p.Descendants(w+"t").Select(t=>t.Value))=="BÁO CÁO");
         var subject=title.ElementsAfterSelf(w+"p").First();
-        if(bad)title.Descendants(w+"t").Single().Value="Báo cáo đề xuất";
+        if(bad)
+        {
+            title.Descendants(w+"t").Single().Value="Báo cáo đề xuất";
+            // This fixture tests component repairs, so its registered type code
+            // must match the custom title; type conflicts have separate checks.
+            var number=xml.Descendants(w+"t").Single(t=>t.Value=="Số: 01/BC-ĐV");
+            number.Value="Số: 01/BCĐX-ĐV";
+        }
         var first=Row("Mang lại bình",bad?12:14,true,center:true,broken:bad);
         if(bad)first.Add(new XElement(w+"r",new XElement(w+"br")),Run("yên cho nhân dân",12,true,false,true));
         else first=Row("Mang lại bình ",14,true,center:true);

@@ -1,5 +1,11 @@
 # Tiếp tục phát triển Chính tả Việt
 
+## B02 — Đối chiếu tên loại và ký hiệu
+
+Trên nhánh đợt sau .59, tiếp nối B01 `030d599daf8b8db0aeeac0da0ee2295b8c193263`. AdministrativeHeaderRules thêm cảnh báo TypeMismatchTitle thuộc AdministrativeNumber, CanFix=false; chỉ đối chiếu namedType chữ thuần duy nhất trước nội dung và prefix đã có trong danh mục NamedHeading, bỏ bản sao/unknown. Căn cứ NĐ30 PL I.I.II.3.b PDF22 đã đọc bản ký, bảng PL III.I PDF40. Prefix khác loại có một cảnh báo chính, không thêm cảnh báo lowercase trùng trên prefix đó; mã cơ quan chữ thường vẫn xét riêng. Không chọn đổi tên hay mã. Tooltip ba dòng, Family number/Manual, M04 và ví dụ TXT cập nhật; 24/8/1 giữ nguyên.
+
+Sửa số/ký hiệu khác vẫn qua lựa chọn/CurrentTextPlan/BatchPlan/atomic cũ; hậu quét giữ mâu thuẫn cho đến khi sửa đúng một bên, không xóa theo lịch sử nút bấm. OfficeComponentCheck fake title BCĐX đi cùng code BCĐX để tách mục tiêu hồi quy. Core mới 117 assertion, local tổng1806; Windows CI/commit ở PR36. Không có Windows package/Word runtime trong B02; hiện 2 bước trong chu kỳ 5–10, giữ version chuẩn bị .60. [Nhật ký](BATCH-AFTER-0.1.59.md).
+
 ## Chu kỳ mới sau 0.1.59 — 24/10/2026 (UTC+7)
 
 Theo yêu cầu mới, tích lũy khoảng **5–10 bước phát triển có kiểm thử** rồi mới tạo gói tải Windows. Mỗi bước vẫn ghi code, kết quả kiểm thử, giới hạn và việc tiếp theo vào [nhật ký đợt](BATCH-AFTER-0.1.59.md); không tính các thao tác commit/test/docs thành nhiều tính năng để đủ số. Đọc [quy trình phát hành](RELEASE-CADENCE.md) trước khi đóng gói.

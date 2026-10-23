@@ -5,6 +5,7 @@ namespace ChinhTa.Core;
 // Narrow text checks for the identified first-page State header. Never infer assigned identifiers/dates.
 public static class AdministrativeHeaderRules
 {
+    public const string TypeMismatchTitle="Tên loại không khớp ký hiệu";
     private const RegexOptions Options=RegexOptions.IgnoreCase|RegexOptions.CultureInvariant;
     private const RegexOptions Linear=Options|RegexOptions.NonBacktracking;
     private static readonly Regex NumberHint=new(@"^[ \t]*Số(?:[ \t]*:|[ \t]*(?=[0-9/._…]))",Options);
@@ -130,6 +131,19 @@ public static class AdministrativeHeaderRules
             Edit(p,false,baseIndex+code.Index+separator.Index,separator.Value,"-","Chuẩn hóa dấu nối trong ký hiệu",result);
         var firstSeparator=Hyphen.Match(code.Value);
         var type=firstSeparator.Success?DocumentTypeCatalog.FindAbbreviation(code.Value[..firstSeparator.Index]):null;
+        bool mismatch=false;
+        if(namedType is not null && type is {NamedHeading:true} && type!=namedType)
+        {
+            mismatch=true;
+            string actual=code.Value[..firstSeparator.Index];
+            result.Add(new(p.Start+baseIndex+code.Index,actual.Length,actual,actual,
+                "Tên loại “"+namedType.Heading+"” có viết tắt “"+namedType.Abbreviation+
+                "”, nhưng ký hiệu đang dùng “"+actual+"”. Đối chiếu tên loại và ký hiệu đã đăng ký; sửa bên ghi sai trong Word rồi quét lại.",
+                false,FixKind.AdministrativeNumber,CanFix:false,
+                Citation:DocumentTypeCatalog.WithSource("NĐ 30/2020/NĐ-CP, Phụ lục I, Phần I.II.3.b: ký hiệu gồm chữ viết tắt tên loại và cơ quan/chức danh ban hành; Phụ lục III, phần I quy định chữ viết tắt tên loại.",
+                    type.Source==DocumentTypeSource.UserSupplement || namedType.Source==DocumentTypeSource.UserSupplement),
+                Title:TypeMismatchTitle));
+        }
         if(type is not null && type==namedType)
             Edit(p,false,baseIndex+code.Index,code.Value[..firstSeparator.Index],type.Abbreviation,
                 "Sai hoa/thường viết tắt tên loại",result,
@@ -137,7 +151,7 @@ public static class AdministrativeHeaderRules
         // A catalog-shaped prefix may be an agency code in a Công văn. Without
         // the corresponding title, retain the old uppercase-code check only;
         // do not invent a type/casing warning for an otherwise uppercase code.
-        string lettersToCheck=type is not null && (type==namedType || code.Value[..firstSeparator.Index]==type.Abbreviation)
+        string lettersToCheck=type is not null && (mismatch || type==namedType || code.Value[..firstSeparator.Index]==type.Abbreviation)
             ?code.Value[(firstSeparator.Index+firstSeparator.Length)..]:code.Value;
         if(lettersToCheck.Any(char.IsLower))
             result.Add(Notice(p,false,"Ký hiệu có chữ thường; đối chiếu quy định chữ in hoa và mã viết tắt của cơ quan. Chưa tự đổi mã."));

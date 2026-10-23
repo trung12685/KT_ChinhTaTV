@@ -64,6 +64,8 @@ public static class IssueTooltipCatalog
             }
             if(issue.Kind==FixKind.AdministrativeNumber)
             {
+                if(issue.Title==AdministrativeHeaderRules.TypeMismatchTitle)
+                    return Decree+"mục II.3, điểm b và Phụ lục III.I: ký hiệu gồm viết tắt tên loại và cơ quan/chức danh ban hành.";
                 if(issue.Original!=issue.Replacement && DocumentTypeCatalog.FindAbbreviation(issue.Original)?.Abbreviation==issue.Replacement)
                     return DocumentTypeCatalog.FindAbbreviation(issue.Original)?.Source==DocumentTypeSource.UserSupplement
                         ?"Danh mục người dùng bổ sung: giữ cách viết chữ viết tắt đã thống nhất."
@@ -101,7 +103,9 @@ public static class IssueTooltipCatalog
     private static string Action(Issue issue)
     {
         if(!issue.CanFix)
-            return issue.Kind==FixKind.ShapeLine && issue.Message.Contains("Sửa nội dung/định dạng",StringComparison.Ordinal)
+            return issue.Kind==FixKind.AdministrativeNumber && issue.Title==AdministrativeHeaderRules.TypeMismatchTitle
+                ?"Đối chiếu tên loại và ký hiệu đã đăng ký; sửa bên ghi sai trong Word rồi quét lại."
+                :issue.Kind==FixKind.ShapeLine && issue.Message.Contains("Sửa nội dung/định dạng",StringComparison.Ordinal)
                 ?"Sửa chữ/phông trong vùng trước, rồi quét lại đường kẻ.":"Đối chiếu trong Chi tiết lỗi và chỉnh thủ công trong Word.";
         if(issue.LineFix is ShapeLineFix line)
             return (line.ShapeId is null?"Kẻ":"Đặt lại")+" đường ngang dài "+Number(line.Width)+" pt, căn theo dòng chữ; "+

@@ -61,3 +61,7 @@ Có thể xem trong **Trợ giúp → Danh mục tên loại văn bản…** ho�
 ## Bổ sung chưa phát hành — B01 sau .59
 
 C05 có thể đề xuất sửa **hoa/thường** phần viết tắt đã khớp danh mục trong dòng Số nhận diện chắc: `TTR-ABC → TTr-ABC`, `QYĐ-ABC → QyĐ-ABC`. Chỉ sửa prefix khi đối chiếu được một tên loại tương ứng duy nhất ở đầu văn bản, giữ số và mã cơ quan; không đổi BC thành KH theo tên loại, không suy đoán CV hoặc viết tắt thiếu dấu. BCĐX là bổ sung người dùng. Đây là code đang phát triển, chưa nằm trong ZIP .59. Xem [nhật ký](BATCH-AFTER-0.1.59.md).
+
+## B02 — Đối chiếu tên loại với viết tắt
+
+Khi tên loại duy nhất ở đầu và viết tắt đều đủ chứng cứ nhưng khác nhau, cảnh báo “Tên loại không khớp ký hiệu”. Ví dụ KẾ HOẠCH đi với `Số: 01/BC-ABC`; theo bảng KẾ HOẠCH là KH. Căn cứ NĐ30 PL I, phần I, II.3.b và PL III.I. Người dùng đối chiếu tên loại/ký hiệu đã đăng ký và sửa bên sai; ứng dụng chưa tự chọn bên để thay. BCĐX giữ nguồn bổ sung, bản sao/Công văn/unknown không bị suy diễn. [Điều kiện và ví dụ](BATCH-AFTER-0.1.59.md). Chưa nằm trong ZIP .59.
