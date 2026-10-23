@@ -23,7 +23,7 @@ public static class SentenceInnerSpaceChecks
             assert(!Checker.Check([new(0,sample.Item2)]).Any(i=>i.CanFix),"Rescan does not retain the repaired internal sentence issue");
         }
         foreach(string text in new[]{"Đã hoàn thành. Tiếp tục", "Đã hoàn thành .", "Đã hoàn thành . tiếp tục", "Đã hoàn thành . TIẾP tục",
-            "Đã hoàn thành . T tiếp tục", "Đã hoàn thành . ThS tiếp tục", "Đã hoàn thành .Tiếp tục", "Đã hoàn thành . 1 tiếp tục",
+            "Đã hoàn thành . T tiếp tục", "Đã hoàn thành . ThS tiếp tục", "Đã hoàn thành . 1 tiếp tục",
             "Nội dung ... Tiếp theo", "Nội dung . . Tiếp theo", "Nội dung ? ! Tiếp theo", "Nội dung !? Tiếp theo",
             "Nội dung … Tiếp theo", "Giá trị 1 . Tiếp theo", "Giá trị 1,25 . Tiếp theo", "Số thứ ii . Tiếp theo",
             "Nội dung TS . Tiếp theo", "Nội dung ThS . Tiếp theo", "Nội dung v.v . Tiếp theo", "Nội dung v.v. . Tiếp theo",

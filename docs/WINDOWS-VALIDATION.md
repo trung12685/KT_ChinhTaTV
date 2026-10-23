@@ -174,3 +174,7 @@ Bài Word tạo ba mẫu body-proof-plain/link/complex sau 45 đoạn đệm. �
 ## Bản thử 0.1.48 — dấu kết câu giữa đoạn
 
 Bài Kiểm tra Word tự động có thêm nguồn giả `sentence-inner-input.docx`: ba C18 và chín lỗi chữ độc lập. Sửa riêng phải giữ khoảng sau dấu và các lỗi chưa chọn; chữ `kế hoạch` đậm/gạch chân không đổi. Fault sau bốn writes phải phục hồi cả lượt, Changed=false và không có Undo mới. Nhóm mới quét hết đúng mục một lượt, một Undo trả cả nhóm; lưu/mở giữ chữ/kiểu/nguồn. Đối chiếu thêm số, `tp`, `Docx`, URL và ô số trống không nhận C18. Bài này cần Word thực tế; CI Windows chỉ kiểm Core/WPF/gói và biên dịch kịch bản, chưa xác nhận Office 2021. [Phạm vi .48](CHANGES-0.1.48.md).
+
+## Bản thử 0.1.49 — thiếu khoảng sau dấu kết câu
+
+Bài Word thêm nguồn giả `sentence-after-input.docx`: ba C19 + chín mục độc lập; một C18 nằm ngay sát C19 ở `hoàn thành  .Tiếp`. Chọn riêng C19 giữ C18 và các mục chưa chọn, kiểm `Tiếp` đậm/gạch chân ngay sau dấu và `thành` ngay trước gap cùng cụm `kế hoạch`. Lỗi sau bốn writes phục hồi chữ/kiểu/Changed và không thêm Undo. Sửa nhóm quét hết đúng mục một lần; một Undo, lưu/mở và hash nguồn giữ đúng. Thử riêng C18 cũng phải giữ C19 chưa chọn. Kiểm số/viết tắt/đuôi tệp/URL/tab/NBSP/chữ sau viết thường không nhận C19. CI kiểm Core/WPF/gói và biên dịch kịch bản; chưa xác nhận Word/Office 2021. [Phạm vi .49](CHANGES-0.1.49.md).
