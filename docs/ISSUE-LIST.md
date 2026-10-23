@@ -14,7 +14,7 @@ Phân loại thận trọng: geometry Line/căn giữa theo cấu hình người
 
 Các lỗi cùng loại nằm cạnh nhau; trong nhóm sắp theo vị trí. Checkbox từng dòng, đầu nhóm, đầu phần và **Tất cả** cùng cập nhật. Dấu gạch ngang trong checkbox nghĩa là mới chọn một phần; bấm để đổi trạng thái. Bấm mũi tên thu gọn/mở nhóm; thao tác Tất cả vẫn áp dụng các mục sửa được trong nhóm đang thu gọn.
 
-Chọn/rê chuột một dòng để đánh dấu vị trí không tự tích lỗi đó. **Sửa lỗi đang xem** dùng dòng đang chọn; **Sửa các lỗi đã tích** dùng các ô đã tích. Thứ tự/giao dịch ghi vẫn do engine cũ kiểm: chữ/phông → căn giữa số/ngày → đường kẻ. Chọn lẫn các giai đoạn vẫn cần tách lượt; Sửa tất cả giữ cách xử lý nhóm đầu như trước.
+Chọn/rê chuột một dòng để đánh dấu vị trí không tự tích lỗi đó. **Sửa lỗi đang xem** dùng dòng đang chọn; **Sửa các lỗi đã tích** dùng các ô đã tích. Từ .53 có thể chọn nhiều nhóm khác nhau cùng lúc. Chương trình tự chạy chữ/phông → đo lại → căn giữa số/ngày → đo lại → đường kẻ, theo đúng mục đã chọn. **Sửa tất cả** dùng các gợi ý sửa được đang có trong danh sách; mục thủ công hoặc mới phát hiện sau đó không tự được thêm vào lượt. Một Undo bỏ cả lượt; bước sau lỗi thì phục hồi tất cả. Xem [sửa nhiều nhóm](MULTI-GROUP-REPAIR.md).
 
 Sau sửa/Undo/quét lại, danh sách được dựng từ kết quả mới và bỏ ô tích/chi tiết cũ. Nếu quét lỗi, danh sách cũ bị xóa để tránh sửa lại theo vị trí cũ. Không tự ẩn cảnh báo chỉ vì đã bấm sửa.
 

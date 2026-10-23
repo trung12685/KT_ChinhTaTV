@@ -1,7 +1,7 @@
 name: Windows package
 on:
   push:
-    branches: [feature/concise-issue-tooltips-0.1.52]
+    branches: [feature/staged-multi-group-0.1.53]
 permissions:
   contents: write
 jobs:
@@ -43,28 +43,29 @@ jobs:
         shell: pwsh
         run: |
           Copy-Item samples artifacts/win-x64/samples -Recurse -Force
-          Copy-Item docs/CHANGES-0.1.52.md artifacts/win-x64/
+          Copy-Item docs/CHANGES-0.1.53.md artifacts/win-x64/
           Copy-Item docs/REPORT-EXPORT.md artifacts/win-x64/
           Copy-Item docs/ISSUE-LIST.md artifacts/win-x64/
           Copy-Item docs/OUTLINE-CONTEXT.md artifacts/win-x64/
-          Copy-Item docs/SUPPORTED-FIXES-0.1.52.md artifacts/win-x64/
+          Copy-Item docs/MULTI-GROUP-REPAIR.md artifacts/win-x64/
+          Copy-Item docs/SUPPORTED-FIXES-0.1.53.md artifacts/win-x64/
           Copy-Item artifacts/build-checks.json artifacts/win-x64/
       - name: Verify packaged report metadata
         run: dotnet run --project tests/ChinhTa.DesktopChecks -c Release -- --verify-report-package artifacts/win-x64
       - name: Archive and hash
         shell: pwsh
         run: |
-          Copy-Item artifacts/ChinhTaViet-0.1.52-tien-do.txt artifacts/win-x64/
-          Compress-Archive artifacts/win-x64/* artifacts/ChinhTaViet-0.1.52-win-x64.zip
-          Get-FileHash artifacts/ChinhTaViet-0.1.52-win-x64.zip -Algorithm SHA256 | Format-List | Out-File artifacts/SHA256.txt
+          Copy-Item artifacts/ChinhTaViet-0.1.53-tien-do.txt artifacts/win-x64/
+          Compress-Archive artifacts/win-x64/* artifacts/ChinhTaViet-0.1.53-win-x64.zip
+          Get-FileHash artifacts/ChinhTaViet-0.1.53-win-x64.zip -Algorithm SHA256 | Format-List | Out-File artifacts/SHA256.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: ChinhTaViet-0.1.52-win-x64
+          name: ChinhTaViet-0.1.53-win-x64
           path: |
             artifacts/*.zip
             artifacts/SHA256.txt
             artifacts/build-checks.json
-            artifacts/ChinhTaViet-0.1.52-tien-do.txt
+            artifacts/ChinhTaViet-0.1.53-tien-do.txt
             artifacts/issue-list-preview.png
             artifacts/issue-tooltip-preview.png
       - name: Publish prerelease
@@ -72,4 +73,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         shell: pwsh
         run: |
-          gh release create v0.1.52 artifacts/ChinhTaViet-0.1.52-win-x64.zip artifacts/SHA256.txt artifacts/build-checks.json artifacts/ChinhTaViet-0.1.52-tien-do.txt artifacts/issue-list-preview.png artifacts/issue-tooltip-preview.png --target $env:GITHUB_SHA --prerelease --title '0.1.52 — Tooltip ngắn, căn cứ và cách xử lý — bản thử' --notes-file docs/CHANGES-0.1.52.md
+          gh release create v0.1.53 artifacts/ChinhTaViet-0.1.53-win-x64.zip artifacts/SHA256.txt artifacts/build-checks.json artifacts/ChinhTaViet-0.1.53-tien-do.txt artifacts/issue-list-preview.png artifacts/issue-tooltip-preview.png --target $env:GITHUB_SHA --prerelease --title '0.1.53 — Sửa nhiều nhóm, đo lại và một Undo — bản thử' --notes-file docs/CHANGES-0.1.53.md

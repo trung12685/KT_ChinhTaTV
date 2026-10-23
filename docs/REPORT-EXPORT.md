@@ -43,3 +43,5 @@ Từ .50, danh sách lỗi của tài liệu được thu gọn và chia ba ph�
 Từ .51 có C20 thứ tự mục gõ tay và C21 dấu đầu dòng đơn theo mục cha, tổng21 đề xuất/8 thủ công/1 minh họa. Ví dụ C20/C21 có nhiều dòng tương ứng các đoạn riêng; không ghép thành một đoạn để thử. Báo cáo ghi giới hạn danh sách tự động/cấp/dẫn chiếu/tab và mốc .51. Các hướng P01–P05 vẫn là việc dự kiến, không coi ngữ cảnh cấu trúc là thư viện ngữ nghĩa đầy đủ. [Cách thử](OUTLINE-CONTEXT.md).
 
 Từ .52, lịch sử có mốc tooltip ngắn ba phần và căn cứ có nội dung; giữ 21/8/1 cùng ví dụ C01–C21. Đây là cập nhật trình bày, không phải loại lỗi mới.
+
+Từ .53, báo cáo ghi mốc sửa nhiều nhóm có đo lại, một Undo/rollback cả lượt; giữ 21/8/1 và ví dụ. Không dùng số loại lỗi làm số lỗi đã sửa trong tài liệu.

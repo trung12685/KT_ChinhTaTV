@@ -488,7 +488,7 @@ public sealed partial class WordSession : IDisposable
         finally { if (File.Exists(candidate)) File.Delete(candidate); }
     }
     public void Fix(Issue issue) => FixMany([issue]);
-    public void FixMany(IEnumerable<Issue> issues) => FixManyCore(issues,true);
+    public void FixMany(IEnumerable<Issue> issues) { FixSelection(issues); }
     internal void FixLineProbe(IEnumerable<Issue> issues) => FixManyCore(issues,false);
     private string ReadIssueText(Issue issue)
     {

@@ -142,7 +142,8 @@ public static class DevelopmentReport
         new("0.1.49","Thêm gợi ý thiếu khoảng sau dấu kết câu giữa đoạn; chọn riêng trước/sau hoặc sửa hai phía một lượt, giữ chữ/kiểu, kiểm giao dịch và ví dụ C19."),
         new("0.1.50","Thu gọn danh sách lỗi một dòng, gom nhóm có checkbox từng mục/nhóm/tất cả, chia thể thức cần sửa/gợi ý cần duyệt/cảnh báo thủ công; chi tiết ở tooltip và khung mở rộng."),
         new("0.1.51","Thêm ngữ cảnh cấu trúc cho thứ tự mục gõ tay và dấu đầu dòng đơn trong từng mục cha; bằng chứng XML, sửa nhóm/rollback và ví dụ C20/C21."),
-        new("0.1.52","Rút tooltip còn Lỗi — Căn cứ — Cách xử lý; nêu đúng vị trí và nội dung quy định, phân biệt cấu hình người dùng; giữ số đo/ngữ cảnh đầy đủ trong Chi tiết lỗi.")
+        new("0.1.52","Rút tooltip còn Lỗi — Căn cứ — Cách xử lý; nêu đúng vị trí và nội dung quy định, phân biệt cấu hình người dùng; giữ số đo/ngữ cảnh đầy đủ trong Chi tiết lỗi."),
+        new("0.1.53","Chọn nhiều nhóm một lượt: sửa chữ/phông, đo lại, căn giữa và Line theo đúng mục đã chọn; một Undo, hậu kiểm nét/phông/vị trí và rollback toàn bộ nếu bước sau lỗi.")
     });
     public static IReadOnlyList<string> NextSteps { get; }=Array.AsReadOnly(new[]
     {
@@ -206,7 +207,7 @@ public static class DevelopmentReport
             Line("  Chuẩn bị/nghiên cứu: "+item.Example.Outcome);
         }
         Line();Line("CÁCH KIỂM TRA TỔNG THỂ");
-        Line("Với từng nhóm: sửa riêng → sửa nhóm → quét lại → một Undo → lưu bản sao/mở lại. Chữ/phông trước, căn giữa sau, Line cuối cùng theo số đo mới. Ghi phiên bản, tên cảnh báo, thao tác và kết quả thực tế khi báo lỗi.");
+        Line("Với từng nhóm: sửa riêng → sửa nhóm → quét lại → một Undo → lưu bản sao/mở lại. Từ .53 có thể chọn nhiều nhóm cùng lúc: chương trình tự sửa chữ/phông, đo lại, căn giữa và Line theo mục đã chọn; một Undo bỏ cả lượt. Mục chỉ cảnh báo vẫn giữ thủ công. Ghi phiên bản, tên cảnh báo, thao tác và kết quả thực tế khi báo lỗi.");
         return text.ToString();
     }
 }
