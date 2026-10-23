@@ -15,3 +15,17 @@ Từ .42 danh mục có 14 nhóm đề xuất sửa (thêm C14 về khoảng tr�
 Từ .43 có 15 nhóm đề xuất sửa (thêm C15 về khoảng trắng sát trong ngoặc tròn), 8 nhóm thủ công và 1 minh họa. Ô ngoặc chỉ chứa dấu cách được giữ cả khi sửa tất cả; dấu câu chưa chọn vẫn được quét sau sửa mép ngoặc. Mỗi nhóm vẫn có điều kiện, chưa phải kiểm đầy đủ chính tả/dấu câu.
 
 Từ .44 có 16 nhóm đề xuất sửa (C16: dấu cách trước dấu .?! cuối đoạn có điều kiện), 8 nhóm thủ công và 1 minh họa. Không coi danh mục là đã kiểm toàn bộ chính tả/dấu câu; kết quả thực tế vẫn cần kiểm trên Word.
+
+## Ví dụ lỗi từ .45
+
+Mỗi mục C01–C16, M01–M08 và D01 có **Ví dụ** và kết quả/hướng xử lý. Báo cáo giữ khoảng trắng thật, ví dụ:
+
+```text
+C01 — Khoảng trắng thừa
+  Ví dụ: “hôm       nay là thứ 2”
+  Kết quả minh họa khi duyệt sửa: hôm nay là thứ 2
+```
+
+Phân biệt ba trạng thái phát triển: đã hỗ trợ đề xuất sửa (cần duyệt/đủ điều kiện); chưa tự sửa (chỉ cảnh báo và hướng thủ công); dự kiến (P01–P05 có ví dụ, chưa triển khai sửa tự động). D01 là minh họa riêng. Các hướng dự kiến gồm vị trí dọc số/ngày, thể thức vùng còn thiếu, dấu giữa câu, dữ liệu chính tả và ngữ cảnh sau cùng; không cộng vào 16 nhóm có thể đề xuất sửa.
+
+Ví dụ phông/vị trí nêu cả kiểu hoặc số đo. [TAB] chỉ là ký hiệu tab. Các ví dụ là mẫu giả để thử, không lấy từ tài liệu đang mở và không có nghĩa chương trình đã sửa các lỗi đó trong tài liệu của bạn. Cửa sổ và TXT dùng cùng nội dung; số kiểm thử vẫn lấy từ dữ liệu đúng gói, không suy từ ví dụ. Các mục mới sau này cần có ví dụ/hướng xử lý tương ứng.

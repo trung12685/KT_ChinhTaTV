@@ -152,3 +152,9 @@ Thử riêng `( công,tác )`: sửa hai mép ngoặc, dấu phẩy chưa chọn
 Bài Word thêm `sentence-end-input.docx` và bản lưu `sentence-end-fixed.docx`: ba dấu .?! cuối đoạn, năm lỗi chữ/ngoặc độc lập, các dòng ngoại lệ. Sửa riêng một C16 giữ lỗi khác và kiểu phần chữ; lỗi cố ý sau C16 đầu trong nhóm phải rollback toàn chữ/kiểu, không tạo Undo. Sửa cả nhóm một lượt, quét hết đúng mục, một Undo trả toàn nhóm, lưu/mở giữ chữ/kiểu/hash nguồn. Các dòng số, TS, địa chỉ và dấu lửng giữ nguyên.
 
 Thử Unicode tổ hợp/surrogate trước lỗi, khoảng trắng cuối và dấu đoạn/ô; C16 chỉ xóa ASCII space trước dấu, không ghi lại từ/dấu câu. Kiểm ngoại lệ tab/NBSP, dấu giữa câu/chuỗi dấu/header/ngày. Báo cáo có C16/mốc .44 và dữ liệu kiểm đúng gói. Chưa coi CI là xác nhận Word/Office 2021.
+
+## Bổ sung .45 — báo cáo có ví dụ (chưa xác nhận runtime Office)
+
+Mở Trợ giúp → Tiến độ và chức năng… khi chưa mở Word: kiểm đủ ví dụ C01–C16/M01–M08/D01 và P01–P05 dự kiến, có kết quả/hướng xử lý và trạng thái chưa triển khai. C01 phải giữ 7 dấu cách giữa hôm/nay trong ví dụ trước sửa. Phần số/kiểu/vị trí phải giữ các điều kiện; trạng thái là tiến độ, không phải lịch sử sửa tài liệu.
+
+Xuất TXT rồi đọc lại: nguyên dấu cách, tiếng Việt và các ví dụ/phần dự kiến; dữ liệu kiểm thử phải đúng .45 hoặc ghi rõ thiếu nếu không có manifest phù hợp. Giữ nguyên lựa chọn/tài liệu/Changed/Undo, kiểm lưu đích lỗi/khóa như .41. Bài Word đã có kiểm xuất báo cáo khi có thay đổi; chưa xác nhận runtime toàn bộ trên Office 2021 cho .45.

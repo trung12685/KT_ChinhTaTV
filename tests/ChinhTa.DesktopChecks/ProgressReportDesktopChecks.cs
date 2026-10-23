@@ -15,8 +15,8 @@ public static class ProgressReportDesktopChecks
         try
         {
             var body=(TextBox)window.FindName("ReportBody");var summary=(TextBlock)window.FindName("Summary");
-            assert(body.IsReadOnly && body.Text.Contains("C13 —") && body.Text.Contains("CÁC BƯỚC TIẾP THEO") && exports==0,
-                "The report window opens read-only with catalog and next steps, without exporting or contacting Word");
+            assert(body.IsReadOnly && body.Text.Contains("C13 —") && body.Text.Contains("CÁC BƯỚC TIẾP THEO") && body.Text.Contains("hôm       nay là thứ 2") && body.Text.Contains("P05 —") && exports==0,
+                "The report window opens read-only with catalog, examples and next steps, without exporting or contacting Word");
             assert(summary.Text.Contains(DevelopmentReport.Count(CapabilityMode.Reviewable)+" nhóm có đề xuất sửa") &&
                 summary.Text.Contains(DevelopmentReport.Count(CapabilityMode.Manual)+" nhóm cảnh báo") &&
                 ((Button)window.FindName("ExportButton")).IsEnabled,
@@ -27,7 +27,7 @@ public static class ProgressReportDesktopChecks
         try
         {
             using var session=new WordSession();
-            string text=DevelopmentReport.Build("0.1.44",new DateTimeOffset(2026,10,23,10,0,0,TimeSpan.FromHours(7)));
+            string text=DevelopmentReport.Build("0.1.45",new DateTimeOffset(2026,10,23,10,0,0,TimeSpan.FromHours(7)));
             string saved=Path.Combine(folder,"báo-cáo.txt");session.SaveProgressReport(saved,text);
             byte[] bytes=File.ReadAllBytes(saved);
             assert(File.ReadAllText(saved)==text && bytes.Take(3).SequenceEqual(new byte[]{0xef,0xbb,0xbf}) &&

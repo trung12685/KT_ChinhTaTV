@@ -5,7 +5,9 @@ using System.Text.RegularExpressions;
 namespace ChinhTa.Core;
 
 public enum CapabilityMode { Reviewable,Manual,Demonstration }
-public sealed record ReportCapability(string Id,string Name,CapabilityMode Mode,string Scope,string Detail);
+public sealed record ReportExample(string Before,string Outcome);
+public sealed record ReportCapability(string Id,string Name,CapabilityMode Mode,string Scope,string Detail,ReportExample Example);
+public sealed record ReportPlannedWork(string Id,string Name,ReportExample Example);
 public sealed record ReportMilestone(string Version,string Detail);
 public sealed record ReportEvidence(string Version,int CoreChecks,int WpfChecks,string Commit,string RunUrl)
 {
@@ -30,55 +32,80 @@ public static class DevelopmentReport
     public static IReadOnlyList<ReportCapability> Capabilities { get; }=Array.AsReadOnly(new ReportCapability[]
     {
         new("C01","Khoảng trắng thừa",CapabilityMode.Reviewable,"Cả ba chế độ",
-            "Gộp dấu cách thường liên tiếp giữa chữ; giữ ô số/ngày trống theo mẫu nhận diện và ngoặc tròn chỉ chứa dấu cách. Không tự xóa tab hoặc thụt đầu dòng."),
+            "Gộp dấu cách thường liên tiếp giữa chữ; giữ ô số/ngày trống theo mẫu nhận diện và ngoặc tròn chỉ chứa dấu cách. Không tự xóa tab hoặc thụt đầu dòng.",
+            new ReportExample("hôm       nay là thứ 2","hôm nay là thứ 2")),
         new("C02","Quốc hiệu",CapabilityMode.Reviewable,"Nhà nước, trang đầu",
-            "Chuẩn hóa chữ/khoảng trắng của dòng nhận diện; Times New Roman, đen, đậm, đứng, cỡ 12–13. Không tự thêm dòng bị thiếu hoặc đoán dòng sai chữ chưa nhận ra."),
+            "Chuẩn hóa chữ/khoảng trắng của dòng nhận diện; Times New Roman, đen, đậm, đứng, cỡ 12–13. Không tự thêm dòng bị thiếu hoặc đoán dòng sai chữ chưa nhận ra.",
+            new ReportExample("cộng hòa xã hội chủ nghĩa việt nam","CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM; phông Times New Roman, đen, đậm, đứng, cỡ 12–13 theo điều kiện nhận diện.")),
         new("C03","Tiêu ngữ",CapabilityMode.Reviewable,"Nhà nước, trang đầu",
-            "Chuẩn hóa dòng nhận diện; Times New Roman, đen, đậm, đứng, cỡ 13–14. Đường kẻ được kiểm riêng."),
+            "Chuẩn hóa dòng nhận diện; Times New Roman, đen, đậm, đứng, cỡ 13–14. Đường kẻ được kiểm riêng.",
+            new ReportExample("độc lập - tự do - hạnh phúc","Độc lập - Tự do - Hạnh phúc; phông Times New Roman, đen, đậm, đứng, cỡ 13–14 theo điều kiện nhận diện.")),
         new("C04","Tiêu đề Đảng",CapabilityMode.Reviewable,"Đảng, trang đầu",
-            "Chuẩn hóa dòng ĐẢNG CỘNG SẢN VIỆT NAM đã nhận diện và phông đen, đậm, đứng, cỡ 15. Chưa tự đặt vị trí toàn trang."),
+            "Chuẩn hóa dòng ĐẢNG CỘNG SẢN VIỆT NAM đã nhận diện và phông đen, đậm, đứng, cỡ 15. Chưa tự đặt vị trí toàn trang.",
+            new ReportExample("đảng cộng sản việt nam","ĐẢNG CỘNG SẢN VIỆT NAM; phông Times New Roman, đen, đậm, đứng, cỡ 15 trong chế độ Đảng.")),
         new("C05","Cách ghi số/ký hiệu",CapabilityMode.Reviewable,"Đầu văn bản Nhà nước nhận diện được",
-            "Nhãn Số:, dấu /, dấu nối, khoảng trắng; thêm 0 cho số 1–9. Không tự cấp số, đoán mã hoặc đổi tên/mã chính thức."),
+            "Nhãn Số:, dấu /, dấu nối, khoảng trắng; thêm 0 cho số 1–9. Không tự cấp số, đoán mã hoặc đổi tên/mã chính thức.",
+            new ReportExample("số  :  3 / BC – ABC","Số: 03/BC-ABC")),
         new("C06","Cách ghi địa danh/ngày tháng",CapabilityMode.Reviewable,"Đầu Nhà nước, mẫu rõ và ngày lịch hợp lệ",
-            "Dấu phẩy, nhãn ngày/tháng/năm và khoảng trắng; thêm 0 trước ngày 1–9, tháng 1–2. Giữ trường chưa điền, không chọn ngày hay địa danh thay người dùng."),
+            "Dấu phẩy, nhãn ngày/tháng/năm và khoảng trắng; thêm 0 trước ngày 1–9, tháng 1–2. Giữ trường chưa điền, không chọn ngày hay địa danh thay người dùng.",
+            new ReportExample("Hà Nội  Ngày3  Tháng1  Năm2026","Hà Nội, ngày 03 tháng 01 năm 2026")),
         new("C07","Phông dòng số/ký hiệu",CapabilityMode.Reviewable,"Dòng được nhận diện và đủ bằng chứng chữ thuần",
-            "Times New Roman, đen, cỡ 13, đứng; giữ chữ, ô trống, đậm/gạch chân và căn đoạn."),
+            "Times New Roman, đen, cỡ 13, đứng; giữ chữ, ô trống, đậm/gạch chân và căn đoạn.",
+            new ReportExample("Dòng Số: 01/BC-ABC dùng Arial, đỏ, nghiêng, cỡ 12.","Giữ nguyên chữ; đề xuất Times New Roman, đen, đứng, cỡ 13 khi dòng đủ điều kiện sửa phông.")),
         new("C08","Phông địa danh/ngày tháng",CapabilityMode.Reviewable,"Dòng được nhận diện và định dạng đủ rõ",
-            "Times New Roman, đen, nghiêng, cỡ 13–14; giữ cỡ hợp lệ, đậm/gạch chân và chữ. Căn giữa là chức năng riêng."),
+            "Times New Roman, đen, nghiêng, cỡ 13–14; giữ cỡ hợp lệ, đậm/gạch chân và chữ. Căn giữa là chức năng riêng.",
+            new ReportExample("Dòng Hà Nội, ngày 03 tháng 3 năm 2026 dùng Arial, đỏ, đứng, cỡ 12.","Giữ nguyên chữ; đề xuất Times New Roman, đen, nghiêng, cỡ 13; nếu cỡ 13–14 đã hợp lệ thì giữ cỡ.")),
         new("C09","Phông tên loại văn bản",CapabilityMode.Reviewable,"Đầu Nhà nước, khối tên loại/trích yếu chắc chắn",
-            "Times New Roman, đen, đứng, đậm, cỡ 13–14. Hiện dùng 13 tên loại; chưa áp cho Công văn/V/v. Không tự đổi nội dung sang chữ hoa."),
+            "Times New Roman, đen, đứng, đậm, cỡ 13–14. Hiện dùng 13 tên loại; chưa áp cho Công văn/V/v. Không tự đổi nội dung sang chữ hoa.",
+            new ReportExample("Tên loại BÁO CÁO dùng Arial, đỏ, nghiêng, cỡ 12.","Giữ nguyên chữ; đề xuất Times New Roman, đen, đứng, đậm, cỡ 13 khi khối tên loại được nhận diện chắc chắn.")),
         new("C10","Phông trích yếu",CapabilityMode.Reviewable,"Khối 1–4 đoạn dưới tên loại, có ranh giới rõ",
-            "Times New Roman, đen, đứng, đậm, cỡ 13–14; giữ nguyên văn, cỡ hợp lệ, gạch chân/căn đoạn. Chưa tự viết thường trích yếu toàn chữ hoa."),
+            "Times New Roman, đen, đứng, đậm, cỡ 13–14; giữ nguyên văn, cỡ hợp lệ, gạch chân/căn đoạn. Chưa tự viết thường trích yếu toàn chữ hoa.",
+            new ReportExample("Trích yếu Tình hình công tác dùng Arial, đỏ, nghiêng, cỡ 12.","Giữ nguyên chữ; đề xuất Times New Roman, đen, đứng, đậm, cỡ 13 khi trích yếu được nhận diện chắc chắn.")),
         new("C11","Căn giữa số/ngày",CapabilityMode.Reviewable,"Mốc chữ và cùng khung ô được xác minh trên XPS",
-            "Căn giữa và bỏ ba thụt lề ngang; giữ chữ/khoảng cách dọc. Chưa tự làm hai dòng cùng hàng hoặc dịch vị trí tuyệt đối."),
+            "Căn giữa và bỏ ba thụt lề ngang; giữ chữ/khoảng cách dọc. Chưa tự làm hai dòng cùng hàng hoặc dịch vị trí tuyệt đối.",
+            new ReportExample("Dòng Số: 01/BC-ABC có tâm chữ lệch tâm ô 10 pt.","Nếu ô/mốc đo được và đủ điều kiện: căn giữa trong ô, bỏ thụt lề ngang; giữ chữ và vị trí dọc, kiểm lại trên XPS.")),
         new("C12","Ba đường kẻ Nhà nước",CapabilityMode.Reviewable,"Cơ quan, tiêu ngữ, trích yếu nhận diện và đo được",
-            "Tạo Line thiếu hoặc đặt lại Line của ứng dụng. Đường cơ quan/trích yếu chấp nhận 1/3–1/2 dòng tham chiếu, tự tạo 3/7; tiêu ngữ theo bề rộng chữ. Kiểm nét XPS thật, không chỉ đếm Shape."),
+            "Tạo Line thiếu hoặc đặt lại Line của ứng dụng. Đường cơ quan/trích yếu chấp nhận 1/3–1/2 dòng tham chiếu, tự tạo 3/7; tiêu ngữ theo bề rộng chữ. Kiểm nét XPS thật, không chỉ đếm Shape.",
+            new ReportExample("Dòng cơ quan rộng 210 pt nhưng đường kẻ chỉ dài 50 pt.","Độ dài hợp lệ 70–105 pt; nếu tự sửa, đích 90 pt (3/7), căn giữa và kiểm vị trí nét thật trên XPS.")),
         new("C13","Từ/cụm từ lặp liên tiếp",CapabilityMode.Reviewable,"Cùng đoạn, dấu cách thường, đúng chữ hoa/thường",
-            "Cụm 2–8 tiếng: đề xuất xóa bản lặp, giữ lần đầu sau khi duyệt. Một tiếng như đều đều/nhà nhà, toàn chữ hoa hoặc dòng số/ngày giữ thủ công. Chưa suy nghĩa câu."),
+            "Cụm 2–8 tiếng: đề xuất xóa bản lặp, giữ lần đầu sau khi duyệt. Một tiếng như đều đều/nhà nhà, toàn chữ hoa hoặc dòng số/ngày giữ thủ công. Chưa suy nghĩa câu.",
+            new ReportExample("Nội dung kế hoạch kế hoạch đã duyệt.","Nội dung kế hoạch đã duyệt.")),
         new("C14","Khoảng trắng quanh dấu phẩy/chấm phẩy",CapabilityMode.Reviewable,"Giữa hai từ có ít nhất hai chữ cái, dấu cách thường",
-            "Đề xuất bỏ khoảng trắng trước và giữ một khoảng trắng sau dấu phẩy/chấm phẩy. Cần duyệt; bỏ qua dòng số/ngày, tab và dấu hiệu địa chỉ/đường dẫn/mã. Chưa mở rộng sang mọi dấu câu."),
+            "Đề xuất bỏ khoảng trắng trước và giữ một khoảng trắng sau dấu phẩy/chấm phẩy. Cần duyệt; bỏ qua dòng số/ngày, tab và dấu hiệu địa chỉ/đường dẫn/mã. Chưa mở rộng sang mọi dấu câu.",
+            new ReportExample("Nội dung  ,  báo cáo;công tác.","Nội dung, báo cáo; công tác.")),
         new("C15","Khoảng trắng sát bên trong ngoặc tròn",CapabilityMode.Reviewable,"Ngoặc cân bằng, không lồng, phần chữ đơn giản trong cùng đoạn",
-            "Đề xuất xóa dấu cách thường ngay sau ( và trước ), giữ chữ/kiểu và khoảng cách ngoài. Bỏ qua ô trống, nội dung có số/ký hiệu kỹ thuật, toàn chữ hoa, tab, ngoặc lồng/thiếu và vùng chưa cho phép sửa. Cần duyệt, chưa kiểm mọi loại ngoặc/nháy."),
+            "Đề xuất xóa dấu cách thường ngay sau ( và trước ), giữ chữ/kiểu và khoảng cách ngoài. Bỏ qua ô trống, nội dung có số/ký hiệu kỹ thuật, toàn chữ hoa, tab, ngoặc lồng/thiếu và vùng chưa cho phép sửa. Cần duyệt, chưa kiểm mọi loại ngoặc/nháy.",
+            new ReportExample("Theo mẫu ( nội dung ) đã duyệt.","Theo mẫu (nội dung) đã duyệt.")),
         new("C16","Khoảng trắng trước dấu kết câu cuối đoạn",CapabilityMode.Reviewable,"Một dấu .?! cuối đoạn, từ cuối ≥2 chữ cái thường và có từ trước",
-            "Đề xuất xóa dấu cách ASCII trước dấu kết câu; giữ chữ, dấu câu, khoảng trắng sau. Bỏ qua số/ký hiệu, dấu hiệu kỹ thuật/header/ngày, chuỗi dấu và ranh giới chưa rõ. Cần duyệt; chưa kiểm dấu giữa câu hoặc tự thêm dấu/khoảng sau."),
+            "Đề xuất xóa dấu cách ASCII trước dấu kết câu; giữ chữ, dấu câu, khoảng trắng sau. Bỏ qua số/ký hiệu, dấu hiệu kỹ thuật/header/ngày, chuỗi dấu và ranh giới chưa rõ. Cần duyệt; chưa kiểm dấu giữa câu hoặc tự thêm dấu/khoảng sau.",
+            new ReportExample("Đã hoàn thành .","Đã hoàn thành.")),
         new("M01","Khổ giấy và lề",CapabilityMode.Manual,"Nhà nước/Đảng",
-            "Cảnh báo A4/lề, trang ngang/lề đối xứng và ngoại lệ; chưa tự đổi thiết lập trang."),
+            "Cảnh báo A4/lề, trang ngang/lề đối xứng và ngoại lệ; chưa tự đổi thiết lập trang.",
+            new ReportExample("Văn bản Nhà nước trên A4 có lề trái 20 mm.","Cảnh báo đối chiếu quy định và ngoại lệ; chưa tự đổi khổ giấy/lề.")),
         new("M02","Khác hàng hoặc vị trí dọc số/ngày",CapabilityMode.Manual,"Khi đo được mốc XPS",
-            "Chưa tự dịch theo chiều dọc hoặc làm số và ngày cùng hàng."),
+            "Chưa tự dịch theo chiều dọc hoặc làm số và ngày cùng hàng.",
+            new ReportExample("Dòng Số: 01/BC-ABC cao hơn dòng địa danh/ngày 12 pt.","Cảnh báo khi đo được mốc; chưa tự dịch dọc để làm hai dòng cùng hàng.")),
         new("M03","Cách viết hoa tên loại/trích yếu",CapabilityMode.Manual,"Khối đã nhận diện",
-            "Tên loại chưa viết hoa/trích yếu toàn chữ hoa cần duyệt. Phần phông có thể có gợi ý riêng đủ điều kiện."),
+            "Tên loại chưa viết hoa/trích yếu toàn chữ hoa cần duyệt. Phần phông có thể có gợi ý riêng đủ điều kiện.",
+            new ReportExample("Tên loại viết báo cáo thay vì BÁO CÁO.","Cảnh báo tên loại chưa viết hoa; chưa tự đổi nội dung chữ. Gợi ý phông có thể được đưa riêng nếu đủ điều kiện.")),
         new("M04","Giá trị số/ngày và mã/tên chính thức",CapabilityMode.Manual,"Đầu văn bản",
-            "Số bằng 0, ngày sai lịch, năm chưa rõ, mẫu/trùng mốc, mã cơ quan hoặc địa danh cần đối chiếu; không tự đoán giá trị mới."),
+            "Số bằng 0, ngày sai lịch, năm chưa rõ, mẫu/trùng mốc, mã cơ quan hoặc địa danh cần đối chiếu; không tự đoán giá trị mới.",
+            new ReportExample("Hà Nội, ngày 31 tháng 02 năm 2026","Ngày không hợp lệ; yêu cầu đối chiếu, không tự đoán ngày thay thế.")),
         new("M05","Thống nhất cỡ quốc hiệu/tiêu ngữ",CapabilityMode.Manual,"Nhà nước",
-            "Cảnh báo cặp cỡ minh họa chưa thống nhất; chưa tự chọn cặp mới cho mọi tài liệu."),
+            "Cảnh báo cặp cỡ minh họa chưa thống nhất; chưa tự chọn cặp mới cho mọi tài liệu.",
+            new ReportExample("Quốc hiệu cỡ 12 nhưng tiêu ngữ cỡ 14.","Cảnh báo đối chiếu cặp cỡ theo chú thích mẫu; chưa tự ép chọn một cặp mới.")),
         new("M06","Tab và bố cục đầu đoạn",CapabilityMode.Manual,"Cảnh báo riêng trong chế độ cá nhân",
-            "Tab liên tiếp, tab/khoảng trắng đầu đoạn căn giữa; không tự xóa tab hoặc thụt lề."),
+            "Tab liên tiếp, tab/khoảng trắng đầu đoạn căn giữa; không tự xóa tab hoặc thụt lề.",
+            new ReportExample("[TAB][TAB]Nội dung","Trong chế độ cá nhân: cảnh báo tab liên tiếp; không tự xóa vì có thể dùng để dàn bố cục.")),
         new("M07","Vùng cấu trúc hoặc kiểu chưa rõ",CapabilityMode.Manual,"Trong phạm vi đã đối chiếu",
-            "Field/control/liên kết/đối tượng hoặc kiểu trộn có thể giữ thủ công. Bảo vệ XML sâu hiện chỉ 40 đoạn đầu Nhà nước, chưa phủ mọi trang/profile."),
+            "Field/control/liên kết/đối tượng hoặc kiểu trộn có thể giữ thủ công. Bảo vệ XML sâu hiện chỉ 40 đoạn đầu Nhà nước, chưa phủ mọi trang/profile.",
+            new ReportExample("Nội dung  báo cáo nằm trong field/control/liên kết chưa được phép sửa chữ.","Giữ thủ công để bảo vệ cấu trúc; không chuyển thành sửa được chỉ vì thấy khoảng trắng thừa.")),
         new("M08","Nét/Shape chưa ghép chắc chắn",CapabilityMode.Manual,"Đường kẻ",
-            "Line không có dấu của ứng dụng, nhóm Shape, border, nét chồng hoặc thiếu mốc/số đo; không tạo thêm để làm mất cảnh báo."),
+            "Line không có dấu của ứng dụng, nhóm Shape, border, nét chồng hoặc thiếu mốc/số đo; không tạo thêm để làm mất cảnh báo.",
+            new ReportExample("Đã có Line dưới cơ quan nhưng Line không mang dấu nhận diện của ứng dụng.","Giữ cảnh báo thủ công nếu không ghép chắc chắn; không tạo thêm Line chồng để làm mất cảnh báo.")),
         new("D01","con đo → con đò",CapabilityMode.Demonstration,"Quy tắc minh họa cũ",
-            "Có thể cảnh báo nhầm, phải đọc ngữ cảnh. Chưa phải bộ kiểm chính tả tiếng Việt đầy đủ; chưa mở rộng suy đoán ngữ cảnh.")
+            "Có thể cảnh báo nhầm, phải đọc ngữ cảnh. Chưa phải bộ kiểm chính tả tiếng Việt đầy đủ; chưa mở rộng suy đoán ngữ cảnh.",
+            new ReportExample("Em ngồi trên con đo.","Nếu nói phương tiện qua sông thì có thể là con đò; đây chỉ là quy tắc minh họa, phải đọc ngữ cảnh, chưa phải bộ kiểm chính tả đầy đủ."))
     });
     public static IReadOnlyList<ReportMilestone> Milestones { get; }=Array.AsReadOnly(new ReportMilestone[]
     {
@@ -92,13 +119,22 @@ public static class DevelopmentReport
         new("0.1.41","Thêm xem/xuất báo cáo tiến độ, danh mục loại lỗi, kết quả kiểm thử đi kèm gói và việc tiếp theo, không cần mở Word."),
         new("0.1.42","Thêm gợi ý khoảng trắng quanh dấu phẩy/chấm phẩy có giới hạn, gộp vùng khoảng trắng để sửa nhóm không chồng lấn; cập nhật danh mục và mẫu kiểm."),
         new("0.1.43","Thêm khoảng trắng sát trong ngoặc tròn có điều kiện; giữ đề xuất dấu phẩy/chấm phẩy khi sửa ngoặc, kiểm nhóm/rollback và cập nhật báo cáo."),
-        new("0.1.44","Thêm gợi ý khoảng trắng trước dấu kết câu cuối đoạn có điều kiện; sửa nhóm cùng ngoặc/dấu phẩy/cụm lặp, rollback và cập nhật báo cáo.")
+        new("0.1.44","Thêm gợi ý khoảng trắng trước dấu kết câu cuối đoạn có điều kiện; sửa nhóm cùng ngoặc/dấu phẩy/cụm lặp, rollback và cập nhật báo cáo."),
+        new("0.1.45","Bổ sung ví dụ lỗi và kết quả/hướng xử lý cho từng nhóm đã hỗ trợ, chỉ cảnh báo, minh họa và các việc dự kiến trong báo cáo xem/xuất TXT.")
     });
     public static IReadOnlyList<string> NextSteps { get; }=Array.AsReadOnly(new[]
     {
         "1. Thể thức và độ ổn định: kiểm tra tổng thể trên Office 2021; xử lý lỗi thực, hoàn thiện nhận diện và phần thể thức còn thiếu theo nguồn. Giữ sửa riêng/nhóm, quét, Undo, lưu/mở, nét thật và rollback.",
         "2. Lỗi chữ cơ bản: mở rộng các quy tắc có thể kiểm chứng về ký tự, khoảng trắng, dấu câu và từ/cụm lặp; bổ sung mẫu, ngoại lệ và kiểm thử. Chưa có từ điển thì không kết luận đã kiểm đầy đủ chính tả tiếng Việt.",
         "3. Sau cùng: ngữ cảnh, ngữ nghĩa và thư viện phục vụ các trường hợp khó; chưa tự suy đoán hoặc viết lại câu trong giai đoạn hiện nay."
+    });
+    public static IReadOnlyList<ReportPlannedWork> PlannedWork { get; }=Array.AsReadOnly(new ReportPlannedWork[]
+    {
+        new("P01","Vị trí dọc số/ngày",new ReportExample("Dòng số và dòng ngày lệch hàng 12 pt.","Hoàn thiện nhận diện, căn cứ, phép đo và hậu kiểm trước khi cho phép dịch dọc; hiện chưa có nút tự sửa phần này.")),
+        new("P02","Thể thức các vùng còn thiếu",new ReportExample("Đoạn thân bài hoặc phần chữ ký dùng Arial màu đỏ.","Tiếp tục xác minh quy định và nhận diện từng vùng trước khi bổ sung sửa phông/kiểu. Chưa tự áp phông cho toàn bộ thân bài/chữ ký/nơi nhận.")),
+        new("P03","Dấu câu ngoài phạm vi hiện tại",new ReportExample("Nội dung . Tiếp theo","Nghiên cứu khoảng trắng với dấu giữa câu, viết tắt và ngoại lệ; C16 hiện chỉ xét dấu cuối đoạn đủ điều kiện, chưa sửa ví dụ này.")),
+        new("P04","Chính tả qua dữ liệu kiểm chứng",new ReportExample("Tôi xẽ gửi báo cáo.","Cần dữ liệu từ và mẫu ngoại lệ trước khi đề xuất xẽ → sẽ; hiện chưa có quy tắc sửa ví dụ này. Chưa coi chương trình là bộ kiểm chính tả đầy đủ.")),
+        new("P05","Ngữ cảnh và từ dễ nhầm — làm sau cùng",new ReportExample("Anh ấy giành thời gian đọc sách.","Nghiên cứu ngữ cảnh giành/dành và thư viện sau phần thể thức/lỗi chữ cơ bản; chưa có gợi ý tự động cho ví dụ này."))
     });
     public static int Count(CapabilityMode mode)=>Capabilities.Count(c=>c.Mode==mode);
     public static string Build(string version,DateTimeOffset created,ReportEvidence? evidence=null)
@@ -107,7 +143,9 @@ public static class DevelopmentReport
         void Line(string value="")=>text.AppendLine(value);
         Line("CHÍNH TẢ VIỆT — TIẾN ĐỘ VÀ CHỨC NĂNG");
         Line("Phiên bản: "+version);Line("Tạo lúc: "+created.ToString("yyyy-MM-dd HH:mm zzz",System.Globalization.CultureInfo.InvariantCulture));
-        Line("Báo cáo năng lực chương trình; không phải số lỗi đã sửa trong tài liệu đang mở.");Line();
+        Line("Báo cáo năng lực chương trình; không phải số lỗi đã sửa trong tài liệu đang mở.");
+        Line("Trạng thái đã hỗ trợ/chưa tự sửa/dự kiến là tiến độ phát triển, không phải lịch sử sửa tài liệu.");
+        Line("Ví dụ dùng dữ liệu giả để minh họa điều kiện; [TAB] là ký hiệu tab. Dấu cách trong ví dụ được giữ nguyên.");Line();
         Line($"TỔNG QUAN: {Count(CapabilityMode.Reviewable)} nhóm có thể đề xuất sửa; {Count(CapabilityMode.Manual)} nhóm chỉ cảnh báo; {Count(CapabilityMode.Demonstration)} quy tắc minh họa.");
         Line("Sửa được khi nhận diện đủ chắc chắn và người dùng duyệt. Không có cảnh báo không đồng nghĩa đúng toàn bộ thể thức/chính tả.");Line();
         Line("KẾT QUẢ KIỂM THỬ ĐI KÈM GÓI");
@@ -121,9 +159,13 @@ public static class DevelopmentReport
         Line("Mốc người dùng đã xác nhận: sửa ba Line cùng lúc trên .27. Những chức năng sau đó tiếp tục thử nghiệm.");Line();
         foreach(var mode in Enum.GetValues<CapabilityMode>())
         {
-            Line(mode switch {CapabilityMode.Reviewable=>"LOẠI LỖI CÓ THỂ ĐỀ XUẤT SỬA",CapabilityMode.Manual=>"CÁC MỤC CHỈ CẢNH BÁO",_=>"QUY TẮC MINH HỌA"});
+            Line(mode switch {CapabilityMode.Reviewable=>"ĐÃ HỖ TRỢ ĐỀ XUẤT SỬA — CẦN DUYỆT",CapabilityMode.Manual=>"CHƯA TỰ SỬA — CHỈ CẢNH BÁO",_=>"QUY TẮC MINH HỌA"});
             foreach(var item in Capabilities.Where(c=>c.Mode==mode))
-            {Line(item.Id+" — "+item.Name);Line("  Áp dụng: "+item.Scope);Line("  "+item.Detail);}
+            {
+                Line(item.Id+" — "+item.Name);Line("  Áp dụng: "+item.Scope);Line("  "+item.Detail);
+                Line("  Ví dụ: “"+item.Example.Before+"”");
+                Line((mode==CapabilityMode.Reviewable?"  Kết quả minh họa khi duyệt sửa: ":mode==CapabilityMode.Manual?"  Hiện tại: ":"  Cần duyệt ngữ cảnh: ")+item.Example.Outcome);
+            }
             Line();
         }
         Line("CÁC NỘI DUNG ĐÃ LÀM");
@@ -133,6 +175,13 @@ public static class DevelopmentReport
         Line("Phần chính tả tiếng Việt đầy đủ chưa hoàn thành. Danh mục có điều kiện không phải kết luận pháp lý hoặc kết quả kiểm tra tài liệu cụ thể.");
         Line();Line("CÁC BƯỚC TIẾP THEO — THEO ƯU TIÊN ĐÃ THỐNG NHẤT");
         foreach(string item in NextSteps)Line(item);
+        Line();Line("CÁC VIỆC DỰ KIẾN — CHƯA TRIỂN KHAI SỬA TỰ ĐỘNG");
+        Line("Đây là hướng phát triển, không phải danh sách chức năng hiện có hoặc cam kết thời điểm hoàn thành.");
+        foreach(var item in PlannedWork)
+        {
+            Line(item.Id+" — "+item.Name);Line("  Ví dụ: “"+item.Example.Before+"”");
+            Line("  Chuẩn bị/nghiên cứu: "+item.Example.Outcome);
+        }
         Line();Line("CÁCH KIỂM TRA TỔNG THỂ");
         Line("Với từng nhóm: sửa riêng → sửa nhóm → quét lại → một Undo → lưu bản sao/mở lại. Chữ/phông trước, căn giữa sau, Line cuối cùng theo số đo mới. Ghi phiên bản, tên cảnh báo, thao tác và kết quả thực tế khi báo lỗi.");
         return text.ToString();
