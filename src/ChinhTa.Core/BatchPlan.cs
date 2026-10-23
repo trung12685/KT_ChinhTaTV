@@ -38,7 +38,7 @@ public static class BatchPlan
     }
     private static bool SharesFormat(Issue format,Issue text)=>format.CharacterFormat is not null &&
         text.CharacterFormat is null && text.Format is null && text.LineFix is null &&
-        text.Kind is FixKind.Text or FixKind.AdministrativeNumber or FixKind.AdministrativeDate or FixKind.RepeatedText or FixKind.PunctuationSpace or FixKind.ParenthesisSpace &&
+        text.Kind is FixKind.Text or FixKind.AdministrativeNumber or FixKind.AdministrativeDate or FixKind.RepeatedText or FixKind.PunctuationSpace or FixKind.ParenthesisSpace or FixKind.SentenceEndSpace &&
         text.Start>=format.Start && (long)text.Start+text.Length<=(long)format.Start+format.Length;
     public static void Validate(IReadOnlyList<Issue> plan, Func<Issue, string> read)
     {

@@ -702,6 +702,54 @@ public static class OfficeIntegrationCheck
                 test.ReadCheckDecorations(parenthesisAfterProbe)!=parenthesisDecoration || !SaveDigest(parenthesisSource).SequenceEqual(parenthesisDigest))
                 throw new InvalidOperationException("Bản lưu ngoặc chưa đúng chữ/kiểu hoặc nguồn mẫu thay đổi");
             Pass(stage);
+            stage="Dấu kết câu cuối đoạn: sửa riêng, giữ kiểu và các mục không chọn";
+            string sentenceEndSource=CreateSentenceEndSample(positionSource,folder);
+            byte[] sentenceEndDigest=SaveDigest(sentenceEndSource);test.Open(sentenceEndSource);
+            string sentenceEndOriginal=test.ReadCheckText();
+            var sentenceEndEdits=test.Check().Where(i=>i.CanFix && i.Kind is FixKind.SentenceEndSpace or FixKind.ParenthesisSpace or FixKind.PunctuationSpace or FixKind.RepeatedText or FixKind.Text).ToArray();
+            var sentenceEndOnly=sentenceEndEdits.Where(i=>i.Kind==FixKind.SentenceEndSpace).OrderBy(i=>i.Start).ToArray();
+            if(sentenceEndOnly.Length!=3 || sentenceEndEdits.Length!=8)
+                throw new InvalidOperationException("Chưa phân biệt đúng ba dấu kết câu và năm lỗi chữ/ngoặc độc lập hoặc đã sửa mẫu ngoại lệ");
+            var sentenceOpen=sentenceEndEdits.Where(i=>i.Kind==FixKind.ParenthesisSpace).OrderBy(i=>i.Start).First();
+            var sentenceEndProbe=new Issue(sentenceOpen.Start+sentenceOpen.Length,"kế hoạch".Length,"kế hoạch","kế hoạch","",false);
+            var sentenceEndDecoration=test.ReadCheckDecorations(sentenceEndProbe);
+            if(sentenceEndDecoration.Bold!=-1 || sentenceEndDecoration.Underline!=1)
+                throw new InvalidOperationException("Mẫu chữ giữ lại chưa có kiểu riêng");
+            test.Fix(sentenceEndOnly[0]);
+            if(test.ReadCheckText()!=sentenceEndOriginal.Replace("hoàn thành  .","hoàn thành.",StringComparison.Ordinal) ||
+                test.Check().Count(i=>i.CanFix && i.Kind==FixKind.SentenceEndSpace)!=2 || test.ReadCheckDecorations(sentenceEndProbe)!=sentenceEndDecoration)
+                throw new InvalidOperationException("Sửa riêng dấu kết câu chưa đúng chữ/kiểu hoặc làm mất mục không chọn");
+            test.Undo();if(test.ReadCheckText()!=sentenceEndOriginal)throw new InvalidOperationException("Undo dấu kết câu chưa về nguyên bản");
+            Pass(stage);
+            test.Open(sentenceEndSource);
+            stage="Lỗi sau xóa khoảng trước dấu kết câu: phục hồi cả nhóm, không tạo Undo";
+            bool sentenceEndRollback=false;
+            try{test.FixTextFailureProbe(sentenceEndEdits,1);}
+            catch(InvalidOperationException error) when(error.InnerException is OfficeTextProbeException){sentenceEndRollback=true;}
+            if(!sentenceEndRollback || test.ReadCheckText()!=sentenceEndOriginal || test.Changed ||
+                test.ReadCheckDecorations(sentenceEndProbe)!=sentenceEndDecoration || test.Check().Count(i=>i.CanFix && i.Kind==FixKind.SentenceEndSpace)!=3)
+                throw new InvalidOperationException("Rollback nhóm dấu kết câu chưa giữ nguyên chữ/kiểu");
+            test.Undo();if(test.ReadCheckText()!=sentenceEndOriginal)throw new InvalidOperationException("Nhóm dấu kết câu lỗi đã tạo Undo");
+            Pass(stage);
+            stage="Sửa nhóm dấu kết câu/chữ: quét, một Undo, lưu/mở và giữ nguồn";
+            string sentenceEndExpected=sentenceEndOriginal.Replace("Nội dung  ( kế hoạch kế hoạch ) đã duyệt;hoàn thành  .","Nội dung (kế hoạch) đã duyệt; hoàn thành.",StringComparison.Ordinal)
+                .Replace("Nội dung đã duyệt ?","Nội dung đã duyệt?",StringComparison.Ordinal).Replace("Xin cảm ơn  !","Xin cảm ơn!",StringComparison.Ordinal);
+            var sentenceEndFresh=test.Check().Where(i=>i.CanFix && i.Kind is FixKind.SentenceEndSpace or FixKind.ParenthesisSpace or FixKind.PunctuationSpace or FixKind.RepeatedText or FixKind.Text).ToArray();
+            int sentenceEndShift=sentenceEndFresh.Where(i=>(long)i.Start+i.Length<=sentenceEndProbe.Start).Sum(i=>i.Replacement.Length-i.Length);
+            var sentenceEndAfterProbe=sentenceEndProbe with {Start=sentenceEndProbe.Start+sentenceEndShift};
+            test.FixMany(sentenceEndFresh);
+            if(test.ReadCheckText()!=sentenceEndExpected || test.Check().Any(i=>i.CanFix && i.Kind is FixKind.SentenceEndSpace or FixKind.ParenthesisSpace or FixKind.PunctuationSpace or FixKind.RepeatedText or FixKind.Text) ||
+                test.ReadCheckDecorations(sentenceEndAfterProbe)!=sentenceEndDecoration)
+                throw new InvalidOperationException("Nhóm dấu kết câu chưa đúng chữ/kiểu hoặc còn mục đã sửa");
+            string sentenceEndSaved=Path.Combine(folder,"sentence-end-fixed.docx");test.SaveCopy(sentenceEndSaved);test.Undo();
+            if(test.ReadCheckText()!=sentenceEndOriginal || test.ReadCheckDecorations(sentenceEndProbe)!=sentenceEndDecoration ||
+                test.Check().Count(i=>i.CanFix && i.Kind==FixKind.SentenceEndSpace)!=3)
+                throw new InvalidOperationException("Một Undo chưa phục hồi toàn nhóm dấu kết câu");
+            test.Open(sentenceEndSaved);
+            if(test.ReadCheckText()!=sentenceEndExpected || test.Check().Any(i=>i.CanFix && i.Kind is FixKind.SentenceEndSpace or FixKind.ParenthesisSpace or FixKind.PunctuationSpace or FixKind.RepeatedText or FixKind.Text) ||
+                test.ReadCheckDecorations(sentenceEndAfterProbe)!=sentenceEndDecoration || !SaveDigest(sentenceEndSource).SequenceEqual(sentenceEndDigest))
+                throw new InvalidOperationException("Bản lưu dấu kết câu chưa đúng chữ/kiểu hoặc nguồn mẫu thay đổi");
+            Pass(stage);
             File.AppendAllText(report,"RESULT PASS\nKiểm thao tác Word/Line, vị trí nét XPS, sửa riêng/nhóm số-ngày, lưu/mở và Hoàn tác trên mẫu giả; không xác nhận mọi tài liệu.\n");
             return new(true,stage,folder);
         }
@@ -757,6 +805,25 @@ public static class OfficeIntegrationCheck
             other.Element(w+"rPr")!.Element(w+"b")!.SetAttributeValue(w+"val",1);run.AddAfterSelf(other);
         }
         entry.Delete();using(var stream=zip.CreateEntry("word/document.xml").Open())xml.Save(stream);return path;
+    }
+    private static string CreateSentenceEndSample(string source,string folder)
+    {
+        string path=Path.Combine(folder,"sentence-end-input.docx");File.Copy(source,path);
+        using var zip=ZipFile.Open(path,ZipArchiveMode.Update);var entry=zip.GetEntry("word/document.xml")!;
+        XDocument xml;using(var input=entry.Open())xml=XDocument.Load(input,LoadOptions.PreserveWhitespace);
+        XNamespace w="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+        XElement Run(string text,bool kept=false)=>new(w+"r",new XElement(w+"rPr",
+            new XElement(w+"rFonts",new XAttribute(w+"ascii","Times New Roman"),new XAttribute(w+"hAnsi","Times New Roman")),
+            new XElement(w+"b",new XAttribute(w+"val",kept?1:0)),new XElement(w+"sz",new XAttribute(w+"val",26)),
+            new XElement(w+"u",new XAttribute(w+"val",kept?"single":"none"))),
+            new XElement(w+"t",new XAttribute(XNamespace.Xml+"space","preserve"),text));
+        var rows=new[]{new XElement(w+"p",Run("Nội dung  ( "),Run("kế hoạch",true),Run(" kế hoạch ) đã duyệt;hoàn thành  .")),
+            new XElement(w+"p",Run("Nội dung đã duyệt ?")),new XElement(w+"p",Run("Xin cảm ơn  !")),
+            new XElement(w+"p",Run("Giá trị 1,25 .")),new XElement(w+"p",Run("Nội dung TS .")),
+            new XElement(w+"p",Run("www . com .")),new XElement(w+"p",Run("Nội dung ..."))};
+        var body=xml.Descendants(w+"body").Single();
+        foreach(var row in rows)if(body.Element(w+"sectPr") is XElement section)section.AddBeforeSelf(row);else body.Add(row);
+        entry.Delete();using(var output=zip.CreateEntry("word/document.xml").Open())xml.Save(output);return path;
     }
     private static string CreateParenthesisSample(string source,string folder)
     {
