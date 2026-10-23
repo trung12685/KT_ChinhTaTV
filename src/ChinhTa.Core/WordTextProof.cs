@@ -7,7 +7,7 @@ namespace ChinhTa.Core;
 public static class WordTextProof
 {
     public static IReadOnlySet<int> Read(string wordOpenXml,IReadOnlyList<WordParagraphSnapshot> live,
-        Action<WordXmlMappingException>? onMismatch=null,Action<int,OutlineParagraphInfo>? onOutline=null)
+        Action<WordXmlMappingException>? onMismatch=null,Action<int,OutlineParagraphInfo>? onOutline=null,Action<int,bool>? onFormatEditable=null)
     {
         int previousEnd=-1;
         foreach(var row in live)
@@ -19,7 +19,7 @@ public static class WordTextProof
         var editable=new HashSet<int>();
         if(onOutline is null)
             WordXmlTableMap.Read(wordOpenXml,live,onMismatch??(_=>{}),
-                onTextEditable:(start,canEdit)=>{if(canEdit)editable.Add(start);},includeLayout:false);
+                onTextEditable:(start,canEdit)=>{if(canEdit)editable.Add(start);},includeLayout:false,onFormatEditable:onFormatEditable);
         else
         {
             var xml=XDocument.Parse(wordOpenXml);
@@ -34,12 +34,13 @@ public static class WordTextProof
                 {
                     if(canEdit)editable.Add(start);
                     onOutline(start,evidence.Describe(ps[matched[start]],canEdit));
-                },includeLayout:false);
+                },includeLayout:false,onFormatEditable:onFormatEditable);
         }
         return editable;
     }
     public static IReadOnlyList<Paragraph> Apply(IEnumerable<Paragraph> paragraphs,IReadOnlySet<int> editableStarts,
-        IReadOnlyDictionary<int,OutlineParagraphInfo>? outline=null)=>
+        IReadOnlyDictionary<int,OutlineParagraphInfo>? outline=null,IReadOnlySet<int>? formatEditableStarts=null)=>
         paragraphs.Select(p=>p with {TextEditable=p.TextEditable && editableStarts.Contains(p.Start),
+            FormatEditable=formatEditableStarts?.Contains(p.Start)??p.FormatEditable,
             Outline=outline is null?p.Outline:outline.TryGetValue(p.Start,out var info)?info:null}).ToArray();
 }

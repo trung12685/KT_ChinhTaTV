@@ -45,3 +45,5 @@ Từ .51 có C20 thứ tự mục gõ tay và C21 dấu đầu dòng đơn theo 
 Từ .52, lịch sử có mốc tooltip ngắn ba phần và căn cứ có nội dung; giữ 21/8/1 cùng ví dụ C01–C21. Đây là cập nhật trình bày, không phải loại lỗi mới.
 
 Từ .53, báo cáo ghi mốc sửa nhiều nhóm có đo lại, một Undo/rollback cả lượt; giữ 21/8/1 và ví dụ. Không dùng số loại lỗi làm số lỗi đã sửa trong tài liệu.
+
+Từ .54 có C22 tên cơ quan và C23 nơi nhận, với ví dụ, tổng 23/8/1. Mốc .54 ghi nhận diện trích yếu và tách thông tin phạm vi XML.

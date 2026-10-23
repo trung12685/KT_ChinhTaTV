@@ -5,17 +5,17 @@ public static class DevelopmentReportChecks
 {
     public static void Run(Action<bool,string> assert)
     {
-        const string version="0.1.53";
+        const string version="0.1.54";
         var now=new DateTimeOffset(2026,10,23,9,15,0,TimeSpan.FromHours(7));
         var evidence=new ReportEvidence(version,17,29,new string('a',40),"https://github.com/trung12685/KT_ChinhTaTV/actions/runs/123");
         string text=DevelopmentReport.Build(version,now,evidence);
         assert(DevelopmentReport.Capabilities.Select(c=>c.Id).Distinct().Count()==DevelopmentReport.Capabilities.Count &&
             DevelopmentReport.Capabilities.All(c=>c.Name.Length>0 && c.Scope.Length>0 && c.Detail.Length>0 && !string.IsNullOrWhiteSpace(c.Example.Before) && !string.IsNullOrWhiteSpace(c.Example.Outcome)),
             "The exported capability catalog has unique IDs, scopes and limits instead of empty headline claims");
-        assert(DevelopmentReport.Count(CapabilityMode.Reviewable)==21 && DevelopmentReport.Count(CapabilityMode.Manual)==8 &&
-            DevelopmentReport.Count(CapabilityMode.Demonstration)==1 && DevelopmentReport.Capabilities.Count==30,
-            "Feature totals distinguish twenty-one reviewed repair groups, eight manual groups and one demo rather than counting repaired document errors");
-        assert(text.Contains("Phiên bản: 0.1.53") && text.Contains("2026-10-23 09:15 +07:00") &&
+        assert(DevelopmentReport.Count(CapabilityMode.Reviewable)==23 && DevelopmentReport.Count(CapabilityMode.Manual)==8 &&
+            DevelopmentReport.Count(CapabilityMode.Demonstration)==1 && DevelopmentReport.Capabilities.Count==32,
+            "Feature totals distinguish twenty-three reviewed repair groups, eight manual groups and one demo rather than counting repaired document errors");
+        assert(text.Contains("Phiên bản: 0.1.54") && text.Contains("2026-10-23 09:15 +07:00") &&
             text.Contains("17 Core/OpenXML và 29 WPF đạt.") && text.Contains(evidence.RunUrl) && text.Contains(evidence.Commit),
             "The report renders the supplied version, local offset and actual matching build counts without hard-coded test totals");
         assert(text.Contains("không phải số lỗi đã sửa") && text.Contains("CI không có Word") && text.Contains("chưa có xác nhận bài Word") &&
@@ -23,7 +23,7 @@ public static class DevelopmentReportChecks
             "Program capabilities and automated checks never become claims of document repair, complete spelling coverage or Office PASS");
         assert(DevelopmentReport.Capabilities.All(item=>text.Contains(item.Id+" — "+item.Name) && text.Contains(item.Example.Before) && text.Contains(item.Example.Outcome)),
             "Every catalog item, including manual and demo examples, appears in the exported report");
-        assert(DevelopmentReport.Milestones.Select(m=>m.Version).Distinct().Count()==DevelopmentReport.Milestones.Count && DevelopmentReport.Milestones.All(item=>text.Contains(item.Version+": "+item.Detail)) && text.Contains("0.1.18–0.1.27") && text.Contains("0.1.40") && text.Contains("0.1.53"),
+        assert(DevelopmentReport.Milestones.Select(m=>m.Version).Distinct().Count()==DevelopmentReport.Milestones.Count && DevelopmentReport.Milestones.All(item=>text.Contains(item.Version+": "+item.Detail)) && text.Contains("0.1.18–0.1.27") && text.Contains("0.1.40") && text.Contains("0.1.54"),
             "The report retains the delivered Line, formatting, save/recovery and repetition milestones for future development");
         int format=text.IndexOf("1. Thể thức",StringComparison.Ordinal),basic=text.IndexOf("2. Lỗi chữ",StringComparison.Ordinal),
             context=text.IndexOf("3. Sau cùng",StringComparison.Ordinal);
@@ -43,7 +43,7 @@ public static class DevelopmentReportChecks
             JsonSerializer.Serialize(evidence with {RunUrl="https://github.com/trung12685/KT_ChinhTaTV/actions/runs/123/extra"}),
             JsonSerializer.Serialize(evidence with {RunUrl="https://github.com/other/repo/actions/runs/123"}),
             JsonSerializer.Serialize(evidence with {Commit=null!}),JsonSerializer.Serialize(evidence with {RunUrl=null!}),
-            "{\"Version\":\"0.1.53\",\"CoreChecks\":999999999999999999999}"})
+            "{\"Version\":\"0.1.54\",\"CoreChecks\":999999999999999999999}"})
             assert(ReportEvidence.Parse(json,version) is null,"Invalid, wrong-version or unrelated build metadata cannot claim current-version validation");
         assert(text.Contains("CHƯA TỰ SỬA — CHỈ CẢNH BÁO") && text.Contains("CÁC VIỆC DỰ KIẾN — CHƯA TRIỂN KHAI") &&
             text.Contains("không phải lịch sử sửa tài liệu") && text.Contains("[TAB] là ký hiệu tab") &&

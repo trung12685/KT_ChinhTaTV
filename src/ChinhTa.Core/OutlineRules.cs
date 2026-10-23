@@ -41,6 +41,7 @@ public static class OutlineRules
         {
             string text=row.Text.TrimEnd('\r','\n','\a');var info=row.Outline;
             if(info is null){End(true);automaticRun=false;continue;}
+            if(info.Scope==OutlineScope.Recipient){End(false);automaticRun=false;continue;}
             if(info.Scope!=OutlineScope.PlainBody || !row.TextEditable && !info.LabelThroughTabs)
             {
                 End(true);

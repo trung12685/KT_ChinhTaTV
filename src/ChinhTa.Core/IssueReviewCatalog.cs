@@ -36,6 +36,8 @@ public static class IssueReviewCatalog
             FixKind.DocumentHeadingFormat=>("document-font","Tên loại và trích yếu",33,issue.Title??"Tên loại/trích yếu chưa đúng"),
             FixKind.AdministrativePosition=>("position","Vị trí số và ngày tháng",34,issue.Title??"Kiểm tra vị trí số/ngày tháng"),
             FixKind.ShapeLine=>("lines","Đường kẻ",40,issue.Title??"Kiểm tra đường kẻ"),
+            FixKind.AgencyFormat or FixKind.AgencyText=>("agency-font","Tên cơ quan",23,issue.Title??"Tên cơ quan chưa đúng thể thức"),
+            FixKind.RecipientFormat or FixKind.RecipientText=>("recipients","Nơi nhận",47,issue.Title??"Nơi nhận chưa đúng thể thức"),
             FixKind.OutlineOrder=>("outline-order","Thứ tự các mục",45,issue.Title??"Kiểm tra thứ tự mục"),
             FixKind.OutlineMarker=>("outline-marker","Dấu đầu dòng đứng một mình",46,issue.Title??"Kiểm tra dấu đầu dòng"),
             FixKind.RepeatedText=>("repeat","Từ, cụm từ lặp",50,"Lặp từ/cụm từ: "+Brief(issue.Original.Trim(),34)),
@@ -52,7 +54,7 @@ public static class IssueReviewCatalog
         // Geometry/centering based on user tolerances remains reviewable. Only a
         // verified missing Line joins the required-format section here.
         bool required=cited && (issue.Kind is FixKind.AdministrativeNumber or FixKind.AdministrativeDate or
-            FixKind.AdministrativeFormat or FixKind.DocumentHeadingFormat ||
+            FixKind.AdministrativeFormat or FixKind.DocumentHeadingFormat or FixKind.AgencyFormat or FixKind.AgencyText or FixKind.RecipientFormat or FixKind.RecipientText ||
             issue.Kind is FixKind.NationalHeading or FixKind.StateMotto or FixKind.PartyHeading &&
                 (issue.Format is {Alignment:null} || issue.Original!=issue.Replacement) ||
             issue.Kind==FixKind.ShapeLine && issue.LineFix is {ShapeId:null});

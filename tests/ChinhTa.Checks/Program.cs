@@ -26,6 +26,7 @@ SentenceAfterSpaceChecks.Run(Assert);
 IssueReviewCatalogChecks.Run(Assert);
 IssueTooltipChecks.Run(Assert);
 StagedRepairChecks.Run(Assert);
+ComponentChecks.Run(Assert);
 OutlineChecks.Run(Assert);
 HeadingPostSaveChecks.Run(Assert);
 CheckpointCleanupChecks.Run(Assert);

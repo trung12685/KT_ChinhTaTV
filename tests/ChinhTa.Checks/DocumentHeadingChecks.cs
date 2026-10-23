@@ -39,7 +39,7 @@ public static class DocumentHeadingChecks
             assert(found.Any(i=>i.Start==unsafeRow.Start && !i.CanFix) && !found.Any(i=>i.Start==unsafeRow.Start && i.CanFix),
                 "Mixed, structured or unobserved subject typography remains explicitly manual without blocking independently proven rows");
         }
-        foreach(var sample in new[]{Sample("Báo cáo"),Sample("BÁO CÁO",5),Sample(body:false),Sample(subjectCount:0)})
+        foreach(var sample in new[]{Sample("Báo cáo"),Sample(body:false),Sample(subjectCount:0)})
         {
             var found=DocumentHeadingRules.Check(sample.P,sample.L,DocumentProfile.State);
             if(sample.P[6].Text.StartsWith("Báo",StringComparison.Ordinal))
@@ -51,7 +51,7 @@ public static class DocumentHeadingChecks
             l.Select((r,i)=>i==6?r with {Text="old title\r"}:r).ToArray(),
             l.Select((r,i)=>i==6?r with {Centered=false}:r).ToArray(),
             l.Select((r,i)=>i==8?r with {Centered=false}:r).ToArray(),
-            l.Select((r,i)=>i==9?r with {Centered=true,ParagraphCentered=true}:r).ToArray()})
+            l.Select((r,i)=>i==9?r with {Text="Một đoạn nội dung căn giữa chưa rõ vai trò.",Centered=true,ParagraphCentered=true}:r).ToArray()})
             assert(Check(layout:layout).All(i=>!i.CanFix),"Missing XML mappings, indents or ambiguous centered body text prevent automatic subject formatting");
         var bodyBefore=p.Take(6).Concat([new Paragraph(p[6].Start-1,"Đoạn mở đầu không thuộc đầu văn bản.\r")]).Concat(p.Skip(6)).ToArray();
         assert(Check(bodyBefore).Count==0,"An exact document-type phrase after ordinary body prose does not become a front title");
