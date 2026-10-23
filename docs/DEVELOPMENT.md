@@ -1,5 +1,11 @@
 # Tiếp tục phát triển Chính tả Việt
 
+## Thứ tự ưu tiên theo người dùng — 23/10/2026
+
+1. Hoàn thiện các kiểm/sửa thể thức theo nguồn hiện có, giữ bằng chứng và hồi quy.
+2. Lỗi chữ có quy tắc rõ, khoảng trắng, từ/cụm từ giống nhau lặp liên tiếp; trước hết phát hiện cơ học và gợi ý có duyệt. Chưa có từ điển thì không quảng bá là đã kiểm đầy đủ chính tả.
+3. Ngữ cảnh, ngữ nghĩa và thư viện phục vụ các phần khó thực hiện sau cùng. Không bổ sung suy đoán ngữ cảnh trong khi người dùng đang thử phần cơ bản.
+
 ## Bắt đầu từ đâu
 
 Mốc đã chốt: [0.1.27](STATUS-0.1.27.md), mã gói `1ec3092ccd68ed0acd8878b2737664116a6b11fe`, tag `v0.1.27`. Đọc biên bản này trước để phân biệt bằng chứng CI, xác nhận người dùng và kịch bản còn chờ. Phát triển từ `main` sau khi chốt, tạo nhánh mới; không tiếp tục phát hành vào tag hoặc ghi đè ZIP 0.1.27.
@@ -69,7 +75,7 @@ Tài liệu riêng chỉ dùng cục bộ theo đường dẫn tùy chọn của
 dotnet publish src/ChinhTa.Desktop -c Release -r win-x64 --self-contained true -o artifacts/win-x64
 ```
 
-Kèm thư mục `samples`, ghi chú phiên bản, ZIP và SHA-256. Chạy kiểm thử trước khi phát hành. Khi tạo bản mới, cập nhật version trong csproj, tiêu đề UI, tên gói/tag, ghi chú và workflow Windows; không phát hành lại vào tag cũ. Workflow `windows-package.yml` gắn `fix/checkpoint-cleanup-0.1.39` và phát hành prerelease 0.1.39 sau kiểm thử. Mỗi phiên bản sau phải đổi nhánh/version và không ghi đè tag đã phát hành. Workflow `finalize-0.1.27.yml` chỉ chốt metadata của bản đã thử, có kiểm tag, digest, CI và thay đổi chỉ thuộc tài liệu/workflow được cho phép; không build hoặc thay asset.
+Kèm thư mục `samples`, ghi chú phiên bản, ZIP và SHA-256. Chạy kiểm thử trước khi phát hành. Khi tạo bản mới, cập nhật version trong csproj, tiêu đề UI, tên gói/tag, ghi chú và workflow Windows; không phát hành lại vào tag cũ. Workflow `windows-package.yml` gắn `feature/repeated-text-0.1.40` và phát hành prerelease 0.1.40 sau kiểm thử. Mỗi phiên bản sau phải đổi nhánh/version và không ghi đè tag đã phát hành. Workflow `finalize-0.1.27.yml` chỉ chốt metadata của bản đã thử, có kiểm tag, digest, CI và thay đổi chỉ thuộc tài liệu/workflow được cho phép; không build hoặc thay asset.
 
 Khi nhận lỗi, lấy log đúng version và phân biệt lỗi đọc Word, ghép XML, CP/mốc, marker, candidate, nét XPS hay rollback. Các mã `Word.Preview.CpMapping`, `Word.Preview.Unmapped`, `Word.LineBatch.ReferenceBinding.*`, `Word.LineBatch.StoryBinding`, `Word.LineBatch.Rescan` ghi số liệu mà không ghi chữ tài liệu. Không kết luận nguyên nhân chỉ từ ngoại lệ tổng quát hoặc một điều kiện guard gộp.
 
@@ -205,3 +211,12 @@ API nay trả `CheckpointCleanup?` khi thao tác thành công nhưng xóa backup
 WordSession.Checkpoint tập trung SwapCheckpoint cho cả Line candidate, rollback chữ/căn giữa và Undo; ghi mã Word.CheckpointCleanup.Retained, không ghi message/path/nội dung. UndoCore pop đúng một mục sau swap thành công, cập nhật Changed/snapshot như trước, dù còn warning cleanup. UndoCleanupProbe chỉ khi có LineCheckArtifactFolder; inject lỗi tại delete để giữ backup thật, không đổi copy/open/verify. Office check tạo hai sửa tiêu đề riêng, kiểm lần Undo có lỗi cleanup về trạng thái trung gian, lần tiếp theo về nguyên bản và hết stack không đổi; nguồn mẫu giữ hash.
 
 Core dùng file thật với callback lỗi dọn để kiểm byte/trình tự/cause; Windows còn giữ handle FileShare.Read không cho File.Delete của backup thật. Kiểm close/open/copy failure + cleanup vẫn giữ lỗi chính, failure phục hồi giữ hai lỗi/backup, và mô phỏng đúng biên stack Undo. Các bài Core/Line cũ không bỏ điều kiện. Chưa thay các finally dọn candidate/XPS/thư mục khác; đừng ghi thành đã xử lý mọi lỗi cleanup. Runtime Office 2021 còn chờ người dùng kiểm tra tổng thể, không chuyển phản hồi đang kiểm thành PASS.
+
+
+## Ghi chú triển khai 0.1.40
+
+`RepeatedTextRules` tách token chữ + dấu kết hợp, không lấy số/gạch dưới trong mã; so NFC ordinal đúng hoa/thường. Chia run bằng dấu cách ASCII, ngừng tại mọi dấu câu/control/tab/NBSP. Duyệt đơn vị ngắn nhất 1–8 token, gom các bản lặp đủ đơn vị và nhảy qua span đã dùng để không đề xuất lồng/chồng. Một token, toàn chữ hoa hoặc ứng viên header số/ngày giữ manual, không cần thư viện ngữ cảnh. Đây là phạm vi bảo thủ, có thể bỏ sót cụm dài/case khác/ranh giới phức tạp.
+
+Gợi ý có Kind.RepeatedText, BatchSafe=false, Replacement rỗng và span chỉ gồm separator + bản lặp sau. Giữ lần đầu thay vì replace toàn nhóm, tránh ép kiểu của phần giữ lại. Checker bỏ các spacing/demo nằm trong deletion, giữ các mục ngoài; gate TextEditable/protectedAdministrative cũ vẫn áp dụng. Word normalize Text=null của range đã xóa thành ""; hậu kiểm story và giao dịch cũ không đổi. BatchPlan cho CharacterFormat cả dòng chứa RepeatedText như text edit khác; kiểm kỳ vọng hàng và phông sau lưu bằng tracker cũ. Không thay MainWindow stage/confirmation hoặc bắt đầu thư viện ngữ cảnh.
+
+Core kiểm ranh giới, Unicode, hai nhóm, 8 tiếng, từ láy/mã/header, overlap spacing/demo/style, fresh scan và rollback sau delete. Office sample có phần giữ lại đậm/gạch chân, hai cụm lặp + một spacing + hai manual; kiểm riêng/nhóm, post-delete lỗi, nguyên văn/kiểu và Undo/save/reopen. Chưa xác nhận Office 2021. Bảo vệ XML sâu vẫn chỉ 40 đoạn đầu State; chưa dùng tính năng mới để tuyên bố field/control mọi trang/profile an toàn. Không có từ điển chính tả đầy đủ; `con đo` vẫn chỉ minh họa cũ. Danh sách người dùng .40 thêm C13, giữ nguyên tài liệu .39.

@@ -650,7 +650,7 @@ public sealed partial class WordSession : IDisposable
                             try{formatRanges.Add((item,(object)tracked,item.Replacement));tracked=null!;}
                             finally{Release(tracked);}
                         }
-                        string actual=(string)range.Text;
+                        string actual=(string?)range.Text??"";
                         if(++applied==failTextAfter)throw new OfficeTextProbeException();
                         return actual;
                     }
