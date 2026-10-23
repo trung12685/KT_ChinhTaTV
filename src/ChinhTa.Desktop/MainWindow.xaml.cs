@@ -137,13 +137,6 @@ public partial class MainWindow : Window
     private void FixAllClick(object sender, RoutedEventArgs e)
     {
         var all = choices.Where(x => x.Issue.CanFix).Select(x => x.Issue).ToArray();
-        bool hasText=all.Any(x=>x.LineFix is null && x.CenterFix is null);
-        bool hasCenter=all.Any(x=>x.CenterFix is not null);
-        if((hasText && (hasCenter || all.Any(x=>x.LineFix is not null))) || (hasCenter && all.Any(x=>x.LineFix is not null)))
-        {
-            MessageBox.Show(this, "Sửa theo thứ tự: chữ/phông → căn giữa số/ngày → Shape Line. Lượt này sửa nhóm đầu còn lỗi; sau quét lại, bấm Sửa tất cả để tiếp tục theo số đo mới.", "Cập nhật số đo");
-            all=all.Where(x=>hasText?x.LineFix is null && x.CenterFix is null:x.CenterFix is not null).ToArray();
-        }
         ConfirmFix(all);
     }
     private void ConfirmFix(IReadOnlyList<Issue> selected)
@@ -154,12 +147,8 @@ public partial class MainWindow : Window
             MessageBox.Show(this, "Chưa chọn lỗi nào. Tích ô bên cạnh các lỗi cần sửa.", "Chọn lỗi");
             return;
         }
-        int Stage(Issue i)=>i.LineFix is not null?2:i.CenterFix is not null?1:0;
-        if(selected.Select(Stage).Distinct().Count()>1)
-        {
-            MessageBox.Show(this, "Chọn riêng một nhóm: chữ/phông, căn giữa số/ngày hoặc Shape Line. Sửa theo thứ tự này và quét lại để dùng số đo mới.", "Sửa theo từng lượt");
-            return;
-        }
+        bool staged=selected.Select(StagedRepairBatch.Stage).Distinct().Count()>1;
+        string stageNote=staged?"\nChương trình tự sửa chữ/phông, đo lại, căn giữa rồi sửa đường kẻ theo các mục đã chọn. Không cần tích chọn lại.":"";
         string examples = string.Join("\n", selected.Take(8).Select(x =>
             $"• {x.Original.Replace("\r", " ")} → {x.Suggestion}"));
         string more = selected.Count > 8 ? $"\n… và {selected.Count - 8} lỗi khác." : "";
@@ -167,10 +156,16 @@ public partial class MainWindow : Window
         string manualNote = manual > 0 ? $"\n{manual} cảnh báo thủ công sẽ không bị sửa." : "";
         string caution = selected.Any(x => !x.BatchSafe)
             ? "\nCó gợi ý cần bạn duyệt (ngữ cảnh, dàn trang hoặc thể thức); có thể cảnh báo nhầm." : "";
-        if (MessageBox.Show(this, $"Áp dụng {selected.Count} gợi ý sửa?\n\n{examples}{more}{caution}{manualNote}\n\n" +
+        if (MessageBox.Show(this, $"Áp dụng {selected.Count} gợi ý sửa?\n\n{examples}{more}{caution}{manualNote}{stageNote}\n\n" +
             "Hoàn tác một lần để bỏ cả lượt sửa. Tài liệu gốc được giữ nguyên.", "Duyệt lượt sửa",
             MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes) return;
-        Run(() => { EditThenScan.Run(()=>session.FixMany(selected),Scan); Status.Text = $"Đã áp dụng {selected.Count} gợi ý. " + Status.Text; });
+        Run(() =>
+        {
+            RepairBatchResult? result=null;
+            EditThenScan.Run(()=>result=session.FixSelection(selected),Scan);
+            Status.Text=$"Đã áp dụng {result!.Applied} gợi ý. "+
+                (result.AlreadySatisfied>0?$"{result.AlreadySatisfied} mục đã đạt sau đo lại. ":"")+Status.Text;
+        });
     }
     private void OfficeCheckClick(object sender, RoutedEventArgs e) => Run(() =>
     {

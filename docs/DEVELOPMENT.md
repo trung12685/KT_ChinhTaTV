@@ -10,7 +10,7 @@
 
 Mốc đã chốt: [0.1.27](STATUS-0.1.27.md), mã gói `1ec3092ccd68ed0acd8878b2737664116a6b11fe`, tag `v0.1.27`. Đọc biên bản này trước để phân biệt bằng chứng CI, xác nhận người dùng và kịch bản còn chờ. Phát triển từ `main` sau khi chốt, tạo nhánh mới; không tiếp tục phát hành vào tag hoặc ghi đè ZIP 0.1.27.
 
-Nhánh đang phát triển: `feature/concise-issue-tooltips-0.1.52`, từ 0.1.51 (`dd81cc5614c641088ff2d8b93db4c509d81a7368`). Chuỗi bản thử dựa trên main đã chốt `da6cf3b0999dbfb60d16ab1eae9733b0f1f20c81`. Đọc các CHANGES và [phạm vi 0.1.52](CHANGES-0.1.52.md). Chưa nhập main hoặc coi CI là bằng chứng Office 2021.
+Nhánh đang phát triển: `feature/staged-multi-group-0.1.53`, từ 0.1.52 (`eaf7c71732cf03e8c2892e18a139f356600f659b`). Chuỗi bản thử dựa trên main đã chốt `da6cf3b0999dbfb60d16ab1eae9733b0f1f20c81`. Đọc các CHANGES và [phạm vi 0.1.53](CHANGES-0.1.53.md). Chưa nhập main hoặc coi CI là bằng chứng Office 2021.
 
 ## Bản đồ mã nguồn
 
@@ -75,7 +75,7 @@ Tài liệu riêng chỉ dùng cục bộ theo đường dẫn tùy chọn của
 dotnet publish src/ChinhTa.Desktop -c Release -r win-x64 --self-contained true -o artifacts/win-x64
 ```
 
-Kèm thư mục `samples`, ghi chú phiên bản, ZIP và SHA-256. Chạy kiểm thử trước khi phát hành. Khi tạo bản mới, cập nhật version trong csproj, tiêu đề UI, tên gói/tag, ghi chú và workflow Windows; không phát hành lại vào tag cũ. Workflow `windows-package.yml` gắn `feature/concise-issue-tooltips-0.1.52` và phát hành prerelease 0.1.52 sau kiểm thử. Mỗi phiên bản sau phải đổi nhánh/version và không ghi đè tag đã phát hành. Workflow `finalize-0.1.27.yml` chỉ chốt metadata của bản đã thử, có kiểm tag, digest, CI và thay đổi chỉ thuộc tài liệu/workflow được cho phép; không build hoặc thay asset.
+Kèm thư mục `samples`, ghi chú phiên bản, ZIP và SHA-256. Chạy kiểm thử trước khi phát hành. Khi tạo bản mới, cập nhật version trong csproj, tiêu đề UI, tên gói/tag, ghi chú và workflow Windows; không phát hành lại vào tag cũ. Workflow `windows-package.yml` gắn `feature/staged-multi-group-0.1.53` và phát hành prerelease 0.1.53 sau kiểm thử. Mỗi phiên bản sau phải đổi nhánh/version và không ghi đè tag đã phát hành. Workflow `finalize-0.1.27.yml` chỉ chốt metadata của bản đã thử, có kiểm tag, digest, CI và thay đổi chỉ thuộc tài liệu/workflow được cho phép; không build hoặc thay asset.
 
 Khi nhận lỗi, lấy log đúng version và phân biệt lỗi đọc Word, ghép XML, CP/mốc, marker, candidate, nét XPS hay rollback. Các mã `Word.Preview.CpMapping`, `Word.Preview.Unmapped`, `Word.LineBatch.ReferenceBinding.*`, `Word.LineBatch.StoryBinding`, `Word.LineBatch.Rescan` ghi số liệu mà không ghi chữ tài liệu. Không kết luận nguyên nhân chỉ từ ngoại lệ tổng quát hoặc một điều kiện guard gộp.
 
@@ -312,3 +312,13 @@ CurrentTextPlan quét lại toàn ngữ cảnh trước checkpoint, nên thêm s
 - Mức Line 3/7 thuộc cấu hình (mặc định), dung sai/gap không đưa thành quy định pháp luật. Chiều dài tooltip lấy từ LineFix hiện tại, không tính lại hoặc ghi vào tài liệu.
 - Bộ kiểm tóm tắt kiểm nguồn/điểm/nội dung/đối tượng/cỡ chữ thực, các mục thủ công và nguồn chưa rõ. WPF mở tooltip thật, kiểm binding ba phần và xuất `issue-tooltip-preview.png` bằng dữ liệu giả; không lấy tài liệu riêng để làm ảnh.
 - Không thêm loại lỗi mới: 21 đề xuất, 8 thủ công, 1 minh họa. Chưa xác nhận runtime Office 2021 cho bản này. Main/tag/gói stable .27 giữ nguyên.
+
+
+## Ghi chú triển khai 0.1.53
+
+- `StagedRepairBatch` phân selection theo chữ/phông, căn giữa, Line; kiểm chồng lấn trong từng bước, giữ nguyên lỗi manual. Tính chữ dự kiến của mốc qua prefix Word thật, không coi CP là chỉ số chuỗi. Lỗi chồng lấn cắt qua mốc không thể chứng minh thì từ chối trước ghi.
+- `WordSession.Staged` tạo checkpoint ngoài rồi dùng nguyên các giao dịch con đã hậu kiểm. Mỗi bước hình học xuất XPS mới, `StagedGeometryResolver` ghép đúng vai trò duy nhất và nội dung mốc sau sửa; dùng proposal mới. Không quét lấy tất cả lỗi mới phát hiện, không ghi lại tọa độ cũ. Một mục có thể đã đạt sau sửa chữ/phông, chỉ bỏ qua nếu xác minh thật.
+- Hậu kiểm cuối xác minh toàn bộ chữ dự kiến, phông đã chọn, các mốc/Line đã chọn và giữ vị trí số/ngày quan sát được trước bước Line (cho phép CP khác sau mở lại, không bỏ qua hình học khác). Xóa/gộp checkpoint con chỉ sau thành công thành một Undo ngoài. Lỗi bất kỳ bước/đo/hậu kiểm phục hồi cả lượt, giữ Changed và Undo cũ. Lỗi rollback giữ checkpoint và hai nguyên nhân, không báo đạt.
+- MainWindow bỏ chặn lựa chọn lẫn bước và bỏ cắt Sửa tất cả còn nhóm đầu. Duyệt một lần, status tách số đã áp dụng và số đã đạt sau đo lại; EditThenScan vẫn phân biệt sửa lỗi với quét danh sách lỗi.
+- Bộ Core kiểm chuỗi bước, chọn hẹp, mốc/phông/text mới, manual/duplicate/mất chứng cứ, sai rollback/commit. WPF kiểm glyph đổi kích thước và CP mô phỏng, proposal Line mới, nét sai dù Shape tồn tại phải rollback. `OfficeStagedCheck` có mẫu giả chọn hẹp/toàn bộ, 3 điểm chèn lỗi, Undo cũ, lưu/mở/nguồn; CI chỉ biên dịch phần Word này, chưa có bằng chứng runtime Office 2021.
+- Không thêm loại lỗi: 21 đề xuất, 8 thủ công, 1 minh họa. Không đổi nguồn pháp lý hoặc 3/7. Main, stable/tag/gói .27 giữ nguyên.

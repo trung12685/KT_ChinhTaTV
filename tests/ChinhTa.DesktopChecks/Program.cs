@@ -173,6 +173,7 @@ static class Program
         AdministrativePositionDesktopChecks.Run(Assert);
         ProgressReportDesktopChecks.Run(Assert);
         IssueReviewPanelChecks.Run(Assert);
+        StagedGeometryDesktopChecks.Run(Assert);
         Console.WriteLine($"{checks} WPF checks passed.");
     }
 }

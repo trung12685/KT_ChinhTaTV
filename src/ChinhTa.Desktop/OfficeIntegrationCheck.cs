@@ -1050,6 +1050,8 @@ public static class OfficeIntegrationCheck
             if(!SaveDigest(bodyPlain).SequenceEqual(bodyPlainDigest) || !SaveDigest(bodyLink).SequenceEqual(bodyLinkDigest) ||
                 !SaveDigest(bodyComplex).SequenceEqual(bodyComplexDigest))throw new InvalidOperationException("Nguồn mẫu đối chiếu toàn thân đã bị thay đổi");
             test.Profile=DocumentProfile.State;Pass(stage);
+            stage="Nhiều nhóm: chữ, thứ tự mục, dấu đơn, căn giữa và Line";
+            OfficeStagedCheck.Run(test,modern,folder,Pass);
             File.AppendAllText(report,"RESULT PASS\nKiểm thao tác Word/Line, vị trí nét XPS, sửa riêng/nhóm số-ngày, lưu/mở và Hoàn tác trên mẫu giả; không xác nhận mọi tài liệu.\n");
             return new(true,stage,folder);
         }
