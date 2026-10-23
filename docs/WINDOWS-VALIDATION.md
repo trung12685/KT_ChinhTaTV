@@ -1,5 +1,7 @@
 > Cập nhật chốt bản 21/10/2026: 0.1.27 đạt 223 Core/OpenXML + 20 WPF trong CI Windows; người dùng xác nhận sửa cả ba đường cùng lúc chạy được trên Office 2021. Lưu/mở lại, một Undo và toàn bộ Office check của 0.1.27 chưa có xác nhận runtime riêng. Xem [biên bản](STATUS-0.1.27.md).
 >
+Để chọn từng nhóm lỗi khi kiểm tra, xem [Danh sách khả năng sửa 0.1.39](SUPPORTED-FIXES-0.1.39.md): C01–C12, các mục thủ công và bảng sửa riêng/nhóm/quét/Undo/lưu-mở. Danh sách mô tả chức năng đã lập trình, không phải xác nhận Office đã đạt.
+
 > Danh sách bên dưới là kịch bản kiểm tra tích lũy theo từng phiên bản, không phải bảng kết quả đã đạt.
 
 # Kiểm thử chấp nhận trên Windows (chưa thực hiện trong cloud Linux)
