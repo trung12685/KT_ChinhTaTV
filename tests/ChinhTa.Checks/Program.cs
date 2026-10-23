@@ -24,6 +24,7 @@ WholeBodyTextProofChecks.Run(Assert);
 SentenceInnerSpaceChecks.Run(Assert);
 SentenceAfterSpaceChecks.Run(Assert);
 IssueReviewCatalogChecks.Run(Assert);
+IssueTooltipChecks.Run(Assert);
 OutlineChecks.Run(Assert);
 HeadingPostSaveChecks.Run(Assert);
 CheckpointCleanupChecks.Run(Assert);

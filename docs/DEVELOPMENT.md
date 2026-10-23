@@ -10,7 +10,7 @@
 
 Mốc đã chốt: [0.1.27](STATUS-0.1.27.md), mã gói `1ec3092ccd68ed0acd8878b2737664116a6b11fe`, tag `v0.1.27`. Đọc biên bản này trước để phân biệt bằng chứng CI, xác nhận người dùng và kịch bản còn chờ. Phát triển từ `main` sau khi chốt, tạo nhánh mới; không tiếp tục phát hành vào tag hoặc ghi đè ZIP 0.1.27.
 
-Nhánh đang phát triển: `feature/outline-context-0.1.51`, từ 0.1.50 (`bb1a8734cc35a8a8bb1c733e1ebb3e2072abb4cb`). Chuỗi bản thử dựa trên main đã chốt `da6cf3b0999dbfb60d16ab1eae9733b0f1f20c81`. Đọc các CHANGES và [phạm vi 0.1.51](CHANGES-0.1.51.md). Chưa nhập main hoặc coi CI là bằng chứng Office 2021.
+Nhánh đang phát triển: `feature/concise-issue-tooltips-0.1.52`, từ 0.1.51 (`dd81cc5614c641088ff2d8b93db4c509d81a7368`). Chuỗi bản thử dựa trên main đã chốt `da6cf3b0999dbfb60d16ab1eae9733b0f1f20c81`. Đọc các CHANGES và [phạm vi 0.1.52](CHANGES-0.1.52.md). Chưa nhập main hoặc coi CI là bằng chứng Office 2021.
 
 ## Bản đồ mã nguồn
 
@@ -75,7 +75,7 @@ Tài liệu riêng chỉ dùng cục bộ theo đường dẫn tùy chọn của
 dotnet publish src/ChinhTa.Desktop -c Release -r win-x64 --self-contained true -o artifacts/win-x64
 ```
 
-Kèm thư mục `samples`, ghi chú phiên bản, ZIP và SHA-256. Chạy kiểm thử trước khi phát hành. Khi tạo bản mới, cập nhật version trong csproj, tiêu đề UI, tên gói/tag, ghi chú và workflow Windows; không phát hành lại vào tag cũ. Workflow `windows-package.yml` gắn `feature/outline-context-0.1.51` và phát hành prerelease 0.1.51 sau kiểm thử. Mỗi phiên bản sau phải đổi nhánh/version và không ghi đè tag đã phát hành. Workflow `finalize-0.1.27.yml` chỉ chốt metadata của bản đã thử, có kiểm tag, digest, CI và thay đổi chỉ thuộc tài liệu/workflow được cho phép; không build hoặc thay asset.
+Kèm thư mục `samples`, ghi chú phiên bản, ZIP và SHA-256. Chạy kiểm thử trước khi phát hành. Khi tạo bản mới, cập nhật version trong csproj, tiêu đề UI, tên gói/tag, ghi chú và workflow Windows; không phát hành lại vào tag cũ. Workflow `windows-package.yml` gắn `feature/concise-issue-tooltips-0.1.52` và phát hành prerelease 0.1.52 sau kiểm thử. Mỗi phiên bản sau phải đổi nhánh/version và không ghi đè tag đã phát hành. Workflow `finalize-0.1.27.yml` chỉ chốt metadata của bản đã thử, có kiểm tag, digest, CI và thay đổi chỉ thuộc tài liệu/workflow được cho phép; không build hoặc thay asset.
 
 Khi nhận lỗi, lấy log đúng version và phân biệt lỗi đọc Word, ghép XML, CP/mốc, marker, candidate, nét XPS hay rollback. Các mã `Word.Preview.CpMapping`, `Word.Preview.Unmapped`, `Word.LineBatch.ReferenceBinding.*`, `Word.LineBatch.StoryBinding`, `Word.LineBatch.Rescan` ghi số liệu mà không ghi chữ tài liệu. Không kết luận nguyên nhân chỉ từ ngoại lệ tổng quát hoặc một điều kiện guard gộp.
 
@@ -303,3 +303,12 @@ Người dùng yêu cầu thêm ngữ cảnh cấu trúc trước phần ngữ n
 Ngoại lệ hẹp cho tab: helper plain-text cũ được tái sử dụng, chỉ cho allowTabs trong outline evidence sau khi text/XML khớp. `TextEditable` chung vẫn false; `LabelThroughTabs` riêng cho marker-only edits, giữ leading/separator tabs. C21 không bỏ separator tab; leading mix space/tab không rõ giữ manual. Cấp cùng family so sánh XML indent khi prefix giống, hoặc độ dài prefix cùng loại whitespace, không giả tọa độ tab bằng720twips. Bản mẫu riêng được đọc kiểm tra, không đưa lên kho/release; kiểm Core dùng snapshot giả không là Word PASS.
 
 CurrentTextPlan quét lại toàn ngữ cảnh trước checkpoint, nên thêm sibling làm proposal cũ biến mất/bị từ chối. Transaction/checkpoint/save/Line/XPS/Undo không đổi. Office fixture giả có3 order+4 singleton+7 text edits, tab đầu các heading, CP probes từ Issue thật, kiểm single/stale-before-checkpoint/fault/oneUndo/save-reopen/styles/source hashes. C20/21 xuất hiện nhóm review trong UI .50; capability21/8/1 và báo cáo ví dụ nhiều đoạn. Ảnh CI thêm hai nhóm và nền sáng kín, guideISSUE-LIST/OUTLINE-CONTEXT được đưa vào gói. Word/Office2021 runtime chưa xác nhận.
+
+
+## Ghi chú triển khai 0.1.52
+
+- `IssueTooltipCatalog` chỉ tạo bản tóm tắt trình bày ba phần. Các nguồn đã biết có nội dung quy định theo `FORMAT-RULES.md` và ảnh PDF nguồn đã đối chiếu. Không suy khoản/điều không có trong phụ lục, không gọi NĐ30 là Thông tư. Nguồn chưa ánh xạ giữ tham chiếu và nhắc đối chiếu, không bịa nội dung.
+- `IssueChoice.Tooltip` tách khỏi `Detail`; template WPF bind tooltip ngắn, expander giữ toàn bộ mô tả/ngữ cảnh/số đo/căn cứ. Phân nhóm, CanFix, payload, chọn và giao dịch giữ nguyên.
+- Mức Line 3/7 thuộc cấu hình (mặc định), dung sai/gap không đưa thành quy định pháp luật. Chiều dài tooltip lấy từ LineFix hiện tại, không tính lại hoặc ghi vào tài liệu.
+- Bộ kiểm tóm tắt kiểm nguồn/điểm/nội dung/đối tượng/cỡ chữ thực, các mục thủ công và nguồn chưa rõ. WPF mở tooltip thật, kiểm binding ba phần và xuất `issue-tooltip-preview.png` bằng dữ liệu giả; không lấy tài liệu riêng để làm ảnh.
+- Không thêm loại lỗi mới: 21 đề xuất, 8 thủ công, 1 minh họa. Chưa xác nhận runtime Office 2021 cho bản này. Main/tag/gói stable .27 giữ nguyên.

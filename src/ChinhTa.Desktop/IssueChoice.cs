@@ -10,6 +10,7 @@ public sealed class IssueChoice(Issue issue,PreviewAnchor? anchor=null) : INotif
     public IssueChoiceGroup Group { get; internal set; }=null!;
     public string Label=>Info.Label;
     public string Location=>anchor is null?"":"T."+anchor.Page;
+    public string Tooltip=>IssueTooltipCatalog.Describe(Issue).Text;
     public string SelectionLabel=>"Tích lỗi: "+Label;
     public string Context { get; }=anchor is not null && anchor.Length>=0 && anchor.Offset>=0 && anchor.Offset<=anchor.PageText.Length
         ?IssueReviewCatalog.Brief(anchor.PageText.Substring(Math.Max(0,anchor.Offset-35),
