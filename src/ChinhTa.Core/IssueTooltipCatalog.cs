@@ -69,6 +69,8 @@ public static class IssueTooltipCatalog
             if(issue.Kind==FixKind.AdministrativeFormat)
                 return Decree+"mục I.4 và "+(issue.CharacterFormat?.Italic==true?"II.4, điểm c: Times New Roman, đen, cỡ 13–14, nghiêng.":
                     "II.3, điểm c: Times New Roman, đen, cỡ 13, đứng.");
+            if(issue.Kind==FixKind.DocumentTypeText)
+                return Decree+"mục II.5, điểm b: tên loại văn bản được trình bày bằng chữ in hoa.";
             if(issue.Kind==FixKind.DocumentHeadingFormat)
                 return Decree+"mục I.4 và II.5, điểm b: Times New Roman, đen, cỡ 13–14, đứng, đậm; tên loại in hoa, trích yếu ngay dưới, căn giữa.";
             if(issue.Kind==FixKind.AdministrativePosition)
@@ -106,6 +108,7 @@ public static class IssueTooltipCatalog
         if(Spacing(issue))return "Gộp phần đã đánh dấu thành một dấu cách.";
         return issue.Kind switch
         {
+            FixKind.DocumentTypeText=>"Viết hoa tên loại thành “"+Brief(issue.Replacement,40)+"”; giữ trích yếu, phông và căn đoạn.",
             FixKind.RepeatedText=>"Bỏ phần lặp đã đánh dấu, giữ lần đầu; cần duyệt cả câu.",
             FixKind.OutlineOrder=>$"Đổi {Brief(issue.Original,20)} → {Brief(issue.Replacement,20)}; giữ nội dung, cần duyệt dẫn chiếu.",
             FixKind.OutlineMarker=>"Bỏ dấu đầu dòng đơn và dấu cách phân cách; giữ nội dung và thụt đầu dòng.",

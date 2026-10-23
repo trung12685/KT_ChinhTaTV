@@ -33,7 +33,7 @@ public static class IssueReviewCatalog
             FixKind.AdministrativeNumber=>("number","Số, ký hiệu",30,issue.Title??"Cách ghi số, ký hiệu"),
             FixKind.AdministrativeDate=>("date","Địa danh, ngày tháng",31,issue.Title??"Cách ghi địa danh, ngày tháng"),
             FixKind.AdministrativeFormat=>("admin-font","Phông số và ngày tháng",32,issue.Title??"Phông số/ngày tháng chưa đúng"),
-            FixKind.DocumentHeadingFormat=>("document-font","Tên loại và trích yếu",33,issue.Title??"Tên loại/trích yếu chưa đúng"),
+            FixKind.DocumentHeadingFormat or FixKind.DocumentTypeText=>("document-font","Tên loại và trích yếu",33,issue.Title??"Tên loại/trích yếu chưa đúng"),
             FixKind.AdministrativePosition=>("position","Vị trí số và ngày tháng",34,issue.Title??"Kiểm tra vị trí số/ngày tháng"),
             FixKind.ShapeLine=>("lines","Đường kẻ",40,issue.Title??"Kiểm tra đường kẻ"),
             FixKind.AgencyFormat or FixKind.AgencyText=>("agency-font","Tên cơ quan",23,issue.Title??"Tên cơ quan chưa đúng thể thức"),
@@ -54,7 +54,7 @@ public static class IssueReviewCatalog
         // Geometry/centering based on user tolerances remains reviewable. Only a
         // verified missing Line joins the required-format section here.
         bool required=issue.Kind is FixKind.OutlineOrder or FixKind.OutlineMarker || cited && (issue.Kind is FixKind.AdministrativeNumber or FixKind.AdministrativeDate or
-            FixKind.AdministrativeFormat or FixKind.DocumentHeadingFormat or FixKind.AgencyFormat or FixKind.AgencyText or FixKind.RecipientFormat or FixKind.RecipientText ||
+            FixKind.AdministrativeFormat or FixKind.DocumentHeadingFormat or FixKind.DocumentTypeText or FixKind.AgencyFormat or FixKind.AgencyText or FixKind.RecipientFormat or FixKind.RecipientText ||
             issue.Kind is FixKind.NationalHeading or FixKind.StateMotto or FixKind.PartyHeading &&
                 (issue.Format is {Alignment:null} || issue.Original!=issue.Replacement) ||
             issue.Kind==FixKind.ShapeLine && issue.LineFix is {ShapeId:null});

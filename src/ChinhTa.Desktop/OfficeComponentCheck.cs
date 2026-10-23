@@ -8,7 +8,7 @@ internal static class OfficeComponentCheck
 {
     public static void Run(WordSession test,string modern,string folder,Action<string> pass)
     {
-        bool Component(Issue i)=>i.Kind is FixKind.AgencyFormat or FixKind.AgencyText or FixKind.RecipientFormat or FixKind.RecipientText or FixKind.DocumentHeadingFormat;
+        bool Component(Issue i)=>i.Kind is FixKind.AgencyFormat or FixKind.AgencyText or FixKind.RecipientFormat or FixKind.RecipientText or FixKind.DocumentHeadingFormat or FixKind.DocumentTypeText;
         string good=Create(modern,folder,false),bad=Create(modern,folder,true);
         var sourceHash=System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(bad));
         test.Profile=DocumentProfile.State;test.Open(good);
@@ -26,7 +26,7 @@ internal static class OfficeComponentCheck
             throw new InvalidOperationException("Mở lại ba Line sinh cảnh báo giả về cơ quan/trích yếu.");
         pass("Thành phần đúng sau sửa cả ba Line: quét, lưu/mở và một Undo không sinh cảnh báo phông giả");
         test.Open(bad);string original=test.ReadCheckText();var plan=test.Check().Where(i=>i.CanFix && Component(i)).ToArray();
-        if(!plan.Any(i=>i.Kind==FixKind.AgencyFormat) || !plan.Any(i=>i.Kind==FixKind.RecipientFormat) || !plan.Any(i=>i.Original.Contains('\v')))
+        if(!plan.Any(i=>i.Kind==FixKind.DocumentTypeText) || !plan.Any(i=>i.Kind==FixKind.AgencyFormat) || !plan.Any(i=>i.Kind==FixKind.RecipientFormat) || !plan.Any(i=>i.Original.Contains('\v')))
             throw new InvalidOperationException("Mẫu sai chưa tạo đủ đề xuất mới hoặc chưa cho sửa phông giữ ngắt dòng.");
         bool failed=false;
         try{test.FixTextFailureProbe(plan,3);}catch(InvalidOperationException error) when(error.InnerException is OfficeTextProbeException){failed=true;}
@@ -34,7 +34,7 @@ internal static class OfficeComponentCheck
             throw new InvalidOperationException("Rollback nhóm cơ quan/nơi nhận/trích yếu chưa về nguyên bản.");
         pass("Thành phần sai: lỗi giữa lượt phục hồi toàn bộ và không tạo Undo");
         plan=test.Check().Where(i=>i.CanFix && Component(i)).ToArray();test.FixMany(plan);
-        string expected=original.Replace("cơ quan chủ quản","CƠ QUAN CHỦ QUẢN",StringComparison.Ordinal)
+        string expected=original.Replace("Báo cáo","BÁO CÁO",StringComparison.Ordinal).Replace("cơ quan chủ quản","CƠ QUAN CHỦ QUẢN",StringComparison.Ordinal)
             .Replace("đơn vị ban hành","ĐƠN VỊ BAN HÀNH",StringComparison.Ordinal).Replace("Mục thử nghiệm.","- Mục thử nghiệm;",StringComparison.Ordinal);
         if(test.ReadCheckText()!=expected || test.Check().Any(Component) || !test.ReadCheckText().Contains('\v') || test.CheckUndoCount!=1)
             throw new InvalidOperationException("Sửa thành phần chưa đúng chữ/phông/dấu hoặc làm mất ngắt dòng.");
@@ -72,7 +72,7 @@ internal static class OfficeComponentCheck
             using var xps=new System.Windows.Xps.Packaging.XpsDocument(path,FileAccess.Read);
             // Test-only deferred intent: selected component edits run before fresh
             // Line measurements in FixStaged. Do not change the production UI gate.
-            var blockers=deferComponents?found.Where(i=>!i.CanFix || i.Kind is not (FixKind.AgencyFormat or FixKind.AgencyText or FixKind.RecipientFormat or FixKind.RecipientText or FixKind.DocumentHeadingFormat)).ToArray():found;
+            var blockers=deferComponents?found.Where(i=>!i.CanFix || i.Kind is not (FixKind.AgencyFormat or FixKind.AgencyText or FixKind.RecipientFormat or FixKind.RecipientText or FixKind.DocumentHeadingFormat or FixKind.DocumentTypeText)).ToArray():found;
             return LineInspection.Inspect(xps.GetFixedDocumentSequence(),new PreviewHighlighter(),test.LineTargets,test.LineShapes,anchors,blockers,
                 LinePolicy.Decree30,test.HasGroupedShapes,test.VerifiedLineEdits).Select(e=>e.Issue).Where(i=>i.CanFix && i.LineFix is not null).ToArray();
         }
@@ -97,6 +97,7 @@ internal static class OfficeComponentCheck
         }
         var title=xml.Descendants(w+"p").Single(p=>string.Concat(p.Descendants(w+"t").Select(t=>t.Value))=="BÁO CÁO");
         var subject=title.ElementsAfterSelf(w+"p").First();
+        if(bad)title.Descendants(w+"t").Single().Value="Báo cáo";
         var first=Row("Mang lại bình",bad?12:14,true,center:true,broken:bad);
         if(bad)first.Add(new XElement(w+"r",new XElement(w+"br")),Run("yên cho nhân dân",12,true,false,true));
         else first=Row("Mang lại bình ",14,true,center:true);

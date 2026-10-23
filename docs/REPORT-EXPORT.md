@@ -49,3 +49,5 @@ Từ .53, báo cáo ghi mốc sửa nhiều nhóm có đo lại, một Undo/roll
 Từ .54 có C22 tên cơ quan và C23 nơi nhận, với ví dụ, tổng 23/8/1. Mốc .54 ghi nhận diện trích yếu và tách thông tin phạm vi XML.
 
 Mốc .55 hoàn thiện hậu kiểm phông nơi nhận sau đoạn 40 trong lượt nhiều nhóm.
+
+Từ .58 thêm C24 viết hoa tên loại đủ điều kiện, ví dụ `Báo cáo` → `BÁO CÁO`; tổng 24/8/1. M03 giữ trích yếu toàn hoa/vùng chưa rõ, không tự viết thường tên riêng hoặc mã. Nhật ký ghi rõ lỗi cơ quan/trích yếu .56 còn chờ bằng chứng runtime .57 hoặc mới hơn.

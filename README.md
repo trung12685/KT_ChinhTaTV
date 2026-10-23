@@ -2,9 +2,13 @@
 
 Ứng dụng C# / WPF chạy trên Windows với Microsoft Word desktop, làm việc offline trên bản sao DOCX và xem trước bằng XPS. Không gửi nội dung tài liệu tới dịch vụ AI.
 
-**[Danh sách các nhóm sửa hiện có và bảng kiểm tổng thể](docs/SUPPORTED-FIXES-0.1.57.md)** — gồm điều kiện, ví dụ, ngoại lệ ô trống và các mục chỉ cảnh báo.
+**[Danh sách các nhóm sửa hiện có và bảng kiểm tổng thể](docs/SUPPORTED-FIXES-0.1.58.md)** — gồm điều kiện, ví dụ, ngoại lệ ô trống và các mục chỉ cảnh báo.
 
 Ưu tiên đã thống nhất: **thể thức → lỗi chữ và lặp từ/cụm từ → ngữ cảnh và thư viện sau cùng**. Phần chính tả tiếng Việt đầy đủ còn cần xây dựng; không coi quy tắc minh họa hiện tại là bộ kiểm hoàn chỉnh.
+
+## Bản thử 0.1.58
+
+Thêm C24: tên loại đã nhận diện chắc như `Báo cáo` → `BÁO CÁO`, theo NĐ30 PL I.II.5.b. Giữ trích yếu/ngắt đoạn, phông/căn đoạn và khoảng ngoài tên; có thể sửa chung phông sau duyệt. Không đổi tên loại chưa rõ, trường/đối tượng hoặc tự viết thường trích yếu. [Tải Windows](https://github.com/trung12685/KT_ChinhTaTV/releases/tag/v0.1.58) · [Phạm vi và cách thử](docs/CHANGES-0.1.58.md). Báo cáo 24/8/1 có ví dụ C24. Giữ tiến độ .57, XPS, một Undo/rollback; lỗi cơ quan/trích yếu đã được người dùng xác nhận trên .56, đang chờ bằng chứng runtime .57 hoặc mới hơn. Chưa xác nhận Office 2021 cho .58; stable .27 giữ nguyên.
 
 ## Bản thử 0.1.57
 

@@ -7,7 +7,7 @@ public static class IssueReviewCatalogChecks
         var space=new Issue(10,3,"   "," ","detail",false);
         var info=IssueReviewCatalog.Describe(space);
         assert(info.Label=="Khoảng trắng thừa" && info.Section==IssueReviewSection.ReviewSuggestion,"Spacing remains a reviewable suggestion with a concise label");
-        foreach(var kind in new[]{FixKind.AdministrativeNumber,FixKind.AdministrativeDate,FixKind.AdministrativeFormat,FixKind.DocumentHeadingFormat})
+        foreach(var kind in new[]{FixKind.AdministrativeNumber,FixKind.AdministrativeDate,FixKind.AdministrativeFormat,FixKind.DocumentHeadingFormat,FixKind.DocumentTypeText})
         {
             var issue=space with {Kind=kind,Citation="Căn cứ thể thức"};
             assert(IssueReviewCatalog.Describe(issue).Section==IssueReviewSection.RequiredFormat,"Cited supported formatting requirements join the required-format section");

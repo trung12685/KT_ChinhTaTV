@@ -13,6 +13,12 @@ public static class BatchPlan
                 throw new InvalidOperationException("Có cảnh báo chỉ kiểm tra thủ công, không thể sửa tự động.");
             if (current.Start < 0 || current.Length <= 0 || current.Original.Length != current.Length)
                 throw new InvalidOperationException("Vị trí lỗi không hợp lệ. Hãy quét lại.");
+            if(current.Kind==FixKind.DocumentTypeText && (!ShapeLineRules.IsDocumentType(current.Original) ||
+                current.Original!=current.Original.Trim() || current.Original.Any(char.IsControl) ||
+                current.Replacement!=current.Original.ToUpperInvariant() || current.Original==current.Replacement ||
+                current.Original.Length!=current.Replacement.Length || current.CharacterFormat is not null ||
+                current.Format is not null || current.LineFix is not null || current.CenterFix is not null))
+                throw new InvalidOperationException("Gợi ý viết hoa tên loại chưa hợp lệ. Hãy quét lại.");
             if(current.CharacterFormat is CharacterFormat style && (!style.Valid ||
                 !(current.Kind==FixKind.AdministrativeFormat && style.Bold is null && style.Role is null ||
                   current.Kind==FixKind.DocumentHeadingFormat && style.Bold==true && !style.Italic && style.Role is null ||
@@ -40,7 +46,8 @@ public static class BatchPlan
     }
     private static bool SharesFormat(Issue format,Issue text)=>format.CharacterFormat is not null &&
         text.CharacterFormat is null && text.Format is null && text.LineFix is null &&
-        text.Kind is FixKind.Text or FixKind.AdministrativeNumber or FixKind.AdministrativeDate or FixKind.RepeatedText or FixKind.PunctuationSpace or FixKind.ParenthesisSpace or FixKind.SentenceEndSpace or FixKind.ColonSpace or FixKind.SentenceInnerSpace or FixKind.SentenceAfterSpace or FixKind.OutlineOrder or FixKind.OutlineMarker or FixKind.AgencyText or FixKind.RecipientText &&
+        text.Kind is FixKind.Text or FixKind.AdministrativeNumber or FixKind.AdministrativeDate or FixKind.RepeatedText or FixKind.PunctuationSpace or FixKind.ParenthesisSpace or FixKind.SentenceEndSpace or FixKind.ColonSpace or FixKind.SentenceInnerSpace or FixKind.SentenceAfterSpace or FixKind.OutlineOrder or FixKind.OutlineMarker or FixKind.AgencyText or FixKind.RecipientText or FixKind.DocumentTypeText &&
+        (text.Kind!=FixKind.DocumentTypeText || format.Kind==FixKind.DocumentHeadingFormat) &&
         text.Start>=format.Start && (long)text.Start+text.Length<=(long)format.Start+format.Length;
     public static void Validate(IReadOnlyList<Issue> plan, Func<Issue, string> read)
     {

@@ -2,7 +2,7 @@ using System.Text.RegularExpressions;
 
 namespace ChinhTa.Core;
 
-// Named State documents only. The content and capitalization are never inferred or rewritten.
+// Named State documents only. Type capitalization is limited to exact supported names in a proven front-title role; subject content is never inferred.
 public static class DocumentHeadingRules
 {
     public const string Citation="NĐ30, PL I, Phần I.I.4 và II.5.b (PDF 21, 24): tên loại/trích yếu cỡ 13–14, đứng, đậm; tên loại in hoa. Chưa kiểm mọi mẫu và ngoại lệ.";
@@ -60,9 +60,17 @@ public static class DocumentHeadingRules
                 result.Add(new(p.Start,text.Length,text,text,"Times New Roman, màu đen, cỡ 13–14, chữ đứng, đậm; giữ cỡ hợp lệ, nguyên văn, gạch chân và căn đoạn. Vị trí/nét kẻ kiểm riêng.",
                     false,FixKind.DocumentHeadingFormat,Citation:Citation,Title:"Định dạng "+label,CharacterFormat:new(size,false,true)));
             }
-            if(isTitle && text!=text.ToUpperInvariant() || !isTitle && text.Any(char.IsLetter) && text==text.ToUpperInvariant())
-                result.Add(Manual(p,isTitle?"Tên loại cần viết hoa; duyệt thủ công, chưa tự đổi nội dung.":
-                    "Trích yếu đang toàn chữ hoa; cần duyệt cách viết, giữ tên riêng/mã viết tắt, chưa tự đổi chữ.","Kiểm tra cách viết "+label));
+            if(isTitle && text!=text.ToUpperInvariant())
+            {
+                string name=text.Trim(' ');int offset=text.Length-text.TrimStart(' ').Length;
+                if(p.TextEditable && name==name.Trim() && ShapeLineRules.IsDocumentType(name) && name.ToUpperInvariant().Length==name.Length)
+                    result.Add(new(p.Start+offset,name.Length,name,name.ToUpperInvariant(),
+                        "Tên loại văn bản được trình bày bằng chữ in hoa; chỉ đổi hoa/thường của tên đã nhận diện, giữ trích yếu, khoảng trắng ngoài tên, phông và căn đoạn.",
+                        false,FixKind.DocumentTypeText,Citation:Citation,Title:"Tên loại văn bản chưa viết hoa"));
+                else result.Add(Manual(p,"Tên loại cần viết hoa nhưng chưa đủ bằng chứng để thay chữ an toàn; duyệt thủ công.","Kiểm tra cách viết tên loại"));
+            }
+            if(!isTitle && text.Any(char.IsLetter) && text==text.ToUpperInvariant())
+                result.Add(Manual(p,"Trích yếu đang toàn chữ hoa; cần duyệt cách viết, giữ tên riêng/mã viết tắt, chưa tự đổi chữ.","Kiểm tra cách viết trích yếu"));
         }
         return result;
     }
