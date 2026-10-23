@@ -220,7 +220,7 @@ public sealed partial class WordSession : IDisposable
             var observed=ObserveComponent(component.Row);
             int index=paragraphs.FindIndex(p=>p.Start==component.Row.Start);paragraphs[index]=observed;
         }
-        foreach(var row in paragraphs.Where(p=>p.FormatEditable && p.Text.Contains('\v') && p.Page==1 && !p.InTable && p.Alignment==1).ToArray())
+        foreach(var row in paragraphs.Where(p=>p.FormatEditable && (p.Text.Contains('\v') || !p.TextEditable) && p.Page==1 && !p.InTable && p.Alignment==1).ToArray())
         {
             int index=paragraphs.FindIndex(p=>p.Start==row.Start);paragraphs[index]=ObserveComponent(row);
         }

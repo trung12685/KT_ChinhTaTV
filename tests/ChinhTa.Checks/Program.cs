@@ -27,6 +27,7 @@ IssueReviewCatalogChecks.Run(Assert);
 IssueTooltipChecks.Run(Assert);
 StagedRepairChecks.Run(Assert);
 ComponentChecks.Run(Assert);
+OwnedLineFormatChecks.Run(Assert);
 OutlineChecks.Run(Assert);
 HeadingPostSaveChecks.Run(Assert);
 CheckpointCleanupChecks.Run(Assert);

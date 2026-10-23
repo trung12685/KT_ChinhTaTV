@@ -16,7 +16,7 @@ public static class IssueReviewCatalog
     };
     public static string SectionDetail(IssueReviewSection section)=>section switch
     {
-        IssueReviewSection.RequiredFormat=>"Yêu cầu thể thức có căn cứ và đủ điều kiện đề xuất sửa. Bạn vẫn duyệt trước khi áp dụng; mục này không chặn lưu tài liệu.",
+        IssueReviewSection.RequiredFormat=>"Yêu cầu thể thức hoặc thứ tự/dấu đầu dòng theo lựa chọn người dùng, đã đủ điều kiện sửa. Bạn vẫn duyệt trước khi áp dụng; mục này không chặn lưu tài liệu.",
         IssueReviewSection.ReviewSuggestion=>"Đã hỗ trợ đề xuất sửa — cần duyệt. Gợi ý chữ, dấu câu, bố cục hoặc số đo cần xem lại theo ngữ cảnh.",
         _=>"Chưa tự sửa — chỉ cảnh báo. Không tích để sửa tự động; xem chi tiết và đối chiếu trong Word."
     };
@@ -53,7 +53,7 @@ public static class IssueReviewCatalog
         bool cited=!string.IsNullOrWhiteSpace(issue.Citation);
         // Geometry/centering based on user tolerances remains reviewable. Only a
         // verified missing Line joins the required-format section here.
-        bool required=cited && (issue.Kind is FixKind.AdministrativeNumber or FixKind.AdministrativeDate or
+        bool required=issue.Kind is FixKind.OutlineOrder or FixKind.OutlineMarker || cited && (issue.Kind is FixKind.AdministrativeNumber or FixKind.AdministrativeDate or
             FixKind.AdministrativeFormat or FixKind.DocumentHeadingFormat or FixKind.AgencyFormat or FixKind.AgencyText or FixKind.RecipientFormat or FixKind.RecipientText ||
             issue.Kind is FixKind.NationalHeading or FixKind.StateMotto or FixKind.PartyHeading &&
                 (issue.Format is {Alignment:null} || issue.Original!=issue.Replacement) ||

@@ -44,7 +44,7 @@ public static class ComponentRules
                 ComponentRole.RecipientLabel=>new(12,true,true,role),_=>new(11,false,null,role)
             };
             FixKind formatKind=agency?FixKind.AgencyFormat:FixKind.RecipientFormat,textKind=agency?FixKind.AgencyText:FixKind.RecipientText;
-            if(!p.FormatObserved || p.FormatMixed || p.BoldMixed || !p.TextEditable)
+            if(!p.FormatObserved || p.FormatMixed || p.BoldMixed || !(p.TextEditable || p.FormatEditable))
                 result.Add(new(p.Start,text.Length,text,text,"Chưa đủ bằng chứng chữ/định dạng đồng nhất để sửa "+label+"; không kết luận thành phần này sai thể thức.",false,formatKind,
                     CanFix:false,Citation:citation,Title:"Kiểm tra định dạng "+label));
             else if(!style.Matches(p.Font,p.Size,p.Italic?-1:0,p.Color,p.Bold?-1:0))

@@ -89,10 +89,10 @@ public static class DevelopmentReport
             "Đề xuất thêm một dấu cách ASCII sau dấu; giữ chữ, dấu câu và khoảng trước chưa chọn. Có thể chọn cùng C18 để sửa hai phía một lượt. Bỏ qua số, viết tắt/đuôi tệp phổ biến, dấu hiệu kỹ thuật/header/ngày, chuỗi dấu và vùng chưa cho phép sửa. Cần duyệt; chưa sửa mọi dấu câu hoặc tự viết hoa.",
             new ReportExample("Đã hoàn thành.Tiếp tục báo cáo","Đã hoàn thành. Tiếp tục báo cáo")),
         new("C20","Thứ tự mục gõ tay",CapabilityMode.Reviewable,"Đầu đoạn thân đã xác minh XML; cùng mục cha/cấp, có mốc 1/a/I",
-            "Đề xuất đổi nhãn 1,2,4 thành 1,2,3; tương tự a), b), d) hoặc I., II., IV. Giữ dấu phân cách, tiêu đề và nội dung. Tách các mục cha; danh sách tự động/bảng/cấp chưa rõ, bắt đầu lại, chữ cái hoặc dẫn chiếu chưa chắc giữ thủ công. Cần duyệt, không suy đoán nội dung bị thiếu.",
+            "Khi đủ điều kiện, xếp Bắt buộc sửa theo yêu cầu người dùng, vẫn duyệt thứ tự/dẫn chiếu. Đề xuất đổi nhãn 1,2,4 thành 1,2,3; tương tự a), b), d) hoặc I., II., IV. Giữ dấu phân cách, tiêu đề và nội dung. Tách các mục cha; danh sách tự động/bảng/cấp chưa rõ, bắt đầu lại, chữ cái hoặc dẫn chiếu chưa chắc giữ thủ công. Cần duyệt, không suy đoán nội dung bị thiếu.",
             new ReportExample("1. Tình hình\n2. Kết quả công tác\n4. Đề xuất","1. Tình hình\n2. Kết quả công tác\n3. Đề xuất")),
         new("C21","Dấu đầu dòng đứng một mình",CapabilityMode.Reviewable,"Dấu -, –/— hoặc + gõ tay trong mục cha xác định trọn vẹn",
-            "Nếu cùng cấp trong mục cha chỉ có một dấu, đề xuất bỏ dấu và dấu cách phân cách; giữ nội dung/thụt đầu dòng. Dấu + đếm riêng dưới từng dấu - hoặc mục cha khác. Có từ hai dấu cùng cấp thì giữ; mục cha chưa rõ/cấu trúc chưa hỗ trợ giữ thủ công. Đây là lựa chọn trình bày theo yêu cầu người dùng.",
+            "Khi đủ điều kiện, xếp Bắt buộc sửa theo yêu cầu người dùng, vẫn cần duyệt. Nếu cùng cấp trong mục cha chỉ có một dấu, đề xuất bỏ dấu và dấu cách phân cách; giữ nội dung/thụt đầu dòng. Dấu + đếm riêng dưới từng dấu - hoặc mục cha khác. Có từ hai dấu cùng cấp thì giữ; mục cha chưa rõ/cấu trúc chưa hỗ trợ giữ thủ công. Đây là lựa chọn trình bày theo yêu cầu người dùng.",
             new ReportExample("1. Nội dung chính\n- Nội dung riêng\n2. Mục khác","1. Nội dung chính\nNội dung riêng\n2. Mục khác")),
         new("C22","Tên cơ quan chủ quản và ban hành",CapabilityMode.Reviewable,"Nhà nước, khối trái đầu trang có mốc Số và cặp quốc hiệu/tiêu ngữ duy nhất",
             "Theo NĐ30 PL I.I.4 và II.2.b: Times New Roman, đen, in hoa, cỡ 12–13, đứng; cơ quan ban hành đậm, cơ quan chủ quản đứng. Chỉ nhận một hoặc hai đoạn tên trong ô đã xác minh; không đoán tên chính thức hoặc sửa khối nhiều dòng/cấp chưa rõ.",
@@ -151,7 +151,8 @@ public static class DevelopmentReport
         new("0.1.52","Rút tooltip còn Lỗi — Căn cứ — Cách xử lý; nêu đúng vị trí và nội dung quy định, phân biệt cấu hình người dùng; giữ số đo/ngữ cảnh đầy đủ trong Chi tiết lỗi."),
         new("0.1.53","Chọn nhiều nhóm một lượt: sửa chữ/phông, đo lại, căn giữa và Line theo đúng mục đã chọn; một Undo, hậu kiểm nét/phông/vị trí và rollback toàn bộ nếu bước sau lỗi."),
         new("0.1.54","Nhận diện trích yếu nhiều đoạn/ngắt dòng và Kính gửi căn giữa; tên cơ quan C22, nơi nhận 9b C23 theo NĐ30; tách thông tin phạm vi XML khỏi lỗi dòng đầu, giữ sửa nhóm/rollback."),
-        new("0.1.55","Hậu kiểm phông trong lượt nhiều nhóm dùng toàn thân đã xác minh XML, gồm nơi nhận sau đoạn 40; không mở rộng phạm vi đo Line/căn giữa.")
+        new("0.1.55","Hậu kiểm phông trong lượt nhiều nhóm dùng toàn thân đã xác minh XML, gồm nơi nhận sau đoạn 40; không mở rộng phạm vi đo Line/căn giữa."),
+        new("0.1.56","Sửa cảnh báo phông giả ở cơ quan/trích yếu sau chèn Line: proof định dạng riêng cho Line nổi của ứng dụng đã xác minh, không mở sửa chữ qua đối tượng. C20/C21 đủ điều kiện chuyển Bắt buộc sửa theo yêu cầu người dùng; giữ duyệt, kiểm nét XPS, một Undo/rollback.")
     });
     public static IReadOnlyList<string> NextSteps { get; }=Array.AsReadOnly(new[]
     {
