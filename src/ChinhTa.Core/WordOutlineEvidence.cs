@@ -4,14 +4,15 @@ using System.Xml.Linq;
 
 namespace ChinhTa.Core;
 
-public enum OutlineScope { PlainBody, AutomaticList, Complex }
-public sealed record OutlineParagraphInfo(OutlineScope Scope,int Indent=0,int? HeadingLevel=null,bool HasReferences=false,bool LabelThroughTabs=false);
+public enum OutlineScope { PlainBody, AutomaticList, Complex, Recipient }
+public sealed record OutlineParagraphInfo(OutlineScope Scope,int Indent=0,int? HeadingLevel=null,bool HasReferences=false,bool LabelThroughTabs=false,ComponentRole? RecipientRole=null,bool LastRecipient=false);
 
 // Resolve paragraph-list evidence from the same live XML used for text proof.
 // Unknown/cyclic styles or indentation never become ordinary manual list text.
 internal sealed class WordOutlineEvidence(XDocument xml)
 {
     private static readonly XNamespace W="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+    private readonly IReadOnlyDictionary<XElement,(ComponentRole Role,bool Last)> recipients=RecipientContext.Read(xml);
     private readonly XElement? styles=xml.Descendants(W+"styles").FirstOrDefault();
     private readonly Dictionary<string,XElement[]> definitions=xml.Descendants(W+"styles").FirstOrDefault()?.Elements(W+"style")
         .GroupBy(s=>(string?)s.Attribute(W+"styleId")??"",StringComparer.Ordinal).ToDictionary(g=>g.Key,g=>g.ToArray(),StringComparer.Ordinal)??new();
@@ -20,6 +21,7 @@ internal sealed class WordOutlineEvidence(XDocument xml)
         Regex.IsMatch(e.Name==W+"fldSimple"?(string?)e.Attribute(W+"instr")??"":e.Value,@"\b(?:REF|PAGEREF|NOTEREF)\b",RegexOptions.IgnoreCase|RegexOptions.CultureInvariant));
     public OutlineParagraphInfo Describe(XElement p,bool textEditable)
     {
+        if(recipients.TryGetValue(p,out var recipient))return new(OutlineScope.Recipient,RecipientRole:recipient.Role,LastRecipient:recipient.Last);
         OutlineParagraphInfo Complex()=>new(OutlineScope.Complex,HasReferences:references);
         bool labelTabs=!textEditable && p.Descendants(W+"tab").Any(e=>e.Parent?.Name==W+"r") && WordXmlTableMap.IsPlainText(p,allowTabs:true);
         if(!textEditable && !labelTabs || p.Ancestors(W+"tc").Any() || p.Descendants().Any(e=>e.Name==W+"bookmarkStart" || e.Name==W+"bookmarkEnd"))return Complex();

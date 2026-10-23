@@ -49,6 +49,7 @@ public partial class MainWindow : Window
             anchors.Clear();
             highlighter.Clear();
             Review.LoadIssues([]);
+            CoverageInfo.Visibility=Visibility.Collapsed;
             Status.Text=ex is ScanAfterEditException?ex.Message:
                 "Thao tác chưa hoàn tất. Danh sách lỗi cũ đã được xóa; hãy Quét lại trước khi sửa tiếp.";
             string message = ex is ScanAfterEditException?ex.Message:WordConnectionPolicy.IsDisconnected(ex)
@@ -74,6 +75,7 @@ public partial class MainWindow : Window
     {
         hover.Stop();pending = displayed = null;
         Review.LoadIssues([]);
+        CoverageInfo.Visibility=Visibility.Collapsed;
         var timer = Stopwatch.StartNew();
         var found = session.Check().ToList();
         double checkSeconds = timer.Elapsed.TotalSeconds;
@@ -93,6 +95,8 @@ public partial class MainWindow : Window
             {found.Add(entry.Issue);anchors[entry.Issue]=entry.Anchor;}
         }
         Review.LoadIssues(found,anchors);
+        CoverageInfo.Text=session.CoverageNotice??"";
+        CoverageInfo.Visibility=session.CoverageNotice is null?Visibility.Collapsed:Visibility.Visible;
         Status.Text = $"{Path.GetFileName(session.Source)} — {found.Count} cảnh báo. " +
             $"Quét: {checkSeconds:F1}s; dựng trang: {timer.Elapsed.TotalSeconds - checkSeconds:F1}s. " +
             "Chọn hoặc rê chuột lên lỗi để đánh dấu riêng, không xuất lại Word." +

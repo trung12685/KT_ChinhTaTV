@@ -3,7 +3,7 @@ using System.Xml.Linq;
 namespace ChinhTa.Core;
 
 // Positions come from live Word ranges, never from guessed XML character counts.
-public record WordParagraphSnapshot(int Start, int End, string Text, int Page, bool InTable, bool Centered, bool? ParagraphCentered = null);
+public record WordParagraphSnapshot(int Start, int End, string Text, int Page, bool InTable, bool Centered, bool? ParagraphCentered = null,bool? UnindentedCenter=null);
 public sealed class WordXmlMappingException(string code, int paragraph, int xmlLength, int wordLength)
     : InvalidOperationException(code)
 {
@@ -15,10 +15,10 @@ public static class WordXmlTableMap
     private static readonly XNamespace W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
     private static readonly HashSet<XName> UnsafeTextNames=new(){W+"sdt",W+"fldSimple",W+"hyperlink",W+"drawing",W+"pict",W+"object",W+"smartTag",W+"tab",W+"br",W+"cr"};
     private static string Clean(string text) => text.TrimEnd('\r', '\a').Replace('\u2011', '\u001e').Replace('\u00ad', '\u001f');
-    public static IReadOnlyList<LayoutParagraph> Read(string wordOpenXml, IReadOnlyList<WordParagraphSnapshot> live, Action<WordXmlMappingException>? onMismatch = null, Action<int, int>? onParagraphMatched = null, Action<int,bool>? onTextEditable = null, bool includeLayout = true)
-        => Read(XDocument.Parse(wordOpenXml),live,onMismatch,onParagraphMatched,onTextEditable,includeLayout);
+    public static IReadOnlyList<LayoutParagraph> Read(string wordOpenXml, IReadOnlyList<WordParagraphSnapshot> live, Action<WordXmlMappingException>? onMismatch = null, Action<int, int>? onParagraphMatched = null, Action<int,bool>? onTextEditable = null, bool includeLayout = true,Action<int,bool>? onFormatEditable=null)
+        => Read(XDocument.Parse(wordOpenXml),live,onMismatch,onParagraphMatched,onTextEditable,includeLayout,onFormatEditable);
     internal static IReadOnlyList<LayoutParagraph> Read(XDocument xml,IReadOnlyList<WordParagraphSnapshot> live,
-        Action<WordXmlMappingException>? onMismatch,Action<int,int>? onParagraphMatched,Action<int,bool>? onTextEditable,bool includeLayout)
+        Action<WordXmlMappingException>? onMismatch,Action<int,int>? onParagraphMatched,Action<int,bool>? onTextEditable,bool includeLayout,Action<int,bool>? onFormatEditable=null)
     {
         var body = xml.Descendants(W + "document").Single().Element(W + "body")
             ?? throw new InvalidOperationException("Missing document body");
@@ -45,6 +45,7 @@ public static class WordXmlTableMap
                 onMismatch(error); verified = i; break;
             }
             onParagraphMatched?.Invoke(live[i].Start, i);
+            onFormatEditable?.Invoke(live[i].Start,IsPlainText(p,allowTextBreaks:true));
             if(onTextEditable is not null)
             {
                 bool editable=IsPlainText(p);
@@ -87,12 +88,14 @@ public static class WordXmlTableMap
                 balanced = BalancedMargins(cell, table, styles);
             }
             result.Add(new(item.Start, item.Text, item.Page, cell is not null, cellStart, cellEnd,
-                item.Centered && balanced, tableStart, item.ParagraphCentered));
+                item.Centered && balanced, tableStart, item.ParagraphCentered,item.UnindentedCenter is bool center?center && balanced:null));
         }
         return result;
     }
-    internal static bool IsPlainText(XElement p,bool allowTabs=false)=>!p.Ancestors(W+"sdt").Any() && !p.Descendants().Any(e=>
-        UnsafeTextNames.Contains(e.Name) && (e.Name!=W+"tab" || e.Parent?.Name==W+"r" && !allowTabs) ||
+    internal static bool IsPlainText(XElement p,bool allowTabs=false,bool allowTextBreaks=false)=>!p.Ancestors(W+"sdt").Any() && !p.Descendants().Any(e=>
+        UnsafeTextNames.Contains(e.Name) &&
+        !(allowTextBreaks && e.Parent?.Name==W+"r" && (e.Name==W+"cr" || e.Name==W+"br" && ((string?)e.Attribute(W+"type") is null or "textWrapping"))) &&
+        (e.Name!=W+"tab" || e.Parent?.Name==W+"r" && !allowTabs) ||
         e.Name.NamespaceName=="http://schemas.openxmlformats.org/officeDocument/2006/math");
     private static string TextOf(XElement p)
     {

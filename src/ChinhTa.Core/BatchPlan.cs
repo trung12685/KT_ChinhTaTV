@@ -14,8 +14,10 @@ public static class BatchPlan
             if (current.Start < 0 || current.Length <= 0 || current.Original.Length != current.Length)
                 throw new InvalidOperationException("Vị trí lỗi không hợp lệ. Hãy quét lại.");
             if(current.CharacterFormat is CharacterFormat style && (!style.Valid ||
-                !(current.Kind==FixKind.AdministrativeFormat && style.Bold is null ||
-                  current.Kind==FixKind.DocumentHeadingFormat && style.Bold==true && !style.Italic) ||
+                !(current.Kind==FixKind.AdministrativeFormat && style.Bold is null && style.Role is null ||
+                  current.Kind==FixKind.DocumentHeadingFormat && style.Bold==true && !style.Italic && style.Role is null ||
+                  current.Kind==FixKind.AgencyFormat && style.Role is ComponentRole.Agency or ComponentRole.AgencyParent ||
+                  current.Kind==FixKind.RecipientFormat && style.Role is ComponentRole.RecipientItem or ComponentRole.RecipientLabel) ||
                 current.Original!=current.Replacement || current.Format is not null || current.LineFix is not null ||
                 current.Original.IndexOfAny(['\r','\n','\a','\t'])>=0))
                 throw new InvalidOperationException("Gợi ý định dạng ký tự không hợp lệ. Hãy quét lại.");
@@ -25,7 +27,7 @@ public static class BatchPlan
                 current.CharacterFormat is not null || current.Format is not null || current.LineFix is not null) ||
                 current.Kind==FixKind.AdministrativePosition && current.CenterFix is null)
                 throw new InvalidOperationException("Gợi ý căn giữa không hợp lệ. Hãy quét lại.");
-            if(current.Kind==FixKind.DocumentHeadingFormat && current.CharacterFormat is null)
+            if(current.Kind is FixKind.DocumentHeadingFormat or FixKind.AgencyFormat or FixKind.RecipientFormat && current.CharacterFormat is null)
                 throw new InvalidOperationException("Gợi ý tên loại/trích yếu thiếu định dạng đã xác minh. Hãy quét lại.");
             active.RemoveAll(previous=>(long)previous.Start+previous.Length<=current.Start);
             foreach(var previous in active)
@@ -38,7 +40,7 @@ public static class BatchPlan
     }
     private static bool SharesFormat(Issue format,Issue text)=>format.CharacterFormat is not null &&
         text.CharacterFormat is null && text.Format is null && text.LineFix is null &&
-        text.Kind is FixKind.Text or FixKind.AdministrativeNumber or FixKind.AdministrativeDate or FixKind.RepeatedText or FixKind.PunctuationSpace or FixKind.ParenthesisSpace or FixKind.SentenceEndSpace or FixKind.ColonSpace or FixKind.SentenceInnerSpace or FixKind.SentenceAfterSpace or FixKind.OutlineOrder or FixKind.OutlineMarker &&
+        text.Kind is FixKind.Text or FixKind.AdministrativeNumber or FixKind.AdministrativeDate or FixKind.RepeatedText or FixKind.PunctuationSpace or FixKind.ParenthesisSpace or FixKind.SentenceEndSpace or FixKind.ColonSpace or FixKind.SentenceInnerSpace or FixKind.SentenceAfterSpace or FixKind.OutlineOrder or FixKind.OutlineMarker or FixKind.AgencyText or FixKind.RecipientText &&
         text.Start>=format.Start && (long)text.Start+text.Length<=(long)format.Start+format.Length;
     public static void Validate(IReadOnlyList<Issue> plan, Func<Issue, string> read)
     {

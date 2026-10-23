@@ -4,8 +4,8 @@ namespace ChinhTa.Core;
 
 public record Paragraph(int Start, string Text, bool Bold = false, float Size = 13,
     int Alignment = 1, string Font = "Times New Roman", bool Italic = false,
-    int Color = 0, bool InTable = false, int Page = 1, bool FormatObserved = false, bool FormatMixed = false, bool TextEditable = true, bool BoldMixed = false, OutlineParagraphInfo? Outline = null);
-public enum FixKind { Text, NationalHeading, StateMotto, PartyHeading, Advisory, PageLayout, ShapeLine, AdministrativeNumber, AdministrativeDate, AdministrativeFormat, AdministrativePosition, DocumentHeadingFormat, RepeatedText, PunctuationSpace, ParenthesisSpace, SentenceEndSpace, ColonSpace, SentenceInnerSpace, SentenceAfterSpace, OutlineOrder, OutlineMarker }
+    int Color = 0, bool InTable = false, int Page = 1, bool FormatObserved = false, bool FormatMixed = false, bool TextEditable = true, bool BoldMixed = false, OutlineParagraphInfo? Outline = null, bool FormatEditable = false);
+public enum FixKind { Text, NationalHeading, StateMotto, PartyHeading, Advisory, PageLayout, ShapeLine, AdministrativeNumber, AdministrativeDate, AdministrativeFormat, AdministrativePosition, DocumentHeadingFormat, RepeatedText, PunctuationSpace, ParenthesisSpace, SentenceEndSpace, ColonSpace, SentenceInnerSpace, SentenceAfterSpace, OutlineOrder, OutlineMarker, AgencyFormat, AgencyText, RecipientFormat, RecipientText }
 public record HeadingFormat(float Size, int? Alignment = null)
 {
     public bool Matches(string font,float size,int bold,int italic,int color,int? alignment)=>
@@ -13,9 +13,17 @@ public record HeadingFormat(float Size, int? Alignment = null)
         float.IsFinite(size) && Math.Abs(size-Size)<.01f && bold==-1 && italic==0 &&
         color is 0 or -16777216 && (Alignment is null || alignment==Alignment);
 }
-public record CharacterFormat(float Size,bool Italic,bool? Bold=null)
+public enum ComponentRole { AgencyParent, Agency, RecipientLabel, RecipientItem }
+public record CharacterFormat(float Size,bool Italic,bool? Bold=null,ComponentRole? Role=null)
 {
-    public bool Valid => float.IsFinite(Size) && (Bold is null?(Italic?Size>=13 && Size<=14:Math.Abs(Size-13)<.01f):Bold==true && !Italic && Size>=13 && Size<=14);
+    public bool Valid => float.IsFinite(Size) && (Role is not null ? Role switch
+    {
+        ComponentRole.AgencyParent=>Size>=12 && Size<=13 && !Italic && Bold==false,
+        ComponentRole.Agency=>Size>=12 && Size<=13 && !Italic && Bold==true,
+        ComponentRole.RecipientLabel=>Size==12 && Italic && Bold==true,
+        ComponentRole.RecipientItem=>Size==11 && !Italic && Bold is null,
+        _=>false
+    } : Bold is null?(Italic?Size>=13 && Size<=14:Math.Abs(Size-13)<.01f):Bold==true && !Italic && Size>=13 && Size<=14);
     public bool Matches(string font,float size,int italic,int color,int? bold=null)=>
         font.Equals("Times New Roman",StringComparison.OrdinalIgnoreCase) && float.IsFinite(size) &&
         Math.Abs(size-Size)<.01f && italic==(Italic?-1:0) && color is 0 or -16777216 &&
@@ -30,7 +38,7 @@ public record Issue(int Start, int Length, string Original, string Replacement,
     public string Suggestion => !CanFix ? "Kiểm tra thủ công; không tự sửa."
         : LineFix is not null ? "Tạo/đặt lại Shape Line theo số đo và cấu hình đã chọn."
         : CenterFix is not null ? "Căn giữa trong ô đã xác minh, bỏ thụt lề ngang; giữ nguyên chữ và khoảng cách dọc."
-        : CharacterFormat is not null ? $"Times New Roman, màu đen, cỡ {CharacterFormat.Size:0.#}, chữ {(CharacterFormat.Italic?"nghiêng":"đứng")}{(CharacterFormat.Bold==true?", đậm":"")}; giữ nguyên chữ."
+        : CharacterFormat is not null ? $"Times New Roman, màu đen, cỡ {CharacterFormat.Size:0.#}, chữ {(CharacterFormat.Italic?"nghiêng":"đứng")}{(CharacterFormat.Bold==true?", đậm":CharacterFormat.Bold==false?", không đậm":"")}; giữ nguyên chữ."
         : Kind==FixKind.OutlineOrder ? $"Đổi ký hiệu mục {Original} → {Replacement}; giữ nội dung, cần duyệt thứ tự và dẫn chiếu."
         : Kind==FixKind.OutlineMarker ? "Bỏ dấu đầu dòng và dấu cách phân cách; giữ nội dung và thụt đầu dòng, cần duyệt mục cha."
         : Kind==FixKind.SentenceAfterSpace ? "Thêm một dấu cách sau dấu kết câu; giữ chữ, dấu câu và khoảng trước, cần duyệt cả câu."

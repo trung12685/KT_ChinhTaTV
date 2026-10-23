@@ -2,7 +2,7 @@ namespace ChinhTa.Core;
 
 public enum LineRole { Agency, Motto, Subject }
 public record LayoutParagraph(int Start, string Text, int Page, bool InTable, int CellStart,
-    int CellEnd, bool Centered, int TableStart = -1, bool? ParagraphCentered = null);
+    int CellEnd, bool Centered, int TableStart = -1, bool? ParagraphCentered = null,bool? UnindentedCenter=null);
 public record LineTarget(LineRole Role, int Start, string Text, int RegionStart, int RegionEnd, bool Centered)
 {
     public string Label => Role switch { LineRole.Agency => "cơ quan ban hành", LineRole.Motto => "tiêu ngữ", _ => "trích yếu" };

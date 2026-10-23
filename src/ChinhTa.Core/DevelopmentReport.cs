@@ -58,7 +58,7 @@ public static class DevelopmentReport
         new("C09","Phông tên loại văn bản",CapabilityMode.Reviewable,"Đầu Nhà nước, khối tên loại/trích yếu chắc chắn",
             "Times New Roman, đen, đứng, đậm, cỡ 13–14. Hiện dùng 13 tên loại; chưa áp cho Công văn/V/v. Không tự đổi nội dung sang chữ hoa.",
             new ReportExample("Tên loại BÁO CÁO dùng Arial, đỏ, nghiêng, cỡ 12.","Giữ nguyên chữ; đề xuất Times New Roman, đen, đứng, đậm, cỡ 13 khi khối tên loại được nhận diện chắc chắn.")),
-        new("C10","Phông trích yếu",CapabilityMode.Reviewable,"Khối 1–4 đoạn dưới tên loại, có ranh giới rõ",
+        new("C10","Phông trích yếu",CapabilityMode.Reviewable,"Khối dưới tên loại, có ranh giới rõ trong vùng đầu trang đã đối chiếu",
             "Times New Roman, đen, đứng, đậm, cỡ 13–14; giữ nguyên văn, cỡ hợp lệ, gạch chân/căn đoạn. Chưa tự viết thường trích yếu toàn chữ hoa.",
             new ReportExample("Trích yếu Tình hình công tác dùng Arial, đỏ, nghiêng, cỡ 12.","Giữ nguyên chữ; đề xuất Times New Roman, đen, đứng, đậm, cỡ 13 khi trích yếu được nhận diện chắc chắn.")),
         new("C11","Căn giữa số/ngày",CapabilityMode.Reviewable,"Mốc chữ và cùng khung ô được xác minh trên XPS",
@@ -94,6 +94,12 @@ public static class DevelopmentReport
         new("C21","Dấu đầu dòng đứng một mình",CapabilityMode.Reviewable,"Dấu -, –/— hoặc + gõ tay trong mục cha xác định trọn vẹn",
             "Nếu cùng cấp trong mục cha chỉ có một dấu, đề xuất bỏ dấu và dấu cách phân cách; giữ nội dung/thụt đầu dòng. Dấu + đếm riêng dưới từng dấu - hoặc mục cha khác. Có từ hai dấu cùng cấp thì giữ; mục cha chưa rõ/cấu trúc chưa hỗ trợ giữ thủ công. Đây là lựa chọn trình bày theo yêu cầu người dùng.",
             new ReportExample("1. Nội dung chính\n- Nội dung riêng\n2. Mục khác","1. Nội dung chính\nNội dung riêng\n2. Mục khác")),
+        new("C22","Tên cơ quan chủ quản và ban hành",CapabilityMode.Reviewable,"Nhà nước, khối trái đầu trang có mốc Số và cặp quốc hiệu/tiêu ngữ duy nhất",
+            "Theo NĐ30 PL I.I.4 và II.2.b: Times New Roman, đen, in hoa, cỡ 12–13, đứng; cơ quan ban hành đậm, cơ quan chủ quản đứng. Chỉ nhận một hoặc hai đoạn tên trong ô đã xác minh; không đoán tên chính thức hoặc sửa khối nhiều dòng/cấp chưa rõ.",
+            new ReportExample("cơ quan chủ quản dùng Arial đỏ cỡ 14.","CƠ QUAN CHỦ QUẢN; Times New Roman, đen, cỡ 12–13, đứng, không đậm; giữ nội dung, căn đoạn và cỡ đang hợp lệ.")),
+        new("C23","Nơi nhận tại ô 9b",CapabilityMode.Reviewable,"Nhà nước, nhãn Nơi nhận và dòng Lưu cùng vùng XML đã nhận diện",
+            "NĐ30 PL I.I.4 và II.9.d: nhãn cỡ 12 nghiêng đậm; danh sách cỡ 11 đứng, có gạch đầu dòng, cuối dòng ;, dòng Lưu kết thúc bằng chấm. Không áp quy tắc dấu đơn/thứ tự mục thân bài cho danh sách này. Chưa đo đủ vị trí lề/hàng, không đoán đơn vị nhận hoặc số bản lưu.",
+            new ReportExample("Nơi nhận: cỡ 14 đứng; một dòng ghi Đơn vị mẫu.","Nhãn cỡ 12 nghiêng đậm; danh sách cỡ 11 đứng; sửa dòng thành - Đơn vị mẫu; khi đã xác minh có dòng Lưu cuối khối.")),
         new("M01","Khổ giấy và lề",CapabilityMode.Manual,"Nhà nước/Đảng",
             "Cảnh báo A4/lề, trang ngang/lề đối xứng và ngoại lệ; chưa tự đổi thiết lập trang.",
             new ReportExample("Văn bản Nhà nước trên A4 có lề trái 20 mm.","Cảnh báo đối chiếu quy định và ngoại lệ; chưa tự đổi khổ giấy/lề.")),
@@ -143,7 +149,8 @@ public static class DevelopmentReport
         new("0.1.50","Thu gọn danh sách lỗi một dòng, gom nhóm có checkbox từng mục/nhóm/tất cả, chia thể thức cần sửa/gợi ý cần duyệt/cảnh báo thủ công; chi tiết ở tooltip và khung mở rộng."),
         new("0.1.51","Thêm ngữ cảnh cấu trúc cho thứ tự mục gõ tay và dấu đầu dòng đơn trong từng mục cha; bằng chứng XML, sửa nhóm/rollback và ví dụ C20/C21."),
         new("0.1.52","Rút tooltip còn Lỗi — Căn cứ — Cách xử lý; nêu đúng vị trí và nội dung quy định, phân biệt cấu hình người dùng; giữ số đo/ngữ cảnh đầy đủ trong Chi tiết lỗi."),
-        new("0.1.53","Chọn nhiều nhóm một lượt: sửa chữ/phông, đo lại, căn giữa và Line theo đúng mục đã chọn; một Undo, hậu kiểm nét/phông/vị trí và rollback toàn bộ nếu bước sau lỗi.")
+        new("0.1.53","Chọn nhiều nhóm một lượt: sửa chữ/phông, đo lại, căn giữa và Line theo đúng mục đã chọn; một Undo, hậu kiểm nét/phông/vị trí và rollback toàn bộ nếu bước sau lỗi."),
+        new("0.1.54","Nhận diện trích yếu nhiều đoạn/ngắt dòng và Kính gửi căn giữa; tên cơ quan C22, nơi nhận 9b C23 theo NĐ30; tách thông tin phạm vi XML khỏi lỗi dòng đầu, giữ sửa nhóm/rollback.")
     });
     public static IReadOnlyList<string> NextSteps { get; }=Array.AsReadOnly(new[]
     {
@@ -154,7 +161,7 @@ public static class DevelopmentReport
     public static IReadOnlyList<ReportPlannedWork> PlannedWork { get; }=Array.AsReadOnly(new ReportPlannedWork[]
     {
         new("P01","Vị trí dọc số/ngày",new ReportExample("Dòng số và dòng ngày lệch hàng 12 pt.","Hoàn thiện nhận diện, căn cứ, phép đo và hậu kiểm trước khi cho phép dịch dọc; hiện chưa có nút tự sửa phần này.")),
-        new("P02","Thể thức các vùng còn thiếu",new ReportExample("Đoạn thân bài hoặc phần chữ ký dùng Arial màu đỏ.","Tiếp tục xác minh quy định và nhận diện từng vùng trước khi bổ sung sửa phông/kiểu. Chưa tự áp phông cho toàn bộ thân bài/chữ ký/nơi nhận.")),
+        new("P02","Thể thức các vùng còn thiếu",new ReportExample("Đoạn thân bài hoặc phần chữ ký dùng Arial màu đỏ.","Tiếp tục xác minh quy định và nhận diện từng vùng trước khi bổ sung sửa phông/kiểu. Chưa tự áp phông cho toàn bộ thân bài/chữ ký; nơi nhận 9b có phạm vi C23 riêng.")),
         new("P03","Dấu câu ngoài phạm vi hiện tại",new ReportExample("Đã hoàn thành.tiếp tục báo cáo","Nghiên cứu ranh giới câu, chữ hoa/thường, viết tắt và ngoại lệ; C18/C19 cần từ sau viết hoa đầu đủ rõ, chưa sửa ví dụ này hoặc tự viết hoa.")),
         new("P04","Chính tả qua dữ liệu kiểm chứng",new ReportExample("Tôi xẽ gửi báo cáo.","Cần dữ liệu từ và mẫu ngoại lệ trước khi đề xuất xẽ → sẽ; hiện chưa có quy tắc sửa ví dụ này. Chưa coi chương trình là bộ kiểm chính tả đầy đủ.")),
         new("P05","Ngữ cảnh và từ dễ nhầm — làm sau cùng",new ReportExample("Anh ấy giành thời gian đọc sách.","Nghiên cứu ngữ cảnh giành/dành và thư viện sau phần thể thức/lỗi chữ cơ bản; chưa có gợi ý tự động cho ví dụ này."))
@@ -195,7 +202,7 @@ public static class DevelopmentReport
         Line("CÁC NỘI DUNG ĐÃ LÀM");
         foreach(var item in Milestones)Line(item.Version+": "+item.Detail);
         Line();Line("GIỚI HẠN CÒN LẠI");
-        Line("Chưa kiểm/sửa đầy đủ tên cơ quan, thân bài, chữ ký/nơi nhận, số trang và mọi mẫu riêng. Header/footer/textbox, bảng gộp/lồng, field/control mọi trang còn giới hạn. Track Changes hoặc tài liệu bảo vệ chưa được hỗ trợ.");
+        Line("Chưa kiểm/sửa đầy đủ tên/mã cơ quan chính thức, thân bài, chữ ký và mọi biến thể nơi nhận, số trang và mọi mẫu riêng. Header/footer/textbox, bảng gộp/lồng, field/control mọi trang còn giới hạn. Track Changes hoặc tài liệu bảo vệ chưa được hỗ trợ.");
         Line("Phần chính tả tiếng Việt đầy đủ chưa hoàn thành. Danh mục có điều kiện không phải kết luận pháp lý hoặc kết quả kiểm tra tài liệu cụ thể.");
         Line();Line("CÁC BƯỚC TIẾP THEO — THEO ƯU TIÊN ĐÃ THỐNG NHẤT");
         foreach(string item in NextSteps)Line(item);

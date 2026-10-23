@@ -20,6 +20,7 @@ public sealed partial class WordSession : IDisposable
     public IReadOnlyList<AdministrativePositionTarget> AdministrativePositionTargets { get; private set; } = [];
     public IReadOnlyList<WordLineShape> LineShapes { get; private set; } = [];
     public bool HasGroupedShapes { get; private set; }
+    public string? CoverageNotice { get; private set; }
     public DocumentProfile Profile { get; set; } = DocumentProfile.State;
     public bool Recovered { get; private set; }
     public string RecoveryPath => Path.Combine(folder, "working.docx");
@@ -92,6 +93,7 @@ public sealed partial class WordSession : IDisposable
     public IReadOnlyList<Issue> Check() => ReadWithRecovery("Word.Check", CheckCore);
     private IReadOnlyList<Issue> CheckCore()
     {
+        CoverageNotice=null;
         // Page information after reopening may be stale until Word has paginated.
         document!.Repaginate();
         var paragraphs = new List<Paragraph>();
@@ -99,6 +101,7 @@ public sealed partial class WordSession : IDisposable
         var liveLayout = new List<WordParagraphSnapshot>();
         var liveText=new List<WordParagraphSnapshot>();
         IReadOnlySet<int> editableStarts=new HashSet<int>();
+        var formatEditableStarts=new HashSet<int>();
         var outlineEvidence=new Dictionary<int,OutlineParagraphInfo>();
         bool textProofUnavailable=false;
         WordXmlMappingException? textProofWarning=null;
@@ -183,11 +186,11 @@ public sealed partial class WordSession : IDisposable
                 {
                     textProofWarning=warning;
                     Diagnostics.Write("Word.TextProof."+warning.DiagnosticCode,warning);
-                },(start,info)=>outlineEvidence[start]=info);
+                },(start,info)=>outlineEvidence[start]=info,(start,canFormat)=>{if(canFormat)formatEditableStarts.Add(start);});
             }
             catch(Exception ex) when(ex is InvalidOperationException or System.Xml.XmlException)
             {
-                Diagnostics.Write("Word.TextProof.Unavailable",ex);textProofUnavailable=true;outlineEvidence.Clear();
+                Diagnostics.Write("Word.TextProof.Unavailable",ex);textProofUnavailable=true;outlineEvidence.Clear();formatEditableStarts.Clear();
             }
             // Preserve the existing geometry prefix and mismatch handling. The whole-
             // body text proof never broadens table/Line operations to later paragraphs.
@@ -209,17 +212,25 @@ public sealed partial class WordSession : IDisposable
             }
         }
         lastLayout=liveLayout.ToArray();
-        paragraphs=WordTextProof.Apply(paragraphs,editableStarts,outlineEvidence).ToList();
+        paragraphs=WordTextProof.Apply(paragraphs,editableStarts,outlineEvidence,formatEditableStarts).ToList();
+        foreach(var component in ComponentRules.Identify(paragraphs,headerLayout,Profile))
+        {
+            var observed=ObserveComponent(component.Row);
+            int index=paragraphs.FindIndex(p=>p.Start==component.Row.Start);paragraphs[index]=observed;
+        }
+        foreach(var row in paragraphs.Where(p=>p.FormatEditable && p.Text.Contains('\v') && p.Page==1 && !p.InTable && p.Alignment==1).ToArray())
+        {
+            int index=paragraphs.FindIndex(p=>p.Start==row.Start);paragraphs[index]=ObserveComponent(row);
+        }
         LineTargets = lineLayoutUnavailable ? [] : ShapeLineRules.Identify(headerLayout, Profile);
         AdministrativePositionTargets=AdministrativePositionRules.Identify(paragraphs,headerLayout,Profile);
         LineShapes = ReadLineShapes();
         var issues = Checker.Check(paragraphs, Profile).ToList();
         issues.AddRange(DocumentHeadingRules.Check(paragraphs,headerLayout,Profile));
-        if((textProofUnavailable || textProofWarning is not null) && paragraphs.FirstOrDefault(p=>p.Text.Length>0) is Paragraph textReference)
-            issues.Add(new(textReference.Start,textReference.Text.Length,textReference.Text,textReference.Text,
-                "Chưa đối chiếu được toàn bộ phần thân để sửa chữ/phông. Các đoạn đã xác minh vẫn được xét; đoạn chưa xác minh giữ kiểm tra thủ công. "+
-                (textProofWarning is null?"Không đọc/đối chiếu được XML hiện tại.":"Mã kiểm tra: "+textProofWarning.DiagnosticCode+"."),
-                false,FixKind.Advisory,CanFix:false,Title:"Chưa đối chiếu đầy đủ vùng sửa chữ"));
+        issues.AddRange(ComponentRules.Check(paragraphs,headerLayout,Profile));
+        if(textProofUnavailable || textProofWarning is not null)
+            CoverageNotice="Chưa đối chiếu đầy đủ một phần tài liệu để sửa chữ. Đây là phạm vi kiểm tra, không phải lỗi của dòng đầu. "+
+                (textProofWarning is null?"Không đọc/đối chiếu được XML hiện tại.":"Mã kiểm tra: "+textProofWarning.DiagnosticCode+".");
         if ((lineLayoutUnavailable || mappingWarning is not null && LineTargets.Count < 3) && paragraphs.FirstOrDefault(p => p.Text.Length > 0) is Paragraph first)
             issues.Add(new(first.Start, first.Text.Length, first.Text, first.Text,
                 "Chưa đối chiếu đủ các mốc đường kẻ. " +
@@ -269,13 +280,13 @@ public sealed partial class WordSession : IDisposable
         int page = (int)range.Information[3];
         bool inTable = (bool)range.Information[12];
         dynamic format = range.ParagraphFormat;
-        bool centered, paragraphCentered;
+        bool centered, paragraphCentered,unindentedCenter;
         try { paragraphCentered = (int)format.Alignment == 1;
-            centered = paragraphCentered && Math.Abs((float)format.LeftIndent) < .1 &&
-            Math.Abs((float)format.RightIndent) < .1 && Math.Abs((float)format.FirstLineIndent) < .1 && !text.Contains('\t') &&
-            text.TrimEnd('\r', '\a', '\n') == text.TrimEnd('\r', '\a', '\n').Trim(); }
+            unindentedCenter = paragraphCentered && Math.Abs((float)format.LeftIndent) < .1 &&
+            Math.Abs((float)format.RightIndent) < .1 && Math.Abs((float)format.FirstLineIndent) < .1 && !text.Contains('\t');
+            centered=unindentedCenter && text.TrimEnd('\r', '\a', '\n') == text.TrimEnd('\r', '\a', '\n').Trim(); }
         finally { Release(format); }
-        return new(start, (int)range.End, text, page, inTable, centered, paragraphCentered);
+        return new(start, (int)range.End, text, page, inTable, centered, paragraphCentered,unindentedCenter);
     }
     private IReadOnlyList<WordLineShape> ReadLineShapes()
     {

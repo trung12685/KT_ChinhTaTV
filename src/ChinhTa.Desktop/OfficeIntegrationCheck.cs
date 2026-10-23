@@ -1042,7 +1042,7 @@ public static class OfficeIntegrationCheck
             foreach(var bodyProfile in Enum.GetValues<DocumentProfile>())
             {
                 test.Profile=bodyProfile;test.Open(bodyComplex);var complexFound=test.Check();
-                if(!complexFound.Any(i=>!i.CanFix && i.Title=="Chưa đối chiếu đầy đủ vùng sửa chữ") ||
+                if(string.IsNullOrWhiteSpace(test.CoverageNotice) ||
                     !complexFound.Any(i=>!i.CanFix && i.Original==bodyNeighbor) ||
                     complexFound.Any(i=>i.CanFix && i.Kind is FixKind.SentenceEndSpace or FixKind.ParenthesisSpace or FixKind.PunctuationSpace or FixKind.RepeatedText or FixKind.Text) || test.Changed)
                     throw new InvalidOperationException("Field phức tạp chưa chặn đủ phần chữ phía sau trong "+bodyProfile);
@@ -1052,6 +1052,8 @@ public static class OfficeIntegrationCheck
             test.Profile=DocumentProfile.State;Pass(stage);
             stage="Nhiều nhóm: chữ, thứ tự mục, dấu đơn, căn giữa và Line";
             OfficeStagedCheck.Run(test,modern,folder,Pass);
+            stage="Tên cơ quan, trích yếu xuống dòng và nơi nhận";
+            OfficeComponentCheck.Run(test,modern,folder,Pass);
             File.AppendAllText(report,"RESULT PASS\nKiểm thao tác Word/Line, vị trí nét XPS, sửa riêng/nhóm số-ngày, lưu/mở và Hoàn tác trên mẫu giả; không xác nhận mọi tài liệu.\n");
             return new(true,stage,folder);
         }

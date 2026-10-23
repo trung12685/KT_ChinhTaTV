@@ -91,3 +91,8 @@ Tiếp nối căn cứ vị trí số/ngày ở bản .32 (NĐ30 PL I Phần I.I
 Đối chiếu lại nguồn NĐ30 đã ghi: PDF 21 (PL I Phần I.I.4) quy định Times New Roman, Unicode TCVN 6909:2001, màu đen; PDF 24 (I.II.5.b) quy định tên loại in hoa, cỡ 13–14, đứng, đậm; trích yếu ngay dưới, chữ in thường, cỡ 13–14, đứng, đậm và căn giữa. Công văn sau “V/v” có cách trình bày khác; chưa áp dụng phần mới cho công văn.
 
 Tự sửa chỉ định dạng ký tự của dòng đã xác minh: giữ cỡ trong 13–14; ngoài khoảng đề xuất 13. Không tự viết hoa tên loại hoặc viết thường trích yếu để tránh đổi tên riêng/mã. Chỉ dùng khối ở đầu trang 1, sau cặp quốc hiệu/tiêu ngữ duy nhất và trước nội dung thường; XML/range sống phải khớp. Tối đa 4 đoạn trích yếu là phạm vi an toàn của bản thử, không phải giới hạn số đoạn theo NĐ30. Chưa kiểm toàn bộ vị trí tuyệt đối, mẫu đặc thù hoặc sửa đổi pháp lý sau nguồn đã ghi. Đường kẻ vẫn đo riêng trên XPS, không suy đạt từ định dạng chữ.
+
+
+## Bổ sung .54 — cơ quan, trích yếu, nơi nhận
+
+Đọc lại ảnh PDF22: II.2.b tên chủ quản in hoa 12–13 đứng; tên ban hành in hoa 12–13 đứng đậm; font đen theo I.4. PDF24 II.5.b không đặt tối đa bốn đoạn trích yếu; ngắt dòng/đoạn không tự là lỗi. PDF28 II.9.d/ô9b: Nơi nhận: một dòng riêng 12 nghiêng đậm; danh sách 11 đứng, gạch đầu dòng, cuối dòng chấm phẩy; dòng cuối Lưu: có VT, đơn vị và số bản lưu, kết thúc bằng chấm. .54 không đoán tên/mã/số bản; kiểm phần nhận diện/phông/dash/dấu câu trong phạm vi đã ghi, chưa đo đủ lề/hàng. Nguồn là Nghị định 30/2020/NĐ-CP.

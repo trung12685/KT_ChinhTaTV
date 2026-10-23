@@ -32,13 +32,13 @@ public static class DocumentHeadingRules
             !AdministrativeHeaderRules.IsCandidate(p.Text)))return [];
         var targets=ShapeLineRules.Identify(layout,profile).Where(t=>t.Role==LineRole.Subject && t.RegionStart==type.Start).ToArray();
         var sourceType=layout.Where(p=>p.Start==type.Start && Clean(p.Text)==Clean(type.Text)).ToArray();
-        if(types.Length!=1 || targets.Length!=1 || sourceType.Length!=1 || !sourceType[0].Centered)
+        if(types.Length!=1 || targets.Length!=1 || sourceType.Length!=1 || !(sourceType[0].UnindentedCenter??sourceType[0].Centered))
             return [Manual(type,"Chưa xác định chắc khối tên loại/trích yếu hoặc chưa xác minh căn giữa không thụt lề. Giữ thủ công.")];
         var subject=layout.Where(p=>p.Page==1 && p.Start>type.Start && p.Start<=targets[0].Start).ToArray();
         var following=layout.Where(p=>p.Page==1 && p.Start>targets[0].Start && !string.IsNullOrWhiteSpace(Clean(p.Text))).FirstOrDefault();
-        if(subject.Length is <1 or >4 || subject.Any(p=>p.InTable || !p.Centered || string.IsNullOrWhiteSpace(Clean(p.Text)) || BodyMarker(p.Text)) ||
-            following is null || following.InTable || (following.ParagraphCentered??following.Centered))
-            return [Manual(type,"Chưa phân định chắc trích yếu với nội dung hoặc khối vượt phạm vi bản thử (tối đa 4 đoạn). Giữ thủ công; không tự định dạng nội dung.")];
+        if(subject.Length<1 || subject.Any(p=>p.InTable || !(p.UnindentedCenter??p.Centered) || string.IsNullOrWhiteSpace(Clean(p.Text)) || BodyMarker(p.Text)) ||
+            following is null || following.InTable || (following.ParagraphCentered??following.Centered) && !BodyMarker(following.Text))
+            return [Manual(type,"Chưa phân định chắc trích yếu với nội dung trong vùng đã nhận diện. Giữ thủ công; không tự định dạng nội dung.")];
         var rows=sourceType.Concat(subject).ToArray();
         if(rows.Any(row=>first.Count(p=>p.Start==row.Start && Clean(p.Text)==Clean(row.Text))!=1))
             return [Manual(type,"Mốc chữ/range của tên loại hoặc trích yếu chưa khớp đủ; cần quét lại, không tự sửa.")];
@@ -47,7 +47,7 @@ public static class DocumentHeadingRules
         {
             var p=first.Single(p=>p.Start==row.Start && Clean(p.Text)==Clean(row.Text));
             bool isTitle=p.Start==type.Start;string text=Clean(p.Text),label=isTitle?"tên loại":"trích yếu";
-            if(!p.FormatObserved || !p.TextEditable || text.IndexOfAny(['\t','\v','\f','\r','\n','\a'])>=0 || p.FormatMixed || p.BoldMixed)
+            if(!p.FormatObserved || !(p.TextEditable || p.FormatEditable) || text.IndexOfAny(['\t','\f','\r','\n','\a'])>=0 || p.FormatMixed || p.BoldMixed)
             {
                 result.Add(Manual(p,"Chưa xác minh đủ chữ thuần/định dạng đồng nhất của "+label+". Có thể có trường, đối tượng nhúng hoặc kiểu chữ trộn; giữ thủ công.","Kiểm tra định dạng "+label));
                 continue;

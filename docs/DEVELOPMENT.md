@@ -10,7 +10,7 @@
 
 Mốc đã chốt: [0.1.27](STATUS-0.1.27.md), mã gói `1ec3092ccd68ed0acd8878b2737664116a6b11fe`, tag `v0.1.27`. Đọc biên bản này trước để phân biệt bằng chứng CI, xác nhận người dùng và kịch bản còn chờ. Phát triển từ `main` sau khi chốt, tạo nhánh mới; không tiếp tục phát hành vào tag hoặc ghi đè ZIP 0.1.27.
 
-Nhánh đang phát triển: `feature/staged-multi-group-0.1.53`, từ 0.1.52 (`eaf7c71732cf03e8c2892e18a139f356600f659b`). Chuỗi bản thử dựa trên main đã chốt `da6cf3b0999dbfb60d16ab1eae9733b0f1f20c81`. Đọc các CHANGES và [phạm vi 0.1.53](CHANGES-0.1.53.md). Chưa nhập main hoặc coi CI là bằng chứng Office 2021.
+Nhánh đang phát triển: `feature/component-roles-0.1.54`, từ 0.1.53 (`ddf74552dce9fbc58e0dea46dfc90f0db69ca865`). Chuỗi bản thử dựa trên main đã chốt `da6cf3b0999dbfb60d16ab1eae9733b0f1f20c81`. Đọc các CHANGES và [phạm vi 0.1.54](CHANGES-0.1.54.md). Chưa nhập main hoặc coi CI là bằng chứng Office 2021.
 
 ## Bản đồ mã nguồn
 
@@ -75,7 +75,7 @@ Tài liệu riêng chỉ dùng cục bộ theo đường dẫn tùy chọn của
 dotnet publish src/ChinhTa.Desktop -c Release -r win-x64 --self-contained true -o artifacts/win-x64
 ```
 
-Kèm thư mục `samples`, ghi chú phiên bản, ZIP và SHA-256. Chạy kiểm thử trước khi phát hành. Khi tạo bản mới, cập nhật version trong csproj, tiêu đề UI, tên gói/tag, ghi chú và workflow Windows; không phát hành lại vào tag cũ. Workflow `windows-package.yml` gắn `feature/staged-multi-group-0.1.53` và phát hành prerelease 0.1.53 sau kiểm thử. Mỗi phiên bản sau phải đổi nhánh/version và không ghi đè tag đã phát hành. Workflow `finalize-0.1.27.yml` chỉ chốt metadata của bản đã thử, có kiểm tag, digest, CI và thay đổi chỉ thuộc tài liệu/workflow được cho phép; không build hoặc thay asset.
+Kèm thư mục `samples`, ghi chú phiên bản, ZIP và SHA-256. Chạy kiểm thử trước khi phát hành. Khi tạo bản mới, cập nhật version trong csproj, tiêu đề UI, tên gói/tag, ghi chú và workflow Windows; không phát hành lại vào tag cũ. Workflow `windows-package.yml` gắn `feature/component-roles-0.1.54` và phát hành prerelease 0.1.54 sau kiểm thử. Mỗi phiên bản sau phải đổi nhánh/version và không ghi đè tag đã phát hành. Workflow `finalize-0.1.27.yml` chỉ chốt metadata của bản đã thử, có kiểm tag, digest, CI và thay đổi chỉ thuộc tài liệu/workflow được cho phép; không build hoặc thay asset.
 
 Khi nhận lỗi, lấy log đúng version và phân biệt lỗi đọc Word, ghép XML, CP/mốc, marker, candidate, nét XPS hay rollback. Các mã `Word.Preview.CpMapping`, `Word.Preview.Unmapped`, `Word.LineBatch.ReferenceBinding.*`, `Word.LineBatch.StoryBinding`, `Word.LineBatch.Rescan` ghi số liệu mà không ghi chữ tài liệu. Không kết luận nguyên nhân chỉ từ ngoại lệ tổng quát hoặc một điều kiện guard gộp.
 
@@ -322,3 +322,15 @@ CurrentTextPlan quét lại toàn ngữ cảnh trước checkpoint, nên thêm s
 - MainWindow bỏ chặn lựa chọn lẫn bước và bỏ cắt Sửa tất cả còn nhóm đầu. Duyệt một lần, status tách số đã áp dụng và số đã đạt sau đo lại; EditThenScan vẫn phân biệt sửa lỗi với quét danh sách lỗi.
 - Bộ Core kiểm chuỗi bước, chọn hẹp, mốc/phông/text mới, manual/duplicate/mất chứng cứ, sai rollback/commit. WPF kiểm glyph đổi kích thước và CP mô phỏng, proposal Line mới, nét sai dù Shape tồn tại phải rollback. `OfficeStagedCheck` có mẫu giả chọn hẹp/toàn bộ, 3 điểm chèn lỗi, Undo cũ, lưu/mở/nguồn; CI chỉ biên dịch phần Word này, chưa có bằng chứng runtime Office 2021.
 - Không thêm loại lỗi: 21 đề xuất, 8 thủ công, 1 minh họa. Không đổi nguồn pháp lý hoặc 3/7. Main, stable/tag/gói .27 giữ nguyên.
+
+
+## Ghi chú triển khai 0.1.54
+
+- Đối chiếu ảnh nguồn NĐ30 PDF21/22/24/28: PL I, Phần I.I.4, II.2.b, II.5.b và II.9.d/ô9b. Không gọi nguồn này là Thông tư. Không đặt giới hạn pháp lý bốn đoạn trích yếu.
+- `DocumentHeadingRules` cho Kính gửi/các mốc thân rõ làm ranh giới dù căn giữa; kiểm phông theo tâm đoạn không thụt lề `UnindentedCenter`, không coi dấu cách cuối đoạn là lỗi phông. Hình học Line vẫn dùng Centered chặt và XPS thật.
+- `WordTextProof`/`WordXmlTableMap` thêm FormatEditable riêng cho textWrapping break/cr đã khớp XML/range; không mở TextEditable, tab/page/column/field/object không được mở. `ObserveComponent` đọc từng phần chữ giữa ngắt dòng, bỏ kiểu riêng của ký tự ngắt; sửa font giữ nguyên nội dung/ngắt dòng.
+- `RecipientContext` chỉ nhận nhãn Nơi nhận và Lưu cùng container XML, không lồng bảng/SDT/danh sách tự động/kiểu chưa rõ; không miễn trừ mọi gạch trong bảng. OutlineScope.Recipient tách khỏi cấu trúc mục. C23 kiểm nhãn/danh sách và sửa từng đoạn ký hiệu nhỏ, không đoán cơ quan nhận/số bản lưu. Chưa tự đo đủ tọa độ sát lề/ngang hàng.
+- `ComponentRules` C22 nhận một/hai đoạn tên trên Số trong ô trái của bảng đầu; quan sát font riêng, role CharacterFormat được BatchPlan kiểm chặt. C23 có role nhãn và dòng riêng. CanFix/CurrentTextPlan kiểm lại, giao dịch chữ/phông cũ và một Undo/rollback dùng chung .53; font và dấu/case có thể chọn riêng/chung.
+- Cảnh báo toàn phần XML chuyển sang CoverageNotice/CoverageInfo riêng, không neo tùy tiện vào BỘ CÔNG AN hay cộng vào danh sách lỗi. Không coi thiếu căn cứ của thông báo kỹ thuật là vi phạm pháp lý; vẫn thể hiện chưa kiểm đủ nếu thật sự mất proof. Chưa có log mới để kết luận nguyên nhân XML của lần chạy Office người dùng.
+- Kiểm riêng DOCX mới chỉ bằng XML và CP/trang mô phỏng: 0 cảnh báo component/trích yếu/nơi nhận, vẫn giữ 1 thứ tự sai và 1 dấu đơn thân bài; nguồn không đổi. Đây không là PASS Word. Không đưa file/đoạn riêng vào repo/gói. Unit fixtures dùng tên giả; OfficeComponentCheck thêm mẫu đúng/sai, ngắt dòng, sửa nhóm/fault/Undo/lưu-mở nhưng chưa chạy Word tại đây.
+- Danh mục 23 đề xuất/8 thủ công/1 minh họa, có ví dụ C22/C23; main và stable .27 giữ nguyên.
