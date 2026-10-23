@@ -1,5 +1,13 @@
 # Tiếp tục phát triển Chính tả Việt
 
+## Mốc tiếp tục 0.1.58 — 24/10/2026 (UTC+7)
+
+Thêm FixKind.DocumentTypeText/C24 cho chính xác 13 tên loại đã qua cùng guard khối đầu Nhà nước của DocumentHeadingRules. Căn cứ NĐ30 PL I.II.5.b đã đối chiếu PDF 24. Thay đúng span tên (giữ ASCII spaces ngoài), ToUpperInvariant cùng độ dài; TextEditable bắt buộc, không nâng quyền qua FormatEditable. Không viết thường trích yếu, không chọn/đổi tên loại theo nội dung. BatchPlan kiểm payload và chỉ cho chia sẻ span với DocumentHeadingFormat; CurrentTextPlan quét lại trước ghi. Giữ range phông track qua thay chữ, expected story, rollback và một Undo.
+
+Core mẫu 13 tên, ngoại lệ/stale/payload, giữ nội dung/ngắt đoạn và batch phông; OfficeComponentCheck giả thêm Báo cáo, kiểm ghép nhóm/Undo/rollback/lưu-mở, chỉ biên dịch trong CI. Báo cáo C24/ví dụ, 24/8/1; M03 giữ trích yếu toàn hoa/vùng chưa rõ. Xem [ghi chú .58](CHANGES-0.1.58.md).
+
+Trạng thái chưa khép: người dùng xác nhận lỗi cơ quan/trích yếu trên .56, đang chờ log/DOCX sau sửa và kết quả .57 hoặc mới hơn. Không coi phát triển C24 hoặc Core/WPF PASS là Office2021 PASS. Tiếp theo ưu tiên nhận bằng chứng runtime và thể thức phần còn thiếu; ngữ cảnh/từ điển sau cùng.
+
 ## Mốc tiếp tục 0.1.57
 
 Phản hồi lặp lại sau .56 chưa có log/DOCX sau sửa hoặc xác nhận bản đang chạy, không kết luận root cause thực tế đã được khép lại. Bổ sung nhánh Word AlternateContent/Choice wps + fallback Line không chữ và run gộp trong OwnedLineFormatProof, không bỏ run chứa chữ. VisibleFormatReader dùng actual Characters Range khi Font vùng không xác định, đối chiếu toàn chuỗi; dùng cả khi hậu kiểm phông nhiều nhóm. C20/C21 CanFix vẫn Bắt buộc sửa; phiên bản UI lấy từ assembly, log thêm MVID Desktop/Core và cờ định dạng khi manual.

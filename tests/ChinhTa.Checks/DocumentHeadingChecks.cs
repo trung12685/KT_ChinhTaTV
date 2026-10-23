@@ -2,7 +2,7 @@ using ChinhTa.Core;
 
 public static class DocumentHeadingChecks
 {
-    private static (Paragraph[] P,LayoutParagraph[] L) Sample(string title="BÁO CÁO",int subjectCount=2,bool body=true)
+    public static (Paragraph[] P,LayoutParagraph[] L) Sample(string title="BÁO CÁO",int subjectCount=2,bool body=true)
     {
         string[] text=["CƠ QUAN MẪU","Số:        /BC-ABC",Checker.Heading,HeadingRules.Motto,
             "Địa danh, ngày        tháng 10 năm 2026","",title,
@@ -43,8 +43,9 @@ public static class DocumentHeadingChecks
         {
             var found=DocumentHeadingRules.Check(sample.P,sample.L,DocumentProfile.State);
             if(sample.P[6].Text.StartsWith("Báo",StringComparison.Ordinal))
-                assert(found.Any(i=>!i.CanFix && i.Message.Contains("viết hoa")) && found.Where(i=>i.CanFix).All(i=>i.Original==i.Replacement),
-                    "A lowercase recognized document title is reviewed manually without automatic text capitalization");
+                assert(found.Any(i=>i.CanFix && i.Kind==FixKind.DocumentTypeText && i.Replacement=="BÁO CÁO") &&
+                    !found.Any(i=>!i.CanFix && i.Message.Contains("viết hoa")),
+                    "A lowercase recognized front title gains one bounded capitalization repair instead of a duplicate manual warning");
             else assert(found.Count>0 && found.All(i=>!i.CanFix),"Unbounded, absent or over-limit subject blocks cannot acquire automatic formatting");
         }
         foreach(var layout in new[]{Array.Empty<LayoutParagraph>(),l.Where(r=>r.Start!=p[9].Start && r.Start!=p[10].Start).ToArray(),

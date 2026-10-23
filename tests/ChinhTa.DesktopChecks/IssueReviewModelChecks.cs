@@ -48,6 +48,13 @@ public static class IssueReviewModelChecks
         assert(mixedSelection.All.SelectedCount==3 && mixedSelection.Choices.Where(c=>c.Issue.CanFix).All(c=>c.IsChecked) &&
             mixedSelection.Choices.Where(c=>!c.Issue.CanFix).All(c=>!c.IsChecked),
             "Required-section selection covers missing Line plus proven order/marker while ambiguous outline stays manual");
+        var caseFix=new Issue(200,7,"Báo cáo","BÁO CÁO","",false,FixKind.DocumentTypeText,
+            Citation:DocumentHeadingRules.Citation,Title:"Tên loại văn bản chưa viết hoa");
+        var titleFont=caseFix with {Kind=FixKind.DocumentHeadingFormat,Replacement=caseFix.Original,CharacterFormat=new(13,false,true),Title="Định dạng tên loại"};
+        var titleGroup=new IssueReviewModel([caseFix,titleFont]);titleGroup.Groups.Single().IsChecked=true;
+        assert(titleGroup.Sections.Single().Title==IssueReviewCatalog.SectionTitle(IssueReviewSection.RequiredFormat) &&
+            titleGroup.All.SelectedCount==2 && titleGroup.Choices.All(c=>c.IsChecked),
+            "Title capitalization and title font share one selectable required-format family without becoming a manual warning");
         var empty=new IssueReviewModel([]);
         assert(!empty.All.CanSelect && empty.All.IsChecked==false && empty.Groups.Count==0,"An empty scan has no selectable phantom group");
         var many=new IssueReviewModel(Enumerable.Range(0,1200).Select(i=>a with {Start=i*3}));

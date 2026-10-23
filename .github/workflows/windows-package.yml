@@ -1,7 +1,7 @@
 name: Windows package
 on:
   push:
-    branches: [feature/repair-progress-0.1.57]
+    branches: [feature/document-type-case-0.1.58]
 permissions:
   contents: write
 jobs:
@@ -43,6 +43,7 @@ jobs:
         shell: pwsh
         run: |
           Copy-Item samples artifacts/win-x64/samples -Recurse -Force
+          Copy-Item docs/CHANGES-0.1.58.md artifacts/win-x64/
           Copy-Item docs/CHANGES-0.1.57.md artifacts/win-x64/
           Copy-Item docs/CHANGES-0.1.56.md artifacts/win-x64/
           Copy-Item docs/CHANGES-0.1.55.md artifacts/win-x64/
@@ -51,24 +52,24 @@ jobs:
           Copy-Item docs/ISSUE-LIST.md artifacts/win-x64/
           Copy-Item docs/OUTLINE-CONTEXT.md artifacts/win-x64/
           Copy-Item docs/MULTI-GROUP-REPAIR.md artifacts/win-x64/
-          Copy-Item docs/SUPPORTED-FIXES-0.1.57.md artifacts/win-x64/
+          Copy-Item docs/SUPPORTED-FIXES-0.1.58.md artifacts/win-x64/
           Copy-Item artifacts/build-checks.json artifacts/win-x64/
       - name: Verify packaged report metadata
         run: dotnet run --project tests/ChinhTa.DesktopChecks -c Release -- --verify-report-package artifacts/win-x64
       - name: Archive and hash
         shell: pwsh
         run: |
-          Copy-Item artifacts/ChinhTaViet-0.1.57-tien-do.txt artifacts/win-x64/
-          Compress-Archive artifacts/win-x64/* artifacts/ChinhTaViet-0.1.57-win-x64.zip
-          Get-FileHash artifacts/ChinhTaViet-0.1.57-win-x64.zip -Algorithm SHA256 | Format-List | Out-File artifacts/SHA256.txt
+          Copy-Item artifacts/ChinhTaViet-0.1.58-tien-do.txt artifacts/win-x64/
+          Compress-Archive artifacts/win-x64/* artifacts/ChinhTaViet-0.1.58-win-x64.zip
+          Get-FileHash artifacts/ChinhTaViet-0.1.58-win-x64.zip -Algorithm SHA256 | Format-List | Out-File artifacts/SHA256.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: ChinhTaViet-0.1.57-win-x64
+          name: ChinhTaViet-0.1.58-win-x64
           path: |
             artifacts/*.zip
             artifacts/SHA256.txt
             artifacts/build-checks.json
-            artifacts/ChinhTaViet-0.1.57-tien-do.txt
+            artifacts/ChinhTaViet-0.1.58-tien-do.txt
             artifacts/issue-list-preview.png
             artifacts/issue-tooltip-preview.png
             artifacts/repair-progress-preview.png
@@ -77,4 +78,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         shell: pwsh
         run: |
-          gh release create v0.1.57 artifacts/ChinhTaViet-0.1.57-win-x64.zip artifacts/SHA256.txt artifacts/build-checks.json artifacts/ChinhTaViet-0.1.57-tien-do.txt artifacts/issue-list-preview.png artifacts/issue-tooltip-preview.png artifacts/repair-progress-preview.png --target $env:GITHUB_SHA --prerelease --title '0.1.57 — Tiến độ sửa và kiểm phông sau Word — bản thử' --notes-file docs/CHANGES-0.1.57.md
+          gh release create v0.1.58 artifacts/ChinhTaViet-0.1.58-win-x64.zip artifacts/SHA256.txt artifacts/build-checks.json artifacts/ChinhTaViet-0.1.58-tien-do.txt artifacts/issue-list-preview.png artifacts/issue-tooltip-preview.png artifacts/repair-progress-preview.png --target $env:GITHUB_SHA --prerelease --title '0.1.58 — Sửa viết hoa tên loại văn bản — bản thử' --notes-file docs/CHANGES-0.1.58.md
