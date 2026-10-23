@@ -80,7 +80,7 @@ public static class IssueReviewPanelChecks
             var old=selected;old.IsChecked=true;panel.LoadIssues([repeat]);Layout(panel);old.IsChecked=false;
             assert(panel.SelectedIssue is null && panel.Choices.Count==1 && panel.Choices.All(c=>!c.IsChecked) &&
                 ((TextBlock)panel.FindName("Summary")).Text.Contains("0/1") && !((TextBlock)panel.FindName("DetailText")).Text.Contains(space.Message),
-                "Rescan discards old rows, checks, selection and details instead of retaining stale repaired entries");
+                "Rescan discards old rows, checks, selection and details instead of retaining stale repaired entries: selected="+panel.SelectedIssue?.Kind+", checked="+panel.Choices.Count(c=>c.IsChecked)+", summary="+((TextBlock)panel.FindName("Summary")).Text);
             panel.LoadIssues([]);Layout(panel);
             assert(!all.IsEnabled && list.Visibility==Visibility.Collapsed && ((TextBlock)panel.FindName("Empty")).Visibility==Visibility.Visible,
                 "Clearing after failure or empty scan leaves no enabled stale row or select-all checkbox");

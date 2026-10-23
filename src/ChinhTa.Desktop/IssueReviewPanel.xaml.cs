@@ -23,6 +23,7 @@ public partial class IssueReviewPanel : UserControl
         view.GroupDescriptions.Add(new PropertyGroupDescription(nameof(IssueChoice.Section)));
         view.GroupDescriptions.Add(new PropertyGroupDescription(nameof(IssueChoice.Group)));
         IssueList.ItemsSource=view;
+        IssueList.SelectedItem=null;
         model.All.PropertyChanged+=SelectionChanged;
         Summary.Text=model.Summary;
         Empty.Visibility=Choices.Count==0?Visibility.Visible:Visibility.Collapsed;
