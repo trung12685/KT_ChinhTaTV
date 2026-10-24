@@ -6,9 +6,9 @@
 
 Ưu tiên đã thống nhất: **thể thức → lỗi chữ và lặp từ/cụm từ → ngữ cảnh và thư viện sau cùng**. Phần chính tả tiếng Việt đầy đủ còn cần xây dựng; không coi quy tắc minh họa hiện tại là bộ kiểm hoàn chỉnh.
 
-## Đang phát triển sau 0.1.60 — B01–B02
+## Đang phát triển sau 0.1.60 — B01–B03
 
-Mở rộng C13: `Kế hoạch kế hoạch đã duyệt.` → `Kế hoạch đã duyệt.` khi khác biệt duy nhất là chữ hoa đầu đoạn; giữ nguyên lần đầu, không gộp hoa/thường giữa câu/từ đơn/mã/sau nhãn. B02 mở rộng C14: `Theo mẫu (nội dung) ,báo cáo.` → `Theo mẫu (nội dung), báo cáo.` trong câu chữ rõ, không suy diễn hàm/mã/ngoặc lồng hoặc XML chưa chắc. Giữ ngoặc, Unicode, kiểu và phần chưa chọn; cần duyệt, sửa riêng/chung và một Undo/rollback. Code mang version **0.1.61**, mới **2 bước**, chưa tạo ZIP/tag/release .61. [Nhật ký, ví dụ và giới hạn](docs/BATCH-AFTER-0.1.60.md). Gom 5–10 bước đã kiểm rồi mới tạo gói tiếp theo.
+Mở rộng C13: `Kế hoạch kế hoạch đã duyệt.` → `Kế hoạch đã duyệt.` khi chỉ khác chữ hoa đầu đoạn. B02/C14: `Theo mẫu (nội dung) ,báo cáo.` → `Theo mẫu (nội dung), báo cáo.` trong câu chữ rõ. B03/C18–C19: `Đã hoàn thành.Xong!` → `Đã hoàn thành. Xong!` với câu cuối một từ có dấu kết câu đơn; chọn riêng trước/sau, không mở viết tắt/đuôi tệp/chuỗi dấu. Giữ Unicode/kiểu, ngoặc và phần chưa chọn, XML và một Undo/rollback; cần duyệt. Code mang version **0.1.61**, mới **3 bước**, chưa ZIP/tag/release .61. [Nhật ký, ví dụ và giới hạn](docs/BATCH-AFTER-0.1.60.md). Gom 5–10 bước đã kiểm rồi mới tạo gói tiếp theo.
 
 ## Bản thử 0.1.60 — gom B01–B05
 

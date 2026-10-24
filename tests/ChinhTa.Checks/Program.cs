@@ -23,6 +23,7 @@ StructuredTextChecks.Run(Assert);
 WholeBodyTextProofChecks.Run(Assert);
 SentenceInnerSpaceChecks.Run(Assert);
 SentenceAfterSpaceChecks.Run(Assert);
+ShortFinalSentenceChecks.Run(Assert);
 IssueReviewCatalogChecks.Run(Assert);
 IssueTooltipChecks.Run(Assert);
 StagedRepairChecks.Run(Assert);

@@ -36,6 +36,22 @@ Kiểm mới có NFC/NFD/emoji và CP thật, ba chế độ, XML/manual, stale 
 
 Kiểm cục bộ đạt **2159 lượt assertion**, thêm 77 so với B01; đây là runner chọn lọc, không thay số kiểm CI. Hiện đủ **2 bước** trong code .61, chưa tạo gói Windows .61. Kết quả Windows đúng commit được lưu tại PR/CI; bản tải .60 giữ nguyên. Lỗi phông cơ quan/trích yếu .56 chưa khép.
 
+## B03 — Khoảng trắng khi câu cuối chỉ có một từ
+
+| Trước | Sau khi duyệt |
+|---|---|
+| `Đã hoàn thành.Xong!` | `Đã hoàn thành. Xong!` |
+| `Đã hoàn thành . Xong!` | `Đã hoàn thành. Xong!` |
+| `Đã hoàn thành  .Xong!` | `Đã hoàn thành. Xong!` nếu chọn cả hai phía |
+
+Mở rộng biên phải dùng chung C18/C19: từ viết hoa đầu/còn lại thường, ≥2 chữ cái, có thể theo ngay một dấu .?! ở cuối đoạn; sau dấu cuối chỉ cho phép ASCII spaces và giữ nguyên nếu không chọn phép sửa tương ứng. Hai từ trái và guard chữ thuần/XML/header/date/kỹ thuật vẫn giữ. Không mở qua dấu phẩy/chấm phẩy/nháy/ngoặc, dấu câu còn nội dung phía sau, chuỗi dấu/ellipsis, số/allcaps hoặc viết tắt/đuôi tệp đã biết. Không tự viết hoa, thêm dấu hay đổi chữ; chưa kiểm mọi viết tắt hoặc suy nghĩa.
+
+Chọn riêng khoảng trước, sau hoặc cả hai; quét mới giữ lỗi chưa chọn. Dùng span xóa ASCII và dấu câu neo dài một ký tự, không đoán vị trí chèn rỗng. C13/C14/C15 và các quy tắc chỉ dùng ClearEnding không đổi phạm vi; Clear chỉ được C18/C19 gọi.
+
+Kiểm có ma trận ba dấu ở biên × ba dấu cuối, Unicode tổ hợp/emoji/CP, giữ kết đoạn và khoảng cuối chưa chọn, ngoại lệ viết tắt/đuôi tệp/chuỗi dấu, các chế độ, XML/manual/stale, ghép B01/B02/các lỗi chữ/phông qua nhiều đoạn và rollback lỗi lưu. Bài Word giả mới giữ Xong đậm/gạch chân qua chọn riêng hai phía, sửa chung, quét, một Undo, rollback/lưu-mở/băm nguồn; CI chỉ biên dịch.
+
+Kiểm cục bộ đạt **2267 lượt assertion**, thêm 108 so với B02; đây là runner chọn lọc, không thay số kiểm Windows CI. Hiện **3 bước** trong code .61, chưa tạo gói Windows .61. Kết quả đúng commit tại PR/CI; gói .60 giữ nguyên. Chưa xác nhận Office 2021 hoặc khép lỗi phông .56.
+
 ## Tiếp theo
 
 Tiếp tục thể thức/lỗi chữ có điều kiện rõ, ngoại lệ và hồi quy; rà nhận diện và hiệu năng khi có số đo. Chính tả qua từ điển và ngữ nghĩa làm sau. Chỉ chốt gói đợt mới khi đủ bước và các kiểm bắt buộc đạt.

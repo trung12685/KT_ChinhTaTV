@@ -1,5 +1,11 @@
 # Tiếp tục phát triển Chính tả Việt
 
+## B03 sau .60 — câu cuối chỉ một từ có dấu kết câu
+
+Tiếp nối B02 `2b2fb58007215008c1f8718ad103610884497d28`, đã đạt 2236 Core/OpenXML +113 WPF. Clear dùng chung C18/C19 nhận từ hoa đầu/còn lại thường tiếp ngay một dấu .?! cuối đoạn, đuôi chỉ ASCII spaces được giữ; loại thêm viết tắt đã biết ở nhánh mới. Không đổi ClearEnding hoặc guard của các nhóm khác, không thêm enum/nhóm. Ví dụ `Đã hoàn thành .Xong!` sửa riêng hoặc chung thành `Đã hoàn thành. Xong!`, giữ phần chưa chọn.
+
+Kiểm ma trận .?! × .?!, các biên/viết tắt/đuôi tệp/control/Unicode/emoji/CP/XML/stale, ghép lỗi qua nhiều đoạn và phông, rollback khi lỗi lưu; TXT có ví dụ C18/C19 tương ứng. Bài Word giả mới giữ kiểu và một Undo/rollback/lưu-mở/băm nguồn, CI chỉ biên dịch. Đủ 3 bước, code .61, tổng25/8/1, chưa ZIP/tag/release. [Nhật ký](BATCH-AFTER-0.1.60.md). Lỗi cơ quan/trích yếu .56 vẫn chờ runtime, không khép chỉ bằng CI.
+
 ## B02 sau .60 — dấu phẩy/chấm phẩy sau ngoặc tròn
 
 Tiếp nối B01 `1908f0387051d96664915be17d456bf0918d0a79`, nhánh feature/format-batch-after-0.1.60; B01 đạt 2159 Core/OpenXML + 113 WPF. C14 nhận `Theo mẫu (nội dung) ,báo cáo.` và giữ `Theo mẫu (nội dung), báo cáo.`. Không sửa chữ/ngoặc; giữ nhóm comma, nguồn quy tắc ứng dụng và phần chưa chọn. Nhánh mới có hai từ trước rõ, ≥2 từ chữ trong, từ phải có chữ thường, cân bằng/không lồng và guard kỹ thuật/header/date/blank/control/XML. Tên hàm dùng chung bộ loại trừ hiện có với C15, không đổi hành vi C15; parse cặp một lần cho nhánh mới, không tăng lượt COM/kết xuất.
