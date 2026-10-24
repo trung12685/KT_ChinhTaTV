@@ -24,6 +24,16 @@ Core kiểm các biến thể chữ/dấu, cỡ sai/đúng, quyền XML, stale, 
 
 B01–B02 là **2 hạng mục** trong code .62, vẫn25 đề xuất/8 thủ công/1 minh họa. Báo cáo TXT và giao diện có ví dụ C02/C03 cập nhật. Kết quả kiểm đúng commit và trạng thái hoàn thành ghi tại [PR38](https://github.com/trung12685/KT_ChinhTaTV/pull/38)/Windows checks; runner cục bộ chọn lọc không thay CI/Word. Chưa tạo gói/tag .62; gom thêm bước theo chu kỳ người dùng yêu cầu.
 
+## B03 — Viết hoa tên loại có cỡ hỗn hợp, giữ định dạng đã đúng
+
+Trước đây C24 còn thủ công khi assessment cần giữ nhiều cỡ, dù đã nhận diện đúng tên loại và đủ proof. Nay `Báo cáo` cỡ13/14 →`BÁO CÁO`, giữ từng cỡ/gạch chân; chọn riêng giữ cả phông/màu/kiểu đang sai nhưng chưa chọn. Chọn kèm sửa phông/cỡ thì kỳ vọng chỉ đổi thuộc tính đã duyệt; cỡ sai/đúng theo B01 vẫn chuẩn hóa riêng. Giữ guard danh mục/NĐ30/bổ sung BCĐX, khối đầu/trích yếu, field/drawing và TextEditable. Không viết thường trích yếu hoặc đoán tên loại.
+
+CasePreservationPlan lấy đúng paragraph hiện tại đã proof làm vùng theo dõi, không tạo thêm mục sửa hoặc dùng chỉ số text toàn thân làm Word CP. CharacterStyleEvidence chụp từng ký tự nhìn thấy và căn/thụt đoạn; RetainedGlyphProjection dùng chung với cỡ để chiếu theo prefix Word thật. WordSession dùng Range.Case, kiểm nguyên văn và fingerprint sau lưu; sửa nhiều nhóm bind lại paragraph/prefix và kiểm sau Line. Một cỡ đúng bị ép, gạch chân bị mất hoặc phông chưa chọn bị sửa đều rollback cả lượt, dù nét Line và chữ đã đúng. Đen tự động/đen RGB, casing tên font không gây lỗi giả; không đối chiếu mọi thuộc tính OpenXML.
+
+Core kiểm toàn danh mục/bổ sung/alias, padding, CP không phải chỉ số string, chọn riêng/chung, snapshot thiếu/stale/payload không khớp, từng thuộc tính drift và rollback; hồi quy cỡ cũ dùng cùng projection. Desktop kiểm reader actual-range giả/Unicode/bounds/COM/layout, lựa chọn phụ thuộc và glyph/nét thật với cỡ title bị drift. OfficeCaseStyleCheck có mẫu tốt, phông sai và cỡ sai trộn cỡ đúng: chọn riêng chữ/phông, chỉ chọn Line trích yếu kéo đúng phụ thuộc, giữ hai Line chưa chọn, rollback sau ghi chữ/sau Line, một Undo/lưu-mở/băm nguồn. CI chỉ biên dịch bài Word, chưa xác nhận Office2021 hay khép phản hồi .56.
+
+[Thiết kế/cách thử](CASE-PRESERVATION.md). B01–B03 là **3 hạng mục**, vẫn25 đề xuất/8 thủ công/1 minh họa; báo cáo UI/TXT có ví dụ C24. Kết quả đúng commit và trạng thái hoàn thành theo [PR38](https://github.com/trung12685/KT_ChinhTaTV/pull/38)/Windows checks; không thay tổng CI bằng runner cục bộ. Chưa tạo gói/tag .62, tiếp tục gom khoảng5–10 bước.
+
 ## Việc tiếp theo
 
 Tiếp tục các vùng thể thức còn thiếu khi có nhận diện/căn cứ rõ, mở rộng lỗi chữ có ngoại lệ và giảm thao tác Word trùng khi có bằng chứng. Phần từ điển/chính tả đầy đủ và ngữ nghĩa vẫn theo giai đoạn sau; không coi chức năng cỡ chữ là hoàn thành các phần này. Chỉ tạo Windows sau đủ đợt và kiểm bắt buộc đạt.

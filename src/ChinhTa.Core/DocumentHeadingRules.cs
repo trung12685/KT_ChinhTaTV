@@ -76,7 +76,7 @@ public static class DocumentHeadingRules
             if(isTitle && text!=text.ToUpperInvariant())
             {
                 string name=text.Trim(' ');int offset=text.Length-text.TrimStart(' ').Length;
-                if(p.TextEditable && !assessment.PreserveSize && name==name.Trim() && ShapeLineRules.IsDocumentType(name) && name.ToUpperInvariant().Length==name.Length)
+                if(p.TextEditable && name==name.Trim() && ShapeLineRules.IsDocumentType(name) && name.ToUpperInvariant().Length==name.Length)
                     result.Add(new(p.Start+offset,name.Length,name,name.ToUpperInvariant(),
                         "Tên loại văn bản được trình bày bằng chữ in hoa; chỉ đổi hoa/thường của tên đã nhận diện, giữ trích yếu, khoảng trắng ngoài tên, phông và căn đoạn.",
                         false,FixKind.DocumentTypeText,Citation:citation,Title:"Tên loại văn bản chưa viết hoa"));

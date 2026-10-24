@@ -16,6 +16,29 @@ public sealed partial class WordSession
         if(rows.Length!=1)throw new InvalidOperationException("Mẫu kiểm chưa có một vùng phông hiện tại duy nhất.");
         return ReadCheckSizes(original with {Start=rows[0].Start});
     }
+    internal CharacterStyleEvidence ReadCheckCurrentStyles(string text)
+    {
+        if(LineCheckArtifactFolder is null)throw new InvalidOperationException("Chỉ dùng trong phiên kiểm Word riêng.");
+        var rows=lastFormatLayout.Where(p=>p.Text.TrimEnd('\r','\a','\n')==text).ToArray();
+        if(rows.Length!=1)throw new InvalidOperationException("Mẫu kiểm chưa có một đoạn hiện tại duy nhất để đối chiếu viết hoa.");
+        dynamic range=document!.Range(rows[0].Start,rows[0].Start+text.Length);
+        try{return VisibleFormatReader.ReadStyles((object)range,text);}finally{Release(range);}
+    }
+    internal IReadOnlyList<Issue> CaseTrackingRegions(IReadOnlyList<Issue> plan)=>CasePreservationPlan.Regions(plan,lastFormatLayout);
+    private CharacterStyleEvidence ExpectedCaseStyles(Issue probe,IReadOnlyList<Issue> plan)
+    {
+        dynamic range=document!.Range(probe.Start,probe.Start+probe.Length);
+        try
+        {
+            var source=VisibleFormatReader.ReadStyles((object)range,probe.Original);
+            return CasePreservationPlan.Expected(probe,plan,source,item=>
+            {
+                dynamic prefix=document!.Range(probe.Start,item.Start);
+                try{return (string?)prefix.Text??"";}finally{Release(prefix);}
+            });
+        }
+        finally{Release(range);}
+    }
     private FontSizeEvidence? ExpectedSizesFor(Issue issue,IReadOnlyList<Issue> edits)
     {
         if(issue.CharacterFormat?.PreserveSize!=true && issue.Format?.MaximumSize is null)return null;

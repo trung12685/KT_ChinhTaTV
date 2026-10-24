@@ -19,7 +19,7 @@ Luồng cũ có hai điểm gây cảnh báo giả tái hiện được bằng k
 
 - Không sửa chữ qua Line/field/control/object. FormatEditable và TextEditable vẫn tách riêng.
 - Giữ ngắt dòng, dấu kết đoạn/ô, gạch chân và đậm không thuộc chính sách sửa. Đổi hoa tên cơ quan/tên loại bằng Range.Case khi chỉ đổi hoa/thường để giữ run; vẫn kiểm text thực tế và rollback nếu sai.
-- Đổi hoa tên loại có cỡ hỗn hợp vẫn cần duyệt thay vì thay text cả vùng có thể mất cỡ. Các trường hợp đồng nhất cũ giữ sửa chung.
+- Từ B03, C24 đổi hoa tên loại có cỡ hỗn hợp khi dữ liệu đủ chắc; dùng Range.Case và proof từng phông/cỡ/màu/đậm/nghiêng/gạch chân, căn/thụt đoạn trước/sau lưu/Line. Chọn riêng giữ định dạng chưa chọn; chọn chung áp đúng chính sách phông/cỡ được duyệt. Không mở quyền sửa qua field/drawing. [Thiết kế](CASE-PRESERVATION.md).
 - Dữ liệu text cũ hoặc mất quyền XML không được dùng sửa; không dùng lịch sử để che cảnh báo.
 - Không dùng số Shape/dấu nhận diện để chứng minh nét đúng; XPS và đo lại sau thay phông còn nguyên.
 - Không tự mở rộng quá vùng đầu trang đã nhận diện; nơi nhận vẫn dùng proof toàn thân. Chưa xác nhận runtime Office 2021 cho .61.

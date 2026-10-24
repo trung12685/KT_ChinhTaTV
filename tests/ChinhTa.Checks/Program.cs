@@ -34,6 +34,7 @@ FormatAssessmentChecks.Run(Assert);
 FontSizeEvidenceChecks.Run(Assert);
 SelectiveSizeChecks.Run(Assert);
 HeadingSelectiveSizeChecks.Run(Assert);
+CasePreservationChecks.Run(Assert);
 OwnedLineFormatChecks.Run(Assert);
 RepairProgressChecks.Run(Assert);
 DocumentTypeTextChecks.Run(Assert);
