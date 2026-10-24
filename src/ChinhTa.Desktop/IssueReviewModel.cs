@@ -39,15 +39,20 @@ public sealed class IssueChoiceGroup : INotifyPropertyChanged
         PropertyChanged?.Invoke(this,new(nameof(SelectedCount)));
     }
     public event PropertyChangedEventHandler? PropertyChanged;
+    internal void RefreshSummary()=>PropertyChanged?.Invoke(this,new(nameof(SelectedCount)));
 }
 
 public sealed class IssueReviewModel
 {
+    private bool updatingDependencies;
+    private string? selectionNote;
+    private readonly IReadOnlyList<IssueChoice> dependentChoices;
     public IReadOnlyList<IssueChoice> Choices { get; }
     public IReadOnlyList<IssueChoiceGroup> Sections { get; }
     public IReadOnlyList<IssueChoiceGroup> Groups { get; }
     public IssueChoiceGroup All { get; }
-    public string Summary=>$"Đã tích {All.SelectedCount}/{All.SelectableCount} · {Choices.Count-All.SelectableCount} thủ công";
+    public string Summary=>$"Đã tích {All.SelectedCount}/{All.SelectableCount} · {Choices.Count-All.SelectableCount} thủ công"+
+        (selectionNote is null?"":" · "+selectionNote);
     public IssueReviewModel(IEnumerable<Issue> issues,IReadOnlyDictionary<Issue,PreviewAnchor>? anchors=null)
     {
         Choices=issues.Select(i=>new IssueChoice(i,anchors is not null && anchors.TryGetValue(i,out var a)?a:null))
@@ -67,5 +72,31 @@ public sealed class IssueReviewModel
         }
         Sections=sections;Groups=groups;
         All=new("Tất cả","Tích/bỏ tích tất cả mục sửa được, kể cả nhóm đang thu gọn. Cảnh báo thủ công được giữ nguyên.",Choices);
+        dependentChoices=Choices.Where(c=>c.Issue.Prerequisites is {Count:>0}).ToArray();
+        foreach(var choice in Choices)choice.PropertyChanged+=DependenciesChanged;
+    }
+    private void DependenciesChanged(object? sender,PropertyChangedEventArgs args)
+    {
+        if(updatingDependencies || args.PropertyName!=nameof(IssueChoice.IsChecked) || sender is not IssueChoice choice)return;
+        updatingDependencies=true;
+        try
+        {
+            selectionNote=null;
+            if(choice.IsChecked && choice.Issue.Prerequisites is {Count:>0})
+            {
+                var required=RepairDependencies.Expand([choice.Issue],Choices.Select(c=>c.Issue).ToArray());int added=0;
+                foreach(var other in Choices.Where(c=>!c.IsChecked && required.Any(i=>RepairDependencies.Same(i,c.Issue))))
+                {other.IsChecked=true;added++;}
+                if(added>0)selectionNote=$"Tích kèm {added} mục cần sửa trước đường kẻ";
+            }
+            else if(!choice.IsChecked)
+            {
+                foreach(var other in dependentChoices.Where(c=>c.IsChecked && c.Issue.Prerequisites!.Any(i=>RepairDependencies.Same(i,choice.Issue))))
+                {other.IsChecked=false;selectionNote="Đã bỏ chọn đường kẻ phụ thuộc";}
+            }
+        }
+        catch(InvalidOperationException)
+        {choice.IsChecked=false;selectionNote="Mục liên quan đã đổi; hãy quét lại";}
+        finally{updatingDependencies=false;All.RefreshSummary();}
     }
 }

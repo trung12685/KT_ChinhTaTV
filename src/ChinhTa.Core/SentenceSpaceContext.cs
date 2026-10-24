@@ -39,9 +39,13 @@ internal static class SentenceSpaceContext
         if(!Word(text,rightStart,rightEnd) || !char.IsUpper(text[rightStart]) ||
             !text[(rightStart+1)..rightEnd].Any(char.IsLower) ||
             text[(rightStart+1)..rightEnd].Any(c=>char.IsLetter(c) && !char.IsLower(c)) ||
-            Suffixes.Contains(text[rightStart..rightEnd]) ||
-            rightEnd<text.Length && text[rightEnd]!=' ')return false;
-        return true;
+            Suffixes.Contains(text[rightStart..rightEnd]))return false;
+        if(rightEnd==text.Length || text[rightEnd]==' ')return true;
+        // A one-word final sentence may end immediately in one .?!, with only
+        // trailing ASCII spaces. Do not turn an abbreviation or punctuation
+        // sequence into a sentence boundary, or change those trailing spaces.
+        if(text[rightEnd] is not ('.' or '?' or '!') || Abbreviations.Contains(text[rightStart..rightEnd]))return false;
+        return text.AsSpan(rightEnd+1).IndexOfAnyExcept(' ')<0;
     }
     private static bool WordChar(char c)=>char.IsLetter(c) || char.GetUnicodeCategory(c) is UnicodeCategory.NonSpacingMark or UnicodeCategory.SpacingCombiningMark;
     private static bool Word(string text,int start,int end)=>start<end && char.IsLetter(text[start]) && text[start..end].Count(char.IsLetter)>=2;

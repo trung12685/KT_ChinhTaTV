@@ -84,6 +84,17 @@ static class Program
         var absent=LineInspection.Inspect(Page(clip),new PreviewHighlighter(),[target],[],anchors,[],LinePolicy.Decree30,false).Single().Issue;
         Assert(absent.Title=="Thiếu đường kẻ dưới tiêu ngữ" && absent.CanFix,
             "A verified absent Line has a concise missing-Line title from the absence branch");
+        var pendingFont=new Issue(0,Text.Length,Text,Text,"",false,FixKind.DocumentHeadingFormat,CharacterFormat:new(13,false,true));
+        var conditional=LineInspection.Inspect(Page(clip),new PreviewHighlighter(),[target],[],anchors,[pendingFont],LinePolicy.Decree30,false).Single().Issue;
+        Assert(conditional.CanFix && conditional.Prerequisites is {Count:1} && conditional.Prerequisites[0]==pendingFont,
+            "A measured missing Line exposes an explicit font prerequisite instead of forcing a separate repair/scan cycle");
+        var maintenance=LineInspection.Inspect(linePage,new PreviewHighlighter(),[target],known,anchors,[pendingFont],LinePolicy.Decree30,false).Single().Issue;
+        Assert(maintenance.CanFix && maintenance.Prerequisites is {Count:1} && maintenance.Title!.StartsWith("Đo lại"),
+            "A currently valid owned stroke is re-measured after planned font repair and is not mislabeled as a missing Line");
+        Assert(LineInspection.Inspect(linePage,new PreviewHighlighter(),[target],known,anchors,[pendingFont with {Start=Text.Length+20}],LinePolicy.Decree30,false).Count==0,
+            "A font repair outside the reference region cannot manufacture a Line dependency");
+        Assert(!LineInspection.Inspect(Page(clip),new PreviewHighlighter(),[target],known.Select(s=>s with {AppOwned=false}).ToArray(),anchors,[pendingFont],LinePolicy.Decree30,false).Single().Issue.CanFix,
+            "Dependencies cannot convert a foreign or unverified existing Line into an automatic edit");
 
         var refreshed=LineInspection.Inspect(linePage,highlighter,[target],known,anchors,[],LinePolicy.Decree30,true);
         Assert(refreshed.Count==0,"A verified corrected owned Line disappears after rescan despite unrelated unmapped shapes");
@@ -175,6 +186,8 @@ static class Program
         IssueReviewPanelChecks.Run(Assert);
         StagedGeometryDesktopChecks.Run(Assert);
         VisibleFormatChecks.Run(Assert);
+        FormatObservationChecks.Run(Assert);
+        DependencyReviewChecks.Run(Assert);
         RepairProgressDesktopChecks.Run(Assert);
         DocumentTypeCatalogDesktopChecks.Run(Assert);
         Console.WriteLine($"{checks} WPF checks passed.");

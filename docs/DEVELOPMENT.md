@@ -1,5 +1,41 @@
 # Tiếp tục phát triển Chính tả Việt
 
+## B05 / chuẩn bị mốc .61 — sửa nhiều nhóm có mục cần trước
+
+Tiếp nối B04 `52fd60993737f106617889abdc80fa54de2f0ad9`, 2411 Core/OpenXML +127 WPF. Thêm RepairDependencies gắn đúng lỗi cần sửa trước vào Line, nối model checkbox/nhóm/all/single-fix → duyệt rõ → backend. Dùng geometry mới sau chữ/phông; Line hiện đã đạt chỉ đo lại/không ghi nếu vẫn đạt, không nhãn thiếu. Thiếu/phát sinh phụ thuộc chưa duyệt thì dừng/rollback. Nhận mốc cơ quan thường theo cấu trúc số/tên rõ, không đoán tên chính thức hay lấy chủ quản thay ban hành.
+
+PreviewAnchorBatch đọc trang/prefix một lần mỗi CP mỗi export, riêng original/length vẫn kiểm; không cache qua sửa. AdministrativePositionInspection dùng chung dữ liệu vừa đo trên XPS thay đo lặp. Không bỏ lần đo sau phông/Line, không dùng số Shape thay nét. Tests Word component/format không gạt blocker mà dùng đúng dependency inspection/model của UI. Thêm Core/Desktop hồi quy lựa chọn/permission/stale/vòng/geometry mới/rollback/CP và trường hợp nét đang đạt cần đo lại.
+
+Đủ5 hạng mục sau .60, chuẩn bị CHANGES/SUPPORTED .61 và báo cáo có ví dụ, ghi actual CI trong build-checks/TXT trước ZIP/SHA-256. [Nhật ký](BATCH-AFTER-0.1.60.md) · [Thiết kế/chọn nhóm](REPAIR-DEPENDENCIES.md). Giữ main/stable .27 và gói .60; chưa khép runtime Office2021 .56 chỉ bằng kiểm code/CI.
+
+## B04 sau .60 — hạng mục kiểm định dạng theo hệ thống
+
+Người dùng yêu cầu tăng phạm vi thay vì tiếp tục từng lỗi chữ nhỏ. Tiếp nối B03 `e92ec19e048d6805e5cc3fee9eedaee786f10337` đạt 2344 Core/OpenXML +113 WPF. Thêm FormatEvidence gắn text và FormatPolicy dùng chung: phân biệt hợp lệ/sai thật/chưa chắc/sai cỡ hỗn hợp; chấp nhận các cỡ hợp lệ/đen tương đương và bỏ ràng buộc đậm khi vai trò giữ đậm.
+
+WordSession đọc phông sau proof và nhận diện, dedupe vùng; VisibleFormatReader dùng aggregate → Words → Characters từ chưa rõ, chỉ chấp nhận phủ đúng text. Hậu kiểm chữ/phông và sau Line dùng cùng Matches; font repair có thể giữ các cỡ hợp lệ, thêm size fingerprint và chiếu qua sửa chữ để phát hiện cỡ bị ép dù vẫn trong khoảng hợp lệ. Case-only dùng Range.Case, giữ run nhưng vẫn xác minh chữ/Undo/rollback. Không nới quyền thay chữ qua đối tượng, XPS vẫn giữ.
+
+Phạm vi gồm các tiêu đề nhận diện, số/ngày, tên loại/trích yếu, cơ quan/nơi nhận. Kiểm nhiều vai trò và ghép cấu trúc ba Line thật; Desktop kiểm fallback/mất kết nối, phủ text và số lời gọi; fixture Word mới có mẫu đúng/sai, size13/14, whitespace/break styles, sửa riêng/chung ba Line/rollback/một Undo/lưu-mở/giữ nguồn. [Thiết kế](FORMAT-ASSESSMENT.md) · [Nhật ký](BATCH-AFTER-0.1.60.md). Bốn hạng mục, tổng25/8/1, code .61 chưa gói; chưa có bằng chứng runtime khép phản hồi .56, không coi CI là Office PASS.
+
+## B03 sau .60 — câu cuối chỉ một từ có dấu kết câu
+
+Tiếp nối B02 `2b2fb58007215008c1f8718ad103610884497d28`, đã đạt 2236 Core/OpenXML +113 WPF. Clear dùng chung C18/C19 nhận từ hoa đầu/còn lại thường tiếp ngay một dấu .?! cuối đoạn, đuôi chỉ ASCII spaces được giữ; loại thêm viết tắt đã biết ở nhánh mới. Không đổi ClearEnding hoặc guard của các nhóm khác, không thêm enum/nhóm. Ví dụ `Đã hoàn thành .Xong!` sửa riêng hoặc chung thành `Đã hoàn thành. Xong!`, giữ phần chưa chọn.
+
+Kiểm ma trận .?! × .?!, các biên/viết tắt/đuôi tệp/control/Unicode/emoji/CP/XML/stale, ghép lỗi qua nhiều đoạn và phông, rollback khi lỗi lưu; TXT có ví dụ C18/C19 tương ứng. Bài Word giả mới giữ kiểu và một Undo/rollback/lưu-mở/băm nguồn, CI chỉ biên dịch. Đủ 3 bước, code .61, tổng25/8/1, chưa ZIP/tag/release. [Nhật ký](BATCH-AFTER-0.1.60.md). Lỗi cơ quan/trích yếu .56 vẫn chờ runtime, không khép chỉ bằng CI.
+
+## B02 sau .60 — dấu phẩy/chấm phẩy sau ngoặc tròn
+
+Tiếp nối B01 `1908f0387051d96664915be17d456bf0918d0a79`, nhánh feature/format-batch-after-0.1.60; B01 đạt 2159 Core/OpenXML + 113 WPF. C14 nhận `Theo mẫu (nội dung) ,báo cáo.` và giữ `Theo mẫu (nội dung), báo cáo.`. Không sửa chữ/ngoặc; giữ nhóm comma, nguồn quy tắc ứng dụng và phần chưa chọn. Nhánh mới có hai từ trước rõ, ≥2 từ chữ trong, từ phải có chữ thường, cân bằng/không lồng và guard kỹ thuật/header/date/blank/control/XML. Tên hàm dùng chung bộ loại trừ hiện có với C15, không đổi hành vi C15; parse cặp một lần cho nhánh mới, không tăng lượt COM/kết xuất.
+
+Hồi quy NFC/NFD/emoji/CP, mọi chế độ, XML/manual/stale, chọn riêng trong/ngoài, nhóm B01/chữ/phông/hai chấm/dấu câu/cuối đoạn và rollback. Bài Word giả giữ run/đậm/gạch chân, quét/Undo/lưu-mở/băm nguồn và rollback; CI chỉ biên dịch. Mới 2 bước, code .61, tổng25/8/1, chưa ZIP/tag/release. [Nhật ký/ví dụ](BATCH-AFTER-0.1.60.md); lỗi phông .56 và Office 2021 vẫn chờ bằng chứng runtime.
+
+## B01 sau .60 — cụm lặp chỉ khác chữ hoa đầu đoạn
+
+Mốc đầu đợt mới: tag v0.1.60, commit `bd86e13f005fe41d3b9d068a317dd8a8795753ab`, đã có gói với 2105 Core/OpenXML + 113 WPF + 1 kiểm metadata; CI không có Word. Code mới version .61, chỉ một bước, chưa ZIP/tag/release.
+
+C13 nhận `Kế hoạch kế hoạch` và giữ `Kế hoạch`, chỉ khi duy nhất ký tự đầu của từ đầu đoạn khác hoa/thường. Cụm 2–8 tiếng, đối chiếu NFC nhưng giữ nguyên UTF-16/kiểu của lần đầu, chỉ xóa đuôi. Không gộp giữa câu/sau nhãn, từ đơn, mã/allcaps hoặc vượt dấu câu/tab/NBSP. Vẫn duyệt và phải có quyền sửa chữ; quét mới chặn lựa chọn cũ khi first-word/context hoặc XML thay đổi. SameUnit dùng vòng lặp thoát sớm thay Range/All trong so sánh cụm; không tuyên bố tăng tốc Word khi chưa đo.
+
+Kiểm hồi quy cũ và mới gồm Unicode tổ hợp, offset, giữ phần chưa chọn, các chế độ, XML, stale, tooltip/report, sửa chung khoảng trắng/hai chấm/dấu kết câu/cuối đoạn/phông và rollback. Bài Word giả mới có giữ đậm/gạch chân, sửa riêng/chung, quét, Undo/rollback/lưu-mở/băm nguồn; CI chỉ biên dịch. [Nhật ký hiện tại](BATCH-AFTER-0.1.60.md). Lỗi phông cơ quan/trích yếu .56 vẫn chờ bằng chứng runtime, main/stable .27 giữ nguyên.
+
 ## B05 / mốc bản thử .60 — gom đủ 5 bước
 
 Tiếp nối B04 `9e5449df1655acb789b01726767a71de126e0922`, nhánh feature/format-batch-after-0.1.59. C15 thêm `)` → `) ` khi các từ trước/trong/sau đủ rõ, giữ guard hàm/công thức/ngoặc thiếu-lồng/ô trống/header/date/control/XML. Các mép độc lập, giữ phần chưa chọn; cùng FixKind/Family parenthesis, property UI không cấp CanFix. Core có Unicode/CP, guard, một mép/cả nhóm, stale khi đổi quyền/context, ghép phông/cụm lặp/hai chấm/C25 và rollback lỗi lưu. Local2028 assertion. OfficeParenthesisAfterCheck giả giữ kiểu, quét/Undo/rollback/lưu-mở; CI chỉ biên dịch.

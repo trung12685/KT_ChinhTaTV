@@ -12,6 +12,7 @@ public static class StagedRepairBatch
     public static IReadOnlyList<Issue> Prepare(IEnumerable<Issue> selection)
     {
         var items=selection.Distinct().ToArray();
+        RepairDependencies.Validate(items);
         foreach(var group in items.GroupBy(Stage))BatchPlan.Create(group);
         var lines=items.Where(i=>Stage(i)==RepairStage.Line).ToArray();
         var centers=items.Where(i=>Stage(i)==RepairStage.Center).ToArray();
@@ -40,7 +41,7 @@ public static class StagedRepairBatch
     private static Issue ValidateResolved(DeferredRepair request,Issue current)
     {
         var old=request.Requested;
-        if(!current.CanFix || current.Original!=request.ExpectedText || current.Kind!=old.Kind ||
+        if(!current.CanFix || current.Prerequisites is {Count:>0} || current.Original!=request.ExpectedText || current.Kind!=old.Kind ||
             Stage(current)!=Stage(old) || old.LineFix?.Role!=current.LineFix?.Role ||
             old.CenterFix?.Role!=current.CenterFix?.Role)
             throw new InvalidOperationException("Mốc đo lại chưa khớp đúng mục đã chọn; phải khôi phục cả lượt.");

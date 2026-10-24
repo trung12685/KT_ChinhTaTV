@@ -13,13 +13,16 @@ public static class LineInspection
         var result = new List<(Issue, PreviewAnchor)>();
         foreach (var target in targets)
         {
+            var prerequisites=otherIssues.Where(i=>i.CanFix && StagedRepairBatch.Stage(i)==RepairStage.Text &&
+                i.Start<(long)target.Start+target.Text.Length && (long)i.Start+i.Length>target.RegionStart).Distinct().ToArray();
             bool hasAnchor = anchors.TryGetValue(target.Probe, out var anchor);
             anchor ??= new PreviewAnchor(1, target.Text, 0, target.Text.Length);
             string citation = ShapeLineRules.Citation(target) +
                 (target.Role == LineRole.Motto ? " Độ dài bằng dòng tiêu ngữ (dung sai đo 5% và 1 pt)." : " Độ dài theo NĐ30.") +
                 " Khoảng cách và dung sai đo/tâm theo cấu hình người dùng.";
             Issue Notice(string message, ShapeLineFix? fix = null) => target.Probe with
-            { Message = message, Citation = citation, CanFix = fix is not null, LineFix = fix };
+            { Message = message, Citation = citation, CanFix = fix is not null, LineFix = fix,
+                Prerequisites=fix is not null && prerequisites.Length>0?Array.AsReadOnly(prerequisites):null };
             var reference=hasAnchor ? ReferenceMeasurement.Read(document,preview,anchor) : null;
             if(reference is null || !target.Centered)
             {
@@ -32,7 +35,16 @@ public static class LineInspection
             {
                 var actual=RenderedLineVerifier.Find(new(accepted.Left,accepted.Top,accepted.Width),preview.HorizontalLines(document,anchor.Page));
                 if(actual is not null && ShapeLineRules.Evaluate(target,reference,actual,accepted.ShapeId,policy).Errors.Length==0)
+                {
+                    if(prerequisites.Length>0)
+                    {
+                        var current=shapes.Where(s=>s.Page==anchor.Page && s.AnchorStart>=target.RegionStart && s.AnchorStart<target.RegionEnd).ToArray();
+                        bool owned=current.Length==1 && current[0].AppOwned && current[0].Id==accepted.ShapeId;
+                        result.Add((Notice("Nét hiện tại đã đạt; cần đo lại sau các lỗi chữ/phông liên quan trước khi kết luận lượt sửa.",owned?accepted:null)
+                            with {Title="Đo lại đường kẻ dưới "+target.Label+" sau sửa chữ/phông"},anchor));
+                    }
                     continue;
+                }
             }
             bool IsInRegion(WordLineShape shape, LineTarget region) => shape.AnchorStart >= region.RegionStart && shape.AnchorStart < region.RegionEnd;
             var pageShapes = shapes.Where(s => s.Page == anchor.Page).ToArray();
@@ -50,10 +62,9 @@ public static class LineInspection
                 var actual = RenderedLineVerifier.Find(measured, preview.HorizontalLines(document, anchor.Page));
                 if (actual is null)
                 {
-                    bool overlapping = otherIssues.Any(i => i.CanFix && i.Start < target.Start + target.Text.Length && (long)i.Start + i.Length > target.Start);
                     var correction = ShapeLineRules.Evaluate(target, reference, null, own[0].Id, policy).Fix;
-                    result.Add((Notice("Shape đã tồn tại nhưng nét trên trang chưa khớp tọa độ khai báo hoặc chưa hiển thị. Cần đặt lại vị trí theo dòng mốc; chưa coi là đúng thể thức.",
-                        overlapping ? null : correction) with {Title="Đường kẻ dưới "+target.Label+" chưa hiển thị đúng"}, anchor));
+                    result.Add((Notice("Shape đã tồn tại nhưng nét trên trang chưa khớp tọa độ khai báo hoặc chưa hiển thị. Cần đặt lại vị trí theo dòng mốc; chưa coi là đúng thể thức. "+
+                        (prerequisites.Length>0?"Chọn kèm các lỗi liên quan; sẽ đo lại sau khi sửa chữ/phông.":""),correction) with {Title="Đường kẻ dưới "+target.Label+" chưa hiển thị đúng"}, anchor));
                     continue;
                 }
                 (fix, errors) = ShapeLineRules.Evaluate(target, reference, actual, own[0].Id, policy);
@@ -70,14 +81,19 @@ public static class LineInspection
                 }
                 (fix, errors) = ShapeLineRules.Evaluate(target, reference, near[0], own[0].Id, policy);
             }
-            if (errors.Length == 0) continue;
+            if (errors.Length == 0)
+            {
+                if(prerequisites.Length>0 && own.Length==1 && own[0].AppOwned)
+                    result.Add((Notice("Nét hiện tại đã đạt; sẽ đo lại sau các lỗi chữ/phông liên quan và chỉ chỉnh nếu số đo mới yêu cầu.",fix)
+                        with {Title="Đo lại đường kẻ dưới "+target.Label+" sau sửa chữ/phông"},anchor));
+                continue;
+            }
             bool foreign = own.Length == 1 && !own[0].AppOwned;
-            bool blocked = foreign || otherIssues.Any(i => i.CanFix && i.Start < target.Start + target.Text.Length && (long)i.Start + i.Length > target.Start);
             string message = string.Join(" ", errors) + $" Dòng cuối rộng {reference.Width:F1} pt; " +
                 $"đề xuất dài {fix.Width:F1} pt, cách dưới {fix.Top - reference.Bottom:F1} pt. " +
                 (foreign ? "Line có sẵn không có dấu nhận diện của ứng dụng; cần chỉnh thủ công trong Word." :
-                    blocked ? "Sửa nội dung/định dạng trong vùng trước rồi quét lại để đo đúng." : "Có thể tạo/đặt lại Line mà không thay nội dung chữ.");
-            result.Add((Notice(message, blocked ? null : fix) with
+                    prerequisites.Length>0 ? "Chọn kèm các lỗi liên quan; sẽ sửa chữ/phông, đo lại rồi kẻ trong cùng lượt." : "Có thể tạo/đặt lại Line mà không thay nội dung chữ.");
+            result.Add((Notice(message, foreign ? null : fix) with
                 {Title=(missing?"Thiếu đường kẻ dưới ":"Đường kẻ dưới ")+target.Label+(missing?"":" chưa đúng")}, anchor));
         }
         return result;

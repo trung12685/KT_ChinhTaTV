@@ -46,7 +46,7 @@ internal static class OfficeComponentCheck
         pass("Thành phần: sửa nhóm, giữ ngắt dòng, quét, một Undo và lưu/mở với nguồn nguyên vẹn");
         string longer=Create(modern,folder,true,true);test.Open(longer);var found=test.Check();
         var edits=found.Where(i=>i.CanFix && Component(i)).ToArray();
-        var lines=ReadLines(test,deferComponents:true);
+        var lines=ReadLines(test);
         if(lines.Length!=3)throw new InvalidOperationException("Mẫu phông sai chưa nhận đủ ba Line thiếu.");
         string longOriginal=test.ReadCheckText();var selected=edits.Concat(lines).ToArray();
         bool rolledBack=false;
@@ -54,7 +54,7 @@ internal static class OfficeComponentCheck
         if(!rolledBack || test.ReadCheckText()!=longOriginal || test.CheckUndoCount!=0 || test.Changed)
             throw new InvalidOperationException("Rollback phông và ba Line chưa phục hồi toàn bộ.");
         pass("Phông và ba Line: lỗi sau chèn Line phục hồi cả lượt, không tạo Undo");
-        found=test.Check();edits=found.Where(i=>i.CanFix && Component(i)).ToArray();lines=ReadLines(test,deferComponents:true);
+        found=test.Check();edits=found.Where(i=>i.CanFix && Component(i)).ToArray();lines=ReadLines(test);
         test.FixSelection(edits.Concat(lines));
         if(test.Check().Any(Component) || test.CheckUndoCount!=1)throw new InvalidOperationException("Hậu kiểm phông cơ quan/trích yếu/nơi nhận sau ba Line chưa qua.");
         string allFixed=Path.Combine(folder,"components-all-fixed.docx");test.SaveCopy(allFixed);
@@ -63,22 +63,21 @@ internal static class OfficeComponentCheck
         if(test.Check().Any(Component))throw new InvalidOperationException("Mở lại phông và ba Line còn cảnh báo thành phần.");
         pass("Phông cơ quan/trích yếu/nơi nhận sau đoạn 40: sửa cùng cả ba Line, quét, một Undo và lưu/mở");
     }
-    private static Issue[] ReadLines(WordSession test,bool deferComponents=false)
+    internal static Issue[] ReadLines(WordSession test)
     {
         var found=test.Check();var anchors=new Dictionary<Issue,PreviewAnchor>();
         string path=test.ExportPreview(test.LineTargets.Select(t=>t.Probe).ToArray(),anchors);
         try
         {
             using var xps=new System.Windows.Xps.Packaging.XpsDocument(path,FileAccess.Read);
-            // Test-only deferred intent: selected component edits run before fresh
-            // Line measurements in FixStaged. Do not change the production UI gate.
-            var blockers=deferComponents?found.Where(i=>!i.CanFix || i.Kind is not (FixKind.AgencyFormat or FixKind.AgencyText or FixKind.RecipientFormat or FixKind.RecipientText or FixKind.DocumentHeadingFormat or FixKind.DocumentTypeText)).ToArray():found;
-            return LineInspection.Inspect(xps.GetFixedDocumentSequence(),new PreviewHighlighter(),test.LineTargets,test.LineShapes,anchors,blockers,
+            // Exercise the same dependency-aware inspection as the production UI;
+            // tests no longer remove font/text blockers to manufacture Line intents.
+            return LineInspection.Inspect(xps.GetFixedDocumentSequence(),new PreviewHighlighter(),test.LineTargets,test.LineShapes,anchors,found,
                 LinePolicy.Decree30,test.HasGroupedShapes,test.VerifiedLineEdits).Select(e=>e.Issue).Where(i=>i.CanFix && i.LineFix is not null).ToArray();
         }
         finally{if(File.Exists(path))File.Delete(path);}
     }
-    private static string Create(string source,string folder,bool bad,bool longBody=false)
+    internal static string Create(string source,string folder,bool bad,bool longBody=false)
     {
         string path=Path.Combine(folder,longBody?"components-long.docx":bad?"components-bad.docx":"components-good.docx");File.Copy(source,path);
         using var zip=ZipFile.Open(path,ZipArchiveMode.Update);var entry=zip.GetEntry("word/document.xml")!;

@@ -1,5 +1,7 @@
 # Xem và xuất tiến độ, chức năng
 
+Bản .61 gom năm hạng mục sau .60, trọng tâm kiểm định dạng và chọn/sửa nhiều nhóm có mục cần sửa trước. TXT có ví dụ sửa phông giữ từng cỡ hợp lệ, C12 chọn kèm rồi đo lại, ba mở rộng lỗi chữ và giới hạn Word runtime. Số kiểm thực tế lấy từ build-checks.json đúng phiên bản/commit; không lấy số dự kiến hoặc lời gọi giả để khẳng định tốc độ Office. Xem [nội dung .61](CHANGES-0.1.61.md).
+
 Từ 0.1.41, chọn **Trợ giúp → Tiến độ và chức năng…**. Mở được khi chưa mở DOCX, không cần Word cho riêng thao tác xem/xuất báo cáo.
 
 Báo cáo gồm phiên bản/thời điểm, số nhóm chức năng tính từ danh mục, loại lỗi có thể đề xuất sửa, các mục chỉ cảnh báo, lịch sử phần đã làm, bằng chứng kiểm thử đi kèm gói, giới hạn và việc tiếp theo. Các số nhóm không phải số lỗi trong tài liệu đang mở; báo cáo chưa thống kê lịch sử bấm sửa của từng tài liệu.

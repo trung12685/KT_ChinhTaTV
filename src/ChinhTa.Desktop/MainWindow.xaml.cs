@@ -154,8 +154,13 @@ public partial class MainWindow : Window
             MessageBox.Show(this, "Chưa chọn lỗi nào. Tích ô bên cạnh các lỗi cần sửa.", "Chọn lỗi");
             return;
         }
+        int originalCount=selected.Count;
+        try{selected=RepairDependencies.Expand(selected,choices.Select(c=>c.Issue).ToArray());}
+        catch(InvalidOperationException error)
+        {MessageBox.Show(this,error.Message,"Quét lại trước khi sửa",MessageBoxButton.OK,MessageBoxImage.Information);return;}
         bool staged=selected.Select(StagedRepairBatch.Stage).Distinct().Count()>1;
         string stageNote=staged?"\nChương trình tự sửa chữ/phông, đo lại, căn giữa rồi sửa đường kẻ theo các mục đã chọn. Không cần tích chọn lại.":"";
+        if(selected.Count>originalCount)stageNote+=$"\nKèm {selected.Count-originalCount} mục cần sửa trước đường kẻ; danh sách dưới đây gồm cả các mục này.";
         string examples = string.Join("\n", selected.Take(8).Select(x =>
             $"• {x.Original.Replace("\r", " ")} → {x.Suggestion}"));
         string more = selected.Count > 8 ? $"\n… và {selected.Count - 8} lỗi khác." : "";

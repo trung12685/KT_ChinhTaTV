@@ -110,12 +110,16 @@ public static class IssueTooltipCatalog
                 :issue.Kind==FixKind.ShapeLine && issue.Message.Contains("Sửa nội dung/định dạng",StringComparison.Ordinal)
                 ?"Sửa chữ/phông trong vùng trước, rồi quét lại đường kẻ.":"Đối chiếu trong Chi tiết lỗi và chỉnh thủ công trong Word.";
         if(issue.LineFix is ShapeLineFix line)
+        {
+            if(issue.Prerequisites is {Count:>0} required)return $"Sửa kèm {required.Count} mục liên quan, đo lại rồi kẻ/đặt lại đường ngang.";
             return (line.ShapeId is null?"Kẻ":"Đặt lại")+" đường ngang dài "+Number(line.Width)+" pt, căn theo dòng chữ; "+
                 (line.Role==LineRole.Motto?"dài bằng tiêu ngữ.":"mức tự sửa theo cấu hình (mặc định 3/7).");
+        }
         if(issue.CenterFix is not null)return "Căn giữa trong ô đã xác minh, bỏ thụt lề ngang; giữ chữ và khoảng cách dọc.";
         if(issue.CharacterFormat is not null)return issue.Suggestion;
         if(issue.Format is HeadingFormat format)
             return (issue.Original==issue.Replacement?"Đặt":"Sửa chữ và đặt")+" Times New Roman, đen, đậm, đứng, cỡ "+Number(format.Size)+
+                (format.MaximumSize is float maximum?"–"+Number(maximum)+" (giữ cỡ hợp lệ)":"")+
                 (format.Alignment is null?".":"; căn giữa trong ô.");
         if(Spacing(issue))return "Gộp phần đã đánh dấu thành một dấu cách.";
         return issue.Kind switch

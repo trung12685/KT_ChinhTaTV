@@ -15,6 +15,17 @@ public static class DocumentHeadingRules
         return new(p.Start,text.Length,text,text,message,false,FixKind.DocumentHeadingFormat,CanFix:false,
             Citation:citation??Citation,Title:title??"Kiểm tra tên loại/trích yếu");
     }
+    // Read-only candidates; Check below remains the authority for role/repair
+    // eligibility. This avoids reading every centered body paragraph over COM.
+    public static IReadOnlyList<Paragraph> ObservationTargets(IReadOnlyList<Paragraph> paragraphs,IReadOnlyList<LayoutParagraph> layout,DocumentProfile profile)
+    {
+        if(profile!=DocumentProfile.State)return [];
+        var subjects=ShapeLineRules.Identify(layout,profile).Where(t=>t.Role==LineRole.Subject).ToArray();
+        if(subjects.Length!=1)return [];
+        var target=subjects[0];
+        return paragraphs.Take(40).Where(p=>p.Page==1 && !p.InTable && p.Start>=target.RegionStart && p.Start<=target.Start &&
+            !string.IsNullOrWhiteSpace(Clean(p.Text))).ToArray();
+    }
     public static IReadOnlyList<Issue> Check(IReadOnlyList<Paragraph> paragraphs,IReadOnlyList<LayoutParagraph> layout,DocumentProfile profile)
     {
         if(profile!=DocumentProfile.State)return [];
@@ -49,23 +60,23 @@ public static class DocumentHeadingRules
         {
             var p=first.Single(p=>p.Start==row.Start && Clean(p.Text)==Clean(row.Text));
             bool isTitle=p.Start==type.Start;string text=Clean(p.Text),label=isTitle?"tên loại":"trích yếu";
-            if(!p.FormatObserved || !(p.TextEditable || p.FormatEditable) || text.IndexOfAny(['\t','\f','\r','\n','\a'])>=0 || p.FormatMixed || p.BoldMixed)
+            var assessment=new FormatPolicy(13,14,false,true).Assess(p);
+            if(assessment.State is FormatState.Unknown or FormatState.NeedsReview || text.IndexOfAny(['\t','\f','\r','\n','\a'])>=0)
             {
-                result.Add(Notice(p,"Chưa xác minh đủ chữ thuần/định dạng đồng nhất của "+label+". Có thể có trường, đối tượng nhúng hoặc kiểu chữ trộn; giữ thủ công.","Kiểm tra định dạng "+label));
+                result.Add(Notice(p,assessment.State==FormatState.NeedsReview?
+                    "Có định dạng sai nhưng cỡ hợp lệ và không hợp lệ đang trộn; cần duyệt từng vùng để giữ cỡ đúng.":
+                    "Chưa xác minh đủ chữ/định dạng của "+label+". Có thể có trường, đối tượng nhúng hoặc thuộc tính chưa đọc được; giữ thủ công.","Kiểm tra định dạng "+label));
                 continue;
             }
-            if(!float.IsFinite(p.Size) || p.Size<=0 || p.Size>1638 || string.IsNullOrWhiteSpace(p.Font))
-            {result.Add(Notice(p,"Chưa đọc được định dạng hợp lệ; giữ thủ công.","Kiểm tra định dạng "+label));continue;}
-            if(!p.Font.Equals("Times New Roman",StringComparison.OrdinalIgnoreCase) || p.Size<13 || p.Size>14 || p.Italic || !p.Bold || p.Color is not (0 or -16777216))
+            if(assessment.State==FormatState.Repairable)
             {
-                float size=p.Size>=13 && p.Size<=14?p.Size:13;
                 result.Add(new(p.Start,text.Length,text,text,"Times New Roman, màu đen, cỡ 13–14, chữ đứng, đậm; giữ cỡ hợp lệ, nguyên văn, gạch chân và căn đoạn. Vị trí/nét kẻ kiểm riêng.",
-                    false,FixKind.DocumentHeadingFormat,Citation:citation,Title:"Định dạng "+label,CharacterFormat:new(size,false,true)));
+                    false,FixKind.DocumentHeadingFormat,Citation:citation,Title:"Định dạng "+label,CharacterFormat:new(assessment.Size,false,true,PreserveSize:assessment.PreserveSize)));
             }
             if(isTitle && text!=text.ToUpperInvariant())
             {
                 string name=text.Trim(' ');int offset=text.Length-text.TrimStart(' ').Length;
-                if(p.TextEditable && name==name.Trim() && ShapeLineRules.IsDocumentType(name) && name.ToUpperInvariant().Length==name.Length)
+                if(p.TextEditable && !assessment.PreserveSize && name==name.Trim() && ShapeLineRules.IsDocumentType(name) && name.ToUpperInvariant().Length==name.Length)
                     result.Add(new(p.Start+offset,name.Length,name,name.ToUpperInvariant(),
                         "Tên loại văn bản được trình bày bằng chữ in hoa; chỉ đổi hoa/thường của tên đã nhận diện, giữ trích yếu, khoảng trắng ngoài tên, phông và căn đoạn.",
                         false,FixKind.DocumentTypeText,Citation:citation,Title:"Tên loại văn bản chưa viết hoa"));

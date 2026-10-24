@@ -68,6 +68,10 @@ jobs:
           Copy-Item $env:RELEASE_NOTES artifacts/win-x64/
           Copy-Item docs/RELEASE-CADENCE.md artifacts/win-x64/
           Copy-Item docs/BATCH-AFTER-0.1.59.md artifacts/win-x64/
+          Copy-Item docs/BATCH-AFTER-0.1.60.md artifacts/win-x64/
+          Copy-Item docs/FORMAT-ASSESSMENT.md artifacts/win-x64/
+          Copy-Item docs/REPAIR-DEPENDENCIES.md artifacts/win-x64/
+          Copy-Item docs/CHANGES-0.1.60.md artifacts/win-x64/
           Copy-Item docs/CHANGES-0.1.59.md artifacts/win-x64/
           Copy-Item docs/CHANGES-0.1.58.md artifacts/win-x64/
           Copy-Item docs/DOCUMENT-TYPES.md artifacts/win-x64/
@@ -88,7 +92,10 @@ jobs:
         run: |
           Copy-Item artifacts/ChinhTaViet-${{ env.RELEASE_VERSION }}-tien-do.txt artifacts/win-x64/
           Compress-Archive artifacts/win-x64/* artifacts/ChinhTaViet-${{ env.RELEASE_VERSION }}-win-x64.zip
-          Get-FileHash artifacts/ChinhTaViet-${{ env.RELEASE_VERSION }}-win-x64.zip -Algorithm SHA256 | Format-List | Out-File artifacts/SHA256.txt
+          $zipName = 'ChinhTaViet-${{ env.RELEASE_VERSION }}-win-x64.zip'
+          $zipHash = (Get-FileHash "artifacts/$zipName" -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$zipHash  $zipName" | Set-Content artifacts/SHA256.txt -Encoding ascii
+          Write-Output "Windows ZIP SHA256: $zipHash"
       - uses: actions/upload-artifact@v4
         with:
           name: ChinhTaViet-${{ env.RELEASE_VERSION }}-win-x64

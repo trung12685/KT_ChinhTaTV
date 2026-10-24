@@ -36,27 +36,32 @@ public static class HeadingRules
         // Local centering of a national heading in a cell follows the user-requested layout convention.
         int? align = !party && p.InTable ? 1 : null;
         bool validSize = p.Size >= min - .01f && p.Size <= max + .01f;
-        if (text == expected && p.Bold && !p.Italic && validSize && p.Font == "Times New Roman"
-            && (p.Color == 0 || p.Color == -16777216) && (align is null || p.Alignment == align)) yield break;
+        var assessment=p.FormatEvidence is null?null:new FormatPolicy(min,max,false,true).Assess(p);
+        bool validFormat=assessment is null?p.Bold && !p.Italic && validSize && p.Font=="Times New Roman" && p.Color is 0 or -16777216:
+            assessment.State==FormatState.Correct;
+        if (text == expected && validFormat && (align is null || p.Alignment == align)) yield break;
         string citation = party ? "05-HD/VPTW (27/5/2026), Phần II.I.1 và Phụ lục 2, mục 1; PDF trang 2, 31."
             : "NĐ 30/2020/NĐ-CP, Phụ lục I, Phần I.I.4 và II.1; PDF trang 21.";
         if (!party && !motto && align is not null)
             citation += " Căn giữa quốc hiệu trong ô: lựa chọn trình bày theo yêu cầu người dùng.";
         string sizeLabel = min == max ? $"{min:0}" : $"{min:0}–{max:0}";
         string label = party ? "Tiêu đề Đảng" : motto ? "Tiêu ngữ" : "Quốc hiệu";
-        if(!p.TextEditable)
+        if(assessment?.State is FormatState.Unknown or FormatState.NeedsReview ||
+            !p.TextEditable && !(p.FormatEditable && text==expected && assessment?.State is FormatState.Correct or FormatState.Repairable) ||
+            assessment?.PreserveSize==true && text!=expected)
         {
             yield return new(p.Start,text.Length,text,text,
-                $"{label}: cần kiểm tra chữ/định dạng thủ công vì dòng có cấu trúc hoặc chưa đối chiếu được XML.",
+                $"{label}: chưa đủ dữ liệu hoặc quyền sửa chữ/định dạng an toàn; cần duyệt thủ công, không kết luận dòng sai thể thức.",
                 false,FixKind.Advisory,CanFix:false,Citation:citation,Title:$"Kiểm tra {label.ToLowerInvariant()}");
             yield break;
         }
+        float targetSize=assessment?.PreserveSize==true?min:assessment?.Size??(validSize?p.Size:min);
         yield return new(p.Start, text.Length, text, expected,
             $"{label}: Times New Roman, chữ đứng, đậm, màu đen, cỡ {sizeLabel}. " +
             (align is not null ? "Căn giữa trong ô. " : "") +
             "Chưa kiểm tra tọa độ vùng đặt; đường kẻ được đánh giá riêng khi nhận diện/đo được.", false,
             party ? FixKind.PartyHeading : motto ? FixKind.StateMotto : FixKind.NationalHeading,
-            Citation: citation, Format: new(validSize ? p.Size : min, align));
+            Citation: citation, Format: new(targetSize, align,assessment?.PreserveSize==true?max:null));
     }
     public static IEnumerable<Issue> CheckConsistency(IReadOnlyList<Paragraph> paragraphs, DocumentProfile profile)
     {
@@ -65,6 +70,8 @@ public static class HeadingRules
         var mottos = paragraphs.Where(p => p.Page == 1 && Canonical(p.Text).Equals(Motto, StringComparison.OrdinalIgnoreCase)).ToArray();
         if (nationals.Length != 1 || mottos.Length != 1) yield break;
         var national = nationals[0]; var motto = mottos[0];
+        if(!national.FormatObserved || !motto.FormatObserved)yield break;
+        if(new[]{national,motto}.Any(p=>p.FormatEvidence is { } e && e.Fonts.Select(f=>f.Size).Distinct().Count()!=1))yield break;
         if (national.Size < 12 || national.Size > 13 || motto.Size < 13 || motto.Size > 14 ||
             Math.Abs(motto.Size - national.Size - 1) < .01) yield break;
         string original = motto.Text.TrimEnd('\r', '\a', '\n');

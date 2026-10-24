@@ -64,6 +64,11 @@ public static class AdministrativePositionDesktopChecks
             "WPF glyph baselines transform into page points and remain equal across 13/14pt font heights");
         assert(AdministrativePositionInspection.Inspect(page,preview,targets,anchors).Count==0,
             "Verified single-line number/date and complete centered reference blocks have no position warning");
+        var measured=targets.Select(t=>AdministrativePositionInspection.MeasureCentering(page,preview,t,anchors)).ToArray();
+        assert(AdministrativePositionInspection.InspectMeasured(measured,anchors).Count==0,
+            "Freshly measured evidence drives the same position assessment without re-measuring every reference");
+        assert(AdministrativePositionInspection.InspectMeasured(measured,new Dictionary<Issue,PreviewAnchor>()).All(e=>!e.Issue.CanFix),
+            "Measured values cannot authorize centering when their Word anchors are absent");
         glyphs[2].OriginX+=8;
         var shifted=AdministrativePositionInspection.Inspect(page,new PreviewHighlighter(),targets,anchors);
         assert(shifted.Any(x=>x.Issue.Start==number.Row.Start && x.Issue.Message.Contains("lệch tâm")) && shifted.All(x=>!x.Issue.CanFix),

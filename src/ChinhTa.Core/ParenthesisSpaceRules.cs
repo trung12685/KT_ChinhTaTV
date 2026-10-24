@@ -13,6 +13,7 @@ public static class ParenthesisSpaceRules
         RegexOptions.IgnoreCase|RegexOptions.CultureInvariant|RegexOptions.NonBacktracking);
     private static readonly HashSet<string> Functions=new(StringComparer.OrdinalIgnoreCase)
         {"fn","func","function","sin","cos","tan","cot","log","ln","exp","sqrt","abs","max","min"};
+    internal static bool IsFunctionName(string value)=>Functions.Contains(value);
     public static IReadOnlyList<Issue> Check(Paragraph paragraph)
     {
         string text=paragraph.Text;
@@ -73,7 +74,7 @@ public static class ParenthesisSpaceRules
         if(!SentenceSpaceContext.ClearEnding(text,leftEnd))return false;
         int wordStart=leftEnd;
         while(wordStart>0 && (char.IsLetter(text[wordStart-1]) || Mark(text[wordStart-1])))wordStart--;
-        if(Functions.Contains(text[wordStart..leftEnd]))return false;
+        if(IsFunctionName(text[wordStart..leftEnd]))return false;
         var inside=text[first..last].Split(' ',StringSplitOptions.RemoveEmptyEntries);
         if(inside.Length<2 || inside.Any(word=>!Letters(word)))return false;
         int start=close+1,end=start;
