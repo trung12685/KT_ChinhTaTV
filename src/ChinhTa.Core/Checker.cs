@@ -6,15 +6,15 @@ public record Paragraph(int Start, string Text, bool Bold = false, float Size = 
     int Alignment = 1, string Font = "Times New Roman", bool Italic = false,
     int Color = 0, bool InTable = false, int Page = 1, bool FormatObserved = false, bool FormatMixed = false, bool TextEditable = true, bool BoldMixed = false, OutlineParagraphInfo? Outline = null, bool FormatEditable = false,FormatEvidence? FormatEvidence=null);
 public enum FixKind { Text, NationalHeading, StateMotto, PartyHeading, Advisory, PageLayout, ShapeLine, AdministrativeNumber, AdministrativeDate, AdministrativeFormat, AdministrativePosition, DocumentHeadingFormat, RepeatedText, PunctuationSpace, ParenthesisSpace, SentenceEndSpace, ColonSpace, SentenceInnerSpace, SentenceAfterSpace, OutlineOrder, OutlineMarker, AgencyFormat, AgencyText, RecipientFormat, RecipientText, DocumentTypeText, ParagraphEndSpace }
-public record HeadingFormat(float Size, int? Alignment = null,float? MaximumSize=null)
+public record HeadingFormat(float Size, int? Alignment = null,float? MaximumSize=null,bool RepairInvalidSizes=false)
 {
     public bool Matches(string font,float size,int bold,int italic,int color,int? alignment)=>
-        font.Equals("Times New Roman",StringComparison.OrdinalIgnoreCase) && float.IsFinite(Size) && Size>0 &&
+        font.Equals("Times New Roman",StringComparison.OrdinalIgnoreCase) && (!RepairInvalidSizes || MaximumSize is not null) && float.IsFinite(Size) && Size>0 &&
         float.IsFinite(size) && (MaximumSize is float maximum?size>=Size && size<=maximum:Math.Abs(size-Size)<.01f) && bold==-1 && italic==0 &&
         color is 0 or -16777216 && (Alignment is null || alignment==Alignment);
 }
 public enum ComponentRole { AgencyParent, Agency, RecipientLabel, RecipientItem }
-public record CharacterFormat(float Size,bool Italic,bool? Bold=null,ComponentRole? Role=null,bool PreserveSize=false)
+public record CharacterFormat(float Size,bool Italic,bool? Bold=null,ComponentRole? Role=null,bool PreserveSize=false,bool RepairInvalidSizes=false)
 {
     public (float Minimum,float Maximum) SizeRange=>Role switch
     {
@@ -22,7 +22,7 @@ public record CharacterFormat(float Size,bool Italic,bool? Bold=null,ComponentRo
         ComponentRole.RecipientLabel=>(12,12),ComponentRole.RecipientItem=>(11,11),
         _=>Bold==true || Italic?(13,14):(13,13)
     };
-    public bool Valid => float.IsFinite(Size) && (!PreserveSize || SizeRange.Minimum<SizeRange.Maximum && Size==SizeRange.Minimum) && (Role is not null ? Role switch
+    public bool Valid => (!RepairInvalidSizes || PreserveSize) && float.IsFinite(Size) && (!PreserveSize || SizeRange.Minimum<SizeRange.Maximum && Size==SizeRange.Minimum) && (Role is not null ? Role switch
     {
         ComponentRole.AgencyParent=>Size>=12 && Size<=13 && !Italic && Bold==false,
         ComponentRole.Agency=>Size>=12 && Size<=13 && !Italic && Bold==true,
@@ -35,10 +35,11 @@ public record CharacterFormat(float Size,bool Italic,bool? Bold=null,ComponentRo
         (PreserveSize?size>=SizeRange.Minimum && size<=SizeRange.Maximum:Math.Abs(size-Size)<.01f) && italic==(Italic?-1:0) && color is 0 or -16777216 &&
         (Bold is null || bold==(Bold==true?-1:0));
 }
+public sealed record OutlineEditContext(int? ParentStart,int GroupStart,string Label,string Delimiter);
 public record Issue(int Start, int Length, string Original, string Replacement,
     string Message, bool BatchSafe, FixKind Kind = FixKind.Text,
     bool CanFix = true, string? Citation = null, HeadingFormat? Format = null, string? Title = null, ShapeLineFix? LineFix = null,
-    CharacterFormat? CharacterFormat = null, AdministrativeCenterFix? CenterFix = null,IReadOnlyList<Issue>? Prerequisites=null)
+    CharacterFormat? CharacterFormat = null, AdministrativeCenterFix? CenterFix = null,IReadOnlyList<Issue>? Prerequisites=null,OutlineEditContext? OutlineContext=null)
 {
     public string DisplayText => Title ?? Original;
     public bool AddsSpaceAfterColon => Kind==FixKind.ColonSpace && Original==":" && Replacement==": ";
@@ -46,6 +47,8 @@ public record Issue(int Start, int Length, string Original, string Replacement,
     public string Suggestion => !CanFix ? "Kiểm tra thủ công; không tự sửa."
         : LineFix is not null ? Prerequisites is {Count:>0} required?$"Sửa kèm {required.Count} mục liên quan, đo lại rồi tạo/đặt lại đường kẻ.":"Tạo/đặt lại Shape Line theo số đo và cấu hình đã chọn."
         : CenterFix is not null ? "Căn giữa trong ô đã xác minh, bỏ thụt lề ngang; giữ nguyên chữ và khoảng cách dọc."
+        : Format is {RepairInvalidSizes:true,MaximumSize:float headingMaximum} selectiveHeading ? $"Times New Roman, đen, đứng, đậm; chỉ đưa cỡ ngoài {selectiveHeading.Size:0.#}–{headingMaximum:0.#} về {selectiveHeading.Size:0.#}; giữ cỡ đúng và chữ."+(selectiveHeading.Alignment is null?"":" Căn giữa trong ô.")
+        : CharacterFormat?.RepairInvalidSizes==true ? $"Times New Roman, đen, {(CharacterFormat.Italic?"nghiêng":"đứng")}{(CharacterFormat.Bold==true?", đậm":CharacterFormat.Bold==false?", không đậm":"")}; chỉ đưa cỡ ngoài {CharacterFormat.SizeRange.Minimum:0.#}–{CharacterFormat.SizeRange.Maximum:0.#} về {CharacterFormat.Size:0.#}; giữ từng cỡ đúng và chữ."
         : CharacterFormat is not null ? $"Times New Roman, màu đen, cỡ {(CharacterFormat.PreserveSize?$"{CharacterFormat.SizeRange.Minimum:0.#}–{CharacterFormat.SizeRange.Maximum:0.#} (giữ cỡ hợp lệ)":$"{CharacterFormat.Size:0.#}")}, chữ {(CharacterFormat.Italic?"nghiêng":"đứng")}{(CharacterFormat.Bold==true?", đậm":CharacterFormat.Bold==false?", không đậm":"")}; giữ nguyên chữ."
         : Kind==FixKind.DocumentTypeText ? "Viết hoa tên loại thành “"+Replacement+"”; giữ nội dung trích yếu, phông và căn đoạn."
         : Kind==FixKind.OutlineOrder ? $"Đổi ký hiệu mục {Original} → {Replacement}; giữ nội dung, cần duyệt thứ tự và dẫn chiếu."
@@ -55,7 +58,7 @@ public record Issue(int Start, int Length, string Original, string Replacement,
         : AddsSpaceAfterColon ? "Thêm một dấu cách sau dấu hai chấm; giữ chữ, dấu câu và khoảng trước, cần duyệt cả câu."
         : Kind==FixKind.ColonSpace ? "Xóa dấu cách trước dấu hai chấm; giữ chữ và dấu câu, cần duyệt cả câu."
         : Kind==FixKind.SentenceEndSpace ? "Xóa dấu cách trước dấu kết câu cuối đoạn; giữ chữ và dấu câu, cần duyệt cả câu."
-        : Kind==FixKind.ParagraphEndSpace ? "Xóa dấu cách cuối đoạn sau dấu kết câu; giữ chữ, dấu câu và dấu kết đoạn/ô, cần duyệt cả câu."
+        : Kind==FixKind.ParagraphEndSpace ? "Xóa dấu cách cuối đoạn sau dấu kết câu/chấm phẩy; giữ chữ, dấu câu và dấu kết đoạn/ô, cần duyệt cả câu."
         : AddsSpaceAfterClosingParenthesis ? "Thêm một dấu cách sau dấu đóng ngoặc; giữ chữ, ngoặc và khoảng trong chưa chọn, cần duyệt cả câu."
         : Kind==FixKind.ParenthesisSpace ? "Xóa dấu cách sát bên trong ngoặc; giữ chữ và dấu ngoặc, cần duyệt cả câu."
         : Kind==FixKind.RepeatedText ? "Xóa phần lặp đã đánh dấu, giữ lần đầu; cần duyệt cả câu."

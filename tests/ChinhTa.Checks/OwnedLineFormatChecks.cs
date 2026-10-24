@@ -63,6 +63,13 @@ public static class OwnedLineFormatChecks
                 assert(defects.Length==2 && defects.All(i=>i.CanFix && i.CharacterFormat is not null && i.Original==i.Replacement),
                     "Real agency and subject font defects after a Line still offer exact content-preserving repairs");
                 BatchPlan.Create(defects);
+                var motto=sample.Rows.Single(p=>p.Text.TrimEnd('\r','\a')==HeadingRules.Motto);
+                var mottoFix=HeadingRules.Check(motto with {FormatMixed=true,FormatEvidence=new(HeadingRules.Motto,
+                    [new("Times New Roman",12,-1,0,0),new("Times New Roman",14,-1,0,0)])},DocumentProfile.State).Single();
+                assert(!motto.TextEditable && motto.FormatEditable && mottoFix.CanFix && mottoFix.Original==mottoFix.Replacement &&
+                    mottoFix.Format is {RepairInvalidSizes:true,Size:13,MaximumSize:14},
+                    "Real owned-Line XML allows selective motto font sizing without granting text replacement through the drawing");
+                BatchPlan.Create([mottoFix]);
                 var mixed=sample.Rows.Select(p=>p.Text.StartsWith("ĐƠN VỊ BAN HÀNH")?p with {FormatMixed=true}:p).ToArray();
                 assert(ComponentRules.Check(mixed,sample.Layout,DocumentProfile.State).Single().CanFix==false,
                     "A known Line cannot conceal genuinely mixed or unobserved visible formatting");

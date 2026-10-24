@@ -6,6 +6,15 @@
 
 Ưu tiên đã thống nhất: **thể thức → lỗi chữ và lặp từ/cụm từ → ngữ cảnh và thư viện sau cùng**. Phần chính tả tiếng Việt đầy đủ còn cần xây dựng; không coi quy tắc minh họa hiện tại là bộ kiểm hoàn chỉnh.
 
+## Bản thử tích lũy 0.1.62 — năm hạng mục sau .61
+
+- B01–B02: sửa riêng cỡ sai trong các vùng đã nhận diện, gồm quốc hiệu/tiêu ngữ giữ nguyên chữ; giữ từng cỡ đúng và đo lại trước Line.
+- B03: `Báo cáo` cỡ13/14 →`BÁO CÁO`, giữ từng cỡ/gạch chân và các thuộc tính chưa chọn. Hậu kiểm định dạng sau lưu/Line, sai thì rollback toàn lượt.
+- B04: dưới mục cha rõ, `1.1., 1.2., 1.4.` →`1.1., 1.2., 1.3.`; chỉ sửa số cuối, giữ prefix/tab, chặn cascade/dẫn chiếu/gợi ý cũ khi đổi tiền tố.
+- B05: `Nội dung đã duyệt;   ` →`Nội dung đã duyệt;`; giữ dấu, đoạn/ô và trường số/ngày trống.
+
+Đủ **5 hạng mục**, tổng25 đề xuất/8 thủ công/1 minh họa. [Gói .62](https://github.com/trung12685/KT_ChinhTaTV/releases/tag/v0.1.62) có ZIP/TXT/SHA-256 khi pipeline phát hành đúng commit đạt; [bản gần nhất .61](https://github.com/trung12685/KT_ChinhTaTV/releases/tag/v0.1.61) giữ nguyên. CI không có Word; chưa khép phản hồi Office2021 cũ bằng kiểm code. [Nội dung/cách thử](docs/CHANGES-0.1.62.md) · [Danh sách chức năng](docs/SUPPORTED-FIXES-0.1.62.md) · [Nhật ký](docs/BATCH-AFTER-0.1.61.md). Main/stable .27 giữ nguyên.
+
 ## Bản thử 0.1.61 — kiểm định dạng và sửa nhiều nhóm
 
 B04 sửa chung luồng kiểm phông/cỡ/màu/kiểu cho quốc hiệu/tiêu ngữ, số/ngày, tên loại/trích yếu, cơ quan và nơi nhận. Các cỡ cùng hợp lệ, hai mã màu đen hoặc kiểu khác ở dấu cách/ngắt dòng không tự thành lỗi. Đọc sau proof XML, mỗi vùng một lần; aggregate rõ dùng ngay, chưa rõ thì đọc từ rồi ký tự cần thiết. Sửa phông/màu giữ từng cỡ hợp lệ và hậu kiểm cỡ ký tự còn lại sau sửa chữ/Line; chưa đọc chắc thì giữ thủ công. Không mở sửa chữ qua đối tượng hoặc bỏ kiểm nét XPS/Undo/rollback.

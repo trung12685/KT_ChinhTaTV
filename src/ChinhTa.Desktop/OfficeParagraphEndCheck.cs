@@ -44,6 +44,54 @@ internal static class OfficeParagraphEndCheck
             !SHA256.HashData(File.ReadAllBytes(path)).SequenceEqual(digest))
             throw new InvalidOperationException("Lưu/mở cuối đoạn chưa đúng hoặc nguồn mẫu bị đổi.");
         pass("Khoảng trắng cuối đoạn: nhóm trước/sau, rollback, một Undo, lưu/mở và giữ nguyên nguồn/kiểu/dấu kết đoạn");
+        RunSemicolon(test,source,folder,pass);
+    }
+    private static void RunSemicolon(WordSession test,string source,string folder,Action<string> pass)
+    {
+        string path=Path.Combine(folder,"semicolon-end-input.docx");File.Copy(source,path);
+        using(var zip=ZipFile.Open(path,ZipArchiveMode.Update))
+        {
+            var entry=zip.GetEntry("word/document.xml")!;XDocument xml;
+            using(var input=entry.Open())xml=XDocument.Load(input,LoadOptions.PreserveWhitespace);
+            XNamespace w="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+            XElement Row(string value)=>new(w+"p",new XElement(w+"r",new XElement(w+"rPr",
+                new XElement(w+"rFonts",new XAttribute(w+"ascii","Times New Roman"),new XAttribute(w+"hAnsi","Times New Roman")),
+                new XElement(w+"sz",new XAttribute(w+"val",26))),new XElement(w+"t",new XAttribute(XNamespace.Xml+"space","preserve"),value)));
+            var body=xml.Descendants(w+"body").Single();
+            foreach(string text in new[]{"Nội dung  kế hoạch kế hoạch;   ","Công tác đã xong;  ","Số:        /BC-ABC"})
+                if(body.Element(w+"sectPr") is XElement section)section.AddBeforeSelf(Row(text));else body.Add(Row(text));
+            entry.Delete();using(var output=zip.CreateEntry("word/document.xml").Open())xml.Save(output);
+        }
+        byte[] hash=SHA256.HashData(File.ReadAllBytes(path));test.Open(path);test.Profile=DocumentProfile.State;
+        string original=test.ReadCheckText();var gaps=test.Check().Where(i=>i.CanFix && i.Kind==FixKind.ParagraphEndSpace).OrderBy(i=>i.Start).ToArray();
+        if(gaps.Length!=2)throw new InvalidOperationException("Mẫu chấm phẩy chưa nhận đúng hai khoảng cuối đoạn.");
+        test.Fix(gaps[0]);
+        if(test.ReadCheckText()!=original.Replace("kế hoạch;   ","kế hoạch;",StringComparison.Ordinal) ||
+            test.Check().Count(i=>i.CanFix && i.Kind==FixKind.ParagraphEndSpace)!=1)
+            throw new InvalidOperationException("Sửa riêng sau chấm phẩy làm đổi mục chưa chọn hoặc còn lỗi đã sửa.");
+        test.Undo();test.Check();
+        Issue[] Selected()
+        {
+            var current=test.Check();var ends=current.Where(i=>i.CanFix && i.Kind==FixKind.ParagraphEndSpace).OrderBy(i=>i.Start).ToArray();
+            int start=ends[0].Start-"Nội dung  kế hoạch kế hoạch;".Length,end=ends[^1].Start+ends[^1].Length;
+            return current.Where(i=>i.CanFix && i.Start>=start && (long)i.Start+i.Length<=end &&
+                i.Kind is FixKind.ParagraphEndSpace or FixKind.RepeatedText or FixKind.Text).ToArray();
+        }
+        var selected=Selected();bool restored=false;
+        try{test.FixTextFailureProbe(selected,1);}catch(InvalidOperationException e) when(e.InnerException is OfficeTextProbeException){restored=true;}
+        if(!restored || test.ReadCheckText()!=original || test.CheckUndoCount!=0 || test.Changed)
+            throw new InvalidOperationException("Rollback chấm phẩy chưa phục hồi toàn lượt.");
+        selected=Selected();test.FixSelection(selected);
+        string expected=original.Replace("Nội dung  kế hoạch kế hoạch;   ","Nội dung kế hoạch;",StringComparison.Ordinal)
+            .Replace("Công tác đã xong;  ","Công tác đã xong;",StringComparison.Ordinal);
+        if(test.ReadCheckText()!=expected || test.Check().Any(i=>i.CanFix && i.Kind==FixKind.ParagraphEndSpace) || test.CheckUndoCount!=1)
+            throw new InvalidOperationException("Sửa chung chấm phẩy/chữ chưa giữ dấu câu/ô trống hoặc một Undo.");
+        string saved=Path.Combine(folder,"semicolon-end-fixed.docx");test.SaveCopy(saved);test.Undo();
+        if(test.ReadCheckText()!=original)throw new InvalidOperationException("Undo chấm phẩy chưa phục hồi chữ.");
+        test.Open(saved);
+        if(test.ReadCheckText()!=expected || !hash.SequenceEqual(SHA256.HashData(File.ReadAllBytes(path))))
+            throw new InvalidOperationException("Lưu/mở chấm phẩy chưa đúng hoặc nguồn đổi.");
+        pass("Khoảng cuối sau chấm phẩy: chọn riêng/chung chữ, giữ dấu/ô trống, rollback, một Undo/lưu-mở/nguồn");
     }
     private static string Create(string source,string folder)
     {

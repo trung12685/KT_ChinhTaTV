@@ -639,7 +639,7 @@ public sealed partial class WordSession : IDisposable
             }
             return;
         }
-        var formatRanges=new List<(Issue Issue,object Range,string Expected,FontSizeEvidence? Sizes)>();
+        var formatRanges=new List<(Issue Issue,object Range,string Expected,FontSizeEvidence? Sizes,CharacterStyleEvidence? Styles)>();
         try
         {
             dynamic textContent=document!.Content;
@@ -664,9 +664,16 @@ public sealed partial class WordSession : IDisposable
                 try
                 {
                     if((string)target.Text!=formatIssue.Original)throw new InvalidOperationException("Dòng định dạng đã thay đổi; hãy quét lại.");
-                    formatRanges.Add((formatIssue,(object)target,expectedRow,ExpectedSizesFor(formatIssue,plan)));target=null!;
+                    formatRanges.Add((formatIssue,(object)target,expectedRow,ExpectedSizesFor(formatIssue,plan),null));target=null!;
                 }
                 finally{Release(target);}
+            }
+            foreach(var probe in CaseTrackingRegions(plan))
+            {
+                var styles=ExpectedCaseStyles(probe,plan);
+                dynamic tracked=document!.Range(probe.Start,probe.Start+probe.Length);
+                try{formatRanges.Add((probe,(object)tracked,styles.Text,null,styles));tracked=null!;}
+                finally{Release(tracked);}
             }
             var headingSizes=plan.Where(i=>i.Format?.MaximumSize is not null).ToDictionary(i=>i,i=>ExpectedSizesFor(i,plan));
             bool textPreviousChanged=Changed,started=false,restored=false;
@@ -693,6 +700,7 @@ public sealed partial class WordSession : IDisposable
                             try{font.Name="Times New Roman";if(!character.PreserveSize)font.Size=character.Size;font.Italic=character.Italic?-1:0;font.Color=0;
                                 if(character.Bold is bool bold)font.Bold=bold?-1:0;}
                             finally{Release(font);}
+                            if(character.RepairInvalidSizes)VisibleFormatReader.RepairSizes((object)range,item.Original,character);
                         }
                         if(item.Format is HeadingFormat heading)
                         {
@@ -704,13 +712,14 @@ public sealed partial class WordSession : IDisposable
                                 if(heading.Alignment is int alignment)format.Alignment=alignment;
                             }
                             finally{Release(format);Release(font);}
+                            if(heading.RepairInvalidSizes)VisibleFormatReader.RepairSizes((object)range,item.Original,heading);
                         }
                         if(item.Format is not null)
                         {
                             // Track the actual replacement range, after a full heading text
                             // replacement has changed its length. Later lower CP edits may move it.
                             dynamic tracked=range.Duplicate;
-                            try{formatRanges.Add((item,(object)tracked,item.Replacement,headingSizes.GetValueOrDefault(item)));tracked=null!;}
+                            try{formatRanges.Add((item,(object)tracked,item.Replacement,headingSizes.GetValueOrDefault(item),null));tracked=null!;}
                             finally{Release(tracked);}
                         }
                         string actual=(string?)range.Text??"";
@@ -741,9 +750,11 @@ public sealed partial class WordSession : IDisposable
                             int? alignment=null;
                             if(styled.Issue.Format?.Alignment is not null)
                             {paragraphFormat=target.ParagraphFormat;alignment=(int)paragraphFormat.Alignment;}
-                            bool matches=VisibleFormatReader.Matches((object)target,styled.Expected,styled.Issue.CharacterFormat,styled.Issue.Format,alignment);
+                            bool matches=styled.Styles is not null || VisibleFormatReader.Matches((object)target,styled.Expected,styled.Issue.CharacterFormat,styled.Issue.Format,alignment);
                             if((string)target.Text!=styled.Expected || !matches)
                                 throw new InvalidOperationException("Định dạng sau lưu chưa khớp gợi ý hoặc vùng chữ bị thay đổi; phải khôi phục cả lượt.");
+                            if(styled.Styles is not null && !styled.Styles.Matches(VisibleFormatReader.ReadStyles((object)target,styled.Expected)))
+                                throw new InvalidOperationException("Định dạng sau viết hoa chưa khớp các mục đã duyệt; phải khôi phục cả lượt.");
                             if(styled.Sizes is not null && !styled.Sizes.Matches(VisibleFormatReader.ReadSizes((object)target,styled.Expected)))
                                 throw new InvalidOperationException("Cỡ chữ hợp lệ đã đổi sau sửa phông; phải khôi phục cả lượt.");
                         }

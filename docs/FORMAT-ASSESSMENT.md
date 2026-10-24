@@ -12,14 +12,14 @@ Luồng cũ có hai điểm gây cảnh báo giả tái hiện được bằng k
 2. Nhận diện cơ quan, tên loại/trích yếu, quốc hiệu/tiêu ngữ, số/ngày và nơi nhận. Dedupe Start, đọc mỗi vùng một lần; không đọc phông mọi đoạn căn giữa.
 3. Định dạng toàn vùng đã rõ: dùng nhanh một lần. Chưa rõ: đọc Range thực của từng Word; chỉ xuống Characters ở từ chưa rõ. Words vượt biên hoặc không khớp toàn text thì bỏ kết quả đó và đọc lại Characters toàn vùng. Chuỗi con phải ghép chính xác về text nguồn; không suy tọa độ con từ chỉ số chữ. COM mất kết nối vẫn chuyển recovery, không biến thành bằng chứng phông đúng.
 4. Gắn dữ liệu phông bất biến vào text hiện tại. Một FormatPolicy đánh giá theo vai trò: đúng, sai có thể sửa, chưa đọc chắc hoặc sai cỡ hỗn hợp cần duyệt. Màu đen tương đương và cỡ trong khoảng hợp lệ không tự thành lỗi. Đậm chỉ bắt buộc khi vai trò yêu cầu.
-5. Sửa cả vùng khi có thể bảo toàn: nếu mọi cỡ hợp lệ thì bỏ qua setter Size; nếu có một cỡ đích chung an toàn thì đổi cỡ. Trộn cỡ không hợp lệ với một cỡ hợp lệ khác chưa sửa từng phần được thì giữ duyệt, không ép mất cỡ đúng.
+5. Sửa cả vùng khi có thể bảo toàn: nếu mọi cỡ hợp lệ thì bỏ qua setter Size; nếu có một cỡ đích chung an toàn thì đổi cỡ. Từ B01 sau .61, trộn cỡ sai/đúng trong CharacterFormat đã nhận diện có thể sửa riêng ký tự ngoài khoảng, giữ từng cỡ đúng. B02 mở tương tự cho quốc hiệu/tiêu ngữ khi giữ nguyên chữ; các ca đồng thời cần thay chữ còn guard riêng, Đảng cỡ cố định không dùng khoảng Nhà nước. Thiếu dữ liệu vẫn thủ công. Xem [thiết kế](SELECTIVE-SIZE-REPAIR.md).
 6. Hậu kiểm trước/sau lưu và sau các nhóm khác dùng cùng bộ đọc, so từng phông theo chính sách. Với phép giữ cỡ, chụp từng cỡ ký tự Word trước sửa; chiếu qua sửa chữ rồi so lại cỡ ký tự giữ lại. Đen/phông đúng nhưng cỡ 14 bị ép về 13 vẫn thất bại và rollback cả lượt.
 
 ## Bảo toàn và giới hạn
 
 - Không sửa chữ qua Line/field/control/object. FormatEditable và TextEditable vẫn tách riêng.
 - Giữ ngắt dòng, dấu kết đoạn/ô, gạch chân và đậm không thuộc chính sách sửa. Đổi hoa tên cơ quan/tên loại bằng Range.Case khi chỉ đổi hoa/thường để giữ run; vẫn kiểm text thực tế và rollback nếu sai.
-- Đổi hoa tên loại có cỡ hỗn hợp vẫn cần duyệt thay vì thay text cả vùng có thể mất cỡ. Các trường hợp đồng nhất cũ giữ sửa chung.
+- Từ B03, C24 đổi hoa tên loại có cỡ hỗn hợp khi dữ liệu đủ chắc; dùng Range.Case và proof từng phông/cỡ/màu/đậm/nghiêng/gạch chân, căn/thụt đoạn trước/sau lưu/Line. Chọn riêng giữ định dạng chưa chọn; chọn chung áp đúng chính sách phông/cỡ được duyệt. Không mở quyền sửa qua field/drawing. [Thiết kế](CASE-PRESERVATION.md).
 - Dữ liệu text cũ hoặc mất quyền XML không được dùng sửa; không dùng lịch sử để che cảnh báo.
 - Không dùng số Shape/dấu nhận diện để chứng minh nét đúng; XPS và đo lại sau thay phông còn nguyên.
 - Không tự mở rộng quá vùng đầu trang đã nhận diện; nơi nhận vẫn dùng proof toàn thân. Chưa xác nhận runtime Office 2021 cho .61.

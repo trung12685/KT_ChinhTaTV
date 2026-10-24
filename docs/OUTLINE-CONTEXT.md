@@ -1,6 +1,6 @@
-# Ngữ cảnh cấu trúc — bản thử 0.1.51
+# Ngữ cảnh cấu trúc — code 0.1.62 đang phát triển
 
-C20/C21 kiểm cấu trúc mục gõ tay, chưa suy nghĩa câu hoặc biết một đoạn nội dung có bị xóa thiếu hay không. Mọi gợi ý ở **Đề xuất sửa — cần duyệt**; người dùng đọc và chấp nhận trước khi áp dụng.
+C20/C21 kiểm cấu trúc mục gõ tay, chưa suy nghĩa câu hoặc biết một đoạn nội dung có bị xóa thiếu hay không. C20/C21 đủ điều kiện ở **Bắt buộc sửa** theo yêu cầu người dùng; vẫn cần đọc và duyệt trước khi áp dụng. Thiếu bằng chứng hoặc có dẫn chiếu chưa chắc giữ thủ công.
 
 ## C20 — Thứ tự mục trong cùng mục cha
 
@@ -12,7 +12,7 @@ Mỗi dòng dưới đây là một đoạn Word riêng:
 4. Đề xuất
 ```
 
-Đề xuất đổi riêng ký hiệu `4` thành `3`, giữ `. Đề xuất` và mọi nội dung. Tương tự `a), b), d)` → `a), b), c)`; `I., II., IV.` → `I., II., III.`. Nhận dấu `.` hoặc `)` sau số/chữ/LaMã và khoảng phân cách rõ. LaMã viết hoa, chữ cái viết thường; chưa kiểm nhãn trần không dấu, `1.1.` hoặc mọi mẫu tùy biến.
+Đề xuất đổi riêng ký hiệu `4` thành `3`, giữ `. Đề xuất` và mọi nội dung. Tương tự `a), b), d)` → `a), b), c)`; `I., II., IV.` → `I., II., III.`. Nhận dấu `.` hoặc `)` sau số/chữ/LaMã và khoảng phân cách rõ. LaMã viết hoa, chữ cái viết thường; từ B04 có thêm số nhiều cấp như `1.1.` dưới mục cha trực tiếp duy nhất, không tự nhận mọi mẫu tùy biến. [Phạm vi/ví dụ/chốt chặn](HIERARCHICAL-OUTLINE.md).
 
 Cấp thông thường: **LaMã → số → chữ → gạch → cộng**. Khi chuyển mục cha, chuỗi con bắt đầu riêng; cùng family có thụt lề rõ có thể là cấp con. Thân bài xen giữa không tự tạo chuỗi mới. Tiêu đề không số có outline level/viết hoa rõ làm ranh giới. Bắt đầu lại, mốc đầu không phải1/a/I, trộn delimiter/độ rộng, cấp/indent chưa rõ giữ kiểm tra thủ công. Chữ cái dùng dấu hiệu quan sát để phân biệt bảng Latin/Vietnamese; khi kỳ vọng sau d) chưa chắc là e) hay đ) thì không tự chọn.
 
@@ -46,6 +46,6 @@ Bằng chứng lấy từ XML đang mở và Start/End/Text Word thật; không 
 
 Tab đầu dòng hoặc phân cách của nhãn số có bằng chứng riêng: chỉ thay ký hiệu, **giữ nguyên tab**, quyền sửa chữ chung vẫn không mở. Với gạch/cộng, leading tab được giữ, nhưng tab làm separator ngay sau marker hoặc prefix trộn chưa rõ sẽ giữ thủ công. Không suy tọa độ tab bằng số twip cố định.
 
-Chọn riêng giữ lỗi chưa chọn. Có thể sửa chung C01–C21 và phông đủ điều kiện; nhóm căn giữa/Line vẫn tách lượt. Quét lại trước ghi kiểm ngữ cảnh mới: thêm dấu cùng cấp phải làm đề xuất đơn cũ hết hiệu lực. Lỗi giữa lượt rollback, một Undo cho cả lượt, lưu/mở giữ chữ/kiểu/nguồn. Không báo đã sửa hết chính tả/ngữ cảnh chỉ vì không có cảnh báo.
+Chọn riêng giữ lỗi chưa chọn. Có thể sửa chung C01–C21 và phông đủ điều kiện; có thể chọn cùng căn giữa/Line, hệ thống sửa chữ rồi đo lại trước từng bước hình học. Quét lại trước ghi kiểm ngữ cảnh mới: thêm dấu cùng cấp phải làm đề xuất đơn cũ hết hiệu lực. Lỗi giữa lượt rollback, một Undo cho cả lượt, lưu/mở giữ chữ/kiểu/nguồn. Không báo đã sửa hết chính tả/ngữ cảnh chỉ vì không có cảnh báo.
 
 Core/Windows CI không có Word; kịch bản Kiểm tra Word tự động đã bổ sung mẫu giả, chưa xác nhận đầy đủ Office2021 cho .51. Các file người dùng không đưa vào release.

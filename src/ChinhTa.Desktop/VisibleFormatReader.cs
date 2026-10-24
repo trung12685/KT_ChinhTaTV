@@ -13,7 +13,7 @@ public sealed record VisibleFont(string Name,float Size,int Bold,int Italic,int 
 // Read-only fallback for an XML-proven span: uniform aggregate, then real Word
 // word ranges, then characters only inside unresolved words (or the whole span
 // if Words does not cover it exactly). Never infer child ranges from text indices.
-public static class VisibleFormatReader
+public static partial class VisibleFormatReader
 {
     public static FontSizeEvidence ReadSizes(object rangeObject,string expected)
     {

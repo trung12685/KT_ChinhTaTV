@@ -10,21 +10,35 @@ public sealed record OutlineFinding(int ParagraphStart,Issue Issue);
 public static class OutlineRules
 {
     private enum Family { Roman, Number, Letter, Dash, Plus }
-    private sealed record Marker(Paragraph Row,Family Family,string Label,string Delimiter,int Value,int Lead,int Prefix,int Indent,string Leading,bool GapTab);
+    private sealed record Marker(Paragraph Row,Family Family,string Label,string Delimiter,int Value,int Lead,int Prefix,int Indent,string Leading,bool GapTab,string[]? NumberPath=null);
     private sealed class Node(Marker? marker)
     {
         public Marker? Marker { get; }=marker;
         public List<Node> Children { get; }=[];
         public bool Complete { get; set; }=true;
+        public bool NumberedDependents {get;set;}
     }
-    private static readonly Regex Prefix=new(@"^(?<lead>[ \t]{0,32})(?:(?<number>[0-9]{1,3})(?<nd>[.)])|(?<roman>[IVXLCDM]{1,12})(?<rd>[.)])|(?<letter>[a-zđ])(?<ld>[.)])|(?<bullet>[-–—+]))(?<gap>[ \t]+)(?<body>.+)$",RegexOptions.CultureInvariant|RegexOptions.NonBacktracking);
-    private static readonly Regex Hint=new(@"^[ \t]*(?:[0-9]{1,3}[.)]|[IVXLCDM]{1,12}[.)]|[a-zđ][.)]|[-–—+•●○*])(?:\s|$)",RegexOptions.CultureInvariant|RegexOptions.NonBacktracking);
-    private static readonly Regex References=new(@"\b(?:mục|điểm|khoản|phần|chương) +(?<label>[0-9]{1,3}|[IVXLCDM]{1,12}|[a-zđ])(?:[.)])?(?=\s|[,;:.!?]|$)",RegexOptions.IgnoreCase|RegexOptions.CultureInvariant);
+    private static readonly Regex Prefix=new(@"^(?<lead>[ \t]{0,32})(?:(?<number>[0-9]{1,3}(?:\.[0-9]{1,3}){0,3})(?<nd>[.)])|(?<roman>[IVXLCDM]{1,12})(?<rd>[.)])|(?<letter>[a-zđ])(?<ld>[.)])|(?<bullet>[-–—+]))(?<gap>[ \t]+)(?<body>.+)$",RegexOptions.CultureInvariant|RegexOptions.NonBacktracking);
+    private static readonly Regex Hint=new(@"^[ \t]*(?:(?:[0-9]+\.)+[0-9]+[.)]|[0-9]{1,3}[.)]|[IVXLCDM]{1,12}[.)]|[a-zđ][.)]|[-–—+•●○*])(?:\s|$)",RegexOptions.CultureInvariant|RegexOptions.NonBacktracking);
+    private const string ReferenceLabel=@"(?:[0-9]+(?:\.[0-9]+)*|[IVXLCDM]{1,12}|[a-zđ])";
+    private static readonly Regex References=new(@"\b(?:mục|điểm|khoản|phần|chương) +(?<label>"+ReferenceLabel+
+        @")(?:[.)])?(?:(?: *[-–—,] *| +(?:và|đến|tới) +)(?<label>"+ReferenceLabel+
+        @")(?:[.)])?)*(?![0-9]|\.[0-9])(?=\s|[,;:.!?]|$)",RegexOptions.IgnoreCase|RegexOptions.CultureInvariant);
+    private static readonly Regex NumberPathHint=new(@"^[ \t]*(?<label>[0-9]+(?:\.[0-9]+)+)",RegexOptions.CultureInvariant|RegexOptions.NonBacktracking);
     private static readonly string[] Alphabets=["abcdefghijklmnopqrstuvwxyz","abcdđeghiklmnopqrstuvxy"];
     public static IReadOnlyList<OutlineFinding> Check(IReadOnlyList<Paragraph> rows)
     {
         var result=new List<OutlineFinding>();var roots=new List<Node>();var root=new Node(null);var path=new List<Node>();
-        var references=rows.SelectMany(p=>References.Matches(p.Text).Cast<Match>()).Select(m=>m.Groups["label"].Value).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var references=new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach(var label in rows.SelectMany(p=>References.Matches(p.Text).Cast<Match>())
+            .SelectMany(m=>m.Groups["label"].Captures.Cast<Capture>()).Select(c=>c.Value))
+        {
+            references.Add(label);
+            if(label.Length>0 && char.IsAsciiDigit(label[0]))
+                // Edited paths have at most four components. Deeper references
+                // still guard those prefixes without quadratic prefix allocation.
+                for(int dot=label.IndexOf('.'),depth=0;dot>=0 && depth<4;dot=label.IndexOf('.',dot+1),depth++)references.Add(label[..dot]);
+        }
         void Notice(Paragraph row,FixKind kind,string title,string message)
         {
             string text=row.Text.TrimEnd('\r','\n','\a');
@@ -40,6 +54,10 @@ public static class OutlineRules
         foreach(var row in rows)
         {
             string text=row.Text.TrimEnd('\r','\n','\a');var info=row.Outline;
+            var numberHint=NumberPathHint.Match(text);
+            if(numberHint.Success && info?.Scope!=OutlineScope.Recipient)
+                foreach(var open in path.Where(n=>n.Marker!.NumberPath is not null &&
+                    numberHint.Groups["label"].Value.StartsWith(n.Marker.Label+".",StringComparison.Ordinal)))open.NumberedDependents=true;
             if(info is null){End(true);automaticRun=false;continue;}
             if(info.Scope==OutlineScope.Recipient){End(false);automaticRun=false;continue;}
             if(info.Scope!=OutlineScope.PlainBody || !row.TextEditable && !info.LabelThroughTabs)
@@ -55,11 +73,18 @@ public static class OutlineRules
             var marker=Parse(row,text);
             if(marker is null)
             {
+                if(numberHint.Success && !Hint.IsMatch(text))
+                {
+                    root.Complete=false;foreach(var open in path)open.Complete=false;
+                    continue; // A decimal value is not itself an outline error.
+                }
                 if(Hint.IsMatch(text))
                 {End(true);Notice(row,FixKind.OutlineOrder,"Ký hiệu mục cần kiểm tra","Ký hiệu/nội dung đầu mục chưa thuộc mẫu rõ để xác định cấp. Chưa tự sửa thứ tự hoặc bỏ dấu.");}
                 else if(info.HeadingLevel is not null || text.Count(char.IsLetter)>=4 && text.Length<160 && text.Any(c=>c==' ') && text.Where(char.IsLetter).All(char.IsUpper))End(false);
                 continue;
             }
+            if(marker.NumberPath is {Length:>1} && path.Count(n=>DirectNumberChild(marker,n.Marker!))>1)
+            {End(true);Notice(row,FixKind.OutlineOrder,"Mục cha nhiều cấp chưa rõ","Có nhiều mục cha đang mở cùng tiền tố số; chưa tự chọn cấp theo thụt lề hoặc đổi nhãn.");continue;}
             while(path.Count>0 && !ChildOf(marker,path[^1].Marker!))path.RemoveAt(path.Count-1);
             var parent=path.Count>0?path[^1]:root;var node=new Node(marker);parent.Children.Add(node);path.Add(node);
         }
@@ -70,7 +95,7 @@ public static class OutlineRules
             var parent=pending.Pop();foreach(var child in parent.Children)pending.Push(child);
             foreach(var group in parent.Children.GroupBy(n=>n.Marker!.Family))
             {
-                var members=group.Select(n=>n.Marker!).ToArray();var first=members[0];
+                var nodes=group.ToArray();var members=nodes.Select(n=>n.Marker!).ToArray();var first=members[0];
                 if(first.Family is Family.Dash or Family.Plus)
                 {
                     if(members.Length!=1)continue;
@@ -82,38 +107,60 @@ public static class OutlineRules
                         false,FixKind.OutlineMarker,Title:$"Dấu {symbol} đứng một mình trong mục")));
                     continue;
                 }
+                bool compound=members.Any(m=>m.NumberPath is {Length:>1});
+                if(compound && (parent.Marker is null || members.Any(m=>!DirectNumberChild(m,parent.Marker) || !CanonicalNumberPath(m)) || !CanonicalNumberPath(parent.Marker)))
+                {Notice(members.First(m=>m.NumberPath is {Length:>1}).Row,FixKind.OutlineOrder,"Mục nhiều cấp cần kiểm tra","Chưa có mục cha số trực tiếp hoặc chuỗi trộn cấp/cách ghi số 0 đầu. Chưa tự đổi nhãn mục nhiều cấp.");continue;}
                 if(members.Length<2)continue;
                 if(members.Select(m=>(m.Indent,m.Leading)).Distinct().Count()!=1 || members.Select(m=>m.Delimiter).Distinct().Count()!=1 || members.Any(m=>m.Value<=0) || first.Value!=1 || members.Skip(1).Any(m=>m.Value==1))
                 {Notice(first.Row,FixKind.OutlineOrder,"Thứ tự mục cần kiểm tra","Chuỗi cùng cấp thiếu mốc đầu 1/a/I, bắt đầu lại, ký hiệu không chuẩn hoặc trộn cách ghi. Chưa tự đánh lại số; cần đối chiếu mục cha.");continue;}
-                bool padded=first.Family==Family.Number && first.Label.StartsWith('0');
-                if(first.Family==Family.Number && members.Any(m=>padded?m.Label.Length!=first.Label.Length:m.Label.StartsWith('0')))
+                bool padded=first.Family==Family.Number && !compound && first.Label.StartsWith('0');
+                if(first.Family==Family.Number && !compound && members.Any(m=>padded?m.Label.Length!=first.Label.Length:m.Label.StartsWith('0')))
                 {Notice(first.Row,FixKind.OutlineOrder,"Cách ghi số mục chưa thống nhất","Chuỗi trộn số có/không có số 0 đầu hoặc độ rộng chưa rõ. Chưa tự chọn cách đánh số mới.");continue;}
                 var alphabets=Alphabets.Where(a=>members.All(m=>m.Label.Length==1 && a.Contains(m.Label[0]))).ToArray();
-                bool referenced=members.Any(m=>m.Row.Outline!.HasReferences || references.Contains(m.Label));
+                bool dependentPrefix=first.Family==Family.Number && nodes.Select((node,index)=>
+                    node.Marker!.Value!=index+1 && node.NumberedDependents).Any(x=>x);
+                string NumberLabel(int value)=>compound?string.Join('.',first.NumberPath![..^1])+"."+value.ToString(CultureInfo.InvariantCulture):
+                    value.ToString(padded?new string('0',first.Label.Length):"0",CultureInfo.InvariantCulture);
+                string[] Expected(int index)=>first.Family switch
+                {
+                    Family.Number when index<999=>[NumberLabel(index+1)],
+                    Family.Roman when index<3999=>[Roman(index+1)],
+                    Family.Letter=>alphabets.Where(a=>index<a.Length).Select(a=>a[index].ToString()).Distinct().ToArray(),
+                    _=>[]
+                };
+                bool referenced=members.Any(m=>m.Row.Outline!.HasReferences || references.Contains(m.Label)) ||
+                    Enumerable.Range(0,members.Length).SelectMany(Expected).Any(references.Contains);
                 for(int i=1;i<members.Length;i++)
                 {
-                    var item=members[i];string[] expected=first.Family switch
-                    {
-                        Family.Number when i<999=>[(i+1).ToString(padded?new string('0',first.Label.Length):"0",CultureInfo.InvariantCulture)],
-                        Family.Roman when i<3999=>[Roman(i+1)],
-                        Family.Letter=>alphabets.Where(a=>i<a.Length).Select(a=>a[i].ToString()).Distinct().ToArray(),
-                        _=>[]
-                    };
+                    var item=members[i];var expected=Expected(i);
                     if(expected.Contains(item.Label,StringComparer.Ordinal))continue;
-                    if(expected.Length!=1 || referenced)
+                    if(dependentPrefix)
+                    {Notice(item.Row,FixKind.OutlineOrder,"Đổi mục cha cần kiểm tra mục con","Đánh lại chuỗi này cần đổi cả tiền tố số của mục con. Chưa tự sửa từng nhãn để tránh để lại mục con sai; đối chiếu cả nhóm trong Word.");continue;}
+                    if(expected.Length!=1 || referenced || compound && !parent.Complete)
                     {Notice(item.Row,FixKind.OutlineOrder,"Thứ tự mục cần đối chiếu","Chuỗi có ký hiệu cần xem lại nhưng bảng chữ cái, giới hạn hoặc dẫn chiếu mục chưa đủ chắc. Không tự chọn nhãn thay thế.");continue;}
-                    result.Add(new(item.Row.Start,new(item.Row.Start+item.Lead,item.Label.Length,item.Label,expected[0],
+                    int tail=compound?item.Label.LastIndexOf('.')+1:0;
+                    string original=item.Label[tail..],replacement=compound?expected[0][(expected[0].LastIndexOf('.')+1)..]:expected[0];
+                    result.Add(new(item.Row.Start,new(item.Row.Start+item.Lead+tail,original.Length,original,replacement,
                         $"Trong cùng mục cha, vị trí thứ {i+1} dự kiến là {expected[0]}{item.Delimiter}, hiện ghi {item.Label}{item.Delimiter}. Chỉ đổi nhãn, giữ nguyên tiêu đề/nội dung; đối chiếu xem có thiếu nội dung hoặc dẫn chiếu trước khi duyệt.",
-                        false,FixKind.OutlineOrder,Title:$"Thứ tự mục: {item.Label} → {expected[0]}")));
+                        false,FixKind.OutlineOrder,Title:$"Thứ tự mục: {item.Label} → {expected[0]}",
+                        OutlineContext:new(parent.Marker?.Row.Start,first.Row.Start,item.Label,item.Delimiter))));
                 }
             }
         }
         return result.OrderBy(f=>f.Issue.Start).ToArray();
     }
-    private static bool ChildOf(Marker child,Marker parent)=>(int)child.Family>(int)parent.Family || child.Family==parent.Family &&
+    private static bool CanonicalNumberPath(Marker marker)=>marker.NumberPath is { } path && path.All(p=>p.Length<=3 && p[0] is >='1' and <='9');
+    private static bool DirectNumberChild(Marker child,Marker parent)=>child.NumberPath is {Length:>1} c &&
+        parent.NumberPath is { } p && c.Length==p.Length+1 && c.Take(p.Length).SequenceEqual(p,StringComparer.Ordinal);
+    private static bool ChildOf(Marker child,Marker parent)
+    {
+        if(child.NumberPath is {Length:>1})return DirectNumberChild(child,parent);
+        if(parent.NumberPath is {Length:>1} && child.Family==Family.Number)return false;
+        return (int)child.Family>(int)parent.Family || child.Family==parent.Family &&
         (child.Leading==parent.Leading && child.Indent>parent.Indent || child.Indent==parent.Indent &&
             child.Leading.Length>parent.Leading.Length &&
             (child.Leading.All(c=>c==' ') && parent.Leading.All(c=>c==' ') || child.Leading.All(c=>c=='\t') && parent.Leading.All(c=>c=='\t')));
+    }
     private static Marker? Parse(Paragraph row,string text)
     {
         var m=Prefix.Match(text);if(!m.Success)return null;
@@ -121,14 +168,14 @@ public static class OutlineRules
         int letters=0;foreach(char c in body){if(c==' ')break;if(char.IsLetter(c))letters++;else if(char.GetUnicodeCategory(c) is not (UnicodeCategory.NonSpacingMark or UnicodeCategory.SpacingCombiningMark))return null;}
         if(letters<2 || body.IndexOfAny(['\t','\v','\f','=','`','<','>','^','|','{','}','[',']'])>=0)return null;
         Family family;string label,delimiter;int value;
-        if(m.Groups["number"].Success){family=Family.Number;label=m.Groups["number"].Value;delimiter=m.Groups["nd"].Value;value=int.Parse(label,CultureInfo.InvariantCulture);}
+        if(m.Groups["number"].Success){family=Family.Number;label=m.Groups["number"].Value;delimiter=m.Groups["nd"].Value;value=int.Parse(label.Split('.').Last(),CultureInfo.InvariantCulture);}
         else if(m.Groups["roman"].Success){family=Family.Roman;label=m.Groups["roman"].Value;delimiter=m.Groups["rd"].Value;value=RomanValue(label);}
         else if(m.Groups["letter"].Success){family=Family.Letter;label=m.Groups["letter"].Value;delimiter=m.Groups["ld"].Value;value=label=="a"?1:2;}
         else{label=m.Groups["bullet"].Value;family=label=="+"?Family.Plus:Family.Dash;delimiter="";value=0;}
         string leading=m.Groups["lead"].Value;
         if(leading.Contains(' ' ) && leading.Contains('\t'))return null;
         int lead=leading.Length;
-        return new(row,family,label,delimiter,value,lead,label.Length+delimiter.Length+m.Groups["gap"].Length,row.Outline!.Indent,leading,m.Groups["gap"].Value.Contains('\t'));
+        return new(row,family,label,delimiter,value,lead,label.Length+delimiter.Length+m.Groups["gap"].Length,row.Outline!.Indent,leading,m.Groups["gap"].Value.Contains('\t'),family==Family.Number?label.Split('.'):null);
     }
     private static int RomanValue(string text)
     {

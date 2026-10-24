@@ -16,7 +16,7 @@ public sealed class FormatEvidence
     {Text=text;Fonts=Array.AsReadOnly(fonts.ToArray());}
 }
 public enum FormatState { Correct,Repairable,Unknown,NeedsReview }
-public sealed record FormatAssessment(FormatState State,float Size,bool PreserveSize=false);
+public sealed record FormatAssessment(FormatState State,float Size,bool PreserveSize=false,bool RepairInvalidSizes=false);
 
 // Shared role policy: variation is not itself a defect. In particular both black
 // encodings and every allowed size may coexist. Unknown data never grants a write.
@@ -26,7 +26,7 @@ public sealed record FormatPolicy(float Minimum,float Maximum,bool Italic,bool? 
     public bool Matches(ObservedFont font)=>font.Known(Bold is not null) &&
         font.Name.Equals("Times New Roman",StringComparison.OrdinalIgnoreCase) && SizeMatches(font.Size) &&
         font.Italic==(Italic?-1:0) && font.Color is 0 or -16777216 && (Bold is null || font.Bold==(Bold.Value?-1:0));
-    public FormatAssessment Assess(Paragraph row)
+    public FormatAssessment Assess(Paragraph row,bool allowSelectiveSizeRepair=false)
     {
         if(!row.FormatObserved || !(row.TextEditable || row.FormatEditable))return new(FormatState.Unknown,Minimum);
         var evidence=row.FormatEvidence;
@@ -38,8 +38,9 @@ public sealed record FormatPolicy(float Minimum,float Maximum,bool Italic,bool? 
         var sizes=fonts.Select(f=>SizeMatches(f.Size)?f.Size:Minimum).Distinct().ToArray();
         if(sizes.Length==1)return new(FormatState.Repairable,sizes[0]);
         if(fonts.All(f=>SizeMatches(f.Size)))return new(FormatState.Repairable,Minimum,PreserveSize:true);
-        // A whole-range size write would destroy a valid size elsewhere. Keep this
-        // actual mixed-size defect review-only until a granular repair is supported.
-        return new(FormatState.NeedsReview,Minimum);
+        // A whole-range size write would destroy a valid size elsewhere. Only the
+        // character-format route opts into a verified per-character size write.
+        return allowSelectiveSizeRepair?new(FormatState.Repairable,Minimum,PreserveSize:true,RepairInvalidSizes:true):
+            new(FormatState.NeedsReview,Minimum);
     }
 }

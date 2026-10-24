@@ -6,7 +6,7 @@ namespace ChinhTa.Desktop;
 
 public sealed partial class WordSession
 {
-    private sealed record StagedFormat(Issue Issue,string Text,string Prefix,FontSizeEvidence? Sizes);
+    private sealed record StagedFormat(Issue Issue,string Text,string Prefix,FontSizeEvidence? Sizes,CharacterStyleEvidence? Styles=null);
     public RepairBatchResult FixSelection(IEnumerable<Issue> selection)
     {
         var plan=StagedRepairBatch.Prepare(selection);
@@ -71,9 +71,11 @@ public sealed partial class WordSession
             {
                 int? alignment=null;
                 if(proof.Issue.Format?.Alignment is not null){paragraph=range.ParagraphFormat;alignment=(int)paragraph.Alignment;}
-                bool correct=VisibleFormatReader.Matches((object)range,proof.Text,proof.Issue.CharacterFormat,proof.Issue.Format,alignment);
+                bool correct=proof.Styles is not null || VisibleFormatReader.Matches((object)range,proof.Text,proof.Issue.CharacterFormat,proof.Issue.Format,alignment);
                 if((string)range.Text!=proof.Text || !correct)
                     throw new InvalidOperationException("Phông sau các nhóm sửa không còn khớp đề xuất; phải khôi phục cả lượt.");
+                if(proof.Styles is not null && !proof.Styles.Matches(VisibleFormatReader.ReadStyles((object)range,proof.Text)))
+                    throw new InvalidOperationException("Định dạng tên loại sau các nhóm sửa chưa khớp phần cần giữ/phần đã duyệt; phải khôi phục cả lượt.");
                 if(proof.Sizes is not null && !proof.Sizes.Matches(VisibleFormatReader.ReadSizes((object)range,proof.Text)))
                     throw new InvalidOperationException("Cỡ chữ đã đổi sau các nhóm sửa; phải khôi phục cả lượt.");
             }
@@ -100,7 +102,13 @@ public sealed partial class WordSession
             StagedRepairBatch.ExpectedReference(i,text,original,ReadPrefix))).ToArray();
         var formats=text.Where(i=>i.Format is not null || i.CharacterFormat is not null).Select(i=>new StagedFormat(i,
             StagedRepairBatch.ExpectedReference(i,text,original,ReadPrefix),
-            AtomicTextBatch.ExpectedStory(text.Where(t=>(long)t.Start+t.Length<=i.Start).ToArray(),ReadPrefix(i),ReadPrefix),ExpectedSizesFor(i,text))).ToArray();
+            AtomicTextBatch.ExpectedStory(text.Where(t=>(long)t.Start+t.Length<=i.Start).ToArray(),ReadPrefix(i),ReadPrefix),ExpectedSizesFor(i,text))).ToList();
+        foreach(var probe in CaseTrackingRegions(text))
+        {
+            var styles=ExpectedCaseStyles(probe,text);
+            formats.Add(new(probe,styles.Text,
+                AtomicTextBatch.ExpectedStory(text.Where(t=>(long)t.Start+t.Length<=probe.Start).ToArray(),ReadPrefix(probe),ReadPrefix),null,styles));
+        }
         string before=Path.Combine(folder,Guid.NewGuid()+".multi.undo.docx");File.Copy(RecoveryPath,before);
         int depth=undoCheckpoints.Count,completed=0;
         bool previousChanged=Changed,restored=false,committed=false;

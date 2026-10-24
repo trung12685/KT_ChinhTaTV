@@ -63,7 +63,7 @@ internal static class OfficeComponentCheck
         if(test.Check().Any(Component))throw new InvalidOperationException("Mở lại phông và ba Line còn cảnh báo thành phần.");
         pass("Phông cơ quan/trích yếu/nơi nhận sau đoạn 40: sửa cùng cả ba Line, quét, một Undo và lưu/mở");
     }
-    internal static Issue[] ReadLines(WordSession test)
+    internal static Issue[] ReadLines(WordSession test,bool verifyAll=false)
     {
         var found=test.Check();var anchors=new Dictionary<Issue,PreviewAnchor>();
         string path=test.ExportPreview(test.LineTargets.Select(t=>t.Probe).ToArray(),anchors);
@@ -72,8 +72,11 @@ internal static class OfficeComponentCheck
             using var xps=new System.Windows.Xps.Packaging.XpsDocument(path,FileAccess.Read);
             // Exercise the same dependency-aware inspection as the production UI;
             // tests no longer remove font/text blockers to manufacture Line intents.
-            return LineInspection.Inspect(xps.GetFixedDocumentSequence(),new PreviewHighlighter(),test.LineTargets,test.LineShapes,anchors,found,
-                LinePolicy.Decree30,test.HasGroupedShapes,test.VerifiedLineEdits).Select(e=>e.Issue).Where(i=>i.CanFix && i.LineFix is not null).ToArray();
+            var inspected=LineInspection.Inspect(xps.GetFixedDocumentSequence(),new PreviewHighlighter(),test.LineTargets,test.LineShapes,anchors,found,
+                LinePolicy.Decree30,test.HasGroupedShapes,test.VerifiedLineEdits).Select(e=>e.Issue).ToArray();
+            if(verifyAll && (test.LineTargets.Select(t=>t.Role).Distinct().Count()!=3 || inspected.Length!=0))
+                throw new InvalidOperationException("Mẫu kiểm chưa xác minh đạt đủ ba vùng/nét Line; không bỏ qua cảnh báo thủ công.");
+            return inspected.Where(i=>i.CanFix && i.LineFix is not null).ToArray();
         }
         finally{if(File.Exists(path))File.Delete(path);}
     }

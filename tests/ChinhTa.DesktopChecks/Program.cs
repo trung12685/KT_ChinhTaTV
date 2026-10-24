@@ -185,9 +185,15 @@ static class Program
         ProgressReportDesktopChecks.Run(Assert);
         IssueReviewPanelChecks.Run(Assert);
         StagedGeometryDesktopChecks.Run(Assert);
+        SelectiveSizeGeometryDesktopChecks.Run(Assert);
+        CaseGeometryDesktopChecks.Run(Assert);
         VisibleFormatChecks.Run(Assert);
         FormatObservationChecks.Run(Assert);
+        SelectiveSizeWriterChecks.Run(Assert);
+        HeadingSelectiveSizeWriterChecks.Run(Assert);
+        CharacterStyleReaderChecks.Run(Assert);
         DependencyReviewChecks.Run(Assert);
+        HierarchicalReviewChecks.Run(Assert);
         RepairProgressDesktopChecks.Run(Assert);
         DocumentTypeCatalogDesktopChecks.Run(Assert);
         Console.WriteLine($"{checks} WPF checks passed.");

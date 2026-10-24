@@ -35,7 +35,7 @@ public static class IssueTooltipCatalog
             FixKind.ColonSpace or FixKind.SentenceInnerSpace or FixKind.SentenceAfterSpace)
             return issue.Kind switch
             {
-                FixKind.ParagraphEndSpace=>"Quy tắc ứng dụng: bỏ dấu cách thừa sau dấu kết câu ở cuối đoạn chữ thuần.",
+                FixKind.ParagraphEndSpace=>"Quy tắc ứng dụng: bỏ dấu cách thừa sau dấu kết câu/chấm phẩy ở cuối đoạn chữ thuần.",
                 FixKind.ParenthesisSpace when issue.AddsSpaceAfterClosingParenthesis=>"Quy tắc ứng dụng: có một dấu cách giữa ngoặc đóng và từ tiếp theo trong câu chữ rõ.",
                 FixKind.ParenthesisSpace=>"Quy tắc ứng dụng: không có dấu cách sát bên trong ngoặc tròn chứa chữ.",
                 FixKind.SentenceAfterSpace=>"Quy tắc ứng dụng: có một dấu cách giữa dấu kết câu và câu tiếp theo.",
@@ -117,6 +117,7 @@ public static class IssueTooltipCatalog
         }
         if(issue.CenterFix is not null)return "Căn giữa trong ô đã xác minh, bỏ thụt lề ngang; giữ chữ và khoảng cách dọc.";
         if(issue.CharacterFormat is not null)return issue.Suggestion;
+        if(issue.Format?.RepairInvalidSizes==true)return issue.Suggestion;
         if(issue.Format is HeadingFormat format)
             return (issue.Original==issue.Replacement?"Đặt":"Sửa chữ và đặt")+" Times New Roman, đen, đậm, đứng, cỡ "+Number(format.Size)+
                 (format.MaximumSize is float maximum?"–"+Number(maximum)+" (giữ cỡ hợp lệ)":"")+

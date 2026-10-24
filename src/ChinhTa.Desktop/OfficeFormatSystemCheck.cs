@@ -13,8 +13,8 @@ internal static class OfficeFormatSystemCheck
     public static void Run(WordSession test,string modern,string folder,Action<string> pass)
     {
         string isolated=Path.Combine(folder,"format-system");Directory.CreateDirectory(isolated);
-        string source=OfficeComponentCheck.Create(modern,isolated,false),good=Create(source,isolated,false),bad=Create(source,isolated,true);
-        byte[] digest=SHA256.HashData(File.ReadAllBytes(bad));test.Profile=DocumentProfile.State;test.Open(good);
+        string source=OfficeComponentCheck.Create(modern,isolated,false),good=Create(source,isolated,false),bad=Create(source,isolated,true),selective=Create(source,isolated,true,true);
+        test.Profile=DocumentProfile.State;test.Open(good);
         if(test.Check().Any(Component))throw new InvalidOperationException("Mẫu đúng có cỡ hợp lệ trộn/ngắt dòng/dấu cách khác kiểu còn bị báo sai.");
         var title=Title(test);var titleSizes=test.ReadCheckSizes(title);var decoration=test.ReadCheckDecorations(title with {Length=3,Original="BÁO",Replacement="BÁO"});
         if(!titleSizes.Sizes.Contains(13) || !titleSizes.Sizes.Contains(14) || decoration.Underline!=1)
@@ -30,16 +30,28 @@ internal static class OfficeFormatSystemCheck
         if(test.Check().Any(Component) || !titleSizes.Matches(test.ReadCheckSizes(Title(test))))
             throw new InvalidOperationException("Mở lại ba Line sinh cảnh báo giả hoặc đổi cỡ hợp lệ.");
         pass("Định dạng hệ thống: hai cỡ hợp lệ/màu đen/ngắt dòng/dấu cách khác kiểu vẫn đúng trước-sau ba Line, lưu/mở và Undo");
+        RunBad(test,bad,isolated,decoration,pass,false);
+        RunBad(test,selective,isolated,decoration,pass,true);
+        OfficeHeadingSizeCheck.Run(test,goodSaved,isolated,pass);
+        OfficeCaseStyleCheck.Run(test,modern,isolated,pass);
+    }
+    private static void RunBad(WordSession test,string bad,string isolated,(int Bold,int Underline,int Alignment) decoration,Action<string> pass,bool selective)
+    {
+        byte[] digest=SHA256.HashData(File.ReadAllBytes(bad));
         test.Open(bad);string original=test.ReadCheckText();var found=test.Check();
         var formats=found.Where(i=>i.CanFix && Component(i)).ToArray();
         if(formats.Count(i=>i.CharacterFormat?.PreserveSize==true)<3 || found.Any(i=>Component(i) && !i.CanFix))
             throw new InvalidOperationException("Sai thật chưa có đủ đề xuất giữ cỡ hoặc vẫn bị giữ thủ công do aggregate trộn.");
         var agency=formats.Single(i=>i.Kind==FixKind.AgencyFormat);var agencySizes=test.ReadCheckSizes(agency);
-        var expectedAgency=agencySizes.Project(formats.Where(i=>i.Kind==FixKind.AgencyText).ToArray(),i=>agency.Original[..(i.Start-agency.Start)]);
+        var correctedAgency=selective?agencySizes.CorrectInvalid(12,13):agencySizes;
+        var expectedAgency=correctedAgency.Project(formats.Where(i=>i.Kind==FixKind.AgencyText).ToArray(),i=>agency.Original[..(i.Start-agency.Start)]);
         var badTitle=Title(test);var beforeTitle=test.ReadCheckSizes(badTitle);
+        var expectedTitle=selective?beforeTitle.CorrectInvalid(13,14):beforeTitle;
+        if(selective && formats.Count(i=>i.CharacterFormat?.RepairInvalidSizes==true)<3)
+            throw new InvalidOperationException("Mẫu cỡ hỗn hợp chưa có ba đề xuất sửa riêng cỡ sai.");
         test.Fix(agency);
         if(!test.Check().Any(i=>i.CanFix && i.Kind==FixKind.DocumentHeadingFormat) ||
-            !agencySizes.Matches(test.ReadCheckSizes(agency)) || test.ReadCheckText()!=original)
+            !correctedAgency.Matches(test.ReadCheckSizes(agency)) || test.ReadCheckText()!=original)
             throw new InvalidOperationException("Sửa riêng phông cơ quan làm mất lỗi chưa chọn hoặc đổi cỡ/chữ.");
         test.Undo();if(test.ReadCheckText()!=original)throw new InvalidOperationException("Undo phông riêng chưa phục hồi chữ.");
         Issue[] SelectLines()
@@ -63,19 +75,19 @@ internal static class OfficeFormatSystemCheck
         string expected=original.Replace("đơn vị ban hành","ĐƠN VỊ BAN HÀNH",StringComparison.Ordinal);
         var freshAgency=test.LineTargets.Single(t=>t.Role==LineRole.Agency).Probe;
         if(test.ReadCheckText()!=expected || test.Check().Any(Component) || test.CheckUndoCount!=1 ||
-            !beforeTitle.Matches(test.ReadCheckSizes(Title(test))) || !expectedAgency.Matches(test.ReadCheckSizes(freshAgency)) ||
+            !expectedTitle.Matches(test.ReadCheckSizes(Title(test))) || !expectedAgency.Matches(test.ReadCheckSizes(freshAgency)) ||
             test.ReadCheckDecorations(Title(test) with {Length=3,Original="BÁO",Replacement="BÁO"})!=decoration)
             throw new InvalidOperationException("Sửa chung chưa giữ từng cỡ hợp lệ/kiểu hoặc còn lỗi phông sau ba Line.");
-        string saved=Path.Combine(isolated,"format-system-fixed.docx");test.SaveCopy(saved);test.Undo();
+        string saved=Path.Combine(isolated,selective?"format-system-selective-fixed.docx":"format-system-fixed.docx");test.SaveCopy(saved);test.Undo();
         if(test.ReadCheckText()!=original || !agencySizes.Matches(test.ReadCheckSizes(agency)))throw new InvalidOperationException("Một Undo chưa phục hồi phông/chữ/cỡ cả lượt.");
         test.Open(saved);test.Check();
-        if(test.Check().Any(Component) || test.ReadCheckText()!=expected || !beforeTitle.Matches(test.ReadCheckSizes(Title(test))) ||
+        if(test.Check().Any(Component) || test.ReadCheckText()!=expected || !expectedTitle.Matches(test.ReadCheckSizes(Title(test))) ||
             !SHA256.HashData(File.ReadAllBytes(bad)).SequenceEqual(digest))throw new InvalidOperationException("Lưu/mở hệ thống chưa đúng hoặc nguồn bị đổi.");
-        pass("Định dạng hệ thống: chọn ba Line tích kèm đúng phông/chữ, sửa riêng/chung giữ từng cỡ/gạch chân, rollback cả lượt, một Undo/lưu-mở/nguồn");
+        pass((selective?"Sửa riêng cỡ sai, giữ từng cỡ đúng: ":"")+"Định dạng hệ thống: chọn ba Line tích kèm đúng phông/chữ, sửa riêng/chung giữ từng cỡ/gạch chân, rollback cả lượt, một Undo/lưu-mở/nguồn");
     }
-    private static string Create(string source,string folder,bool bad)
+    private static string Create(string source,string folder,bool bad,bool selective=false)
     {
-        string path=Path.Combine(folder,bad?"format-system-bad.docx":"format-system-good.docx");File.Copy(source,path);
+        string path=Path.Combine(folder,selective?"format-system-selective.docx":bad?"format-system-bad.docx":"format-system-good.docx");File.Copy(source,path);
         using var zip=ZipFile.Open(path,ZipArchiveMode.Update);var entry=zip.GetEntry("word/document.xml")!;XDocument xml;
         using(var input=entry.Open())xml=XDocument.Load(input,LoadOptions.PreserveWhitespace);
         XNamespace w="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
@@ -87,10 +99,10 @@ internal static class OfficeFormatSystemCheck
         XElement Row(string text)=>xml.Descendants(w+"p").Single(p=>string.Concat(p.Descendants(w+"t").Select(t=>t.Value))==text);
         void Replace(string text,params XElement[] runs){var p=Row(text);p.Elements(w+"r").Remove();p.Add(runs);}
         Replace("CƠ QUAN CHỦ QUẢN",Run("CƠ",12),Run(" ",8,wrong:true),Run("QUAN CHỦ QUẢN",13));
-        Replace("ĐƠN VỊ BAN HÀNH",Run(bad?"đ":"Đ",12,true,wrong:bad),Run(bad?"ơn":"ƠN",13,true,wrong:bad),Run(" ",8,wrong:true),Run(bad?"vị ban hành":"VỊ BAN HÀNH",13,true));
-        Replace("BÁO CÁO",Run("BÁO",13,true,underline:true),Run(" ",8,wrong:true),Run("CÁO",14,true,wrong:bad));
+        Replace("ĐƠN VỊ BAN HÀNH",Run(bad?"đ":"Đ",selective?10:12,true,wrong:bad),Run(bad?"ơn":"ƠN",13,true,wrong:bad),Run(" ",8,wrong:true),Run(bad?"vị ban hành":"VỊ BAN HÀNH",13,true));
+        Replace("BÁO CÁO",Run("BÁO",selective?12:13,true,underline:true),Run(" ",8,wrong:true),Run("CÁO",14,true,wrong:bad));
         var soft=Run("",8,wrong:true);soft.Element(w+"t")!.ReplaceWith(new XElement(w+"br"));
-        Replace("Mang lại bình ",Run("Mang lại",13,true,italic:bad),Run(" ",8,wrong:true),soft,Run("bình yên",14,true));
+        Replace("Mang lại bình ",Run("Mang lại",selective?12:13,true,italic:bad),Run(" ",8,wrong:true),soft,Run("bình yên",14,true));
         Replace("Số: 01/BC-ĐV",Run("Số:",13,true),Run(" 01/BC-ĐV",13));
         entry.Delete();using(var output=zip.CreateEntry("word/document.xml").Open())xml.Save(output);return path;
     }
