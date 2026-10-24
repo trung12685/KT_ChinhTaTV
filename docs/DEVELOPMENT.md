@@ -1,5 +1,9 @@
 # Tiếp tục phát triển Chính tả Việt
 
+## B05 / chốt đợt .62 — khoảng cuối sau chấm phẩy
+
+Tiếp nối B04 `f2ec57528c8339b29046ba0e314d8abe5b2bd7f3`, 2844 Core/OpenXML +206 WPF. C25 thêm dấu cuối ; qua cùng Supported/ClearEnding, chỉ xóa ASCII spaces cuối, giữ dấu/CR/LF/cell-end và trước dấu chưa chọn; không mở mã, tab/NBSP, ô trống hoặc XML chưa chắc. Giữ enum, nhóm spacing, backend/giao dịch/XPS cũ. Core kiểm ba profile, Unicode, loại trừ, sửa riêng/chung và stale/rollback; OfficeParagraphEndCheck mở rộng mẫu giả semicolon, chọn riêng/chung chữ và lưu/mở/Undo/nguồn, CI chỉ biên dịch Word. Chuẩn bị CHANGES/SUPPORTED .62, báo cáo và tài liệu đủ B01–B05; đóng gói chỉ sau kiểm đúng commit, không khép Office2021 .56 bằng CI. [Nhật ký](BATCH-AFTER-0.1.61.md).
+
 ## B04 sau .61 — số mục gõ tay nhiều cấp và dẫn chiếu
 
 Tiếp nối B03 `068b4dc4d48dbd05827c7eb42c0f0a4a2e44ae3d`, 2744 Core/OpenXML +201 WPF. OutlineRules có NumberPath2–4 cấp, cha số trực tiếp/duy nhất và sibling cùng kiểu, bắt đầu1; chỉ thay đuôi số của nhãn. Dùng cùng enum/payload/giao dịch cũ, giữ prefix/tab/terminator và proof Word/XML; không đổi Word numPr. NumberedDependents bảo vệ cha khi tiền tố con/hint còn phụ thuộc; nhóm cần cascade giữ thủ công toàn bộ. Index dẫn chiếu cũ/mới/hậu duệ và danh sách/range một lần; tối đa4 ancestor prefixes cho path được hỗ trợ, không cấp phát prefix bậc hai cho ref sâu. Số thập phân chưa chắc không tự thành lỗi; chỉ giữ thận trọng khi thiếu chứng cứ cho sửa. CurrentTextPlan vẫn quét cả cấu trúc trước ghi. [Thiết kế](HIERARCHICAL-OUTLINE.md) · [Nhật ký](BATCH-AFTER-0.1.61.md). Core có nhiều cấp, thiếu/ambiguous/padded/auto/field/tab/reference, stale, chọn riêng/chung và rollback, 1200 dòng giả; Desktop kiểm nhóm/mục cha thủ công. OfficeHierarchicalOutlineCheck có mẫu giả số nhiều cấp + dấu đơn/chữ + Line, giữ prefix/kiểu/tab, một Undo/lưu-mở/nguồn; CI chỉ biên dịch Word. Bốn bước,25/8/1, .62 chưa gói; kết quả đúng commit theo PR38, chưa Word2021 PASS.

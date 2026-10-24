@@ -6,15 +6,14 @@
 
 Ưu tiên đã thống nhất: **thể thức → lỗi chữ và lặp từ/cụm từ → ngữ cảnh và thư viện sau cùng**. Phần chính tả tiếng Việt đầy đủ còn cần xây dựng; không coi quy tắc minh họa hiện tại là bộ kiểm hoàn chỉnh.
 
-## Đang phát triển sau 0.1.61 — sửa riêng phần sai cỡ
+## Bản thử tích lũy 0.1.62 — năm hạng mục sau .61
 
-B01 của đợt mới bổ sung sửa cỡ hỗn hợp trong các vùng đã nhận diện chắc: cơ quan 12–13; tên loại, trích yếu và ngày 13–14. Ví dụ trích yếu có chữ cỡ 12/13/14: chỉ đưa 12 về 13, giữ mỗi chữ 13/14, ngắt dòng và nội dung. Một mục duyệt cho toàn vùng vẫn sửa chung được với hoa/thường, khoảng trắng và cụm lặp; đo lại trước Line, hậu kiểm từng cỡ và rollback nếu sai. B02 bổ sung quốc hiệu/tiêu ngữ khi giữ nguyên chữ: chỉ sửa cỡ ngoài12–13 hoặc13–14, kể cả vùng có Line đã xác minh; dùng cùng writer/hậu kiểm. Khi đồng thời cần thay chữ vẫn giữ guard riêng, không mở sửa chữ qua đối tượng; Đảng vẫn cỡ15 cố định.
+- B01–B02: sửa riêng cỡ sai trong các vùng đã nhận diện, gồm quốc hiệu/tiêu ngữ giữ nguyên chữ; giữ từng cỡ đúng và đo lại trước Line.
+- B03: `Báo cáo` cỡ13/14 →`BÁO CÁO`, giữ từng cỡ/gạch chân và các thuộc tính chưa chọn. Hậu kiểm định dạng sau lưu/Line, sai thì rollback toàn lượt.
+- B04: dưới mục cha rõ, `1.1., 1.2., 1.4.` →`1.1., 1.2., 1.3.`; chỉ sửa số cuối, giữ prefix/tab, chặn cascade/dẫn chiếu/gợi ý cũ khi đổi tiền tố.
+- B05: `Nội dung đã duyệt;   ` →`Nội dung đã duyệt;`; giữ dấu, đoạn/ô và trường số/ngày trống.
 
-B03 cho viết hoa tên loại cỡ hỗn hợp, ví dụ `Báo cáo` có chữ13/14 → `BÁO CÁO`, giữ từng cỡ và gạch chân. Có proof định dạng từng ký tự/căn đoạn sau lưu và sau Line; chọn riêng giữ phần chưa chọn, chọn chung chỉ sửa đúng thuộc tính đã duyệt. [Thiết kế](docs/CASE-PRESERVATION.md).
-
-B04 bổ sung mục nhiều cấp: trong mục1, chuỗi `1.1., 1.2., 1.4.` → `1.1., 1.2., 1.3.`; chỉ sửa phần số cuối, giữ tiền tố/tab. Đổi cha còn nhãn con phụ thuộc hoặc có dẫn chiếu liên quan vẫn cần duyệt cả nhóm. [Phạm vi/ví dụ](docs/HIERARCHICAL-OUTLINE.md).
-
-Code dùng **0.1.62**, hiện **4 bước**, **chưa có bản tải .62**. Gói gần nhất là [0.1.61](https://github.com/trung12685/KT_ChinhTaTV/releases/tag/v0.1.61), đã phát hành với 2435 Core/OpenXML +144 WPF +1 kiểm metadata gói. Gom khoảng 5–10 bước mới tạo gói tiếp; chưa có bằng chứng runtime Office2021 để khép lỗi phông cũ. [Nhật ký mới](docs/BATCH-AFTER-0.1.61.md) · [Thiết kế](docs/SELECTIVE-SIZE-REPAIR.md).
+Đủ **5 hạng mục**, tổng25 đề xuất/8 thủ công/1 minh họa. [Gói .62](https://github.com/trung12685/KT_ChinhTaTV/releases/tag/v0.1.62) có ZIP/TXT/SHA-256 khi pipeline phát hành đúng commit đạt; [bản gần nhất .61](https://github.com/trung12685/KT_ChinhTaTV/releases/tag/v0.1.61) giữ nguyên. CI không có Word; chưa khép phản hồi Office2021 cũ bằng kiểm code. [Nội dung/cách thử](docs/CHANGES-0.1.62.md) · [Danh sách chức năng](docs/SUPPORTED-FIXES-0.1.62.md) · [Nhật ký](docs/BATCH-AFTER-0.1.61.md). Main/stable .27 giữ nguyên.
 
 ## Bản thử 0.1.61 — kiểm định dạng và sửa nhiều nhóm
 

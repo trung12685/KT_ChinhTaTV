@@ -19,7 +19,7 @@ public static class ParagraphEndSpaceChecks
                 Apply(sample.Item1)==sample.Item2,"Paragraph-end repairs remove exact ASCII gaps after a final sentence mark while retaining Unicode and every paragraph/cell terminator");
             assert(!Checker.Check([new(0,sample.Item2)]).Any(i=>i.CanFix),"A combined repair leaves no residual supported paragraph or punctuation gap");
         }
-        foreach(string text in new[]{"Đã hoàn thành.","Đã hoàn thành   ","    ","Nội dung:   ","Nội dung;   ",
+        foreach(string text in new[]{"Đã hoàn thành.","Đã hoàn thành   ","    ","Nội dung:   ",
             "Nội dung...   ","Nội dung . .   ","Nội dung?!   ","Nội dung…   ","duyệt.   ",
             "Nội dung A.   ","Nội dung ii.   ","Nội dung TS.   ","Nội dung ts.   ","Nội dung ThS.   ",
             "Báo cáo 12.   ","Dòng số 1,25.   ","Chỉ mục a.   ","NỘI DUNG.   ","Nội dung Duyệt.   ",

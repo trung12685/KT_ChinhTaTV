@@ -1,5 +1,7 @@
 # Xem và xuất tiến độ, chức năng
 
+Bản .62 gom năm hạng mục sau .61: sửa riêng cỡ sai, quốc hiệu/tiêu ngữ, viết hoa giữ kiểu, mục số nhiều cấp và khoảng cuối sau chấm phẩy. TXT có ví dụ/giới hạn và số kiểm từ build-checks.json đúng phiên bản/commit. [Nội dung .62](CHANGES-0.1.62.md) · [Danh sách chức năng](SUPPORTED-FIXES-0.1.62.md). CI không chạy Word.
+
 Bản .61 gom năm hạng mục sau .60, trọng tâm kiểm định dạng và chọn/sửa nhiều nhóm có mục cần sửa trước. TXT có ví dụ sửa phông giữ từng cỡ hợp lệ, C12 chọn kèm rồi đo lại, ba mở rộng lỗi chữ và giới hạn Word runtime. Số kiểm thực tế lấy từ build-checks.json đúng phiên bản/commit; không lấy số dự kiến hoặc lời gọi giả để khẳng định tốc độ Office. Xem [nội dung .61](CHANGES-0.1.61.md).
 
 Từ 0.1.41, chọn **Trợ giúp → Tiến độ và chức năng…**. Mở được khi chưa mở DOCX, không cần Word cho riêng thao tác xem/xuất báo cáo.

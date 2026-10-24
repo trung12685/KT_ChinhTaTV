@@ -69,6 +69,11 @@ jobs:
           Copy-Item docs/RELEASE-CADENCE.md artifacts/win-x64/
           Copy-Item docs/BATCH-AFTER-0.1.59.md artifacts/win-x64/
           Copy-Item docs/BATCH-AFTER-0.1.60.md artifacts/win-x64/
+          Copy-Item docs/BATCH-AFTER-0.1.61.md artifacts/win-x64/
+          Copy-Item docs/SELECTIVE-SIZE-REPAIR.md artifacts/win-x64/
+          Copy-Item docs/CASE-PRESERVATION.md artifacts/win-x64/
+          Copy-Item docs/HIERARCHICAL-OUTLINE.md artifacts/win-x64/
+          Copy-Item docs/CHANGES-0.1.61.md artifacts/win-x64/
           Copy-Item docs/FORMAT-ASSESSMENT.md artifacts/win-x64/
           Copy-Item docs/REPAIR-DEPENDENCIES.md artifacts/win-x64/
           Copy-Item docs/CHANGES-0.1.60.md artifacts/win-x64/

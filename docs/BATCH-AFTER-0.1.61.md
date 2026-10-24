@@ -1,6 +1,6 @@
 # Đợt phát triển sau 0.1.61
 
-Mốc v0.1.61 `1a53d2c6f304adc913c139fb4e4f3d3b03d2db46`, đã phát hành ZIP/TXT/SHA-256: 2435 Core/OpenXML +144 WPF +1 kiểm metadata gói. Gói .61, main và stable .27 giữ nguyên. Đợt mới code **0.1.62**, chưa tạo tag/gói; gom khoảng5–10 bước hữu ích rồi đóng gói theo nhịp người dùng yêu cầu. Tính năng cùng tests/docs là một bước, không đếm theo số commit.
+Mốc v0.1.61 `1a53d2c6f304adc913c139fb4e4f3d3b03d2db46`, đã phát hành ZIP/TXT/SHA-256: 2435 Core/OpenXML +144 WPF +1 kiểm metadata gói. Gói .61, main và stable .27 giữ nguyên. Đợt code **0.1.62** đã gom B01–B05 theo nhịp người dùng yêu cầu. Tag/gói chỉ được tạo sau kiểm bắt buộc đúng commit; kết quả công bố theo PR/release, không suy có bản tải chỉ từ version. Tính năng cùng tests/docs là một bước, không đếm theo số commit.
 
 ## B01 — Sửa cỡ hỗn hợp mà giữ phần đã đúng
 
@@ -43,6 +43,14 @@ Chặn đổi số cha nếu còn tiền tố con hoặc hint chưa chắc phụ
 Core kiểm 2–4 cấp/punctuation/tab/Unicode, multi-digit tail, nhiều cha, sửa riêng/chung với dấu đơn/khoảng trắng/lặp, missing/ambiguous/zero/restart/auto/reference/unknown-scope, stale và rollback; 1200 đoạn giả kiểm300 cha độc lập, không là benchmark Word. XML thật/giả kiểm LabelThroughTabs giữ quyền chữ chung đóng. Desktop kiểm compact full-label rows, RequiredFormat, check nhóm/từng lỗi và manual cascade. OfficeHierarchicalOutlineCheck dùng mẫu giả có nhãn con, giữ prefix đậm/gạch chân, sửa riêng/chung chữ + Line, lỗi sau Line, một Undo/lưu-mở/băm nguồn; CI chỉ biên dịch Word.
 
 B01–B04 là **4 hạng mục** trong .62, vẫn25 đề xuất/8 thủ công/1 minh họa. [Phạm vi/cách thử](HIERARCHICAL-OUTLINE.md); C20 trong báo cáo TXT có ví dụ mới. Kết quả đúng commit và hoàn thành theo [PR38](https://github.com/trung12685/KT_ChinhTaTV/pull/38)/Windows checks. Chưa gói/tag .62, chưa Office2021 PASS hoặc khép .56 chỉ bằng CI. Khi chốt gói tiếp theo cần kèm hướng dẫn CASE-PRESERVATION và HIERARCHICAL-OUTLINE cùng tài liệu định dạng/đợt.
+
+## B05 — Khoảng trắng cuối đoạn sau chấm phẩy và chốt đợt
+
+Mở C25 cho `Nội dung đã duyệt;   ` →`Nội dung đã duyệt;`, dùng cùng guard câu chữ/ngoại lệ và quyền XML. Chỉ xóa ASCII spaces sau dấu ; cuối đoạn, giữ nguyên dấu câu, khoảng trước chưa chọn, CR/LF/kết ô. Không tự thêm/thay dấu, xóa tab/NBSP/ô số/ngày hoặc thay đoạn chưa kết thúc. Nhãn spacing/tooltip/cách xử lý vẫn ngắn và có ví dụ TXT. C14 khoảng trước dấu chấm phẩy ở cuối đoạn chưa được mở thêm bởi bước này.
+
+Core kiểm các dấu kết đoạn, Unicode/emoji/NFD, các chế độ, ngoại lệ, stale, giữ phần chưa chọn, sửa chung spaces/repetitions và rollback lỗi lưu. OfficeParagraphEndCheck thêm mẫu giả semicolon, sửa riêng/chung chữ, một Undo, rollback/lưu-mở/băm nguồn; CI chỉ biên dịch. Không tăng nhóm lỗi, vẫn25/8/1.
+
+Đủ **5 hạng mục**, chuẩn bị CHANGES/SUPPORTED .62 và workflow kèm toàn bộ guide mới. Windows checks phải đạt đúng commit trước tạo nhánh release/gói. Gói chạy lại Core/OpenXML/WPF, kiểm metadata TXT từ assembly, ZIP/SHA-256 và prerelease; lưu số kiểm/commit/run thật ở PR/release. Các tài liệu B01–B04 ghi chưa gói mô tả thời điểm từng bước, không thay bằng chứng phát hành. Main/stable .27 giữ nguyên; chưa có runtime Word/Office2021 để khép phản hồi .56.
 
 ## Việc tiếp theo
 
