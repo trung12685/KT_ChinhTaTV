@@ -61,3 +61,7 @@ C17 đổi thành Khoảng trắng quanh dấu hai chấm, ví dụ `Ghi chú :n
 ## Bổ sung chưa phát hành — B04/C25
 
 Báo cáo thêm C25 Khoảng trắng cuối đoạn sau dấu kết câu, ví dụ dấu cách thật `Đã hoàn thành.   ` → `Đã hoàn thành.`. Tổng hiện25 nhóm đề xuất/8 thủ công/1 minh họa, lịch sử ghi đủ B01–B04. Chỉ áp cho đoạn chữ thuần có kết thúc rõ, giữ dấu kết đoạn/ô và khoảng trước chưa chọn; xem [phạm vi và ngoại lệ](BATCH-AFTER-0.1.59.md). Code chuẩn bị .60, chưa có trong ZIP .59; chưa đóng gói trong bước4.
+
+## Bản thử .60 — chốt B01–B05
+
+C15 thêm thiếu khoảng sau ngoặc đóng trong cụm chữ rõ: `Theo mẫu ( nội dung )đã duyệt.` → `Theo mẫu (nội dung) đã duyệt.`; chọn riêng trong/ngoài hoặc cả nhóm. Báo cáo có lịch sử đủ5 bước, vẫn25/8/1. [Danh sách đủ/ví dụ](SUPPORTED-FIXES-0.1.60.md). Gói lấy số kiểm thực tế từ JSON theo đúng commit; các bài Word mới chưa được CI chạy runtime. Xem ghi chú .60 và nhật ký đợt để tiếp tục.

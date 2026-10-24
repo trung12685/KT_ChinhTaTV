@@ -11,9 +11,9 @@ Yêu cầu người dùng từ 24/10/2026 (UTC+7): tiếp tục bổ sung code v
 
 ## Khi đủ khoảng 5–10 bước
 
-Đối chiếu nhật ký và lỗi còn mở, chuẩn bị version tiếp theo cùng `docs/CHANGES-<version>.md`, `docs/SUPPORTED-FIXES-<version>.md` và báo cáo TXT có ví dụ. Hoàn thành các kiểm bắt buộc trước khi chủ động gọi `windows-package.yml` hoặc tạo tag `v<version>` tại đúng commit. Manual dispatch cần workflow đã có trên default branch của GitHub; tag trigger dùng workflow tại tag. Không chạy packaging chỉ để kiểm một bước bình thường.
+Đối chiếu nhật ký và lỗi còn mở, chuẩn bị version tiếp theo cùng `docs/CHANGES-<version>.md`, `docs/SUPPORTED-FIXES-<version>.md` và báo cáo TXT có ví dụ. Hoàn thành các kiểm bắt buộc trước khi chủ động gọi `windows-package.yml` hoặc tạo tag `v<version>` tại đúng commit. Khi connector không có lệnh dispatch/tag, có thể chủ động tạo nhánh `release/windows-<version>` từ đúng commit đã kiểm; workflow chỉ nhận nhánh khớp version và chặn tag đã có. Manual dispatch cần workflow đã có trên default branch của GitHub; tag trigger dùng workflow tại tag. Không chạy packaging chỉ để kiểm một bước bình thường.
 
-Workflow đóng gói đối chiếu version/tag và tài liệu, chạy lại Core/OpenXML/WPF, publish Windows self-contained, kiểm metadata báo cáo trong gói, tạo ZIP/SHA-256 và prerelease mới. Không sửa hoặc phát hành lại tag/asset cũ. Phiên bản .60 trong code đang phát triển không phải bằng chứng đã có bản tải .60; chưa có tài liệu phát hành .60 thì guard đóng gói sẽ chặn.
+Workflow đóng gói chỉ nhận manual/tag/nhánh release chuẩn bị riêng; push nhánh feature vẫn chỉ kiểm thử. Workflow đối chiếu version/tag/nhánh và tài liệu, chạy lại Core/OpenXML/WPF, publish Windows self-contained, kiểm metadata báo cáo trong gói, tạo ZIP/SHA-256 và prerelease mới. Không sửa hoặc phát hành lại tag/asset cũ. Phiên bản .60 trong code đang phát triển không phải bằng chứng đã có bản tải .60; chưa có tài liệu phát hành .60 thì guard đóng gói sẽ chặn.
 
 Nếu có lỗi nghiêm trọng cần bản sửa sớm thì nêu lý do và kết quả kiểm thực tế; mốc 5–10 là nhịp làm việc, không phải lý do trì hoãn xử lý lỗi. Giữ kiểm nét XPS, đối chiếu nguyên văn/định dạng, checkpoint, một Undo và rollback. CI không cài Word và không chứng minh Office 2021 đã đạt.
 

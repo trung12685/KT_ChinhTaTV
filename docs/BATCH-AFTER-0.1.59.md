@@ -1,6 +1,6 @@
-# Đợt bổ sung sau 0.1.59 — chưa phát hành Windows
+# Đợt bổ sung sau 0.1.59 — B01–B05 trong bản thử 0.1.60
 
-Nền: `03bf183746d37f0ca543f386faf8045f2ee9a090` (.59). Nhánh: `feature/format-batch-after-0.1.59`. Version trong code chuẩn bị .60, chưa có gói tải .60. Tích lũy khoảng 5–10 bước có kiểm thử theo [chu kỳ mới](RELEASE-CADENCE.md); không gộp số test/commit thành số tính năng.
+Nền: `03bf183746d37f0ca543f386faf8045f2ee9a090` (.59). Nhánh: `feature/format-batch-after-0.1.59`. Phiên bản của đợt là .60; chỉ tạo gói thử sau khi các kiểm bắt buộc đạt. Tích lũy khoảng 5–10 bước có kiểm thử theo [chu kỳ mới](RELEASE-CADENCE.md); không gộp số test/commit thành số tính năng.
 
 ## B01 — Hoa/thường của viết tắt tên loại
 
@@ -66,11 +66,31 @@ Thêm nhóm C25, tổng **25 nhóm đề xuất / 8 thủ công / 1 minh họa**
 
 Không áp cho số/giờ, từ viết tắt, mã, đường dẫn, chuỗi dấu/ba chấm, từ cuối toàn hoa/tên riêng, tab/NBSP/ngắt dòng trong đoạn, khoảng trống sau đoạn chưa kết câu hoặc XML/control chưa đủ. Không xóa CR/LF/kết ô. FixKind nối cuối enum để giữ giá trị cũ; BatchPlan chỉ nhận payload xóa ASCII spaces và cho ghép phông đã xác minh, CurrentTextPlan phải còn cùng gợi ý từ quét mới. Gom C25 cạnh C01 trong nhóm Khoảng trắng thừa, tooltip ba dòng chỉ rõ giữ dấu kết đoạn/ô.
 
-C25 kết hợp hai phía hai chấm/ngoặc/lặp/dấu câu/phông qua giao dịch cũ, hậu quét và rollback toàn lượt. Core kiểm Unicode/CP, chọn riêng/hai phía, blank/date/technical, mất quyền/context, payload giả, lưu thất bại và giữ nguyên dấu kết đoạn. Local runner tổng **1960 assertion đạt**; kiểm Windows sẽ gắn đúng commit trong PR/checks. Báo cáo TXT có C25/ví dụ dấu cách thật, đếm25/8/1 và lịch sử đủ B01–B04.
+C25 kết hợp hai phía hai chấm/ngoặc/lặp/dấu câu/phông qua giao dịch cũ, hậu quét và rollback toàn lượt. Core kiểm Unicode/CP, chọn riêng/hai phía, blank/date/technical, mất quyền/context, payload giả, lưu thất bại và giữ nguyên dấu kết đoạn. Local runner tổng **1960 assertion đạt**; Windows CI B04 đã đạt **2037 Core/OpenXML + 113 WPF** trên `9e5449df1655acb789b01726767a71de126e0922`, [run 40044420287](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40044420287). Báo cáo TXT có C25/ví dụ dấu cách thật, đếm25/8/1 và lịch sử đủ B01–B04.
 
 OfficeParagraphEndCheck thêm mẫu giả có kiểu đậm/gạch chân: sửa riêng và nhóm trước/sau dấu câu, quét lại, một Undo, rollback, lưu/mở và kiểm nguồn còn nguyên. Bài được gọi từ Kiểm tra Word tự động; CI chỉ biên dịch, chưa có Word runtime xác nhận. Không phát hành Windows trong bước này.
 
-Tiến độ đợt: **4 bước tính năng (B01–B04)**. Còn tích lũy đến khoảng 5–10 bước mới chuẩn bị bản tải Windows.
+## B05 — C15: Thiếu khoảng trắng sau ngoặc đóng
+
+Mở rộng C15, giữ tổng25/8/1. Mốc `)` → `) ` có độ dài nguồn1, không viết lại từ. Chỉ sau ngoặc cân bằng/không lồng và có khoảng trước ngoặc mở sẵn; cần hai từ trước rõ, ít nhất hai từ trong (mỗi từ ≥2 chữ), hai từ sau rõ, từ ngay sau toàn chữ thường. Không thêm khoảng trước ngoặc mở; giữ các trường hợp hàm/công thức/mã, từ ngắn/toàn hoa, ngoặc thiếu/lồng/ô trống, tab/NBSP/header/ngày hoặc XML chưa đủ. Danh sách hàm loại trừ chỉ là guard cục bộ, không phải thư viện ngữ nghĩa.
+
+| Trước | Khi duyệt |
+|---|---|
+| `Theo mẫu (nội dung)đã duyệt.` | `Theo mẫu (nội dung) đã duyệt.` |
+| `Theo mẫu ( nội dung )đã duyệt.` — chọn riêng ngoài | `Theo mẫu ( nội dung ) đã duyệt.`; giữ lỗi trong chưa chọn |
+| Cùng ví dụ — chỉ chọn trong | `Theo mẫu (nội dung)đã duyệt.`; thiếu sau vẫn còn để chọn |
+| Cùng ví dụ — chọn cả nhóm | `Theo mẫu (nội dung) đã duyệt.` |
+| `fn(nội dung)đã duyệt`, `Tính sin (alpha beta)gamma delta`, ngoặc trống | Không dùng quy tắc thiếu sau để thay chữ/ký hiệu |
+
+Cùng Family parenthesis và FixKind hiện có; property nhận diện sau ngoặc chỉ dùng nhãn/Suggestion/tooltip, không cấp quyền sửa. Nguồn quy tắc ứng dụng, không gán NĐ30. CurrentTextPlan chặn khi quyền hoặc từ sau thay đổi dù dấu `)` giữ nguyên; ghép phông/cụm lặp/hai chấm/dấu câu/C25 qua giao dịch cũ. Local runner tổng **2028 assertion đạt**; CI Windows thực tế gắn đúng commit ở PR/checks.
+
+OfficeParenthesisAfterCheck dùng mẫu giả giữ đậm/gạch chân: sửa riêng trong/ngoài, nhóm, quét lại, một Undo, lỗi giữa lượt/rollback và lưu/mở/giữ nguồn. Bài được gọi trong Kiểm tra Word tự động; CI chỉ biên dịch, chưa có xác nhận runtime Word cho bản .60.
+
+## Chốt đợt 5 bước
+
+B01–B05 là **5 bước tính năng**, không tính test/docs/commit thành bước riêng. Chuẩn bị CHANGES/SUPPORTED-FIXES .60 và TXT có ví dụ; gói Windows chỉ tạo sau khi Core/OpenXML, WPF/build, publish và kiểm metadata gói đạt. Workflow package nhận manual/tag hoặc nhánh release/windows-0.1.60 được tạo chủ động từ commit đã kiểm; push feature vẫn chỉ chạy tests. Không ghi đè tag/gói cũ, không nhập main, stable vẫn .27.
+
+Bằng chứng CI/commit/tag và checksum gói nằm ở PR36, release .60 cùng build-checks.json/TXT/SHA256.txt. Chưa coi bản tải/CI là Office2021 PASS; phản hồi phông sau nhóm .56 vẫn chưa khép. Đợt tiếp theo tiếp tục theo ưu tiên thể thức → lỗi chữ/lặp → ngữ nghĩa/thư viện sau cùng.
 
 ## Nội dung tiếp theo
 

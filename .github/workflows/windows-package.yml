@@ -3,6 +3,7 @@ on:
   workflow_dispatch:
   push:
     tags: ['v*']
+    branches: ['release/windows-*']
 permissions:
   contents: write
 concurrency:
@@ -27,6 +28,10 @@ jobs:
           $support = "docs/SUPPORTED-FIXES-$version.md"
           if (-not (Test-Path $notes) -or -not (Test-Path $support)) { throw 'Prepare release notes and supported-fix checklist after the development batch' }
           if ($env:GITHUB_REF_TYPE -eq 'tag' -and $env:GITHUB_REF_NAME -cne "v$version") { throw 'Tag does not match the project version' }
+          if ($env:GITHUB_EVENT_NAME -eq 'push' -and $env:GITHUB_REF_TYPE -eq 'branch' -and $env:GITHUB_REF_NAME -cne "release/windows-$version") { throw 'Release branch does not match the prepared version' }
+          $remoteTag = git ls-remote --tags origin "refs/tags/v$version"
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot verify the remote release tag' }
+          if ($env:GITHUB_REF_TYPE -ne 'tag' -and $remoteTag) { throw 'Release tag already exists; use a new version, never overwrite' }
           "RELEASE_VERSION=$version" >> $env:GITHUB_ENV
           "RELEASE_NOTES=$notes" >> $env:GITHUB_ENV
       - name: Regression checks
@@ -63,6 +68,7 @@ jobs:
           Copy-Item $env:RELEASE_NOTES artifacts/win-x64/
           Copy-Item docs/RELEASE-CADENCE.md artifacts/win-x64/
           Copy-Item docs/BATCH-AFTER-0.1.59.md artifacts/win-x64/
+          Copy-Item docs/CHANGES-0.1.59.md artifacts/win-x64/
           Copy-Item docs/CHANGES-0.1.58.md artifacts/win-x64/
           Copy-Item docs/DOCUMENT-TYPES.md artifacts/win-x64/
           Copy-Item docs/CHANGES-0.1.57.md artifacts/win-x64/
@@ -100,4 +106,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         shell: pwsh
         run: |
-          gh release create v${{ env.RELEASE_VERSION }} artifacts/ChinhTaViet-${{ env.RELEASE_VERSION }}-win-x64.zip artifacts/SHA256.txt artifacts/build-checks.json artifacts/ChinhTaViet-${{ env.RELEASE_VERSION }}-tien-do.txt artifacts/issue-list-preview.png artifacts/issue-tooltip-preview.png artifacts/repair-progress-preview.png artifacts/document-types-preview.png --target $env:GITHUB_SHA --prerelease --title "$env:RELEASE_VERSION — Bản thử tích lũy" --notes-file $env:RELEASE_NOTES
+          $checks = Get-Content artifacts/build-checks.json -Raw | ConvertFrom-Json
+          $notes = (Get-Content $env:RELEASE_NOTES -Raw) + "`n`nKiểm thử tự động thực tế: $($checks.CoreChecks) Core/OpenXML + $($checks.WpfChecks) WPF; kiểm metadata gói đạt. Commit: $($checks.Commit). CI: $($checks.RunUrl). Chưa xác nhận bài Word thực tế trên Office 2021."
+          $notes | Set-Content artifacts/release-notes.md -Encoding utf8
+          gh release create v${{ env.RELEASE_VERSION }} artifacts/ChinhTaViet-${{ env.RELEASE_VERSION }}-win-x64.zip artifacts/SHA256.txt artifacts/build-checks.json artifacts/ChinhTaViet-${{ env.RELEASE_VERSION }}-tien-do.txt artifacts/issue-list-preview.png artifacts/issue-tooltip-preview.png artifacts/repair-progress-preview.png artifacts/document-types-preview.png --target $env:GITHUB_SHA --prerelease --title "$env:RELEASE_VERSION — Bản thử tích lũy" --notes-file artifacts/release-notes.md

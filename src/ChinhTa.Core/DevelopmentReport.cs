@@ -73,9 +73,9 @@ public static class DevelopmentReport
         new("C14","Khoảng trắng quanh dấu phẩy/chấm phẩy",CapabilityMode.Reviewable,"Giữa hai từ có ít nhất hai chữ cái, dấu cách thường",
             "Đề xuất bỏ khoảng trắng trước và giữ một khoảng trắng sau dấu phẩy/chấm phẩy. Cần duyệt; bỏ qua dòng số/ngày, tab và dấu hiệu địa chỉ/đường dẫn/mã. Chưa mở rộng sang mọi dấu câu.",
             new ReportExample("Nội dung  ,  báo cáo;công tác.","Nội dung, báo cáo; công tác.")),
-        new("C15","Khoảng trắng sát bên trong ngoặc tròn",CapabilityMode.Reviewable,"Ngoặc cân bằng, không lồng, phần chữ đơn giản trong cùng đoạn",
-            "Đề xuất xóa dấu cách thường ngay sau ( và trước ), giữ chữ/kiểu và khoảng cách ngoài. Bỏ qua ô trống, nội dung có số/ký hiệu kỹ thuật, toàn chữ hoa, tab, ngoặc lồng/thiếu và vùng chưa cho phép sửa. Cần duyệt, chưa kiểm mọi loại ngoặc/nháy.",
-            new ReportExample("Theo mẫu ( nội dung ) đã duyệt.","Theo mẫu (nội dung) đã duyệt.")),
+        new("C15","Khoảng trắng quanh ngoặc tròn",CapabilityMode.Reviewable,"Ngoặc cân bằng, không lồng, phần chữ đơn giản trong cùng đoạn",
+            "Đề xuất xóa dấu cách thường sát trong ngoặc. Thêm dấu cách còn thiếu sau ngoặc đóng khi hai từ trước, ít nhất hai từ trong và hai từ sau đều rõ, từ ngay sau chữ thường. Chọn riêng hoặc chung, giữ chữ/kiểu và khoảng chưa chọn. Bỏ ô trống, số/mã/công thức/hàm, toàn hoa, tab/NBSP, ngoặc lồng/thiếu và XML chưa chắc. Cần duyệt; chưa thêm khoảng trước ngoặc mở hoặc kiểm mọi loại ngoặc/nháy.",
+            new ReportExample("Theo mẫu ( nội dung )đã duyệt.","Theo mẫu (nội dung) đã duyệt.")),
         new("C16","Khoảng trắng trước dấu kết câu cuối đoạn",CapabilityMode.Reviewable,"Một dấu .?! cuối đoạn, từ cuối ≥2 chữ cái thường và có từ trước",
             "Đề xuất xóa dấu cách ASCII trước dấu kết câu; giữ chữ, dấu câu, khoảng trắng sau. Bỏ qua số/ký hiệu, dấu hiệu kỹ thuật/header/ngày, chuỗi dấu và ranh giới chưa rõ. Cần duyệt; chưa kiểm dấu giữa câu hoặc tự thêm dấu/khoảng sau.",
             new ReportExample("Đã hoàn thành .","Đã hoàn thành.")),
@@ -162,7 +162,7 @@ public static class DevelopmentReport
         new("0.1.57","Thêm cửa sổ tiến độ độc lập khi sửa: bước hiện tại, số mục hậu kiểm tạm thời, thời gian chờ, đo lại/quét lại/phục hồi; chưa hoàn tất trước quét lại. Mở proof định dạng cho Line trong nhánh tương thích/run gộp, đọc từng ký tự Word khi phông vùng bị trộn; giữ kiểm nét và rollback, chưa xác nhận runtime Office 2021."),
         new("0.1.58","Thêm C24 viết hoa chính xác tên loại văn bản đã nhận diện chắc theo NĐ30 II.5.b; giữ trích yếu, khoảng ngoài tên, phông/căn đoạn, chặn trường/đối tượng/vùng chưa rõ; sửa chung phông, quét lại và một Undo/rollback. Lỗi cơ quan/trích yếu trên .56 vẫn chờ bằng chứng runtime .57 hoặc mới hơn."),
         new("0.1.59","Danh mục đủ 27 tên hành chính/3 bản sao theo NĐ30 PL III.I trang 40; thêm Báo cáo đề xuất/BCĐX theo người dùng, tách nguồn. Dùng chung nhận diện/C24/phông/mốc trích yếu, không áp thể thức gốc cho bản sao; sửa cảnh báo nhầm chữ thường ở QyĐ/CTr/TTr/TrS, giữ mã cơ quan. Có cửa sổ tra cứu và danh mục đầy đủ trong TXT."),
-        new("0.1.60 — đang phát triển","Đợt 4 bước: B01 chuẩn hóa hoa/thường viết tắt theo một tên loại tương ứng duy nhất; B02 cảnh báo tên loại/ký hiệu mâu thuẫn, không đoán bên sai; B03 thêm khoảng sau hai chấm, chọn riêng/cả hai phía; B04 thêm C25 bỏ dấu cách ASCII sau dấu kết câu cuối đoạn, giữ dấu kết đoạn/ô và phần chưa chọn. Tổng25/8/1; giữ sửa nhóm, XPS, một Undo/rollback. Gom khoảng5–10 bước mới đóng gói; chưa phát hành .60 hoặc xác nhận Word runtime.")
+        new("0.1.60","Gom 5 bước sau .59: B01 hoa/thường viết tắt theo tên loại chắc chắn; B02 cảnh báo tên loại/ký hiệu mâu thuẫn, không đoán bên sai; B03 thêm khoảng sau hai chấm; B04 C25 bỏ dấu cách cuối đoạn có điều kiện, giữ kết đoạn/ô; B05 C15 thêm khoảng sau ngoặc đóng trong cụm chữ rõ. Chọn riêng/chung, giữ khoảng chưa chọn, XPS, một Undo/rollback; tổng25/8/1. Bản thử, chưa xác nhận toàn bộ bài Word trên Office 2021.")
     });
     public static IReadOnlyList<string> NextSteps { get; }=Array.AsReadOnly(new[]
     {
@@ -221,7 +221,7 @@ public static class DevelopmentReport
         Line(DocumentTypeCatalog.UserNote);
         Line("Danh mục đầy đủ không có nghĩa đã kiểm mọi mẫu đặc thù. Bản sao có thể thức riêng; chưa tự đổi chữ viết tắt theo tên loại hoặc mã cơ quan. Giữ đúng QyĐ, CTr, TTr, TrS.");Line();
         Line("CHU KỲ PHÁT TRIỂN");
-        Line("Gom khoảng 5–10 bước có kiểm thử rồi mới đóng gói Windows; từng bước vẫn cập nhật code và nhật ký. Các thay đổi chưa phát hành sau .59 được ghi tại docs/BATCH-AFTER-0.1.59.md.");Line();
+        Line("Gom khoảng 5–10 bước có kiểm thử rồi mới đóng gói Windows; từng bước vẫn cập nhật code và nhật ký. Nội dung đợt sau .59 được ghi tại docs/BATCH-AFTER-0.1.59.md.");Line();
         Line("CÁC NỘI DUNG ĐÃ LÀM");
         foreach(var item in Milestones)Line(item.Version+": "+item.Detail);
         Line();Line("GIỚI HẠN CÒN LẠI");

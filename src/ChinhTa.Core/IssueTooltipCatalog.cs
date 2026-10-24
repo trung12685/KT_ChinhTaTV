@@ -36,6 +36,7 @@ public static class IssueTooltipCatalog
             return issue.Kind switch
             {
                 FixKind.ParagraphEndSpace=>"Quy tắc ứng dụng: bỏ dấu cách thừa sau dấu kết câu ở cuối đoạn chữ thuần.",
+                FixKind.ParenthesisSpace when issue.AddsSpaceAfterClosingParenthesis=>"Quy tắc ứng dụng: có một dấu cách giữa ngoặc đóng và từ tiếp theo trong câu chữ rõ.",
                 FixKind.ParenthesisSpace=>"Quy tắc ứng dụng: không có dấu cách sát bên trong ngoặc tròn chứa chữ.",
                 FixKind.SentenceAfterSpace=>"Quy tắc ứng dụng: có một dấu cách giữa dấu kết câu và câu tiếp theo.",
                 _=>"Quy tắc ứng dụng: không có dấu cách trước dấu câu; có khoảng cách sau dấu câu khi tiếp tục viết."
@@ -124,6 +125,7 @@ public static class IssueTooltipCatalog
             FixKind.OutlineOrder=>$"Đổi {Brief(issue.Original,20)} → {Brief(issue.Replacement,20)}; giữ nội dung, cần duyệt dẫn chiếu.",
             FixKind.OutlineMarker=>"Bỏ dấu đầu dòng đơn và dấu cách phân cách; giữ nội dung và thụt đầu dòng.",
             FixKind.PunctuationSpace=>"Bỏ khoảng trước, chuẩn hóa khoảng sau dấu đã chọn; cần duyệt cả câu.",
+            FixKind.ParenthesisSpace when issue.AddsSpaceAfterClosingParenthesis=>"Thêm một dấu cách sau ngoặc đóng; giữ chữ, ngoặc và khoảng trong chưa chọn.",
             FixKind.ParenthesisSpace=>"Bỏ dấu cách sát trong ngoặc đã chọn; giữ chữ và ngoặc.",
             FixKind.SentenceAfterSpace=>"Thêm một dấu cách sau dấu kết câu đã chọn.",
             FixKind.ColonSpace when issue.AddsSpaceAfterColon=>"Thêm một dấu cách sau dấu hai chấm; giữ chữ, dấu câu và khoảng trước chưa chọn.",

@@ -1,5 +1,11 @@
 # Tiếp tục phát triển Chính tả Việt
 
+## B05 / mốc bản thử .60 — gom đủ 5 bước
+
+Tiếp nối B04 `9e5449df1655acb789b01726767a71de126e0922`, nhánh feature/format-batch-after-0.1.59. C15 thêm `)` → `) ` khi các từ trước/trong/sau đủ rõ, giữ guard hàm/công thức/ngoặc thiếu-lồng/ô trống/header/date/control/XML. Các mép độc lập, giữ phần chưa chọn; cùng FixKind/Family parenthesis, property UI không cấp CanFix. Core có Unicode/CP, guard, một mép/cả nhóm, stale khi đổi quyền/context, ghép phông/cụm lặp/hai chấm/C25 và rollback lỗi lưu. Local2028 assertion. OfficeParenthesisAfterCheck giả giữ kiểu, quét/Undo/rollback/lưu-mở; CI chỉ biên dịch.
+
+Đợt đủ5 bước B01–B05, tổng25/8/1. .60 có CHANGES và bảng C01–C25, báo cáo ví dụ, ghi chú Office2021 chờ; lịch sử TXT ghi đủ5 bước. Chuẩn bị một gói Windows mới sau kiểm bắt buộc; workflow package thêm nhánh release/windows-<version> được tạo chủ động khi connector không dispatch/tag được. Guard nhánh/version và tag có sẵn ngăn ghi đè; nhánh feature vẫn chỉ tests, không packaging mỗi bước. Bằng chứng theo đúng commit ở PR36/release, không lấy CI làm Word PASS hoặc khép lỗi .56. Main/stable .27 giữ nguyên. [Nhật ký đợt](BATCH-AFTER-0.1.59.md) · [Ghi chú .60](CHANGES-0.1.60.md).
+
 ## B04 — C25 khoảng trắng cuối đoạn
 
 Tiếp nối B03 `ef45c4a1e12c8f305f2e298aaee9e5a43ded4819`, cùng nhánh đợt. ParagraphEndSpaceRules chỉ xóa ASCII gap sau một dấu kết câu cuối đoạn có chữ đủ rõ, giữ CR/LF/kết ô và phần chưa chọn. SentenceSpaceContext.ClearEnding tách nguyên điều kiện trái đang dùng cho Clear, không đổi guard cũ; số/ngày/mã/technical/NBSP/control/không kết câu vẫn ngoài phạm vi. FixKind.ParagraphEndSpace append cuối enum; BatchPlan chặn payload không phải xóa space thuần/giả định dạng, cho chia sẻ span phông. CurrentTextPlan vẫn phải quét mới trước ghi. C25 cùng Family spacing cạnh C01, ReviewSuggestion, nguồn quy tắc ứng dụng.
