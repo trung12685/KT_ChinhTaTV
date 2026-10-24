@@ -1,5 +1,9 @@
 # Tiếp tục phát triển Chính tả Việt
 
+## B01 sau .61 — sửa cỡ hỗn hợp, giữ phần đúng
+
+Mốc nguồn v0.1.61 `1a53d2c6f304adc913c139fb4e4f3d3b03d2db46`, CI 2435 Core/OpenXML +144 WPF, gói thêm1 kiểm metadata. Đợt mới code .62, chưa gói, một bước chức năng. CharacterFormat.RepairInvalidSizes chỉ hợp lệ khi PreserveSize và vai trò có khoảng cỡ; FormatPolicy chỉ opt-in ở cơ quan/tên loại/trích yếu/ngày. Giữ nguyên quốc hiệu/tiêu ngữ/Đảng và quyền XML. Không cắt thành nhiều Issue gây chồng với text edit. Chụp cỡ nguồn → chỉ chuẩn hóa ngoài khoảng → chiếu qua sửa chữ → hậu kiểm exact glyph sau lưu/Line. Setter dùng Range ký tự Word thực, đối chiếu toàn text/biên trước khi ghi Size, bỏ ký tự trắng; lỗi vào rollback toàn lượt cũ. [Nhật ký](BATCH-AFTER-0.1.61.md) · [Thiết kế/giới hạn](SELECTIVE-SIZE-REPAIR.md). Core/Desktop có guard, CP/UTF16, lỗi COM, hậu kiểm và lựa chọn; bài Word mở rộng mẫu hỗn hợp, sửa riêng/chung ba Line, một Undo/lưu-mở/băm nguồn, CI chỉ biên dịch. Chưa khép phản hồi .56 trên Office2021.
+
 ## B05 / chuẩn bị mốc .61 — sửa nhiều nhóm có mục cần trước
 
 Tiếp nối B04 `52fd60993737f106617889abdc80fa54de2f0ad9`, 2411 Core/OpenXML +127 WPF. Thêm RepairDependencies gắn đúng lỗi cần sửa trước vào Line, nối model checkbox/nhóm/all/single-fix → duyệt rõ → backend. Dùng geometry mới sau chữ/phông; Line hiện đã đạt chỉ đo lại/không ghi nếu vẫn đạt, không nhãn thiếu. Thiếu/phát sinh phụ thuộc chưa duyệt thì dừng/rollback. Nhận mốc cơ quan thường theo cấu trúc số/tên rõ, không đoán tên chính thức hay lấy chủ quản thay ban hành.

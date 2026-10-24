@@ -60,7 +60,7 @@ public static class DocumentHeadingRules
         {
             var p=first.Single(p=>p.Start==row.Start && Clean(p.Text)==Clean(row.Text));
             bool isTitle=p.Start==type.Start;string text=Clean(p.Text),label=isTitle?"tên loại":"trích yếu";
-            var assessment=new FormatPolicy(13,14,false,true).Assess(p);
+            var assessment=new FormatPolicy(13,14,false,true).Assess(p,allowSelectiveSizeRepair:true);
             if(assessment.State is FormatState.Unknown or FormatState.NeedsReview || text.IndexOfAny(['\t','\f','\r','\n','\a'])>=0)
             {
                 result.Add(Notice(p,assessment.State==FormatState.NeedsReview?
@@ -71,7 +71,7 @@ public static class DocumentHeadingRules
             if(assessment.State==FormatState.Repairable)
             {
                 result.Add(new(p.Start,text.Length,text,text,"Times New Roman, màu đen, cỡ 13–14, chữ đứng, đậm; giữ cỡ hợp lệ, nguyên văn, gạch chân và căn đoạn. Vị trí/nét kẻ kiểm riêng.",
-                    false,FixKind.DocumentHeadingFormat,Citation:citation,Title:"Định dạng "+label,CharacterFormat:new(assessment.Size,false,true,PreserveSize:assessment.PreserveSize)));
+                    false,FixKind.DocumentHeadingFormat,Citation:citation,Title:"Định dạng "+label,CharacterFormat:new(assessment.Size,false,true,PreserveSize:assessment.PreserveSize,RepairInvalidSizes:assessment.RepairInvalidSizes)));
             }
             if(isTitle && text!=text.ToUpperInvariant())
             {

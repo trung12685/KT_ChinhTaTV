@@ -16,6 +16,8 @@ public sealed partial class WordSession
         try
         {
             var source=VisibleFormatReader.ReadSizes((object)range,issue.Original);
+            if(issue.CharacterFormat is {RepairInvalidSizes:true} selective)
+                source=source.CorrectInvalid(selective.SizeRange.Minimum,selective.SizeRange.Maximum);
             var contained=edits.Where(i=>i.CharacterFormat is null && i.Format is null && i.Start>=issue.Start &&
                 (long)i.Start+i.Length<=(long)issue.Start+issue.Length).ToArray();
             return source.Project(contained,item=>

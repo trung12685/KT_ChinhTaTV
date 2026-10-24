@@ -6,6 +6,12 @@
 
 Ưu tiên đã thống nhất: **thể thức → lỗi chữ và lặp từ/cụm từ → ngữ cảnh và thư viện sau cùng**. Phần chính tả tiếng Việt đầy đủ còn cần xây dựng; không coi quy tắc minh họa hiện tại là bộ kiểm hoàn chỉnh.
 
+## Đang phát triển sau 0.1.61 — sửa riêng phần sai cỡ
+
+B01 của đợt mới bổ sung sửa cỡ hỗn hợp trong các vùng đã nhận diện chắc: cơ quan 12–13; tên loại, trích yếu và ngày 13–14. Ví dụ trích yếu có chữ cỡ 12/13/14: chỉ đưa 12 về 13, giữ mỗi chữ 13/14, ngắt dòng và nội dung. Một mục duyệt cho toàn vùng vẫn sửa chung được với hoa/thường, khoảng trắng và cụm lặp; đo lại trước Line, hậu kiểm từng cỡ và rollback nếu sai. Quốc hiệu/tiêu ngữ/tiêu đề Đảng vẫn giữ guard riêng, không mở sửa chữ qua đối tượng.
+
+Code dùng **0.1.62**, hiện **1 bước**, **chưa có bản tải .62**. Gói gần nhất là [0.1.61](https://github.com/trung12685/KT_ChinhTaTV/releases/tag/v0.1.61), đã phát hành với 2435 Core/OpenXML +144 WPF +1 kiểm metadata gói. Gom khoảng 5–10 bước mới tạo gói tiếp; chưa có bằng chứng runtime Office2021 để khép lỗi phông cũ. [Nhật ký mới](docs/BATCH-AFTER-0.1.61.md) · [Thiết kế](docs/SELECTIVE-SIZE-REPAIR.md).
+
 ## Bản thử 0.1.61 — kiểm định dạng và sửa nhiều nhóm
 
 B04 sửa chung luồng kiểm phông/cỡ/màu/kiểu cho quốc hiệu/tiêu ngữ, số/ngày, tên loại/trích yếu, cơ quan và nơi nhận. Các cỡ cùng hợp lệ, hai mã màu đen hoặc kiểu khác ở dấu cách/ngắt dòng không tự thành lỗi. Đọc sau proof XML, mỗi vùng một lần; aggregate rõ dùng ngay, chưa rõ thì đọc từ rồi ký tự cần thiết. Sửa phông/màu giữ từng cỡ hợp lệ và hậu kiểm cỡ ký tự còn lại sau sửa chữ/Line; chưa đọc chắc thì giữ thủ công. Không mở sửa chữ qua đối tượng hoặc bỏ kiểm nét XPS/Undo/rollback.

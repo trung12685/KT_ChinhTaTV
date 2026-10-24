@@ -13,6 +13,16 @@ public sealed class FontSizeEvidence
             throw new InvalidOperationException("Chưa đọc chắc cỡ chữ của các ký tự cần giữ.");
         Text=text;Sizes=Array.AsReadOnly(values);
     }
+    // Every visible source glyph must be known before a selective size repair.
+    // The expected result retains each already legal size, rather than accepting
+    // any post-save size in the allowed interval.
+    public FontSizeEvidence CorrectInvalid(float minimum,float maximum)
+    {
+        if(!float.IsFinite(minimum) || !float.IsFinite(maximum) || minimum<=0 || maximum<minimum || maximum>1638 ||
+            Sizes.Where((_,i)=>!char.IsWhiteSpace(Text[i])).Any(s=>s is null))
+            throw new InvalidOperationException("Chưa đọc đủ cỡ chữ để sửa riêng phần sai.");
+        return new(Text,Sizes.Select(s=>s is float size && (size<minimum || size>maximum)?minimum:s));
+    }
     public FontSizeEvidence Project(IReadOnlyList<Issue> edits,Func<Issue,string> readPrefix)
     {
         string text=Text;var sizes=Sizes.ToList();

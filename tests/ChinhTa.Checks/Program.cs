@@ -32,6 +32,7 @@ PreviewAnchorBatchChecks.Run(Assert);
 ComponentChecks.Run(Assert);
 FormatAssessmentChecks.Run(Assert);
 FontSizeEvidenceChecks.Run(Assert);
+SelectiveSizeChecks.Run(Assert);
 OwnedLineFormatChecks.Run(Assert);
 RepairProgressChecks.Run(Assert);
 DocumentTypeTextChecks.Run(Assert);

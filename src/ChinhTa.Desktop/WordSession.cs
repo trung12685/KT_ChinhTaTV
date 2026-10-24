@@ -693,6 +693,7 @@ public sealed partial class WordSession : IDisposable
                             try{font.Name="Times New Roman";if(!character.PreserveSize)font.Size=character.Size;font.Italic=character.Italic?-1:0;font.Color=0;
                                 if(character.Bold is bool bold)font.Bold=bold?-1:0;}
                             finally{Release(font);}
+                            if(character.RepairInvalidSizes)VisibleFormatReader.RepairSizes((object)range,item.Original,character);
                         }
                         if(item.Format is HeadingFormat heading)
                         {

@@ -185,8 +185,10 @@ static class Program
         ProgressReportDesktopChecks.Run(Assert);
         IssueReviewPanelChecks.Run(Assert);
         StagedGeometryDesktopChecks.Run(Assert);
+        SelectiveSizeGeometryDesktopChecks.Run(Assert);
         VisibleFormatChecks.Run(Assert);
         FormatObservationChecks.Run(Assert);
+        SelectiveSizeWriterChecks.Run(Assert);
         DependencyReviewChecks.Run(Assert);
         RepairProgressDesktopChecks.Run(Assert);
         DocumentTypeCatalogDesktopChecks.Run(Assert);

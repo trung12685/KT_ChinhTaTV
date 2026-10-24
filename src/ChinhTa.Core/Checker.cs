@@ -14,7 +14,7 @@ public record HeadingFormat(float Size, int? Alignment = null,float? MaximumSize
         color is 0 or -16777216 && (Alignment is null || alignment==Alignment);
 }
 public enum ComponentRole { AgencyParent, Agency, RecipientLabel, RecipientItem }
-public record CharacterFormat(float Size,bool Italic,bool? Bold=null,ComponentRole? Role=null,bool PreserveSize=false)
+public record CharacterFormat(float Size,bool Italic,bool? Bold=null,ComponentRole? Role=null,bool PreserveSize=false,bool RepairInvalidSizes=false)
 {
     public (float Minimum,float Maximum) SizeRange=>Role switch
     {
@@ -22,7 +22,7 @@ public record CharacterFormat(float Size,bool Italic,bool? Bold=null,ComponentRo
         ComponentRole.RecipientLabel=>(12,12),ComponentRole.RecipientItem=>(11,11),
         _=>Bold==true || Italic?(13,14):(13,13)
     };
-    public bool Valid => float.IsFinite(Size) && (!PreserveSize || SizeRange.Minimum<SizeRange.Maximum && Size==SizeRange.Minimum) && (Role is not null ? Role switch
+    public bool Valid => (!RepairInvalidSizes || PreserveSize) && float.IsFinite(Size) && (!PreserveSize || SizeRange.Minimum<SizeRange.Maximum && Size==SizeRange.Minimum) && (Role is not null ? Role switch
     {
         ComponentRole.AgencyParent=>Size>=12 && Size<=13 && !Italic && Bold==false,
         ComponentRole.Agency=>Size>=12 && Size<=13 && !Italic && Bold==true,
@@ -46,6 +46,7 @@ public record Issue(int Start, int Length, string Original, string Replacement,
     public string Suggestion => !CanFix ? "Kiểm tra thủ công; không tự sửa."
         : LineFix is not null ? Prerequisites is {Count:>0} required?$"Sửa kèm {required.Count} mục liên quan, đo lại rồi tạo/đặt lại đường kẻ.":"Tạo/đặt lại Shape Line theo số đo và cấu hình đã chọn."
         : CenterFix is not null ? "Căn giữa trong ô đã xác minh, bỏ thụt lề ngang; giữ nguyên chữ và khoảng cách dọc."
+        : CharacterFormat?.RepairInvalidSizes==true ? $"Times New Roman, đen, {(CharacterFormat.Italic?"nghiêng":"đứng")}{(CharacterFormat.Bold==true?", đậm":CharacterFormat.Bold==false?", không đậm":"")}; chỉ đưa cỡ ngoài {CharacterFormat.SizeRange.Minimum:0.#}–{CharacterFormat.SizeRange.Maximum:0.#} về {CharacterFormat.Size:0.#}; giữ từng cỡ đúng và chữ."
         : CharacterFormat is not null ? $"Times New Roman, màu đen, cỡ {(CharacterFormat.PreserveSize?$"{CharacterFormat.SizeRange.Minimum:0.#}–{CharacterFormat.SizeRange.Maximum:0.#} (giữ cỡ hợp lệ)":$"{CharacterFormat.Size:0.#}")}, chữ {(CharacterFormat.Italic?"nghiêng":"đứng")}{(CharacterFormat.Bold==true?", đậm":CharacterFormat.Bold==false?", không đậm":"")}; giữ nguyên chữ."
         : Kind==FixKind.DocumentTypeText ? "Viết hoa tên loại thành “"+Replacement+"”; giữ nội dung trích yếu, phông và căn đoạn."
         : Kind==FixKind.OutlineOrder ? $"Đổi ký hiệu mục {Original} → {Replacement}; giữ nội dung, cần duyệt thứ tự và dẫn chiếu."

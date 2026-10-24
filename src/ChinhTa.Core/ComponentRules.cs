@@ -45,7 +45,7 @@ public static class ComponentRules
             };
             FixKind formatKind=agency?FixKind.AgencyFormat:FixKind.RecipientFormat,textKind=agency?FixKind.AgencyText:FixKind.RecipientText;
             var range=style.SizeRange;
-            var assessment=new FormatPolicy(range.Minimum,range.Maximum,style.Italic,style.Bold).Assess(p);
+            var assessment=new FormatPolicy(range.Minimum,range.Maximum,style.Italic,style.Bold).Assess(p,allowSelectiveSizeRepair:true);
             if(assessment.State is FormatState.Unknown or FormatState.NeedsReview)
                 result.Add(new(p.Start,text.Length,text,text,assessment.State==FormatState.Unknown?
                     "Chưa đủ bằng chứng chữ/định dạng để sửa "+label+"; không kết luận thành phần này sai thể thức.":
@@ -53,7 +53,7 @@ public static class ComponentRules
                     CanFix:false,Citation:citation,Title:"Kiểm tra định dạng "+label));
             else if(assessment.State==FormatState.Repairable)
                 result.Add(new(p.Start,text.Length,text,text,"Định dạng "+label+" chưa đúng thông số đã đối chiếu; giữ nguyên nội dung và căn đoạn.",false,formatKind,
-                    Citation:citation,Title:"Định dạng "+label,CharacterFormat:style with {Size=assessment.Size,PreserveSize=assessment.PreserveSize}));
+                    Citation:citation,Title:"Định dạng "+label,CharacterFormat:style with {Size=assessment.Size,PreserveSize=assessment.PreserveSize,RepairInvalidSizes=assessment.RepairInvalidSizes}));
             void Edit(int offset,string original,string replacement,string title)
             {
                 if(original==replacement)return;

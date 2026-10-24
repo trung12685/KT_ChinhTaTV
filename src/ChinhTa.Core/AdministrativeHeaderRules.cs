@@ -71,13 +71,13 @@ public static class AdministrativeHeaderRules
             bool known=date?CheckDate(p,result):CheckNumber(p,result,namedType);
             if(p.FormatEvidence is not null)
             {
-                var assessment=new FormatPolicy(13,date?14:13,date,null).Assess(p);
+                var assessment=new FormatPolicy(13,date?14:13,date,null).Assess(p,allowSelectiveSizeRepair:true);
                 if(known && assessment.State==FormatState.Repairable)
                 {
                     string text=Clean(p.Text);
                     result.Add(new(p.Start,text.Length,text,text,"Times New Roman, màu đen, đúng cỡ/kiểu của dòng; giữ cỡ hợp lệ, đậm/gạch chân, ô trống và căn đoạn.",false,
                         FixKind.AdministrativeFormat,Citation:Citation(date),Title:date?"Định dạng địa danh/ngày tháng":"Định dạng số/ký hiệu",
-                        CharacterFormat:new(assessment.Size,date,PreserveSize:assessment.PreserveSize)));
+                        CharacterFormat:new(assessment.Size,date,PreserveSize:assessment.PreserveSize,RepairInvalidSizes:assessment.RepairInvalidSizes)));
                 }
                 else if(assessment.State is FormatState.Unknown or FormatState.NeedsReview || !known && assessment.State==FormatState.Repairable)
                     result.Add(Notice(p,date,"Chưa thể sửa định dạng cả dòng an toàn; giữ nguyên cỡ hợp lệ khác và kiểm tra thủ công."));
