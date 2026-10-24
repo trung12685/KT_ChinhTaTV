@@ -26,7 +26,7 @@ public static class StagedRepairBatch
     {
         string prefix=readPrefix(target);
         WordPreviewAnchor.Create(1,story,prefix,target.Original);
-        var overlapping=text.Where(i=>i.CharacterFormat is null && i.Original!=i.Replacement &&
+        var overlapping=text.Where(i=>!i.IsStyleOnly && i.Original!=i.Replacement &&
             i.Start<(long)target.Start+target.Length && target.Start<(long)i.Start+i.Length).ToArray();
         if(overlapping.Any(i=>i.Start<target.Start || (long)i.Start+i.Length>(long)target.Start+target.Length))
             throw new InvalidOperationException("Vùng sửa chữ cắt qua mốc nhóm sau; hãy sửa riêng rồi quét lại.");

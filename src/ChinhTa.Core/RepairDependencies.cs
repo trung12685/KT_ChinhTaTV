@@ -5,7 +5,7 @@ namespace ChinhTa.Core;
 public static class RepairDependencies
 {
     public static bool Same(Issue a,Issue b)=>a.Start==b.Start && a.Length==b.Length && a.Original==b.Original &&
-        a.Replacement==b.Replacement && a.Kind==b.Kind && a.OutlineContext==b.OutlineContext && a.Format==b.Format && a.CharacterFormat==b.CharacterFormat &&
+        a.Replacement==b.Replacement && a.Kind==b.Kind && a.OutlineContext==b.OutlineContext && a.Format==b.Format && a.CharacterFormat==b.CharacterFormat && a.ParagraphFix==b.ParagraphFix && a.SpacingFix==b.SpacingFix &&
         a.LineFix==b.LineFix && a.CenterFix==b.CenterFix;
     private static bool Leaf(Issue issue)=>issue.CanFix && StagedRepairBatch.Stage(issue)==RepairStage.Text &&
         issue.Prerequisites is not {Count:>0};

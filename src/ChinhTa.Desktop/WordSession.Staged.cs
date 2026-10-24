@@ -74,8 +74,8 @@ public sealed partial class WordSession
                 bool correct=proof.Styles is not null || VisibleFormatReader.Matches((object)range,proof.Text,proof.Issue.CharacterFormat,proof.Issue.Format,alignment);
                 if((string)range.Text!=proof.Text || !correct)
                     throw new InvalidOperationException("Phông sau các nhóm sửa không còn khớp đề xuất; phải khôi phục cả lượt.");
-                if(proof.Styles is not null && !proof.Styles.Matches(VisibleFormatReader.ReadStyles((object)range,proof.Text)))
-                    throw new InvalidOperationException("Định dạng tên loại sau các nhóm sửa chưa khớp phần cần giữ/phần đã duyệt; phải khôi phục cả lượt.");
+                if(proof.Styles is not null && !proof.Styles.Matches(VisibleFormatReader.ReadStyles((object)range,proof.Text,includeSpacing:proof.Styles.Paragraph?.Spacing is not null)))
+                    throw new InvalidOperationException("Định dạng ký tự sau các nhóm sửa chưa khớp phần cần giữ/phần đã duyệt; phải khôi phục cả lượt.");
                 if(proof.Sizes is not null && !proof.Sizes.Matches(VisibleFormatReader.ReadSizes((object)range,proof.Text)))
                     throw new InvalidOperationException("Cỡ chữ đã đổi sau các nhóm sửa; phải khôi phục cả lượt.");
             }
@@ -98,6 +98,7 @@ public sealed partial class WordSession
         }
         Checkpoint();
         string original=ReadStoryText(),expected=AtomicTextBatch.ExpectedStory(text,original,ReadPrefix);
+        var spacingProofs=BodySpacingVerification.Build(text,original,ReadPrefix);
         var requests=selected.Select(i=>new DeferredRepair(i,StagedRepairBatch.Stage(i)==RepairStage.Text?i.Replacement:
             StagedRepairBatch.ExpectedReference(i,text,original,ReadPrefix))).ToArray();
         var formats=text.Where(i=>i.Format is not null || i.CharacterFormat is not null).Select(i=>new StagedFormat(i,
@@ -156,6 +157,7 @@ public sealed partial class WordSession
                     if(requests.Where(r=>StagedRepairBatch.Stage(r.Requested)!=RepairStage.Text).Any(r=>StagedGeometryResolver.Resolve(r,review) is not null))
                         throw new InvalidOperationException("Còn mục đã chọn chưa đạt sau hậu kiểm; phải khôi phục cả lượt.");
                     VerifyStagedFormats(formats);
+                    VerifyBodySpacing(spacingProofs,expected);
                 },
                 ()=>
                 {

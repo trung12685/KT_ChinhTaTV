@@ -13,7 +13,7 @@ public static class AtomicTextBatch
         var stringPlan=BatchPlan.Create(mapped);
         if(stringPlan.Count!=plan.Count || !mapped.Select(i=>i.Start).SequenceEqual(stringPlan.Select(i=>i.Start)))
             throw new InvalidOperationException("Không đối chiếu được thứ tự các vùng chữ đã chọn.");
-        foreach(var item in stringPlan.Where(i=>i.CharacterFormat is null))
+        foreach(var item in stringPlan.Where(i=>!i.IsStyleOnly))
             story=story.Remove(item.Start,item.Length).Insert(item.Start,item.Replacement);
         return story;
     }
