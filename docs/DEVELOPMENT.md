@@ -1,5 +1,11 @@
 # Tiếp tục phát triển Chính tả Việt
 
+## B02 sau .60 — dấu phẩy/chấm phẩy sau ngoặc tròn
+
+Tiếp nối B01 `1908f0387051d96664915be17d456bf0918d0a79`, nhánh feature/format-batch-after-0.1.60; B01 đạt 2159 Core/OpenXML + 113 WPF. C14 nhận `Theo mẫu (nội dung) ,báo cáo.` và giữ `Theo mẫu (nội dung), báo cáo.`. Không sửa chữ/ngoặc; giữ nhóm comma, nguồn quy tắc ứng dụng và phần chưa chọn. Nhánh mới có hai từ trước rõ, ≥2 từ chữ trong, từ phải có chữ thường, cân bằng/không lồng và guard kỹ thuật/header/date/blank/control/XML. Tên hàm dùng chung bộ loại trừ hiện có với C15, không đổi hành vi C15; parse cặp một lần cho nhánh mới, không tăng lượt COM/kết xuất.
+
+Hồi quy NFC/NFD/emoji/CP, mọi chế độ, XML/manual/stale, chọn riêng trong/ngoài, nhóm B01/chữ/phông/hai chấm/dấu câu/cuối đoạn và rollback. Bài Word giả giữ run/đậm/gạch chân, quét/Undo/lưu-mở/băm nguồn và rollback; CI chỉ biên dịch. Mới 2 bước, code .61, tổng25/8/1, chưa ZIP/tag/release. [Nhật ký/ví dụ](BATCH-AFTER-0.1.60.md); lỗi phông .56 và Office 2021 vẫn chờ bằng chứng runtime.
+
 ## B01 sau .60 — cụm lặp chỉ khác chữ hoa đầu đoạn
 
 Mốc đầu đợt mới: tag v0.1.60, commit `bd86e13f005fe41d3b9d068a317dd8a8795753ab`, đã có gói với 2105 Core/OpenXML + 113 WPF + 1 kiểm metadata; CI không có Word. Code mới version .61, chỉ một bước, chưa ZIP/tag/release.

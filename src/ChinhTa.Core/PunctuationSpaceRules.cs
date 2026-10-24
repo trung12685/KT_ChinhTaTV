@@ -2,7 +2,8 @@ using System.Globalization;
 
 namespace ChinhTa.Core;
 
-// Deliberately narrow: ASCII spaces around comma/semicolon between two words.
+// ASCII spaces around comma/semicolon between words, or after a verified simple
+// prose parenthesis. The parenthetical path has its own stricter context gate.
 // No semantic inference, number punctuation, general token splitting or tabs.
 public static class PunctuationSpaceRules
 {
@@ -12,6 +13,7 @@ public static class PunctuationSpaceRules
         if(AdministrativeHeaderRules.IsCandidate(text) || text.IndexOfAny(['\t','@','/','\\','_','=','`','<','>','[',']','{','}'])>=0)
             return Array.Empty<Issue>();
         var result=new List<Issue>();
+        Dictionary<int,int>? parentheses=null;
         for(int mark=0;mark<text.Length;mark++)
         {
             if(text[mark] is not (',' or ';'))continue;
@@ -21,9 +23,11 @@ public static class PunctuationSpaceRules
             int left=start,right=end;
             while(left>0 && WordChar(text[left-1]))left--;
             while(right<text.Length && WordChar(text[right]))right++;
-            if(!Word(text,left,start) || !Word(text,end,right) ||
-                !LeftBoundary(text,left) || !RightBoundary(text,right) ||
-                Upper(text,left,start) && Upper(text,end,right))continue;
+            bool wordLeft=Word(text,left,start) && LeftBoundary(text,left);
+            bool parentheticalLeft=!wordLeft && start>0 && text[start-1]==')' && ParentheticalLeft(start-1);
+            if(!Word(text,end,right) || !RightBoundary(text,right) || !wordLeft && !parentheticalLeft ||
+                wordLeft && Upper(text,left,start) && Upper(text,end,right) ||
+                parentheticalLeft && Upper(text,end,right))continue;
             string original=text[start..end],replacement=text[mark]+" ";
             if(original==replacement)continue;
             if(!paragraph.TextEditable)
@@ -38,6 +42,39 @@ public static class PunctuationSpaceRules
                 false,FixKind.PunctuationSpace,Title:text[mark]==','?"Khoảng trắng quanh dấu phẩy":"Khoảng trắng quanh dấu chấm phẩy"));
         }
         return result;
+        bool ParentheticalLeft(int close)
+        {
+            // Parse once per paragraph, only if a punctuation candidate follows ')'.
+            if(parentheses is null)
+            {
+                parentheses=new();
+                if(!SentenceSpaceContext.Supported(text.TrimEnd('\r','\n','\a')))return false;
+                int open=-1;
+                for(int i=0;i<text.Length;i++)
+                    if(text[i]=='(')
+                    {
+                        if(open>=0){parentheses.Clear();return false;}
+                        open=i;
+                    }
+                    else if(text[i]==')')
+                    {
+                        if(open<0){parentheses.Clear();return false;}
+                        parentheses.Add(i,open);open=-1;
+                    }
+                if(open>=0)parentheses.Clear();
+            }
+            if(!parentheses.TryGetValue(close,out int opening))return false;
+            int leftEnd=opening;
+            while(leftEnd>0 && text[leftEnd-1]==' ')leftEnd--;
+            if(leftEnd==opening || !SentenceSpaceContext.ClearEnding(text,leftEnd))return false;
+            int wordStart=leftEnd;
+            while(wordStart>0 && WordChar(text[wordStart-1]))wordStart--;
+            if(ParenthesisSpaceRules.IsFunctionName(text[wordStart..leftEnd]))return false;
+            string inside=text[(opening+1)..close];
+            var words=inside.Split(' ',StringSplitOptions.RemoveEmptyEntries);
+            return words.Length>=2 && inside.Any(char.IsLower) &&
+                words.All(word=>char.IsLetter(word[0]) && word.Count(char.IsLetter)>=2 && word.All(WordChar));
+        }
     }
     private static bool WordChar(char c)=>char.IsLetter(c) || char.GetUnicodeCategory(c) is UnicodeCategory.NonSpacingMark or UnicodeCategory.SpacingCombiningMark;
     private static bool Word(string text,int start,int end)=>start<end && char.IsLetter(text[start]) &&

@@ -38,6 +38,7 @@ CheckpointCleanupChecks.Run(Assert);
 RepeatedTextChecks.Run(Assert);
 InitialRepeatChecks.Run(Assert);
 PunctuationSpaceChecks.Run(Assert);
+ParentheticalPunctuationChecks.Run(Assert);
 ParenthesisSpaceChecks.Run(Assert);
 ParenthesisAfterSpaceChecks.Run(Assert);
 SentenceEndSpaceChecks.Run(Assert);

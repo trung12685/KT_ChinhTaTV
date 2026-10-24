@@ -20,6 +20,22 @@ Kiểm sửa riêng/chung cùng khoảng trắng, hai chấm, dấu kết câu/c
 
 Kiểm cục bộ đạt **2082 lượt assertion**, gồm 54 lượt bổ sung so với mốc .60 và các hồi quy cũ; đây là runner chọn lọc, không phải toàn bộ CI. Kết quả Windows đúng commit được ghi trong PR và Windows checks. Lỗi cảnh báo phông cơ quan/trích yếu sau sửa nhóm trên .56 vẫn chờ bằng chứng runtime để khép lỗi. Không dùng tính năng C13 mới để tuyên bố lỗi đó đã hết.
 
+## B02 — Dấu phẩy/chấm phẩy sau ngoặc tròn
+
+| Trước | Sau khi duyệt |
+|---|---|
+| `Theo mẫu (nội dung) ,báo cáo.` | `Theo mẫu (nội dung), báo cáo.` |
+| `Theo mẫu (nội dung);  đã duyệt.` | `Theo mẫu (nội dung); đã duyệt.` |
+| `Theo mẫu ( nội dung ) ,báo cáo.` | `Theo mẫu ( nội dung ), báo cáo.` nếu chỉ chọn dấu câu; khoảng trong chưa chọn giữ nguyên |
+
+Mở rộng C14, giữ cùng FixKind/nhóm/tooltip và tổng 25/8/1. Nhánh cũ giữa hai từ giữ nguyên điều kiện; nhánh mới sau ngoặc chỉ nhận câu có hai từ trước rõ, từ cuối thường và cách ngoặc mở bằng ASCII space, ít nhất hai từ chữ trong ngoặc (mỗi từ ≥2 chữ cái, có chữ thường) và từ bên phải ≥2 chữ cái có chữ thường. Cả đoạn phải có ngoặc cân bằng, không lồng; parse cặp một lần khi gặp ứng viên sau `)`. Chỉ thay span dấu phẩy/chấm phẩy và các ASCII spaces sát bên, không thay ngoặc/chữ/CP khác.
+
+Bỏ qua số/mã, tên hàm đã nhận diện, dấu hiệu kỹ thuật/header/ngày, tab/NBSP/control, ô trống, ngoặc lồng/thiếu, từ phải toàn hoa/một chữ/đuôi tên miền và XML chưa chắc. Gợi ý là quy tắc ứng dụng có duyệt, không phải căn cứ pháp lý. Không tuyên bố phân biệt được mọi hàm hay mọi ngữ cảnh ngôn ngữ.
+
+Kiểm mới có NFC/NFD/emoji và CP thật, ba chế độ, XML/manual, stale khi quyền sửa hoặc ngữ cảnh đổi dù span dấu câu không đổi; chọn riêng ngoài/trong, ghép B01/cụm lặp/khoảng trắng/hai chấm/dấu kết câu/cuối đoạn/phông và rollback khi lỗi lưu. Bài Word giả có hai dấu câu ngoài/hai mép trong, giữ run đậm/gạch chân, chọn riêng/chung, quét, một Undo, rollback, lưu/mở/băm nguồn; CI chỉ biên dịch, chưa chạy Word thực tế.
+
+Kiểm cục bộ đạt **2159 lượt assertion**, thêm 77 so với B01; đây là runner chọn lọc, không thay số kiểm CI. Hiện đủ **2 bước** trong code .61, chưa tạo gói Windows .61. Kết quả Windows đúng commit được lưu tại PR/CI; bản tải .60 giữ nguyên. Lỗi phông cơ quan/trích yếu .56 chưa khép.
+
 ## Tiếp theo
 
 Tiếp tục thể thức/lỗi chữ có điều kiện rõ, ngoại lệ và hồi quy; rà nhận diện và hiệu năng khi có số đo. Chính tả qua từ điển và ngữ nghĩa làm sau. Chỉ chốt gói đợt mới khi đủ bước và các kiểm bắt buộc đạt.
