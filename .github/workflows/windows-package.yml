@@ -70,6 +70,12 @@ jobs:
           Copy-Item docs/BATCH-AFTER-0.1.59.md artifacts/win-x64/
           Copy-Item docs/BATCH-AFTER-0.1.60.md artifacts/win-x64/
           Copy-Item docs/BATCH-AFTER-0.1.61.md artifacts/win-x64/
+          Copy-Item docs/BATCH-AFTER-0.1.62.md artifacts/win-x64/
+          Copy-Item docs/BODY-FORMAT.md artifacts/win-x64/
+          Copy-Item docs/BODY-PARAGRAPH.md artifacts/win-x64/
+          Copy-Item docs/BODY-SPACING.md artifacts/win-x64/
+          Copy-Item docs/BODY-OPENING.md artifacts/win-x64/
+          Copy-Item docs/CHANGES-0.1.62.md artifacts/win-x64/
           Copy-Item docs/SELECTIVE-SIZE-REPAIR.md artifacts/win-x64/
           Copy-Item docs/CASE-PRESERVATION.md artifacts/win-x64/
           Copy-Item docs/HIERARCHICAL-OUTLINE.md artifacts/win-x64/

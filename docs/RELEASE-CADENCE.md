@@ -18,3 +18,7 @@ Workflow đóng gói chỉ nhận manual/tag/nhánh release chuẩn bị riêng;
 Nếu có lỗi nghiêm trọng cần bản sửa sớm thì nêu lý do và kết quả kiểm thực tế; mốc 5–10 là nhịp làm việc, không phải lý do trì hoãn xử lý lỗi. Giữ kiểm nét XPS, đối chiếu nguyên văn/định dạng, checkpoint, một Undo và rollback. CI không cài Word và không chứng minh Office 2021 đã đạt.
 
 Nhật ký hiện tại: [Đợt sau 0.1.61](BATCH-AFTER-0.1.61.md), đủ5 hạng mục cho mốc .62; kết quả phát hành đúng commit theo PR/release. Đợt5 bước [sau .60](BATCH-AFTER-0.1.60.md) đã phát hành .61 tại commit `1a53d2c6f304adc913c139fb4e4f3d3b03d2db46`. Đợt 5 bước [sau .59](BATCH-AFTER-0.1.59.md) đã có gói thử .60; mốc ổn định đã chốt vẫn .27.
+
+## Mốc .63
+
+Đủ B01–B05 sau .62: phông/cỡ văn xuôi, căn/thụt, khoảng đoạn, giãn dòng, mở đầu không Kính gửi có proof chắc. Chuẩn bị notes/checklist và chạy kiểm bắt buộc đúng head trước release branch. Gói kèm nhật ký/bốn tài liệu phạm vi và TXT có ví dụ. Chưa có Word runtime thì không ghi Office2021 pass.

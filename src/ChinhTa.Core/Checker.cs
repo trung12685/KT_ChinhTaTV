@@ -4,8 +4,8 @@ namespace ChinhTa.Core;
 
 public record Paragraph(int Start, string Text, bool Bold = false, float Size = 13,
     int Alignment = 1, string Font = "Times New Roman", bool Italic = false,
-    int Color = 0, bool InTable = false, int Page = 1, bool FormatObserved = false, bool FormatMixed = false, bool TextEditable = true, bool BoldMixed = false, OutlineParagraphInfo? Outline = null, bool FormatEditable = false,FormatEvidence? FormatEvidence=null);
-public enum FixKind { Text, NationalHeading, StateMotto, PartyHeading, Advisory, PageLayout, ShapeLine, AdministrativeNumber, AdministrativeDate, AdministrativeFormat, AdministrativePosition, DocumentHeadingFormat, RepeatedText, PunctuationSpace, ParenthesisSpace, SentenceEndSpace, ColonSpace, SentenceInnerSpace, SentenceAfterSpace, OutlineOrder, OutlineMarker, AgencyFormat, AgencyText, RecipientFormat, RecipientText, DocumentTypeText, ParagraphEndSpace }
+    int Color = 0, bool InTable = false, int Page = 1, bool FormatObserved = false, bool FormatMixed = false, bool TextEditable = true, bool BoldMixed = false, OutlineParagraphInfo? Outline = null, bool FormatEditable = false,FormatEvidence? FormatEvidence=null,ObservedParagraphStyle? ParagraphStyle=null,BodyFlow? Flow=null);
+public enum FixKind { Text, NationalHeading, StateMotto, PartyHeading, Advisory, PageLayout, ShapeLine, AdministrativeNumber, AdministrativeDate, AdministrativeFormat, AdministrativePosition, DocumentHeadingFormat, RepeatedText, PunctuationSpace, ParenthesisSpace, SentenceEndSpace, ColonSpace, SentenceInnerSpace, SentenceAfterSpace, OutlineOrder, OutlineMarker, AgencyFormat, AgencyText, RecipientFormat, RecipientText, DocumentTypeText, ParagraphEndSpace, BodyFormat, BodyParagraph, BodyGap, BodyLineSpacing }
 public record HeadingFormat(float Size, int? Alignment = null,float? MaximumSize=null,bool RepairInvalidSizes=false)
 {
     public bool Matches(string font,float size,int bold,int italic,int color,int? alignment)=>
@@ -13,17 +13,19 @@ public record HeadingFormat(float Size, int? Alignment = null,float? MaximumSize
         float.IsFinite(size) && (MaximumSize is float maximum?size>=Size && size<=maximum:Math.Abs(size-Size)<.01f) && bold==-1 && italic==0 &&
         color is 0 or -16777216 && (Alignment is null || alignment==Alignment);
 }
-public enum ComponentRole { AgencyParent, Agency, RecipientLabel, RecipientItem }
+public enum ComponentRole { AgencyParent, Agency, RecipientLabel, RecipientItem, Body }
 public record CharacterFormat(float Size,bool Italic,bool? Bold=null,ComponentRole? Role=null,bool PreserveSize=false,bool RepairInvalidSizes=false)
 {
     public (float Minimum,float Maximum) SizeRange=>Role switch
     {
         ComponentRole.Agency or ComponentRole.AgencyParent=>(12,13),
+        ComponentRole.Body=>(13,14),
         ComponentRole.RecipientLabel=>(12,12),ComponentRole.RecipientItem=>(11,11),
         _=>Bold==true || Italic?(13,14):(13,13)
     };
     public bool Valid => (!RepairInvalidSizes || PreserveSize) && float.IsFinite(Size) && (!PreserveSize || SizeRange.Minimum<SizeRange.Maximum && Size==SizeRange.Minimum) && (Role is not null ? Role switch
     {
+        ComponentRole.Body=>Size>=13 && Size<=14 && !Italic && Bold==false,
         ComponentRole.AgencyParent=>Size>=12 && Size<=13 && !Italic && Bold==false,
         ComponentRole.Agency=>Size>=12 && Size<=13 && !Italic && Bold==true,
         ComponentRole.RecipientLabel=>Size==12 && Italic && Bold==true,
@@ -39,8 +41,9 @@ public sealed record OutlineEditContext(int? ParentStart,int GroupStart,string L
 public record Issue(int Start, int Length, string Original, string Replacement,
     string Message, bool BatchSafe, FixKind Kind = FixKind.Text,
     bool CanFix = true, string? Citation = null, HeadingFormat? Format = null, string? Title = null, ShapeLineFix? LineFix = null,
-    CharacterFormat? CharacterFormat = null, AdministrativeCenterFix? CenterFix = null,IReadOnlyList<Issue>? Prerequisites=null,OutlineEditContext? OutlineContext=null)
+    CharacterFormat? CharacterFormat = null, AdministrativeCenterFix? CenterFix = null,IReadOnlyList<Issue>? Prerequisites=null,OutlineEditContext? OutlineContext=null,BodyParagraphFix? ParagraphFix=null,BodySpacingFix? SpacingFix=null)
 {
+    public bool IsStyleOnly=>CharacterFormat is not null || ParagraphFix is not null || SpacingFix is not null;
     public string DisplayText => Title ?? Original;
     public bool AddsSpaceAfterColon => Kind==FixKind.ColonSpace && Original==":" && Replacement==": ";
     public bool AddsSpaceAfterClosingParenthesis => Kind==FixKind.ParenthesisSpace && Original==")" && Replacement==") ";
@@ -48,6 +51,8 @@ public record Issue(int Start, int Length, string Original, string Replacement,
         : LineFix is not null ? Prerequisites is {Count:>0} required?$"Sửa kèm {required.Count} mục liên quan, đo lại rồi tạo/đặt lại đường kẻ.":"Tạo/đặt lại Shape Line theo số đo và cấu hình đã chọn."
         : CenterFix is not null ? "Căn giữa trong ô đã xác minh, bỏ thụt lề ngang; giữ nguyên chữ và khoảng cách dọc."
         : Format is {RepairInvalidSizes:true,MaximumSize:float headingMaximum} selectiveHeading ? $"Times New Roman, đen, đứng, đậm; chỉ đưa cỡ ngoài {selectiveHeading.Size:0.#}–{headingMaximum:0.#} về {selectiveHeading.Size:0.#}; giữ cỡ đúng và chữ."+(selectiveHeading.Alignment is null?"":" Căn giữa trong ô.")
+        : SpacingFix is not null ? SpacingFix.Suggestion
+        : ParagraphFix is not null ? ParagraphFix.Suggestion
         : CharacterFormat?.RepairInvalidSizes==true ? $"Times New Roman, đen, {(CharacterFormat.Italic?"nghiêng":"đứng")}{(CharacterFormat.Bold==true?", đậm":CharacterFormat.Bold==false?", không đậm":"")}; chỉ đưa cỡ ngoài {CharacterFormat.SizeRange.Minimum:0.#}–{CharacterFormat.SizeRange.Maximum:0.#} về {CharacterFormat.Size:0.#}; giữ từng cỡ đúng và chữ."
         : CharacterFormat is not null ? $"Times New Roman, màu đen, cỡ {(CharacterFormat.PreserveSize?$"{CharacterFormat.SizeRange.Minimum:0.#}–{CharacterFormat.SizeRange.Maximum:0.#} (giữ cỡ hợp lệ)":$"{CharacterFormat.Size:0.#}")}, chữ {(CharacterFormat.Italic?"nghiêng":"đứng")}{(CharacterFormat.Bold==true?", đậm":CharacterFormat.Bold==false?", không đậm":"")}; giữ nguyên chữ."
         : Kind==FixKind.DocumentTypeText ? "Viết hoa tên loại thành “"+Replacement+"”; giữ nội dung trích yếu, phông và căn đoạn."

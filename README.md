@@ -2,9 +2,21 @@
 
 Ứng dụng C# / WPF chạy trên Windows với Microsoft Word desktop, làm việc offline trên bản sao DOCX và xem trước bằng XPS. Không gửi nội dung tài liệu tới dịch vụ AI.
 
-**[Danh sách nhóm sửa và bảng kiểm bản thử 0.1.61](docs/SUPPORTED-FIXES-0.1.61.md)** — gồm điều kiện, ví dụ, ngoại lệ ô trống và các mục chỉ cảnh báo.
+**[Danh sách nhóm sửa và bảng kiểm bản thử 0.1.63](docs/SUPPORTED-FIXES-0.1.63.md)** — gồm điều kiện, ví dụ, ngoại lệ ô trống và các mục chỉ cảnh báo.
 
 Ưu tiên đã thống nhất: **thể thức → lỗi chữ và lặp từ/cụm từ → ngữ cảnh và thư viện sau cùng**. Phần chính tả tiếng Việt đầy đủ còn cần xây dựng; không coi quy tắc minh họa hiện tại là bộ kiểm hoàn chỉnh.
+
+## Bản thử tích lũy 0.1.63 — năm hạng mục thân bài
+
+- B01/C26: Arial đỏ12 xen14 → Times New Roman đen13/14; giữ từng cỡ đang đúng, glyph/gạch chân và bố cục chưa chọn.
+- B02/C27: căn trái/đầu dòng0cm → căn đều/1,27cm; giữ mức1cm hoặc1,27cm đang đúng.
+- B03/C28: hai đoạn liền nhau cùng trang có After0 + Before0 → sau đoạn trước6pt; xét cả hai phía, không báo thiếu chỉ từ After<6.
+- B04/C29: Double/Multiple ngoài1–1,5 → Single; không đoán Exactly/AtLeast/grid hoặc khoảng đoạn gộp/auto/contextual chưa đo.
+- B05: văn bản có tên loại không Kính gửi vẫn nhận thân bài khi hai đoạn mở đầu có XML căn đều/thụt1cm hoặc1,27cm, kiểu và căn/thụt Word thực tế chắc, có chữ ký/Nơi nhận. Mốc ngắn đi sau sửa lặp không làm mất lỗi chưa chọn phía sau.
+
+Đủ **5 bước**, tổng29 đề xuất/8 thủ công/1 minh họa; chưa phải bộ kiểm đầy đủ NĐ30/chính tả. Sửa riêng/chung giữ phần chưa chọn, đo XPS mới trước Line, hậu kiểm glyph/thuộc tính/ngữ cảnh/đoạn kế, một Undo/rollback và giữ nguồn.
+
+[Gói .63](https://github.com/trung12685/KT_ChinhTaTV/releases/tag/v0.1.63) có ZIP/TXT/SHA-256 khi pipeline phát hành đúng commit đạt. [Nội dung/cách thử](docs/CHANGES-0.1.63.md) · [Danh sách chức năng](docs/SUPPORTED-FIXES-0.1.63.md) · [Nhật ký](docs/BATCH-AFTER-0.1.62.md) · [Không Kính gửi](docs/BODY-OPENING.md). CI không chạy Word, chưa xác nhận runtime Office2021 hoặc khép phản hồi phông cũ. Gói .62 và main/stable .27 giữ nguyên.
 
 ## Bản thử tích lũy 0.1.62 — năm hạng mục sau .61
 
