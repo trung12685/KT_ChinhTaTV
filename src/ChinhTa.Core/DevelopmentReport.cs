@@ -44,8 +44,8 @@ public static class DevelopmentReport
             "Chuẩn hóa dòng ĐẢNG CỘNG SẢN VIỆT NAM đã nhận diện và phông đen, đậm, đứng, cỡ 15. Chưa tự đặt vị trí toàn trang.",
             new ReportExample("đảng cộng sản việt nam","ĐẢNG CỘNG SẢN VIỆT NAM; phông Times New Roman, đen, đậm, đứng, cỡ 15 trong chế độ Đảng.")),
         new("C05","Cách ghi số/ký hiệu",CapabilityMode.Reviewable,"Đầu văn bản Nhà nước nhận diện được",
-            "Nhãn Số:, dấu /, dấu nối, khoảng trắng; thêm 0 cho số 1–9. Không tự cấp số, đoán mã hoặc đổi tên/mã chính thức.",
-            new ReportExample("số  :  3 / BC – ABC","Số: 03/BC-ABC")),
+            "Nhãn Số:, dấu /, dấu nối, khoảng trắng; thêm 0 cho số 1–9. Chuẩn hóa hoa/thường của viết tắt đã khớp danh mục và tên loại duy nhất ở đầu văn bản, ví dụ TTR → TTr, CTR → CTr, QYĐ → QyĐ; BCĐX do người dùng bổ sung. Giữ số và mã cơ quan, không suy đoán loại văn bản hoặc viết tắt chưa biết.",
+            new ReportExample("số  :  3 / bc – ABC","Số: 03/BC-ABC")),
         new("C06","Cách ghi địa danh/ngày tháng",CapabilityMode.Reviewable,"Đầu Nhà nước, mẫu rõ và ngày lịch hợp lệ",
             "Dấu phẩy, nhãn ngày/tháng/năm và khoảng trắng; thêm 0 trước ngày 1–9, tháng 1–2. Giữ trường chưa điền, không chọn ngày hay địa danh thay người dùng.",
             new ReportExample("Hà Nội  Ngày3  Tháng1  Năm2026","Hà Nội, ngày 03 tháng 01 năm 2026")),
@@ -73,15 +73,15 @@ public static class DevelopmentReport
         new("C14","Khoảng trắng quanh dấu phẩy/chấm phẩy",CapabilityMode.Reviewable,"Giữa hai từ có ít nhất hai chữ cái, dấu cách thường",
             "Đề xuất bỏ khoảng trắng trước và giữ một khoảng trắng sau dấu phẩy/chấm phẩy. Cần duyệt; bỏ qua dòng số/ngày, tab và dấu hiệu địa chỉ/đường dẫn/mã. Chưa mở rộng sang mọi dấu câu.",
             new ReportExample("Nội dung  ,  báo cáo;công tác.","Nội dung, báo cáo; công tác.")),
-        new("C15","Khoảng trắng sát bên trong ngoặc tròn",CapabilityMode.Reviewable,"Ngoặc cân bằng, không lồng, phần chữ đơn giản trong cùng đoạn",
-            "Đề xuất xóa dấu cách thường ngay sau ( và trước ), giữ chữ/kiểu và khoảng cách ngoài. Bỏ qua ô trống, nội dung có số/ký hiệu kỹ thuật, toàn chữ hoa, tab, ngoặc lồng/thiếu và vùng chưa cho phép sửa. Cần duyệt, chưa kiểm mọi loại ngoặc/nháy.",
-            new ReportExample("Theo mẫu ( nội dung ) đã duyệt.","Theo mẫu (nội dung) đã duyệt.")),
+        new("C15","Khoảng trắng quanh ngoặc tròn",CapabilityMode.Reviewable,"Ngoặc cân bằng, không lồng, phần chữ đơn giản trong cùng đoạn",
+            "Đề xuất xóa dấu cách thường sát trong ngoặc. Thêm dấu cách còn thiếu sau ngoặc đóng khi hai từ trước, ít nhất hai từ trong và hai từ sau đều rõ, từ ngay sau chữ thường. Chọn riêng hoặc chung, giữ chữ/kiểu và khoảng chưa chọn. Bỏ ô trống, số/mã/công thức/hàm, toàn hoa, tab/NBSP, ngoặc lồng/thiếu và XML chưa chắc. Cần duyệt; chưa thêm khoảng trước ngoặc mở hoặc kiểm mọi loại ngoặc/nháy.",
+            new ReportExample("Theo mẫu ( nội dung )đã duyệt.","Theo mẫu (nội dung) đã duyệt.")),
         new("C16","Khoảng trắng trước dấu kết câu cuối đoạn",CapabilityMode.Reviewable,"Một dấu .?! cuối đoạn, từ cuối ≥2 chữ cái thường và có từ trước",
             "Đề xuất xóa dấu cách ASCII trước dấu kết câu; giữ chữ, dấu câu, khoảng trắng sau. Bỏ qua số/ký hiệu, dấu hiệu kỹ thuật/header/ngày, chuỗi dấu và ranh giới chưa rõ. Cần duyệt; chưa kiểm dấu giữa câu hoặc tự thêm dấu/khoảng sau.",
             new ReportExample("Đã hoàn thành .","Đã hoàn thành.")),
-        new("C17","Khoảng trắng trước dấu hai chấm",CapabilityMode.Reviewable,"Hai từ kề nhau bên trái; từ cuối chữ thường; bên phải đã có dấu cách và từ rõ",
-            "Đề xuất xóa dấu cách ASCII trước dấu hai chấm; giữ chữ, dấu câu và khoảng sau. Bỏ qua số/giờ/tỉ lệ số hoặc La Mã, dấu hiệu kỹ thuật/header/ngày và mẫu chưa rõ. Cần duyệt; chưa thêm khoảng sau hay sửa mọi dấu hai chấm.",
-            new ReportExample("Ghi chú : nội dung","Ghi chú: nội dung")),
+        new("C17","Khoảng trắng quanh dấu hai chấm",CapabilityMode.Reviewable,"Hai từ kề nhau bên trái; từ cuối chữ thường; từ bên phải rõ, cùng đoạn chữ thuần",
+            "Đề xuất xóa dấu cách ASCII trước hoặc thêm một dấu cách còn thiếu sau dấu hai chấm; chọn riêng từng phía hoặc cả hai. Giữ chữ/dấu câu và khoảng chưa chọn. Bỏ qua số/giờ/tỉ lệ số hoặc La Mã, mã/đường dẫn/protocol, header/ngày, từ bên phải toàn hoa và vùng chưa rõ. Cần duyệt; chưa sửa mọi dấu hai chấm.",
+            new ReportExample("Ghi chú :nội dung","Ghi chú: nội dung")),
         new("C18","Khoảng trắng trước dấu kết câu giữa đoạn",CapabilityMode.Reviewable,"Một dấu .?! giữa đoạn; hai từ trái rõ, từ phải viết hoa đầu; khoảng sau được xét riêng",
             "Đề xuất xóa dấu cách ASCII trước dấu; giữ chữ, dấu câu và khoảng sau. Bỏ qua số, viết tắt/đuôi tệp phổ biến, dấu hiệu kỹ thuật/header/ngày, chuỗi dấu và vùng chưa cho phép sửa. Cần duyệt; chưa kiểm mọi viết tắt hoặc thêm dấu/khoảng sau.",
             new ReportExample("Đã hoàn thành . Tiếp tục báo cáo","Đã hoàn thành. Tiếp tục báo cáo")),
@@ -103,6 +103,9 @@ public static class DevelopmentReport
         new("C24","Viết hoa tên loại văn bản",CapabilityMode.Reviewable,"Nhà nước, tên loại thuộc danh mục hành chính/bổ sung đã nhận diện chắc trong khối đầu trang",
             "Theo NĐ30 PL I.II.5.b: tên loại in hoa. 27 tên theo PL III.I và Báo cáo đề xuất/BCĐX theo yêu cầu người dùng; không nhận tên bản sao theo mẫu văn bản gốc. Chỉ đổi hoa/thường tên chính xác, có proof chữ thuần và định dạng đồng nhất; giữ khoảng trắng ngoài tên, trích yếu nhiều đoạn, phông và căn đoạn. Không suy đoán tên loại từ nội dung, không tự viết thường trích yếu hoặc áp cho Công văn/V/v, bảng/field/drawing/vùng chưa rõ. Có thể chọn chung sửa phông, một Undo/rollback.",
             new ReportExample("Báo cáo","BÁO CÁO")),
+        new("C25","Khoảng trắng cuối đoạn sau dấu kết câu",CapabilityMode.Reviewable,"Cả ba chế độ, đoạn chữ thuần có kết thúc rõ bằng .?!",
+            "Xóa dấu cách ASCII sau dấu kết câu cuối đoạn, giữ dấu kết đoạn/ô, dấu câu, chữ và khoảng trước chưa chọn. Cần hai từ rõ bên trái; bỏ qua số/ngày, mã/đường dẫn/viết tắt, khoảng không ngắt, tab, ô trống, đoạn chưa kết câu và vùng XML chưa chắc. Có thể sửa chung các nhóm chữ/phông đủ điều kiện; cần duyệt.",
+            new ReportExample("Đã hoàn thành.   ","Đã hoàn thành.")),
         new("M01","Khổ giấy và lề",CapabilityMode.Manual,"Nhà nước/Đảng",
             "Cảnh báo A4/lề, trang ngang/lề đối xứng và ngoại lệ; chưa tự đổi thiết lập trang.",
             new ReportExample("Văn bản Nhà nước trên A4 có lề trái 20 mm.","Cảnh báo đối chiếu quy định và ngoại lệ; chưa tự đổi khổ giấy/lề.")),
@@ -113,8 +116,8 @@ public static class DevelopmentReport
             "Tên loại chỉ chưa viết hoa nhưng đủ chứng cứ được đề xuất theo C24. Tên loại chưa rõ hoặc trích yếu toàn chữ hoa giữ thủ công để bảo toàn tên riêng/mã; phần phông có gợi ý riêng đủ điều kiện.",
             new ReportExample("Trích yếu viết toàn chữ hoa: KẾT QUẢ CÔNG TÁC UNESCO.","Cảnh báo cách viết trích yếu; giữ tên riêng/mã UNESCO, chưa tự chuyển sang chữ thường. Phần phông có thể có gợi ý riêng nếu đủ điều kiện.")),
         new("M04","Giá trị số/ngày và mã/tên chính thức",CapabilityMode.Manual,"Đầu văn bản",
-            "Số bằng 0, ngày sai lịch, năm chưa rõ, mẫu/trùng mốc, mã cơ quan hoặc địa danh cần đối chiếu; không tự đoán giá trị mới.",
-            new ReportExample("Hà Nội, ngày 31 tháng 02 năm 2026","Ngày không hợp lệ; yêu cầu đối chiếu, không tự đoán ngày thay thế.")),
+            "Số bằng 0, ngày sai lịch, năm chưa rõ, mẫu/trùng mốc, mã cơ quan hoặc địa danh cần đối chiếu; không tự đoán giá trị mới. Khi cả tên loại và viết tắt đều nhận diện chắc mà không khớp nhau, cảnh báo đúng phần viết tắt; đối chiếu tên loại/ký hiệu đã đăng ký để sửa bên sai. BCĐX là bổ sung người dùng, Công văn/bản sao/mã lạ vẫn ngoài đối chiếu này.",
+            new ReportExample("KẾ HOẠCH\nSố: 01/BC-ABC","Tên loại KẾ HOẠCH tương ứng KH nhưng ký hiệu dùng BC; đối chiếu tên loại và ký hiệu đã đăng ký, sửa bên ghi sai rồi quét lại. Ví dụ ngày sai lịch: ngày 31 tháng 02 năm 2026 vẫn cần kiểm tra thủ công.")),
         new("M05","Thống nhất cỡ quốc hiệu/tiêu ngữ",CapabilityMode.Manual,"Nhà nước",
             "Cảnh báo cặp cỡ minh họa chưa thống nhất; chưa tự chọn cặp mới cho mọi tài liệu.",
             new ReportExample("Quốc hiệu cỡ 12 nhưng tiêu ngữ cỡ 14.","Cảnh báo đối chiếu cặp cỡ theo chú thích mẫu; chưa tự ép chọn một cặp mới.")),
@@ -158,7 +161,8 @@ public static class DevelopmentReport
         new("0.1.56","Sửa cảnh báo phông giả ở cơ quan/trích yếu sau chèn Line: proof định dạng riêng cho Line nổi của ứng dụng đã xác minh, không mở sửa chữ qua đối tượng. C20/C21 đủ điều kiện chuyển Bắt buộc sửa theo yêu cầu người dùng; giữ duyệt, kiểm nét XPS, một Undo/rollback."),
         new("0.1.57","Thêm cửa sổ tiến độ độc lập khi sửa: bước hiện tại, số mục hậu kiểm tạm thời, thời gian chờ, đo lại/quét lại/phục hồi; chưa hoàn tất trước quét lại. Mở proof định dạng cho Line trong nhánh tương thích/run gộp, đọc từng ký tự Word khi phông vùng bị trộn; giữ kiểm nét và rollback, chưa xác nhận runtime Office 2021."),
         new("0.1.58","Thêm C24 viết hoa chính xác tên loại văn bản đã nhận diện chắc theo NĐ30 II.5.b; giữ trích yếu, khoảng ngoài tên, phông/căn đoạn, chặn trường/đối tượng/vùng chưa rõ; sửa chung phông, quét lại và một Undo/rollback. Lỗi cơ quan/trích yếu trên .56 vẫn chờ bằng chứng runtime .57 hoặc mới hơn."),
-        new("0.1.59","Danh mục đủ 27 tên hành chính/3 bản sao theo NĐ30 PL III.I trang 40; thêm Báo cáo đề xuất/BCĐX theo người dùng, tách nguồn. Dùng chung nhận diện/C24/phông/mốc trích yếu, không áp thể thức gốc cho bản sao; sửa cảnh báo nhầm chữ thường ở QyĐ/CTr/TTr/TrS, giữ mã cơ quan. Có cửa sổ tra cứu và danh mục đầy đủ trong TXT.")
+        new("0.1.59","Danh mục đủ 27 tên hành chính/3 bản sao theo NĐ30 PL III.I trang 40; thêm Báo cáo đề xuất/BCĐX theo người dùng, tách nguồn. Dùng chung nhận diện/C24/phông/mốc trích yếu, không áp thể thức gốc cho bản sao; sửa cảnh báo nhầm chữ thường ở QyĐ/CTr/TTr/TrS, giữ mã cơ quan. Có cửa sổ tra cứu và danh mục đầy đủ trong TXT."),
+        new("0.1.60","Gom 5 bước sau .59: B01 hoa/thường viết tắt theo tên loại chắc chắn; B02 cảnh báo tên loại/ký hiệu mâu thuẫn, không đoán bên sai; B03 thêm khoảng sau hai chấm; B04 C25 bỏ dấu cách cuối đoạn có điều kiện, giữ kết đoạn/ô; B05 C15 thêm khoảng sau ngoặc đóng trong cụm chữ rõ. Chọn riêng/chung, giữ khoảng chưa chọn, XPS, một Undo/rollback; tổng25/8/1. Bản thử, chưa xác nhận toàn bộ bài Word trên Office 2021.")
     });
     public static IReadOnlyList<string> NextSteps { get; }=Array.AsReadOnly(new[]
     {
@@ -216,6 +220,8 @@ public static class DevelopmentReport
         }
         Line(DocumentTypeCatalog.UserNote);
         Line("Danh mục đầy đủ không có nghĩa đã kiểm mọi mẫu đặc thù. Bản sao có thể thức riêng; chưa tự đổi chữ viết tắt theo tên loại hoặc mã cơ quan. Giữ đúng QyĐ, CTr, TTr, TrS.");Line();
+        Line("CHU KỲ PHÁT TRIỂN");
+        Line("Gom khoảng 5–10 bước có kiểm thử rồi mới đóng gói Windows; từng bước vẫn cập nhật code và nhật ký. Nội dung đợt sau .59 được ghi tại docs/BATCH-AFTER-0.1.59.md.");Line();
         Line("CÁC NỘI DUNG ĐÃ LÀM");
         foreach(var item in Milestones)Line(item.Version+": "+item.Detail);
         Line();Line("GIỚI HẠN CÒN LẠI");

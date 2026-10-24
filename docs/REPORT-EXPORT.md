@@ -53,3 +53,15 @@ Mốc .55 hoàn thiện hậu kiểm phông nơi nhận sau đoạn 40 trong lư
 Từ .58 thêm C24 viết hoa tên loại đủ điều kiện, ví dụ `Báo cáo` → `BÁO CÁO`; tổng 24/8/1. M03 giữ trích yếu toàn hoa/vùng chưa rõ, không tự viết thường tên riêng hoặc mã. Nhật ký ghi rõ lỗi cơ quan/trích yếu .56 còn chờ bằng chứng runtime .57 hoặc mới hơn.
 
 Từ .59, TXT có đủ 27 tên hành chính/3 bản sao theo PL III.I trang40, thêm Báo cáo đề xuất — BCĐX theo người dùng; ba nhóm nguồn riêng. Có cửa sổ tra cứu tương ứng trong Trợ giúp. Đây là dữ liệu tham chiếu, không tăng số nhóm sửa24/8/1 hoặc chứng minh mọi mẫu đã được kiểm.
+
+## Bổ sung chưa phát hành — B03 sau .59
+
+C17 đổi thành Khoảng trắng quanh dấu hai chấm, ví dụ `Ghi chú :nội dung` → `Ghi chú: nội dung`: sửa riêng thừa trước/thiếu sau hoặc cả hai phía. Đây là quy tắc ứng dụng có duyệt và có giới hạn về chữ/giờ/mã/protocol/vùng XML, không phải kiểm mọi dấu hai chấm. Báo cáo đang trong code chuẩn bị .60, chưa có trong ZIP .59. Đợt có 3 bước, [nhật ký](BATCH-AFTER-0.1.59.md); tổng nhóm vẫn 24/8/1.
+
+## Bổ sung chưa phát hành — B04/C25
+
+Báo cáo thêm C25 Khoảng trắng cuối đoạn sau dấu kết câu, ví dụ dấu cách thật `Đã hoàn thành.   ` → `Đã hoàn thành.`. Tổng hiện25 nhóm đề xuất/8 thủ công/1 minh họa, lịch sử ghi đủ B01–B04. Chỉ áp cho đoạn chữ thuần có kết thúc rõ, giữ dấu kết đoạn/ô và khoảng trước chưa chọn; xem [phạm vi và ngoại lệ](BATCH-AFTER-0.1.59.md). Code chuẩn bị .60, chưa có trong ZIP .59; chưa đóng gói trong bước4.
+
+## Bản thử .60 — chốt B01–B05
+
+C15 thêm thiếu khoảng sau ngoặc đóng trong cụm chữ rõ: `Theo mẫu ( nội dung )đã duyệt.` → `Theo mẫu (nội dung) đã duyệt.`; chọn riêng trong/ngoài hoặc cả nhóm. Báo cáo có lịch sử đủ5 bước, vẫn25/8/1. [Danh sách đủ/ví dụ](SUPPORTED-FIXES-0.1.60.md). Gói lấy số kiểm thực tế từ JSON theo đúng commit; các bài Word mới chưa được CI chạy runtime. Xem ghi chú .60 và nhật ký đợt để tiếp tục.

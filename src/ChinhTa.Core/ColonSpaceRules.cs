@@ -3,8 +3,8 @@ using System.Text.RegularExpressions;
 
 namespace ChinhTa.Core;
 
-// Delete only ASCII spaces before a prose colon, never the colon or its words.
-// Require two adjacent words on the left and an already separated word on the right.
+// Independent ASCII-space edits on each side of a prose colon. A missing gap
+// uses the colon as a positive source anchor and never rewrites either word.
 public static class ColonSpaceRules
 {
     private static readonly Regex DateWords=new(@"\bngày\b[^\r\n\a]*\btháng\b[^\r\n\a]*\bnăm\b",
@@ -19,10 +19,11 @@ public static class ColonSpaceRules
         var result=new List<Issue>();
         for(int mark=0;mark<text.Length;mark++)
         {
-            if(text[mark]!=':' || mark+1==text.Length || text[mark+1]!=' ')continue;
+            if(text[mark]!=':' || mark+1==text.Length)continue;
             int start=mark,rightStart=mark+1;
             while(start>0 && text[start-1]==' ')start--;
-            if(start==mark)continue;
+            bool missingAfter=text[mark+1]!=' ';
+            if(start==mark && !missingAfter)continue;
             int leftStart=start;
             while(leftStart>0 && WordChar(text[leftStart-1]))leftStart--;
             if(!Word(text,leftStart,start) || text[leftStart..start].Any(c=>char.IsLetter(c) && !char.IsLower(c)) ||
@@ -39,11 +40,16 @@ public static class ColonSpaceRules
                 Roman(text[leftStart..start]) && Roman(text[rightStart..rightEnd]))continue;
             if(!paragraph.TextEditable)
                 return [new(paragraph.Start,text.Length,text,text,
-                    "Có khoảng trắng trước dấu hai chấm trong vùng chưa cho phép sửa chữ. Kiểm tra thủ công.",
+                    "Có khoảng trắng quanh dấu hai chấm cần duyệt trong vùng chưa cho phép sửa chữ. Kiểm tra thủ công.",
                     false,FixKind.ColonSpace,CanFix:false,Title:"Dấu hai chấm trong vùng có cấu trúc")];
-            result.Add(new(paragraph.Start+start,mark-start,text[start..mark],"",
-                "Đề xuất xóa dấu cách trước dấu hai chấm; giữ chữ, dấu hai chấm và khoảng cách sau. Cần duyệt cả câu.",
-                false,FixKind.ColonSpace,Title:"Khoảng trắng trước dấu hai chấm"));
+            if(start<mark)
+                result.Add(new(paragraph.Start+start,mark-start,text[start..mark],"",
+                    "Đề xuất xóa dấu cách trước dấu hai chấm; giữ chữ, dấu hai chấm và khoảng cách sau. Cần duyệt cả câu.",
+                    false,FixKind.ColonSpace,Title:"Khoảng trắng trước dấu hai chấm"));
+            if(missingAfter)
+                result.Add(new(paragraph.Start+mark,1,":",": ",
+                    "Đề xuất thêm một dấu cách ASCII sau dấu hai chấm; giữ chữ, dấu câu và khoảng trước chưa chọn. Cần duyệt cả câu.",
+                    false,FixKind.ColonSpace,Title:"Thiếu khoảng trắng sau dấu hai chấm"));
         }
         return result;
     }

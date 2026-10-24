@@ -26,6 +26,7 @@ public static class IssueReviewCatalog
         var (key,family,order,label)=issue.Kind switch
         {
             FixKind.Text when space=>("spacing","Khoảng trắng thừa",10,"Khoảng trắng thừa"),
+            FixKind.ParagraphEndSpace=>("spacing","Khoảng trắng thừa",10,issue.CanFix?"Thừa khoảng trắng cuối đoạn":issue.Title??"Kiểm tra khoảng trắng cuối đoạn"),
             FixKind.Text=>("spelling","Gợi ý chính tả",90,"Gợi ý chính tả: "+Brief(issue.Original,20)+" → "+Brief(issue.Replacement,20)),
             FixKind.NationalHeading=>("national","Quốc hiệu",20,"Quốc hiệu chưa đúng thể thức"),
             FixKind.StateMotto=>("motto","Tiêu ngữ",21,"Tiêu ngữ chưa đúng thể thức"),
@@ -42,9 +43,11 @@ public static class IssueReviewCatalog
             FixKind.OutlineMarker=>("outline-marker","Dấu đầu dòng đứng một mình",46,issue.Title??"Kiểm tra dấu đầu dòng"),
             FixKind.RepeatedText=>("repeat","Từ, cụm từ lặp",50,"Lặp từ/cụm từ: "+Brief(issue.Original.Trim(),34)),
             FixKind.PunctuationSpace=>("comma","Dấu phẩy, chấm phẩy",60,issue.Title??"Khoảng trắng quanh dấu câu"),
-            FixKind.ParenthesisSpace=>("parenthesis","Ngoặc tròn",61,"Khoảng trắng sát trong ngoặc tròn"),
+            FixKind.ParenthesisSpace=>("parenthesis","Ngoặc tròn",61,!issue.CanFix?issue.Title??"Kiểm tra khoảng trắng quanh ngoặc":
+                issue.AddsSpaceAfterClosingParenthesis?"Thiếu khoảng trắng sau dấu đóng ngoặc":"Khoảng trắng sát trong ngoặc tròn"),
             FixKind.SentenceEndSpace=>("sentence-end","Dấu kết câu cuối đoạn",62,"Thừa khoảng trước dấu kết câu cuối đoạn"),
-            FixKind.ColonSpace=>("colon","Dấu hai chấm",63,"Thừa khoảng trước dấu hai chấm"),
+            FixKind.ColonSpace=>("colon","Dấu hai chấm",63,!issue.CanFix?issue.Title??"Kiểm tra khoảng trắng quanh dấu hai chấm":
+                issue.AddsSpaceAfterColon?"Thiếu khoảng trắng sau dấu hai chấm":"Thừa khoảng trước dấu hai chấm"),
             FixKind.SentenceInnerSpace=>("sentence-before","Khoảng trước dấu kết câu",64,"Thừa khoảng trước dấu kết câu"),
             FixKind.SentenceAfterSpace=>("sentence-after","Khoảng sau dấu kết câu",65,"Thiếu khoảng sau dấu kết câu"),
             FixKind.PageLayout=>("page","Khổ giấy và lề",70,issue.Title??"Kiểm tra khổ giấy/lề"),

@@ -1,5 +1,37 @@
 # Tiếp tục phát triển Chính tả Việt
 
+## B05 / mốc bản thử .60 — gom đủ 5 bước
+
+Tiếp nối B04 `9e5449df1655acb789b01726767a71de126e0922`, nhánh feature/format-batch-after-0.1.59. C15 thêm `)` → `) ` khi các từ trước/trong/sau đủ rõ, giữ guard hàm/công thức/ngoặc thiếu-lồng/ô trống/header/date/control/XML. Các mép độc lập, giữ phần chưa chọn; cùng FixKind/Family parenthesis, property UI không cấp CanFix. Core có Unicode/CP, guard, một mép/cả nhóm, stale khi đổi quyền/context, ghép phông/cụm lặp/hai chấm/C25 và rollback lỗi lưu. Local2028 assertion. OfficeParenthesisAfterCheck giả giữ kiểu, quét/Undo/rollback/lưu-mở; CI chỉ biên dịch.
+
+Đợt đủ5 bước B01–B05, tổng25/8/1. .60 có CHANGES và bảng C01–C25, báo cáo ví dụ, ghi chú Office2021 chờ; lịch sử TXT ghi đủ5 bước. Chuẩn bị một gói Windows mới sau kiểm bắt buộc; workflow package thêm nhánh release/windows-<version> được tạo chủ động khi connector không dispatch/tag được. Guard nhánh/version và tag có sẵn ngăn ghi đè; nhánh feature vẫn chỉ tests, không packaging mỗi bước. Bằng chứng theo đúng commit ở PR36/release, không lấy CI làm Word PASS hoặc khép lỗi .56. Main/stable .27 giữ nguyên. [Nhật ký đợt](BATCH-AFTER-0.1.59.md) · [Ghi chú .60](CHANGES-0.1.60.md).
+
+## B04 — C25 khoảng trắng cuối đoạn
+
+Tiếp nối B03 `ef45c4a1e12c8f305f2e298aaee9e5a43ded4819`, cùng nhánh đợt. ParagraphEndSpaceRules chỉ xóa ASCII gap sau một dấu kết câu cuối đoạn có chữ đủ rõ, giữ CR/LF/kết ô và phần chưa chọn. SentenceSpaceContext.ClearEnding tách nguyên điều kiện trái đang dùng cho Clear, không đổi guard cũ; số/ngày/mã/technical/NBSP/control/không kết câu vẫn ngoài phạm vi. FixKind.ParagraphEndSpace append cuối enum; BatchPlan chặn payload không phải xóa space thuần/giả định dạng, cho chia sẻ span phông. CurrentTextPlan vẫn phải quét mới trước ghi. C25 cùng Family spacing cạnh C01, ReviewSuggestion, nguồn quy tắc ứng dụng.
+
+TXT thêm C25/ví dụ giữ literal trailing spaces trong dấu nháy; tổng25/8/1, lịch sử .60 nay ghi đủ B01–B04. Local1960 assertion, có chọn riêng phần trước/sau và giữ dấu kết đoạn, tổ hợp/emoji, kiểu chữ, stale/context/payload và rollback sau lỗi lưu. OfficeParagraphEndCheck được gọi ở cuối bài Word tự động, có mẫu giả sửa/quét/Undo/rollback/lưu-mở/giữ nguồn, chỉ biên dịch trong CI; không đánh dấu Word runtime đạt. Hiện4 bước, chưa đóng gói .60. [Nhật ký/checklist](BATCH-AFTER-0.1.59.md).
+
+## B03 — Khoảng sau dấu hai chấm
+
+Tiếp nối B02 `7e996ba19dd0249bb9dec584612deaf73cf847f8` trên cùng nhánh đợt. ColonSpaceRules nhận thiếu sau bằng span `:` → `: `, chỉ khi qua cùng bộ nhận diện chữ rõ của C17; bỏ điều kiện cũ buộc phải có dấu cách sau mới xét phía trước. Hai lỗi độc lập cho hai phía, span dương/liền nhau không chồng; không viết lại từ. Không thêm FixKind hoặc nới BatchPlan. Issue.AddsSpaceAfterColon chỉ phân biệt nhãn/Suggestion/tooltip, không cấp CanFix; cùng Family colon/ReviewSuggestion. Giờ, tỉ lệ, chữ hoa/mã, protocol, đường dẫn, tab/control/header/ngày và vùng chưa đủ giữ guard cũ.
+
+C17 đổi tên/phạm vi/ví dụ TXT, số nhóm vẫn24/8/1. Core 75 assertion mới và cập nhật một negative cũ, local1880. OfficeIntegrationCheck mẫu hai chấm có cả thiếu sau/thừa trước; sửa riêng từng phía giữ phần chưa chọn và kiểu chữ, vẫn quét/Undo/rollback/lưu-mở; chỉ được biên dịch trong CI, chưa có Word runtime. Nhật ký đợt có ví dụ và trạng thái chính xác; hiện3 bước, chưa đóng gói .60, không nhập main. [Chi tiết](BATCH-AFTER-0.1.59.md).
+
+## B02 — Đối chiếu tên loại và ký hiệu
+
+Trên nhánh đợt sau .59, tiếp nối B01 `030d599daf8b8db0aeeac0da0ee2295b8c193263`. AdministrativeHeaderRules thêm cảnh báo TypeMismatchTitle thuộc AdministrativeNumber, CanFix=false; chỉ đối chiếu namedType chữ thuần duy nhất trước nội dung và prefix đã có trong danh mục NamedHeading, bỏ bản sao/unknown. Căn cứ NĐ30 PL I.I.II.3.b PDF22 đã đọc bản ký, bảng PL III.I PDF40. Prefix khác loại có một cảnh báo chính, không thêm cảnh báo lowercase trùng trên prefix đó; mã cơ quan chữ thường vẫn xét riêng. Không chọn đổi tên hay mã. Tooltip ba dòng, Family number/Manual, M04 và ví dụ TXT cập nhật; 24/8/1 giữ nguyên.
+
+Sửa số/ký hiệu khác vẫn qua lựa chọn/CurrentTextPlan/BatchPlan/atomic cũ; hậu quét giữ mâu thuẫn cho đến khi sửa đúng một bên, không xóa theo lịch sử nút bấm. OfficeComponentCheck fake title BCĐX đi cùng code BCĐX để tách mục tiêu hồi quy. Core mới 117 assertion, local tổng1806; Windows CI/commit ở PR36. Không có Windows package/Word runtime trong B02; hiện 2 bước trong chu kỳ 5–10, giữ version chuẩn bị .60. [Nhật ký](BATCH-AFTER-0.1.59.md).
+
+## Chu kỳ mới sau 0.1.59 — 24/10/2026 (UTC+7)
+
+Theo yêu cầu mới, tích lũy khoảng **5–10 bước phát triển có kiểm thử** rồi mới tạo gói tải Windows. Mỗi bước vẫn ghi code, kết quả kiểm thử, giới hạn và việc tiếp theo vào [nhật ký đợt](BATCH-AFTER-0.1.59.md); không tính các thao tác commit/test/docs thành nhiều tính năng để đủ số. Đọc [quy trình phát hành](RELEASE-CADENCE.md) trước khi đóng gói.
+
+Nhánh `feature/format-batch-after-0.1.59` dựa trên commit .59 `03bf183746d37f0ca543f386faf8045f2ee9a090`. Code đang chuẩn bị .60, **chưa có gói .60**; gói tải mới nhất vẫn .59. Windows checks chạy khi push, chỉ kiểm thử/build/log; Windows package chỉ chạy khi chủ động tạo tag hoặc gọi thủ công, đòi ghi chú và checklist đúng phiên bản. Không tạo tag/phát hành trong bước này.
+
+B01 mở rộng C05: FindAbbreviation so sánh OrdinalIgnoreCase với danh mục, chỉ thay hoa/thường prefix đứng trước dấu nối đầu tiên; không đổi ký tự, dấu tiếng Việt, số hay mã cơ quan. Chỉ sửa khi có một tên loại tương ứng duy nhất ở đầu văn bản, chữ thuần và trước nội dung; thiếu/trùng/khác tên thì giữ thủ công, tránh đổi mã cơ quan của công văn. Bản sao chưa được cấp quyền sửa mã theo nhận diện tên loại gốc. Canonical QyĐ/CTr/TTr/TrS giữ nguyên. Unknown/CV/thiếu dấu/mẫu riêng, trang hai, tab, nhiều dòng ứng viên hoặc XML chưa đủ vẫn qua guard cũ. BCĐX giữ nguồn người dùng trong citation/tooltip. CurrentTextPlan, BatchPlan, AtomicTextBatch và hậu kiểm Word giữ nguyên. Lỗi .56 vẫn chờ bằng chứng runtime; không lấy CI làm Word PASS.
+
 ## Mốc tiếp tục 0.1.59 — 24/10/2026 (UTC+7)
 
 DocumentTypeCatalog là nguồn chung: 27 administrative + 3 copy của NĐ30 PLIII.I PDF40, 1 user BCĐX. Exact abbreviations QyĐ/CTr/TTr/TrS; source/kind riêng, copy không EligibleHeading. Nghị quyết/Quyết định qualifier cá biệt thuộc reference, heading không thêm qualifier. Giấy uỷ/ủy quyền cùng entry nhưng C24 giữ nguyên cách đặt dấu. ShapeLineRules không giữ hashset13 rời; DocumentHeadingRules/WordSession dùng nguồn chung. Custom-name provenance đi theo citation/LineTarget.UserDefinedType, tooltip và TXT. AdministrativeHeaderRules chỉ miễn cờ lowercase cho prefix canonical, vẫn kiểm mã cơ quan và không tự đổi viết tắt theo title.
@@ -36,7 +68,7 @@ Hồi quy dùng drawing từ DocxLineEditor, tái hiện lỗi trên map/guard .
 
 Mốc đã chốt: [0.1.27](STATUS-0.1.27.md), mã gói `1ec3092ccd68ed0acd8878b2737664116a6b11fe`, tag `v0.1.27`. Đọc biên bản này trước để phân biệt bằng chứng CI, xác nhận người dùng và kịch bản còn chờ. Phát triển từ `main` sau khi chốt, tạo nhánh mới; không tiếp tục phát hành vào tag hoặc ghi đè ZIP 0.1.27.
 
-Nhánh đang phát triển: `feature/component-roles-0.1.55`, từ 0.1.54 (`e0d5bac9c12d9dcebc53f109e1b29c3b2b79a3a2`). Chuỗi bản thử dựa trên main đã chốt `da6cf3b0999dbfb60d16ab1eae9733b0f1f20c81`. Đọc các CHANGES và [phạm vi 0.1.55](CHANGES-0.1.55.md). Chưa nhập main hoặc coi CI là bằng chứng Office 2021.
+Nhánh đang phát triển và nền chính xác được ghi ở đầu tài liệu và nhật ký đợt. Chuỗi bản thử dựa trên main đã chốt `da6cf3b0999dbfb60d16ab1eae9733b0f1f20c81`; chưa nhập main hoặc coi CI là bằng chứng Office 2021.
 
 ## Bản đồ mã nguồn
 
@@ -101,7 +133,7 @@ Tài liệu riêng chỉ dùng cục bộ theo đường dẫn tùy chọn của
 dotnet publish src/ChinhTa.Desktop -c Release -r win-x64 --self-contained true -o artifacts/win-x64
 ```
 
-Kèm thư mục `samples`, ghi chú phiên bản, ZIP và SHA-256. Chạy kiểm thử trước khi phát hành. Khi tạo bản mới, cập nhật version trong csproj, tiêu đề UI, tên gói/tag, ghi chú và workflow Windows; không phát hành lại vào tag cũ. Workflow `windows-package.yml` gắn `feature/component-roles-0.1.55` và phát hành prerelease 0.1.55 sau kiểm thử. Mỗi phiên bản sau phải đổi nhánh/version và không ghi đè tag đã phát hành. Workflow `finalize-0.1.27.yml` chỉ chốt metadata của bản đã thử, có kiểm tag, digest, CI và thay đổi chỉ thuộc tài liệu/workflow được cho phép; không build hoặc thay asset.
+Kèm thư mục `samples`, ghi chú phiên bản, ZIP và SHA-256. Chạy kiểm thử trước khi phát hành. Khi tạo bản mới, cập nhật version trong csproj, tiêu đề UI, tên gói/tag, ghi chú và workflow Windows; không phát hành lại vào tag cũ. Theo chu kỳ mới, `windows-checks.yml` kiểm thử mỗi bước trên nhánh, không publish/ZIP/release. `windows-package.yml` chỉ chạy thủ công hoặc khi push tag `v*`; đọc version/ghi chú/checklist từ commit hiện tại, chạy lại các kiểm bắt buộc rồi mới đóng gói. Xem RELEASE-CADENCE; không ghi đè tag/asset đã phát hành. Workflow `finalize-0.1.27.yml` chỉ chốt metadata của bản đã thử, có kiểm tag, digest, CI và thay đổi chỉ thuộc tài liệu/workflow được cho phép; không build hoặc thay asset.
 
 Khi nhận lỗi, lấy log đúng version và phân biệt lỗi đọc Word, ghép XML, CP/mốc, marker, candidate, nét XPS hay rollback. Các mã `Word.Preview.CpMapping`, `Word.Preview.Unmapped`, `Word.LineBatch.ReferenceBinding.*`, `Word.LineBatch.StoryBinding`, `Word.LineBatch.Rescan` ghi số liệu mà không ghi chữ tài liệu. Không kết luận nguyên nhân chỉ từ ngoại lệ tổng quát hoặc một điều kiện guard gộp.
 

@@ -31,10 +31,12 @@ public static class IssueTooltipCatalog
             return "Theo yêu cầu người dùng: bỏ dấu - hoặc + nếu chỉ có một dấu cùng cấp trong cùng mục cha.";
         if(Spacing(issue))return "Quy tắc ứng dụng: giữa các từ dùng một dấu cách; giữ ô số/ngày để trống theo mẫu.";
         if(issue.Kind==FixKind.RepeatedText)return "Quy tắc ứng dụng: phát hiện từ/cụm từ giống nhau liền nhau; cần duyệt ngữ cảnh.";
-        if(issue.Kind is FixKind.PunctuationSpace or FixKind.ParenthesisSpace or FixKind.SentenceEndSpace or
+        if(issue.Kind is FixKind.PunctuationSpace or FixKind.ParenthesisSpace or FixKind.SentenceEndSpace or FixKind.ParagraphEndSpace or
             FixKind.ColonSpace or FixKind.SentenceInnerSpace or FixKind.SentenceAfterSpace)
             return issue.Kind switch
             {
+                FixKind.ParagraphEndSpace=>"Quy tắc ứng dụng: bỏ dấu cách thừa sau dấu kết câu ở cuối đoạn chữ thuần.",
+                FixKind.ParenthesisSpace when issue.AddsSpaceAfterClosingParenthesis=>"Quy tắc ứng dụng: có một dấu cách giữa ngoặc đóng và từ tiếp theo trong câu chữ rõ.",
                 FixKind.ParenthesisSpace=>"Quy tắc ứng dụng: không có dấu cách sát bên trong ngoặc tròn chứa chữ.",
                 FixKind.SentenceAfterSpace=>"Quy tắc ứng dụng: có một dấu cách giữa dấu kết câu và câu tiếp theo.",
                 _=>"Quy tắc ứng dụng: không có dấu cách trước dấu câu; có khoảng cách sau dấu câu khi tiếp tục viết."
@@ -63,7 +65,15 @@ public static class IssueTooltipCatalog
                     (!motto && issue.Format?.Alignment is not null?" Căn giữa trong ô theo yêu cầu người dùng.":"");
             }
             if(issue.Kind==FixKind.AdministrativeNumber)
+            {
+                if(issue.Title==AdministrativeHeaderRules.TypeMismatchTitle)
+                    return Decree+"mục II.3, điểm b và Phụ lục III.I: ký hiệu gồm viết tắt tên loại và cơ quan/chức danh ban hành.";
+                if(issue.Original!=issue.Replacement && DocumentTypeCatalog.FindAbbreviation(issue.Original)?.Abbreviation==issue.Replacement)
+                    return DocumentTypeCatalog.FindAbbreviation(issue.Original)?.Source==DocumentTypeSource.UserSupplement
+                        ?"Danh mục người dùng bổ sung: giữ cách viết chữ viết tắt đã thống nhất."
+                        :"Nghị định 30/2020/NĐ-CP, Phụ lục III, phần I: giữ đúng cách viết chữ hoa/thường của chữ viết tắt tên loại trong bảng.";
                 return Decree+"mục II.3, điểm a–c: ghi Số:, số dưới 10 thêm 0; dùng / giữa số và ký hiệu, - giữa nhóm viết tắt, không cách chữ.";
+            }
             if(issue.Kind==FixKind.AdministrativeDate)
                 return Decree+"mục II.4, điểm b–c: sau địa danh có dấu phẩy; ghi đủ ngày, tháng, năm; ngày dưới 10 và tháng 1, 2 thêm 0.";
             if(issue.Kind==FixKind.AdministrativeFormat)
@@ -95,7 +105,9 @@ public static class IssueTooltipCatalog
     private static string Action(Issue issue)
     {
         if(!issue.CanFix)
-            return issue.Kind==FixKind.ShapeLine && issue.Message.Contains("Sửa nội dung/định dạng",StringComparison.Ordinal)
+            return issue.Kind==FixKind.AdministrativeNumber && issue.Title==AdministrativeHeaderRules.TypeMismatchTitle
+                ?"Đối chiếu tên loại và ký hiệu đã đăng ký; sửa bên ghi sai trong Word rồi quét lại."
+                :issue.Kind==FixKind.ShapeLine && issue.Message.Contains("Sửa nội dung/định dạng",StringComparison.Ordinal)
                 ?"Sửa chữ/phông trong vùng trước, rồi quét lại đường kẻ.":"Đối chiếu trong Chi tiết lỗi và chỉnh thủ công trong Word.";
         if(issue.LineFix is ShapeLineFix line)
             return (line.ShapeId is null?"Kẻ":"Đặt lại")+" đường ngang dài "+Number(line.Width)+" pt, căn theo dòng chữ; "+
@@ -113,8 +125,11 @@ public static class IssueTooltipCatalog
             FixKind.OutlineOrder=>$"Đổi {Brief(issue.Original,20)} → {Brief(issue.Replacement,20)}; giữ nội dung, cần duyệt dẫn chiếu.",
             FixKind.OutlineMarker=>"Bỏ dấu đầu dòng đơn và dấu cách phân cách; giữ nội dung và thụt đầu dòng.",
             FixKind.PunctuationSpace=>"Bỏ khoảng trước, chuẩn hóa khoảng sau dấu đã chọn; cần duyệt cả câu.",
+            FixKind.ParenthesisSpace when issue.AddsSpaceAfterClosingParenthesis=>"Thêm một dấu cách sau ngoặc đóng; giữ chữ, ngoặc và khoảng trong chưa chọn.",
             FixKind.ParenthesisSpace=>"Bỏ dấu cách sát trong ngoặc đã chọn; giữ chữ và ngoặc.",
             FixKind.SentenceAfterSpace=>"Thêm một dấu cách sau dấu kết câu đã chọn.",
+            FixKind.ColonSpace when issue.AddsSpaceAfterColon=>"Thêm một dấu cách sau dấu hai chấm; giữ chữ, dấu câu và khoảng trước chưa chọn.",
+            FixKind.ParagraphEndSpace=>"Bỏ dấu cách cuối đoạn; giữ chữ, dấu câu, khoảng trước chưa chọn và dấu kết đoạn/ô.",
             FixKind.SentenceEndSpace or FixKind.SentenceInnerSpace or FixKind.ColonSpace=>"Bỏ dấu cách trước dấu câu đã chọn; giữ chữ và dấu câu.",
             _=>issue.Replacement.Length==0?"Xóa phần đã đánh dấu; cần duyệt ngữ cảnh.":"Thay phần đã đánh dấu bằng “"+Brief(issue.Replacement,80)+"”; cần duyệt ngữ cảnh."
         };

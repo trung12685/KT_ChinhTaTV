@@ -5,6 +5,7 @@ namespace ChinhTa.Core;
 // Narrow text checks for the identified first-page State header. Never infer assigned identifiers/dates.
 public static class AdministrativeHeaderRules
 {
+    public const string TypeMismatchTitle="Tên loại không khớp ký hiệu";
     private const RegexOptions Options=RegexOptions.IgnoreCase|RegexOptions.CultureInvariant;
     private const RegexOptions Linear=Options|RegexOptions.NonBacktracking;
     private static readonly Regex NumberHint=new(@"^[ \t]*Số(?:[ \t]*:|[ \t]*(?=[0-9/._…]))",Options);
@@ -44,6 +45,13 @@ public static class AdministrativeHeaderRules
     public static IReadOnlyList<Issue> Check(IReadOnlyList<Paragraph> paragraphs,DocumentProfile profile)
     {
         var header=Identify(paragraphs,profile);
+        var front=paragraphs.Take(40).Where(p=>p.Page==1).ToArray();
+        var titles=front.Select((p,i)=>(p,i)).Where(x=>!x.p.InTable && DocumentTypeCatalog.FindHeading(x.p.Text) is not null).ToArray();
+        int lastHeading=Array.FindLastIndex(front,p=>HeadingRules.IsCandidate(p.Text,profile));
+        var namedType=titles.Length==1 && lastHeading>=0 && titles[0].i>lastHeading && titles[0].p.TextEditable &&
+            !front.Skip(lastHeading+1).Take(titles[0].i-lastHeading-1).Any(p=>!p.InTable &&
+                !string.IsNullOrWhiteSpace(Clean(p.Text)) && !IsCandidate(p.Text))
+                ?DocumentTypeCatalog.FindHeading(titles[0].p.Text):null;
         var result=new List<Issue>();
         foreach(bool date in new[]{false,true})
         {
@@ -60,7 +68,7 @@ public static class AdministrativeHeaderRules
                 result.Add(Notice(p,date,"Chưa xác minh được dòng chữ thuần để sửa an toàn (có thể có trường tự động, control, liên kết hoặc tab bố cục). Chỉnh thủ công; giữ nguyên nội dung và cấu trúc."));
                 continue;
             }
-            bool known=date?CheckDate(p,result):CheckNumber(p,result);
+            bool known=date?CheckDate(p,result):CheckNumber(p,result,namedType);
             if(p.FormatObserved && (p.FormatMixed || p.Font!="Times New Roman" ||
                 p.Color is not (0 or -16777216) || !float.IsFinite(p.Size) ||
                 (date ? p.Size<12.99f || p.Size>14.01f || !p.Italic : Math.Abs(p.Size-13)>.01f || p.Italic)))
@@ -87,14 +95,14 @@ public static class AdministrativeHeaderRules
         return new(p.Start,text.Length,text,text,message,false,date?FixKind.AdministrativeDate:FixKind.AdministrativeNumber,
             CanFix:false,Citation:Citation(date),Title:date?"Kiểm tra địa danh, ngày tháng":"Kiểm tra số, ký hiệu văn bản");
     }
-    private static void Edit(Paragraph p,bool date,int offset,string original,string replacement,string title,List<Issue> result)
+    private static void Edit(Paragraph p,bool date,int offset,string original,string replacement,string title,List<Issue> result,string? citation=null)
     {
         if(original==replacement)return;
         if(original.Length==0)throw new InvalidOperationException("An administrative edit must retain a source anchor");
         result.Add(new(p.Start+offset,original.Length,original,replacement,title,false,
-            date?FixKind.AdministrativeDate:FixKind.AdministrativeNumber,Citation:Citation(date),Title:title));
+            date?FixKind.AdministrativeDate:FixKind.AdministrativeNumber,Citation:citation??Citation(date),Title:title));
     }
-    private static bool CheckNumber(Paragraph p,List<Issue> result)
+    private static bool CheckNumber(Paragraph p,List<Issue> result,DocumentTypeEntry? namedType)
     {
         string text=Clean(p.Text);
         var prefix=NumberPrefix.Match(text);
@@ -122,7 +130,28 @@ public static class AdministrativeHeaderRules
         foreach(Match separator in Hyphen.Matches(code.Value))
             Edit(p,false,baseIndex+code.Index+separator.Index,separator.Value,"-","Chuẩn hóa dấu nối trong ký hiệu",result);
         var firstSeparator=Hyphen.Match(code.Value);
-        string lettersToCheck=firstSeparator.Success && DocumentTypeCatalog.IsKnownAbbreviation(code.Value[..firstSeparator.Index])
+        var type=firstSeparator.Success?DocumentTypeCatalog.FindAbbreviation(code.Value[..firstSeparator.Index]):null;
+        bool mismatch=false;
+        if(namedType is not null && type is {NamedHeading:true} && type!=namedType)
+        {
+            mismatch=true;
+            string actual=code.Value[..firstSeparator.Index];
+            result.Add(new(p.Start+baseIndex+code.Index,actual.Length,actual,actual,
+                "Tên loại “"+namedType.Heading+"” có viết tắt “"+namedType.Abbreviation+
+                "”, nhưng ký hiệu đang dùng “"+actual+"”. Đối chiếu tên loại và ký hiệu đã đăng ký; sửa bên ghi sai trong Word rồi quét lại.",
+                false,FixKind.AdministrativeNumber,CanFix:false,
+                Citation:DocumentTypeCatalog.WithSource("NĐ 30/2020/NĐ-CP, Phụ lục I, Phần I.II.3.b: ký hiệu gồm chữ viết tắt tên loại và cơ quan/chức danh ban hành; Phụ lục III, phần I quy định chữ viết tắt tên loại.",
+                    type.Source==DocumentTypeSource.UserSupplement || namedType.Source==DocumentTypeSource.UserSupplement),
+                Title:TypeMismatchTitle));
+        }
+        if(type is not null && type==namedType)
+            Edit(p,false,baseIndex+code.Index,code.Value[..firstSeparator.Index],type.Abbreviation,
+                "Sai hoa/thường viết tắt tên loại",result,
+                DocumentTypeCatalog.WithSource(Citation(false),type.Source==DocumentTypeSource.UserSupplement));
+        // A catalog-shaped prefix may be an agency code in a Công văn. Without
+        // the corresponding title, retain the old uppercase-code check only;
+        // do not invent a type/casing warning for an otherwise uppercase code.
+        string lettersToCheck=type is not null && (mismatch || type==namedType || code.Value[..firstSeparator.Index]==type.Abbreviation)
             ?code.Value[(firstSeparator.Index+firstSeparator.Length)..]:code.Value;
         if(lettersToCheck.Any(char.IsLower))
             result.Add(Notice(p,false,"Ký hiệu có chữ thường; đối chiếu quy định chữ in hoa và mã viết tắt của cơ quan. Chưa tự đổi mã."));

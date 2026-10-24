@@ -3,9 +3,9 @@ using System.Xml.Linq;
 
 public static class AdministrativeHeaderChecks
 {
-    private static Paragraph[] Header(string number="Số: 01/BC-ABC",string date="Hà Nội, ngày 03 tháng 3 năm 2026")
+    private static Paragraph[] Header(string number="Số: 01/BC-ABC",string date="Hà Nội, ngày 03 tháng 3 năm 2026",string title="BÁO CÁO")
     {
-        string[] text=["CƠ QUAN THỬ NGHIỆM",number,Checker.Heading,HeadingRules.Motto,date,"BÁO CÁO","Nội dung thử nghiệm."];
+        string[] text=["CƠ QUAN THỬ NGHIỆM",number,Checker.Heading,HeadingRules.Motto,date,title,"Nội dung thử nghiệm."];
         int start=170;
         return text.Select((value,index)=>
         {
@@ -56,7 +56,8 @@ public static class AdministrativeHeaderChecks
                 "Rescan with shifted Word offsets completes the selected individual/group edit without residual warnings");
         }
         foreach(string number in new[]{"Số:        /BC-ABCD","Số:    …/BC-ABCD","Số: 01/UBND-VP","Số: 12/QĐ-ABC-XYZ","Số: 001/BC-ABC"})
-            assert(Found(Header(number)).Length==0,"Valid identifier or intentional blank number is preserved: "+number);
+            assert(Found(Header(number,title:number.Contains("/QĐ-")?"QUYẾT ĐỊNH":"BÁO CÁO")).Length==0,
+                "Valid identifier or intentional blank number with the corresponding type is preserved: "+number);
         foreach(string date in new[]{"Ninh Bình, ngày        tháng 10 năm 2026","Hà Nội, ngày    tháng    năm    ",
             "Hà Nội, ngày … tháng … năm …","Hà Nội, ngày 29 tháng 02 năm 2024","Hà Nội, ngày 29 tháng 02 năm    ",
             "Hà Nội, ngày 03 tháng 03 năm 2026","Hà Nội, ngày 03 tháng 3 năm 2026"})
@@ -95,7 +96,9 @@ public static class AdministrativeHeaderChecks
             assert(notices.Any(i=>!i.CanFix) && notices.All(i=>!i.CanFix),"Ambiguous, unsupported or zero identifiers remain manual: "+number);
         }
         var lower=Found(Header("Số: 03/bc-abc"));
-        assert(lower.Length==1 && !lower[0].CanFix,"Lowercase agency/type abbreviation is reviewed, never silently renamed");
+        assert(lower.Count(i=>i.CanFix)==1 && lower.Single(i=>i.CanFix).Original=="bc" &&
+            lower.Single(i=>i.CanFix).Replacement=="BC" && lower.Count(i=>!i.CanFix)==1,
+            "Known type casing has a separate proposal while the lowercase agency code remains manual");
         foreach(string date in new[]{"Hà Nội, ngày 31 tháng 4 năm 2026","Hà Nội, ngày 29 tháng 2 năm 2025",
             "Hà Nội, ngày 00 tháng 1 năm 2026","Hà Nội, ngày 12 tháng 13 năm 2026","Hà Nội, ngày 03 tháng 1 năm 26",
             "Hà Nội, ngày 03 tháng 1 năm 0000","Hà Nội, ngày 123 tháng 1 năm 2026","Hà Nội, ngày 03 tháng 1 năm 20__",
