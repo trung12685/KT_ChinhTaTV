@@ -44,12 +44,16 @@ public static class ComponentRules
                 ComponentRole.RecipientLabel=>new(12,true,true,role),_=>new(11,false,null,role)
             };
             FixKind formatKind=agency?FixKind.AgencyFormat:FixKind.RecipientFormat,textKind=agency?FixKind.AgencyText:FixKind.RecipientText;
-            if(!p.FormatObserved || p.FormatMixed || p.BoldMixed || !(p.TextEditable || p.FormatEditable))
-                result.Add(new(p.Start,text.Length,text,text,"Chưa đủ bằng chứng chữ/định dạng đồng nhất để sửa "+label+"; không kết luận thành phần này sai thể thức.",false,formatKind,
+            var range=style.SizeRange;
+            var assessment=new FormatPolicy(range.Minimum,range.Maximum,style.Italic,style.Bold).Assess(p);
+            if(assessment.State is FormatState.Unknown or FormatState.NeedsReview)
+                result.Add(new(p.Start,text.Length,text,text,assessment.State==FormatState.Unknown?
+                    "Chưa đủ bằng chứng chữ/định dạng để sửa "+label+"; không kết luận thành phần này sai thể thức.":
+                    "Có định dạng sai ở "+label+" nhưng sửa cỡ cả vùng sẽ đổi cỡ hợp lệ khác; cần duyệt từng vùng trong Word.",false,formatKind,
                     CanFix:false,Citation:citation,Title:"Kiểm tra định dạng "+label));
-            else if(!style.Matches(p.Font,p.Size,p.Italic?-1:0,p.Color,p.Bold?-1:0))
+            else if(assessment.State==FormatState.Repairable)
                 result.Add(new(p.Start,text.Length,text,text,"Định dạng "+label+" chưa đúng thông số đã đối chiếu; giữ nguyên nội dung và căn đoạn.",false,formatKind,
-                    Citation:citation,Title:"Định dạng "+label,CharacterFormat:style));
+                    Citation:citation,Title:"Định dạng "+label,CharacterFormat:style with {Size=assessment.Size,PreserveSize=assessment.PreserveSize}));
             void Edit(int offset,string original,string replacement,string title)
             {
                 if(original==replacement)return;

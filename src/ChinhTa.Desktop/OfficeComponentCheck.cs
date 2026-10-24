@@ -63,7 +63,7 @@ internal static class OfficeComponentCheck
         if(test.Check().Any(Component))throw new InvalidOperationException("Mở lại phông và ba Line còn cảnh báo thành phần.");
         pass("Phông cơ quan/trích yếu/nơi nhận sau đoạn 40: sửa cùng cả ba Line, quét, một Undo và lưu/mở");
     }
-    private static Issue[] ReadLines(WordSession test,bool deferComponents=false)
+    internal static Issue[] ReadLines(WordSession test,bool deferComponents=false)
     {
         var found=test.Check();var anchors=new Dictionary<Issue,PreviewAnchor>();
         string path=test.ExportPreview(test.LineTargets.Select(t=>t.Probe).ToArray(),anchors);
@@ -78,7 +78,7 @@ internal static class OfficeComponentCheck
         }
         finally{if(File.Exists(path))File.Delete(path);}
     }
-    private static string Create(string source,string folder,bool bad,bool longBody=false)
+    internal static string Create(string source,string folder,bool bad,bool longBody=false)
     {
         string path=Path.Combine(folder,longBody?"components-long.docx":bad?"components-bad.docx":"components-good.docx");File.Copy(source,path);
         using var zip=ZipFile.Open(path,ZipArchiveMode.Update);var entry=zip.GetEntry("word/document.xml")!;

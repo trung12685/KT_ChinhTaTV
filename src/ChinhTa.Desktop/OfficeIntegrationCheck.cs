@@ -1072,6 +1072,8 @@ public static class OfficeIntegrationCheck
             OfficeParentheticalPunctuationCheck.Run(test,modern,folder,Pass);
             stage="Khoảng trắng với câu cuối chỉ một từ";
             OfficeShortFinalSentenceCheck.Run(test,modern,folder,Pass);
+            stage="Định dạng hệ thống và cảnh báo giả sau sửa nhóm";
+            OfficeFormatSystemCheck.Run(test,modern,folder,Pass);
             File.AppendAllText(report,"RESULT PASS\nKiểm thao tác Word/Line, vị trí nét XPS, sửa riêng/nhóm số-ngày, lưu/mở và Hoàn tác trên mẫu giả; không xác nhận mọi tài liệu.\n");
             return new(true,stage,folder);
         }

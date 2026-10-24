@@ -28,6 +28,8 @@ IssueReviewCatalogChecks.Run(Assert);
 IssueTooltipChecks.Run(Assert);
 StagedRepairChecks.Run(Assert);
 ComponentChecks.Run(Assert);
+FormatAssessmentChecks.Run(Assert);
+FontSizeEvidenceChecks.Run(Assert);
 OwnedLineFormatChecks.Run(Assert);
 RepairProgressChecks.Run(Assert);
 DocumentTypeTextChecks.Run(Assert);
@@ -210,7 +212,7 @@ Assert(Checker.Check([new(0, Checker.Heading.Replace("HÒA", "HOÀ"), true, 12)]
 var headingSpaces = Checker.Check([new(0, Checker.Heading.Replace("XÃ HỘI", "XÃ  HỘI"), true, 12)], DocumentProfile.State);
 Assert(headingSpaces.Count == 1 && headingSpaces[0].Kind == FixKind.NationalHeading,
     "Lỗi khoảng trắng trong quốc hiệu gộp vào sửa thành phần, không chồng lấn");
-var pair = Checker.Check([new(0, Checker.Heading, true, 12), new(100, HeadingRules.Motto, true, 14)], DocumentProfile.State);
+var pair = Checker.Check([new(0, Checker.Heading, true, 12,FormatObserved:true), new(100, HeadingRules.Motto, true, 14,FormatObserved:true)], DocumentProfile.State);
 Assert(pair.Count == 1 && !pair[0].CanFix, "Cỡ quốc hiệu/tiêu ngữ cần thống nhất theo chú thích phụ lục");
 Assert(Checker.Check([new(0, Checker.Heading, true, 13), new(100, HeadingRules.Motto, true, 14)], DocumentProfile.State).Count == 0,
     "Cặp quốc hiệu 13 và tiêu ngữ 14 hợp lệ");

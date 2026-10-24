@@ -50,17 +50,17 @@ public static class DevelopmentReport
             "Dấu phẩy, nhãn ngày/tháng/năm và khoảng trắng; thêm 0 trước ngày 1–9, tháng 1–2. Giữ trường chưa điền, không chọn ngày hay địa danh thay người dùng.",
             new ReportExample("Hà Nội  Ngày3  Tháng1  Năm2026","Hà Nội, ngày 03 tháng 01 năm 2026")),
         new("C07","Phông dòng số/ký hiệu",CapabilityMode.Reviewable,"Dòng được nhận diện và đủ bằng chứng chữ thuần",
-            "Times New Roman, đen, cỡ 13, đứng; giữ chữ, ô trống, đậm/gạch chân và căn đoạn.",
+            "Times New Roman, đen, cỡ 13, đứng; giữ chữ, ô trống, đậm/gạch chân và căn đoạn. Đậm trộn không tự thành lỗi khi chính sách giữ đậm; đọc theo dữ liệu chữ đã đối chiếu.",
             new ReportExample("Dòng Số: 01/BC-ABC dùng Arial, đỏ, nghiêng, cỡ 12.","Giữ nguyên chữ; đề xuất Times New Roman, đen, đứng, cỡ 13 khi dòng đủ điều kiện sửa phông.")),
         new("C08","Phông địa danh/ngày tháng",CapabilityMode.Reviewable,"Dòng được nhận diện và định dạng đủ rõ",
-            "Times New Roman, đen, nghiêng, cỡ 13–14; giữ cỡ hợp lệ, đậm/gạch chân và chữ. Căn giữa là chức năng riêng.",
+            "Times New Roman, đen, nghiêng, cỡ 13–14; giữ từng cỡ hợp lệ, đậm/gạch chân và chữ. Cỡ 13/14 cùng hợp lệ không tự thành lỗi. Căn giữa là chức năng riêng.",
             new ReportExample("Dòng Hà Nội, ngày 03 tháng 3 năm 2026 dùng Arial, đỏ, đứng, cỡ 12.","Giữ nguyên chữ; đề xuất Times New Roman, đen, nghiêng, cỡ 13; nếu cỡ 13–14 đã hợp lệ thì giữ cỡ.")),
         new("C09","Phông tên loại văn bản",CapabilityMode.Reviewable,"Đầu Nhà nước, khối tên loại/trích yếu chắc chắn",
             "Times New Roman, đen, đứng, đậm, cỡ 13–14. Danh mục có 27 tên hành chính theo PL III.I và Báo cáo đề xuất/BCĐX do người dùng bổ sung; vẫn cần khối/trích yếu đủ chắc, chưa áp cho Công văn/V/v hoặc thể thức bản sao. Viết hoa tên loại có điều kiện theo C24 riêng.",
             new ReportExample("Tên loại BÁO CÁO dùng Arial, đỏ, nghiêng, cỡ 12.","Giữ nguyên chữ; đề xuất Times New Roman, đen, đứng, đậm, cỡ 13 khi khối tên loại được nhận diện chắc chắn.")),
         new("C10","Phông trích yếu",CapabilityMode.Reviewable,"Khối dưới tên loại, có ranh giới rõ trong vùng đầu trang đã đối chiếu",
-            "Times New Roman, đen, đứng, đậm, cỡ 13–14; giữ nguyên văn, cỡ hợp lệ, gạch chân/căn đoạn. Chưa tự viết thường trích yếu toàn chữ hoa.",
-            new ReportExample("Trích yếu Tình hình công tác dùng Arial, đỏ, nghiêng, cỡ 12.","Giữ nguyên chữ; đề xuất Times New Roman, đen, đứng, đậm, cỡ 13 khi trích yếu được nhận diện chắc chắn.")),
+            "Times New Roman, đen, đứng, đậm, cỡ 13–14; giữ nguyên văn, từng cỡ hợp lệ, gạch chân/căn đoạn và ngắt dòng. Màu đen tự động/đen RGB, khác kiểu ở dấu cách/ngắt dòng hoặc các cỡ cùng hợp lệ không tự thành lỗi. Sai phông/màu có thể sửa mà giữ cỡ; trộn cỡ sai/đúng chưa bảo toàn được thì duyệt từng vùng. Chưa tự viết thường trích yếu toàn chữ hoa.",
+            new ReportExample("Trích yếu có chữ cỡ 13 và 14 đều hợp lệ nhưng dùng Arial đỏ.","Giữ nguyên chữ và từng cỡ 13/14; sửa phông Times New Roman, đen, đứng, đậm khi đủ bằng chứng. Hậu kiểm cả cỡ ký tự còn lại, không ép cả dòng về 13.")),
         new("C11","Căn giữa số/ngày",CapabilityMode.Reviewable,"Mốc chữ và cùng khung ô được xác minh trên XPS",
             "Căn giữa và bỏ ba thụt lề ngang; giữ chữ/khoảng cách dọc. Chưa tự làm hai dòng cùng hàng hoặc dịch vị trí tuyệt đối.",
             new ReportExample("Dòng Số: 01/BC-ABC có tâm chữ lệch tâm ô 10 pt.","Nếu ô/mốc đo được và đủ điều kiện: căn giữa trong ô, bỏ thụt lề ngang; giữ chữ và vị trí dọc, kiểm lại trên XPS.")),
@@ -125,7 +125,7 @@ public static class DevelopmentReport
             "Tab liên tiếp, tab/khoảng trắng đầu đoạn căn giữa; không tự xóa tab hoặc thụt lề.",
             new ReportExample("[TAB][TAB]Nội dung","Trong chế độ cá nhân: cảnh báo tab liên tiếp; không tự xóa vì có thể dùng để dàn bố cục.")),
         new("M07","Vùng cấu trúc hoặc kiểu chưa rõ",CapabilityMode.Manual,"Trong phạm vi đã đối chiếu",
-            "Field/control/liên kết/đối tượng hoặc kiểu trộn có thể giữ thủ công. Đối chiếu XML phần thân ở cả ba chế độ, kể cả sau đoạn 40; vùng chưa chứng minh giữ thủ công. Field phức tạp hoặc lệch XML có thể chặn các đoạn sau. Đo tọa độ/phông đặc thù đầu Nhà nước vẫn có phạm vi riêng. Thứ tự mục/dấu đầu dòng cần bằng chứng thân ngoài bảng; danh sách tự động hoặc kiểu/cấp chưa rõ giữ thủ công.",
+            "Field/control/liên kết/đối tượng hoặc thuộc tính chưa đọc chắc giữ thủ công. Khác biệt định dạng hợp lệ không tự thành lỗi; đủ dữ liệu có thể sửa phông/màu/kiểu mà giữ cỡ, không mở sửa chữ qua đối tượng. Đối chiếu XML phần thân ở cả ba chế độ, kể cả sau đoạn 40; vùng chưa chứng minh giữ thủ công. Đo tọa độ/phông đặc thù đầu Nhà nước vẫn có phạm vi riêng. Thứ tự mục/dấu đầu dòng cần bằng chứng thân ngoài bảng; danh sách tự động hoặc kiểu/cấp chưa rõ giữ thủ công.",
             new ReportExample("Nội dung  báo cáo nằm trong field/control/liên kết chưa được phép sửa chữ.","Giữ thủ công để bảo vệ cấu trúc; không chuyển thành sửa được chỉ vì thấy khoảng trắng thừa.")),
         new("M08","Nét/Shape chưa ghép chắc chắn",CapabilityMode.Manual,"Đường kẻ",
             "Line không có dấu của ứng dụng, nhóm Shape, border, nét chồng hoặc thiếu mốc/số đo; không tạo thêm để làm mất cảnh báo.",
@@ -163,7 +163,7 @@ public static class DevelopmentReport
         new("0.1.58","Thêm C24 viết hoa chính xác tên loại văn bản đã nhận diện chắc theo NĐ30 II.5.b; giữ trích yếu, khoảng ngoài tên, phông/căn đoạn, chặn trường/đối tượng/vùng chưa rõ; sửa chung phông, quét lại và một Undo/rollback. Lỗi cơ quan/trích yếu trên .56 vẫn chờ bằng chứng runtime .57 hoặc mới hơn."),
         new("0.1.59","Danh mục đủ 27 tên hành chính/3 bản sao theo NĐ30 PL III.I trang 40; thêm Báo cáo đề xuất/BCĐX theo người dùng, tách nguồn. Dùng chung nhận diện/C24/phông/mốc trích yếu, không áp thể thức gốc cho bản sao; sửa cảnh báo nhầm chữ thường ở QyĐ/CTr/TTr/TrS, giữ mã cơ quan. Có cửa sổ tra cứu và danh mục đầy đủ trong TXT."),
         new("0.1.60","Gom 5 bước sau .59: B01 hoa/thường viết tắt theo tên loại chắc chắn; B02 cảnh báo tên loại/ký hiệu mâu thuẫn, không đoán bên sai; B03 thêm khoảng sau hai chấm; B04 C25 bỏ dấu cách cuối đoạn có điều kiện, giữ kết đoạn/ô; B05 C15 thêm khoảng sau ngoặc đóng trong cụm chữ rõ. Chọn riêng/chung, giữ khoảng chưa chọn, XPS, một Undo/rollback; tổng25/8/1. Bản thử, chưa xác nhận toàn bộ bài Word trên Office 2021."),
-        new("0.1.61 — đang phát triển","B01 sau .60: C13 nhận cụm lặp chỉ khác chữ hoa đầu đoạn, giữ lần đầu. B02: C14 sửa dấu phẩy/chấm phẩy sau ngoặc tròn đơn trong câu chữ rõ. B03: C18/C19 nhận câu cuối một từ có dấu kết câu đơn, ví dụ Đã hoàn thành.Xong! → Đã hoàn thành. Xong!; giữ riêng hai phía, không mở viết tắt/đuôi tệp/chuỗi dấu. Giữ Unicode/kiểu và phần chưa chọn, quét mới/Undo/rollback; tổng25/8/1. Mới ba bước, chưa có gói Windows .61; không phải bộ kiểm chính tả/ngữ nghĩa đầy đủ.")
+        new("0.1.61 — đang phát triển","B01–B03: cụm lặp khác chữ hoa đầu đoạn, dấu phẩy/chấm phẩy sau ngoặc và câu cuối một từ. B04: sửa chung luồng kiểm định dạng đầu văn bản/cơ quan/trích yếu/nơi nhận; dữ liệu chữ hiện tại gắn đúng text, phân biệt đúng/sai/chưa chắc, không coi mọi kiểu trộn là lỗi. Đọc một lần sau proof XML, aggregate → từ → ký tự khi cần; sửa phông/màu giữ cỡ hợp lệ và hậu kiểm từng cỡ còn lại cả sau Line. Giữ XPS, chọn riêng/chung/Undo/rollback; tổng25/8/1. Bốn hạng mục trong code, chưa có gói Windows .61 hoặc xác nhận runtime Office 2021.")
     });
     public static IReadOnlyList<string> NextSteps { get; }=Array.AsReadOnly(new[]
     {

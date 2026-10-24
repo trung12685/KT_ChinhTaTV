@@ -116,6 +116,7 @@ public static class IssueTooltipCatalog
         if(issue.CharacterFormat is not null)return issue.Suggestion;
         if(issue.Format is HeadingFormat format)
             return (issue.Original==issue.Replacement?"Đặt":"Sửa chữ và đặt")+" Times New Roman, đen, đậm, đứng, cỡ "+Number(format.Size)+
+                (format.MaximumSize is float maximum?"–"+Number(maximum)+" (giữ cỡ hợp lệ)":"")+
                 (format.Alignment is null?".":"; căn giữa trong ô.");
         if(Spacing(issue))return "Gộp phần đã đánh dấu thành một dấu cách.";
         return issue.Kind switch

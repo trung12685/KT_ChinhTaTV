@@ -4,19 +4,25 @@ namespace ChinhTa.Core;
 
 public record Paragraph(int Start, string Text, bool Bold = false, float Size = 13,
     int Alignment = 1, string Font = "Times New Roman", bool Italic = false,
-    int Color = 0, bool InTable = false, int Page = 1, bool FormatObserved = false, bool FormatMixed = false, bool TextEditable = true, bool BoldMixed = false, OutlineParagraphInfo? Outline = null, bool FormatEditable = false);
+    int Color = 0, bool InTable = false, int Page = 1, bool FormatObserved = false, bool FormatMixed = false, bool TextEditable = true, bool BoldMixed = false, OutlineParagraphInfo? Outline = null, bool FormatEditable = false,FormatEvidence? FormatEvidence=null);
 public enum FixKind { Text, NationalHeading, StateMotto, PartyHeading, Advisory, PageLayout, ShapeLine, AdministrativeNumber, AdministrativeDate, AdministrativeFormat, AdministrativePosition, DocumentHeadingFormat, RepeatedText, PunctuationSpace, ParenthesisSpace, SentenceEndSpace, ColonSpace, SentenceInnerSpace, SentenceAfterSpace, OutlineOrder, OutlineMarker, AgencyFormat, AgencyText, RecipientFormat, RecipientText, DocumentTypeText, ParagraphEndSpace }
-public record HeadingFormat(float Size, int? Alignment = null)
+public record HeadingFormat(float Size, int? Alignment = null,float? MaximumSize=null)
 {
     public bool Matches(string font,float size,int bold,int italic,int color,int? alignment)=>
         font.Equals("Times New Roman",StringComparison.OrdinalIgnoreCase) && float.IsFinite(Size) && Size>0 &&
-        float.IsFinite(size) && Math.Abs(size-Size)<.01f && bold==-1 && italic==0 &&
+        float.IsFinite(size) && (MaximumSize is float maximum?size>=Size && size<=maximum:Math.Abs(size-Size)<.01f) && bold==-1 && italic==0 &&
         color is 0 or -16777216 && (Alignment is null || alignment==Alignment);
 }
 public enum ComponentRole { AgencyParent, Agency, RecipientLabel, RecipientItem }
-public record CharacterFormat(float Size,bool Italic,bool? Bold=null,ComponentRole? Role=null)
+public record CharacterFormat(float Size,bool Italic,bool? Bold=null,ComponentRole? Role=null,bool PreserveSize=false)
 {
-    public bool Valid => float.IsFinite(Size) && (Role is not null ? Role switch
+    public (float Minimum,float Maximum) SizeRange=>Role switch
+    {
+        ComponentRole.Agency or ComponentRole.AgencyParent=>(12,13),
+        ComponentRole.RecipientLabel=>(12,12),ComponentRole.RecipientItem=>(11,11),
+        _=>Bold==true || Italic?(13,14):(13,13)
+    };
+    public bool Valid => float.IsFinite(Size) && (!PreserveSize || SizeRange.Minimum<SizeRange.Maximum && Size==SizeRange.Minimum) && (Role is not null ? Role switch
     {
         ComponentRole.AgencyParent=>Size>=12 && Size<=13 && !Italic && Bold==false,
         ComponentRole.Agency=>Size>=12 && Size<=13 && !Italic && Bold==true,
@@ -26,7 +32,7 @@ public record CharacterFormat(float Size,bool Italic,bool? Bold=null,ComponentRo
     } : Bold is null?(Italic?Size>=13 && Size<=14:Math.Abs(Size-13)<.01f):Bold==true && !Italic && Size>=13 && Size<=14);
     public bool Matches(string font,float size,int italic,int color,int? bold=null)=>
         font.Equals("Times New Roman",StringComparison.OrdinalIgnoreCase) && float.IsFinite(size) &&
-        Math.Abs(size-Size)<.01f && italic==(Italic?-1:0) && color is 0 or -16777216 &&
+        (PreserveSize?size>=SizeRange.Minimum && size<=SizeRange.Maximum:Math.Abs(size-Size)<.01f) && italic==(Italic?-1:0) && color is 0 or -16777216 &&
         (Bold is null || bold==(Bold==true?-1:0));
 }
 public record Issue(int Start, int Length, string Original, string Replacement,
@@ -40,7 +46,7 @@ public record Issue(int Start, int Length, string Original, string Replacement,
     public string Suggestion => !CanFix ? "Kiểm tra thủ công; không tự sửa."
         : LineFix is not null ? "Tạo/đặt lại Shape Line theo số đo và cấu hình đã chọn."
         : CenterFix is not null ? "Căn giữa trong ô đã xác minh, bỏ thụt lề ngang; giữ nguyên chữ và khoảng cách dọc."
-        : CharacterFormat is not null ? $"Times New Roman, màu đen, cỡ {CharacterFormat.Size:0.#}, chữ {(CharacterFormat.Italic?"nghiêng":"đứng")}{(CharacterFormat.Bold==true?", đậm":CharacterFormat.Bold==false?", không đậm":"")}; giữ nguyên chữ."
+        : CharacterFormat is not null ? $"Times New Roman, màu đen, cỡ {(CharacterFormat.PreserveSize?$"{CharacterFormat.SizeRange.Minimum:0.#}–{CharacterFormat.SizeRange.Maximum:0.#} (giữ cỡ hợp lệ)":$"{CharacterFormat.Size:0.#}")}, chữ {(CharacterFormat.Italic?"nghiêng":"đứng")}{(CharacterFormat.Bold==true?", đậm":CharacterFormat.Bold==false?", không đậm":"")}; giữ nguyên chữ."
         : Kind==FixKind.DocumentTypeText ? "Viết hoa tên loại thành “"+Replacement+"”; giữ nội dung trích yếu, phông và căn đoạn."
         : Kind==FixKind.OutlineOrder ? $"Đổi ký hiệu mục {Original} → {Replacement}; giữ nội dung, cần duyệt thứ tự và dẫn chiếu."
         : Kind==FixKind.OutlineMarker ? "Bỏ dấu đầu dòng và dấu cách phân cách; giữ nội dung và thụt đầu dòng, cần duyệt mục cha."

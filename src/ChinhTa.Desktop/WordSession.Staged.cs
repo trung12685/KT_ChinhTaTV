@@ -6,7 +6,7 @@ namespace ChinhTa.Desktop;
 
 public sealed partial class WordSession
 {
-    private sealed record StagedFormat(Issue Issue,string Text,string Prefix);
+    private sealed record StagedFormat(Issue Issue,string Text,string Prefix,FontSizeEvidence? Sizes);
     public RepairBatchResult FixSelection(IEnumerable<Issue> selection)
     {
         var plan=StagedRepairBatch.Prepare(selection);
@@ -71,11 +71,11 @@ public sealed partial class WordSession
             {
                 int? alignment=null;
                 if(proof.Issue.Format?.Alignment is not null){paragraph=range.ParagraphFormat;alignment=(int)paragraph.Alignment;}
-                var observed=VisibleFormatReader.Read((object)range,proof.Text,allowCharacterFallback:true);
-                bool correct=observed.All(f=>f.Known && (proof.Issue.CharacterFormat is CharacterFormat character?character.Matches(f.Name,f.Size,f.Italic,f.Color,f.Bold):
-                    proof.Issue.Format is HeadingFormat heading && heading.Matches(f.Name,f.Size,f.Bold,f.Italic,f.Color,alignment)));
+                bool correct=VisibleFormatReader.Matches((object)range,proof.Text,proof.Issue.CharacterFormat,proof.Issue.Format,alignment);
                 if((string)range.Text!=proof.Text || !correct)
                     throw new InvalidOperationException("Phông sau các nhóm sửa không còn khớp đề xuất; phải khôi phục cả lượt.");
+                if(proof.Sizes is not null && !proof.Sizes.Matches(VisibleFormatReader.ReadSizes((object)range,proof.Text)))
+                    throw new InvalidOperationException("Cỡ chữ đã đổi sau các nhóm sửa; phải khôi phục cả lượt.");
             }
             finally{Release(paragraph);Release(range);}
         }
@@ -100,7 +100,7 @@ public sealed partial class WordSession
             StagedRepairBatch.ExpectedReference(i,text,original,ReadPrefix))).ToArray();
         var formats=text.Where(i=>i.Format is not null || i.CharacterFormat is not null).Select(i=>new StagedFormat(i,
             StagedRepairBatch.ExpectedReference(i,text,original,ReadPrefix),
-            AtomicTextBatch.ExpectedStory(text.Where(t=>(long)t.Start+t.Length<=i.Start).ToArray(),ReadPrefix(i),ReadPrefix))).ToArray();
+            AtomicTextBatch.ExpectedStory(text.Where(t=>(long)t.Start+t.Length<=i.Start).ToArray(),ReadPrefix(i),ReadPrefix),ExpectedSizesFor(i,text))).ToArray();
         string before=Path.Combine(folder,Guid.NewGuid()+".multi.undo.docx");File.Copy(RecoveryPath,before);
         int depth=undoCheckpoints.Count,completed=0;
         bool previousChanged=Changed,restored=false,committed=false;

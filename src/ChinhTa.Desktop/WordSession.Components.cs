@@ -3,6 +3,29 @@ using ChinhTa.Core;
 namespace ChinhTa.Desktop;
 public sealed partial class WordSession
 {
+    internal FontSizeEvidence ReadCheckSizes(Issue probe)
+    {
+        dynamic range=document!.Range(probe.Start,probe.Start+probe.Length);
+        try{return VisibleFormatReader.ReadSizes((object)range,probe.Original);}
+        finally{Release(range);}
+    }
+    private FontSizeEvidence? ExpectedSizesFor(Issue issue,IReadOnlyList<Issue> edits)
+    {
+        if(issue.CharacterFormat?.PreserveSize!=true && issue.Format?.MaximumSize is null)return null;
+        dynamic range=document!.Range(issue.Start,issue.Start+issue.Length);
+        try
+        {
+            var source=VisibleFormatReader.ReadSizes((object)range,issue.Original);
+            var contained=edits.Where(i=>i.CharacterFormat is null && i.Format is null && i.Start>=issue.Start &&
+                (long)i.Start+i.Length<=(long)issue.Start+issue.Length).ToArray();
+            return source.Project(contained,item=>
+            {
+                dynamic prefix=document!.Range(issue.Start,item.Start);
+                try{return (string?)prefix.Text??"";}finally{Release(prefix);}
+            });
+        }
+        finally{Release(range);}
+    }
     private Paragraph ObserveComponent(Paragraph row)
     {
         if(!row.TextEditable && !row.FormatEditable)return row;
@@ -17,7 +40,7 @@ public sealed partial class WordSession
                 dynamic range=document!.Range(row.Start+offset,row.Start+offset+part.Length);
                 try
                 {
-                    observations.AddRange(VisibleFormatReader.Read((object)range,part,row.FormatEditable && !row.TextEditable));
+                    observations.AddRange(VisibleFormatReader.Read((object)range,part,allowCharacterFallback:true));
                 }
                 finally{Release(range);}
             }
@@ -27,6 +50,7 @@ public sealed partial class WordSession
         var first=observations[0];
         return row with {Font=first.Name,Size=first.Size,Bold=first.Bold==-1,Italic=first.Italic!=0,Color=first.Color,FormatObserved=true,
             FormatMixed=observations.Any(o=>o!=first || !o.Known),
-            BoldMixed=observations.Any(o=>o.Bold is not (0 or -1))};
+            BoldMixed=observations.Any(o=>o.Bold is not (0 or -1)),
+            FormatEvidence=new(text,observations.Select(o=>new ObservedFont(o.Name,o.Size,o.Bold,o.Italic,o.Color)))};
     }
 }

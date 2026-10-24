@@ -1,5 +1,13 @@
 # Tiếp tục phát triển Chính tả Việt
 
+## B04 sau .60 — hạng mục kiểm định dạng theo hệ thống
+
+Người dùng yêu cầu tăng phạm vi thay vì tiếp tục từng lỗi chữ nhỏ. Tiếp nối B03 `e92ec19e048d6805e5cc3fee9eedaee786f10337` đạt 2344 Core/OpenXML +113 WPF. Thêm FormatEvidence gắn text và FormatPolicy dùng chung: phân biệt hợp lệ/sai thật/chưa chắc/sai cỡ hỗn hợp; chấp nhận các cỡ hợp lệ/đen tương đương và bỏ ràng buộc đậm khi vai trò giữ đậm.
+
+WordSession đọc phông sau proof và nhận diện, dedupe vùng; VisibleFormatReader dùng aggregate → Words → Characters từ chưa rõ, chỉ chấp nhận phủ đúng text. Hậu kiểm chữ/phông và sau Line dùng cùng Matches; font repair có thể giữ các cỡ hợp lệ, thêm size fingerprint và chiếu qua sửa chữ để phát hiện cỡ bị ép dù vẫn trong khoảng hợp lệ. Case-only dùng Range.Case, giữ run nhưng vẫn xác minh chữ/Undo/rollback. Không nới quyền thay chữ qua đối tượng, XPS vẫn giữ.
+
+Phạm vi gồm các tiêu đề nhận diện, số/ngày, tên loại/trích yếu, cơ quan/nơi nhận. Kiểm nhiều vai trò và ghép cấu trúc ba Line thật; Desktop kiểm fallback/mất kết nối, phủ text và số lời gọi; fixture Word mới có mẫu đúng/sai, size13/14, whitespace/break styles, sửa riêng/chung ba Line/rollback/một Undo/lưu-mở/giữ nguồn. [Thiết kế](FORMAT-ASSESSMENT.md) · [Nhật ký](BATCH-AFTER-0.1.60.md). Bốn hạng mục, tổng25/8/1, code .61 chưa gói; chưa có bằng chứng runtime khép phản hồi .56, không coi CI là Office PASS.
+
 ## B03 sau .60 — câu cuối chỉ một từ có dấu kết câu
 
 Tiếp nối B02 `2b2fb58007215008c1f8718ad103610884497d28`, đã đạt 2236 Core/OpenXML +113 WPF. Clear dùng chung C18/C19 nhận từ hoa đầu/còn lại thường tiếp ngay một dấu .?! cuối đoạn, đuôi chỉ ASCII spaces được giữ; loại thêm viết tắt đã biết ở nhánh mới. Không đổi ClearEnding hoặc guard của các nhóm khác, không thêm enum/nhóm. Ví dụ `Đã hoàn thành .Xong!` sửa riêng hoặc chung thành `Đã hoàn thành. Xong!`, giữ phần chưa chọn.

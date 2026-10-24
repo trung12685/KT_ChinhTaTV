@@ -52,6 +52,25 @@ Kiểm có ma trận ba dấu ở biên × ba dấu cuối, Unicode tổ hợp/e
 
 Kiểm cục bộ đạt **2267 lượt assertion**, thêm 108 so với B02; đây là runner chọn lọc, không thay số kiểm Windows CI. Hiện **3 bước** trong code .61, chưa tạo gói Windows .61. Kết quả đúng commit tại PR/CI; gói .60 giữ nguyên. Chưa xác nhận Office 2021 hoặc khép lỗi phông .56.
 
+## B04 — Sửa chung luồng kiểm định dạng và cảnh báo giả
+
+Theo phản hồi người dùng, chuyển trọng tâm từ các lỗi chữ nhỏ sang một hạng mục hệ thống: nhận diện → đọc phông → đánh giá theo vai trò → sửa → hậu kiểm, gồm quốc hiệu/tiêu ngữ/Đảng, số/ngày, tên loại/trích yếu, cơ quan và nơi nhận. Tiếp nối B03 `e92ec19e048d6805e5cc3fee9eedaee786f10337` (2344 Core/OpenXML +113 WPF).
+
+Hai lỗi chung tái hiện được: mọi quan sát khác nhau bị coi là trộn không an toàn dù đều hợp lệ; fallback đọc sâu chỉ mở ở một số vùng có Line, và hậu kiểm trước/sau Line dùng hai cách đọc khác nhau. Luồng mới gắn dữ liệu với text hiện tại, phân biệt đúng/sai thật/chưa chắc/sai cỡ hỗn hợp cần duyệt. Đen RGB/đen tự động, các cỡ cùng hợp lệ và đậm không bị ràng buộc không tự thành lỗi; kiểu của dấu cách/ngắt dòng không thay thế kiểu chữ nhìn thấy.
+
+Đọc sau proof XML, dedupe mỗi vùng; aggregate rõ dùng nhanh, chưa rõ đi qua từ rồi các ký tự cần thiết; không ghép được toàn text thì fail closed/fallback có kiểm. Không tăng lượt kết xuất XPS. Mẫu giả 2400 ký tự: 601 lượt Font thay 1801 nếu đọc từng glyph; không phải số đo Word thực tế. Sửa phông/màu/kiểu giữ từng cỡ đang hợp lệ bằng cách không set Size, chụp/chiếu cỡ qua sửa chữ và hậu kiểm cỡ còn lại trước/sau lưu/Line. Cỡ 14 bị ép về 13 vẫn rollback dù cả hai cùng hợp lệ. Đổi hoa dùng Word.Case để giữ run khi chỉ đổi hoa/thường; kiểm nguyên văn vẫn bắt buộc.
+
+| Ví dụ | Kết quả/hướng xử lý |
+|---|---|
+| Trích yếu TNR đen, đứng/đậm, có chữ 13 và chữ 14 | Không báo lỗi chỉ vì cỡ khác nhau |
+| Cùng trích yếu nhưng Arial đỏ, cỡ 13/14 đều đúng | Sửa phông/màu, giữ từng cỡ 13/14, ngắt dòng và gạch chân |
+| Một chữ cỡ 12 sai trộn chữ cỡ 14 đúng | Duyệt từng vùng khi chưa thể sửa cỡ mà giữ phần đúng; không ép toàn vùng về 13 |
+| Một glyph chưa đọc được phông | Giữ thủ công, không suy từ glyph đầu rằng cả dòng đúng |
+
+[Thiết kế và giới hạn](FORMAT-ASSESSMENT.md). Kiểm Core/Desktop có vai trò, scalar undefined, dữ liệu stale/quyền XML, Word thật/giả theo nguồn, Word ranges vượt biên, COM lỗi/mất kết nối, số lời gọi, một glyph sai, giả payload và hậu kiểm cỡ. OfficeFormatSystemCheck tạo mẫu giả đúng/sai, nhiều run/cỡ, dấu cách/ngắt dòng khác kiểu, sửa riêng/chung ba Line, XPS, quét/Undo/rollback/lưu-mở/băm nguồn; CI chỉ biên dịch.
+
+Hiện **4 hạng mục** trong code .61, chưa tạo gói. Chưa khẳng định đã khép phản hồi thực tế .56 trên Office 2021: các nguyên nhân trong code đã sửa và có hồi quy, vẫn cần chạy bài Word/tài liệu thực tế. Gói .60/main/stable .27 giữ nguyên.
+
 ## Tiếp theo
 
 Tiếp tục thể thức/lỗi chữ có điều kiện rõ, ngoại lệ và hồi quy; rà nhận diện và hiệu năng khi có số đo. Chính tả qua từ điển và ngữ nghĩa làm sau. Chỉ chốt gói đợt mới khi đủ bước và các kiểm bắt buộc đạt.

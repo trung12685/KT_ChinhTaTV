@@ -39,6 +39,19 @@ public static class OwnedLineFormatChecks
                     "Adding all three owned Lines does not invent an agency/recipient format warning");
                 assert(DocumentHeadingRules.Check(sample.Rows,sample.Layout,DocumentProfile.State).Count==0,
                     "After owned Lines, centered multi-paragraph subject and discretionary breaks remain valid");
+                var observed=sample.Rows.Select(p=>
+                {
+                    bool agency=p.Text.StartsWith("ĐƠN VỊ BAN HÀNH") || p.Text.StartsWith("CƠ QUAN CHỦ QUẢN");
+                    bool subject=p.Text.StartsWith("Mang lại") || p.Text.StartsWith("Tổng hợp") || p.Text.StartsWith("trong giai đoạn");
+                    float first=agency?12:subject?13:p.Size,second=agency?13:subject?14:p.Size;
+                    return p with {Font="",Size=9999999,FormatMixed=true,BoldMixed=true,
+                        FormatEvidence=new(p.Text.TrimEnd('\r','\a','\n'),new[]{
+                            new ObservedFont("Times New Roman",first,p.Bold?-1:0,p.Italic?-1:0,0),
+                            new ObservedFont("TIMES NEW ROMAN",second,p.Bold?-1:0,p.Italic?-1:0,-16777216)})};
+                }).ToArray();
+                assert(ComponentRules.Check(observed,sample.Layout,DocumentProfile.State).Count==0 &&
+                    DocumentHeadingRules.Check(observed,sample.Layout,DocumentProfile.State).Count==0,
+                    "Owned-Line XML proof plus current visible format evidence accepts equivalent black and legal size variation despite undefined aggregates");
                 foreach(var text in new[]{"ĐƠN VỊ BAN HÀNH",HeadingRules.Motto,"trong giai đoạn thử nghiệm"})
                 {
                     var row=sample.Rows.Single(p=>p.Text.TrimEnd('\r','\a')==text);

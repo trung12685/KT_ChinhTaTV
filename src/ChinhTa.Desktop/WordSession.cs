@@ -128,29 +128,19 @@ public sealed partial class WordSession : IDisposable
                     // Only the existing header prefix needs COM geometry. Every body
                     // paragraph supplies its actual End for the independent XML text proof.
                     liveText.Add(snapshot??new WordParagraphSnapshot(start,(int)r.End,text,0,false,false));
-                    bool documentHeading=Profile==DocumentProfile.State && i<=40 && !HeadingRules.IsCandidate(text,Profile) && snapshot is {InTable:false} &&
-                        (ShapeLineRules.IsDocumentType(text) || snapshot.ParagraphCentered==true);
-                    if (documentHeading || HeadingRules.IsCandidate(text, Profile) ||
+                    if (HeadingRules.IsCandidate(text, Profile) ||
                         Profile == DocumentProfile.State && i<=40 && AdministrativeHeaderRules.IsCandidate(text) ||
                         Profile == DocumentProfile.Personal && System.Text.RegularExpressions.Regex.IsMatch(text, @"^[ \t]+\S"))
                     {
-                        bool administrative=Profile==DocumentProfile.State && i<=40 && AdministrativeHeaderRules.IsCandidate(text);
-                        // The paragraph/cell terminator can carry a different font. Observe
-                        // the same visible text span that a new character-format fix changes.
-                        bool observeVisible=administrative || documentHeading || HeadingRules.IsCandidate(text,Profile);
-                        dynamic observed=observeVisible?document!.Range(start,start+text.TrimEnd('\r','\a','\n').Length):r;
-                        dynamic? f=null,format=null;
+                        // Read location/alignment first. Font reads happen once, after
+                        // XML permission and component roles have been established.
+                        dynamic? format=null;
                         try
                         {
-                            f=observed.Font;format=r.ParagraphFormat;
-                            int bold=(int)f.Bold,italic=(int)f.Italic,color=(int)f.Color;
-                            float size=(float)f.Size;string fontName=(string?)f.Name??"";
-                            paragraphs.Add(new(start, text, bold == -1,
-                            size, (int)format.Alignment, fontName,
-                            italic != 0, color, snapshot?.InTable??(bool)r.Information[12], snapshot?.Page??(int)r.Information[3],
-                            FormatObserved:true,FormatMixed:italic is not (0 or -1) || size<=0 || size>=9999999 || color is 9999999 or -9999999 ||
-                                string.IsNullOrWhiteSpace(fontName),BoldMixed:bold is not (0 or -1))); }
-                        finally { Release(format); Release(f); if(observeVisible)Release(observed); }
+                            format=r.ParagraphFormat;
+                            paragraphs.Add(new(start,text,Alignment:(int)format.Alignment,
+                                InTable:snapshot?.InTable??(bool)r.Information[12],Page:snapshot?.Page??(int)r.Information[3])); }
+                        finally { Release(format); }
                     }
                     else paragraphs.Add(new(start, text,Page:snapshot?.Page??0,InTable:snapshot?.InTable??false));
                 }
@@ -215,12 +205,11 @@ public sealed partial class WordSession : IDisposable
         lastLayout=liveLayout.ToArray();
         lastFormatLayout=liveText.Where(p=>editableStarts.Contains(p.Start) || formatEditableStarts.Contains(p.Start)).ToArray();
         paragraphs=WordTextProof.Apply(paragraphs,editableStarts,outlineEvidence,formatEditableStarts).ToList();
-        foreach(var component in ComponentRules.Identify(paragraphs,headerLayout,Profile))
-        {
-            var observed=ObserveComponent(component.Row);
-            int index=paragraphs.FindIndex(p=>p.Start==component.Row.Start);paragraphs[index]=observed;
-        }
-        foreach(var row in paragraphs.Where(p=>p.FormatEditable && (p.Text.Contains('\v') || !p.TextEditable) && p.Page==1 && (!p.InTable && p.Alignment==1 || HeadingRules.IsCandidate(p.Text,Profile))).ToArray())
+        var observeStarts=ComponentRules.Identify(paragraphs,headerLayout,Profile).Select(t=>t.Row.Start)
+            .Concat(DocumentHeadingRules.ObservationTargets(paragraphs,headerLayout,Profile).Select(p=>p.Start))
+            .Concat(paragraphs.Where(p=>p.Page==1 && HeadingRules.IsCandidate(p.Text,Profile)).Select(p=>p.Start))
+            .Concat(paragraphs.Take(40).Where(p=>Profile==DocumentProfile.State && AdministrativeHeaderRules.IsCandidate(p.Text)).Select(p=>p.Start)).ToHashSet();
+        foreach(var row in paragraphs.Where(p=>observeStarts.Contains(p.Start)).ToArray())
         {
             int index=paragraphs.FindIndex(p=>p.Start==row.Start);paragraphs[index]=ObserveComponent(row);
         }
@@ -234,7 +223,7 @@ public sealed partial class WordSession : IDisposable
         {
             var row=paragraphs.FirstOrDefault(p=>p.Start==issue.Start);
             if(row is not null)Diagnostics.Write("Word.Component.Unverified",null,
-                $"Kind={issue.Kind}; Start={row.Start}; TextEditable={row.TextEditable}; FormatEditable={row.FormatEditable}; Observed={row.FormatObserved}; Mixed={row.FormatMixed}; BoldMixed={row.BoldMixed}; Tnr={row.Font.Equals("Times New Roman",StringComparison.OrdinalIgnoreCase)}; Size={row.Size}; Bold={row.Bold}; Italic={row.Italic}; Color={row.Color}");
+                $"Kind={issue.Kind}; Start={row.Start}; TextEditable={row.TextEditable}; FormatEditable={row.FormatEditable}; Observed={row.FormatObserved}; Mixed={row.FormatMixed}; BoldMixed={row.BoldMixed}; Tnr={row.Font.Equals("Times New Roman",StringComparison.OrdinalIgnoreCase)}; Size={row.Size}; Bold={row.Bold}; Italic={row.Italic}; Color={row.Color}; EvidenceFonts={row.FormatEvidence?.Fonts.Count??0}; EvidenceBound={row.FormatEvidence?.Text==row.Text.TrimEnd('\r','\a','\n')}");
         }
         if(textProofUnavailable || textProofWarning is not null)
             CoverageNotice="Chưa đối chiếu đầy đủ một phần tài liệu để sửa chữ. Đây là phạm vi kiểm tra, không phải lỗi của dòng đầu. "+
@@ -646,7 +635,7 @@ public sealed partial class WordSession : IDisposable
             }
             return;
         }
-        var formatRanges=new List<(Issue Issue,object Range,string Expected)>();
+        var formatRanges=new List<(Issue Issue,object Range,string Expected,FontSizeEvidence? Sizes)>();
         try
         {
             dynamic textContent=document!.Content;
@@ -671,10 +660,11 @@ public sealed partial class WordSession : IDisposable
                 try
                 {
                     if((string)target.Text!=formatIssue.Original)throw new InvalidOperationException("Dòng định dạng đã thay đổi; hãy quét lại.");
-                    formatRanges.Add((formatIssue,(object)target,expectedRow));target=null!;
+                    formatRanges.Add((formatIssue,(object)target,expectedRow,ExpectedSizesFor(formatIssue,plan)));target=null!;
                 }
                 finally{Release(target);}
             }
+            var headingSizes=plan.Where(i=>i.Format?.MaximumSize is not null).ToDictionary(i=>i,i=>ExpectedSizesFor(i,plan));
             bool textPreviousChanged=Changed,started=false,restored=false;
             int applied=0;
             try
@@ -687,11 +677,16 @@ public sealed partial class WordSession : IDisposable
                     dynamic range=document!.Range(item.Start,item.Start+item.Length);
                     try
                     {
-                        if((string)range.Text!=item.Replacement)range.Text=item.Replacement;
+                        if((string)range.Text!=item.Replacement)
+                        {
+                            if(item.Kind is FixKind.AgencyText or FixKind.DocumentTypeText && item.Original.Length==item.Replacement.Length &&
+                                item.Original.ToUpperInvariant()==item.Replacement)range.Case=1; // wdUpperCase preserves run formatting.
+                            else range.Text=item.Replacement;
+                        }
                         if(item.CharacterFormat is CharacterFormat character)
                         {
                             dynamic font=range.Font;
-                            try{font.Name="Times New Roman";font.Size=character.Size;font.Italic=character.Italic?-1:0;font.Color=0;
+                            try{font.Name="Times New Roman";if(!character.PreserveSize)font.Size=character.Size;font.Italic=character.Italic?-1:0;font.Color=0;
                                 if(character.Bold is bool bold)font.Bold=bold?-1:0;}
                             finally{Release(font);}
                         }
@@ -701,7 +696,7 @@ public sealed partial class WordSession : IDisposable
                             try
                             {
                                 font.Bold=-1;font.Italic=0;font.Color=0;
-                                font.Size=heading.Size;font.Name="Times New Roman";
+                                if(heading.MaximumSize is null)font.Size=heading.Size;font.Name="Times New Roman";
                                 if(heading.Alignment is int alignment)format.Alignment=alignment;
                             }
                             finally{Release(format);Release(font);}
@@ -711,7 +706,7 @@ public sealed partial class WordSession : IDisposable
                             // Track the actual replacement range, after a full heading text
                             // replacement has changed its length. Later lower CP edits may move it.
                             dynamic tracked=range.Duplicate;
-                            try{formatRanges.Add((item,(object)tracked,item.Replacement));tracked=null!;}
+                            try{formatRanges.Add((item,(object)tracked,item.Replacement,headingSizes.GetValueOrDefault(item)));tracked=null!;}
                             finally{Release(tracked);}
                         }
                         string actual=(string?)range.Text??"";
@@ -736,21 +731,19 @@ public sealed partial class WordSession : IDisposable
                         throw new InvalidOperationException("Chữ sau lưu không đúng phạm vi đã chọn; phải khôi phục cả lượt.");
                     foreach(var styled in formatRanges)
                     {
-                        dynamic target=styled.Range;dynamic font=target.Font;dynamic? paragraphFormat=null;
+                        dynamic target=styled.Range;dynamic? paragraphFormat=null;
                         try
                         {
                             int? alignment=null;
                             if(styled.Issue.Format?.Alignment is not null)
                             {paragraphFormat=target.ParagraphFormat;alignment=(int)paragraphFormat.Alignment;}
-                            string name=(string?)font.Name??"";float size=(float)font.Size;
-                            int bold=(int)font.Bold,italic=(int)font.Italic,color=(int)font.Color;
-                            bool matches=styled.Issue.CharacterFormat is CharacterFormat character
-                                ?character.Matches(name,size,italic,color,bold)
-                                :styled.Issue.Format is HeadingFormat heading && heading.Matches(name,size,bold,italic,color,alignment);
+                            bool matches=VisibleFormatReader.Matches((object)target,styled.Expected,styled.Issue.CharacterFormat,styled.Issue.Format,alignment);
                             if((string)target.Text!=styled.Expected || !matches)
                                 throw new InvalidOperationException("Định dạng sau lưu chưa khớp gợi ý hoặc vùng chữ bị thay đổi; phải khôi phục cả lượt.");
+                            if(styled.Sizes is not null && !styled.Sizes.Matches(VisibleFormatReader.ReadSizes((object)target,styled.Expected)))
+                                throw new InvalidOperationException("Cỡ chữ hợp lệ đã đổi sau sửa phông; phải khôi phục cả lượt.");
                         }
-                        finally{Release(paragraphFormat);Release(font);}
+                        finally{Release(paragraphFormat);}
                     }
                 },()=>
                 {

@@ -6,9 +6,11 @@
 
 Ưu tiên đã thống nhất: **thể thức → lỗi chữ và lặp từ/cụm từ → ngữ cảnh và thư viện sau cùng**. Phần chính tả tiếng Việt đầy đủ còn cần xây dựng; không coi quy tắc minh họa hiện tại là bộ kiểm hoàn chỉnh.
 
-## Đang phát triển sau 0.1.60 — B01–B03
+## Đang phát triển sau 0.1.60 — B04: kiểm định dạng theo hệ thống
 
-Mở rộng C13: `Kế hoạch kế hoạch đã duyệt.` → `Kế hoạch đã duyệt.` khi chỉ khác chữ hoa đầu đoạn. B02/C14: `Theo mẫu (nội dung) ,báo cáo.` → `Theo mẫu (nội dung), báo cáo.` trong câu chữ rõ. B03/C18–C19: `Đã hoàn thành.Xong!` → `Đã hoàn thành. Xong!` với câu cuối một từ có dấu kết câu đơn; chọn riêng trước/sau, không mở viết tắt/đuôi tệp/chuỗi dấu. Giữ Unicode/kiểu, ngoặc và phần chưa chọn, XML và một Undo/rollback; cần duyệt. Code mang version **0.1.61**, mới **3 bước**, chưa ZIP/tag/release .61. [Nhật ký, ví dụ và giới hạn](docs/BATCH-AFTER-0.1.60.md). Gom 5–10 bước đã kiểm rồi mới tạo gói tiếp theo.
+B04 sửa chung luồng kiểm phông/cỡ/màu/kiểu cho quốc hiệu/tiêu ngữ, số/ngày, tên loại/trích yếu, cơ quan và nơi nhận. Các cỡ cùng hợp lệ, hai mã màu đen hoặc kiểu khác ở dấu cách/ngắt dòng không tự thành lỗi. Đọc sau proof XML, mỗi vùng một lần; aggregate rõ dùng ngay, chưa rõ thì đọc từ rồi ký tự cần thiết. Sửa phông/màu giữ từng cỡ hợp lệ và hậu kiểm cỡ ký tự còn lại sau sửa chữ/Line; chưa đọc chắc thì giữ thủ công. Không mở sửa chữ qua đối tượng hoặc bỏ kiểm nét XPS/Undo/rollback.
+
+B01–B03 trước đó: cụm lặp chỉ khác chữ hoa đầu đoạn, dấu phẩy/chấm phẩy sau ngoặc và câu cuối một từ. Code **0.1.61**, đã **4 hạng mục**, chưa ZIP/tag/release .61. [Nhật ký và giới hạn](docs/BATCH-AFTER-0.1.60.md) · [Luồng định dạng và hồi quy](docs/FORMAT-ASSESSMENT.md). Gom 5–10 hạng mục đã kiểm rồi đóng gói; cảnh báo cũ trên Office 2021 chưa khép chỉ bằng CI.
 
 ## Bản thử 0.1.60 — gom B01–B05
 

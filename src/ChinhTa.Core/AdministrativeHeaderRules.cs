@@ -69,7 +69,20 @@ public static class AdministrativeHeaderRules
                 continue;
             }
             bool known=date?CheckDate(p,result):CheckNumber(p,result,namedType);
-            if(p.FormatObserved && (p.FormatMixed || p.Font!="Times New Roman" ||
+            if(p.FormatEvidence is not null)
+            {
+                var assessment=new FormatPolicy(13,date?14:13,date,null).Assess(p);
+                if(known && assessment.State==FormatState.Repairable)
+                {
+                    string text=Clean(p.Text);
+                    result.Add(new(p.Start,text.Length,text,text,"Times New Roman, màu đen, đúng cỡ/kiểu của dòng; giữ cỡ hợp lệ, đậm/gạch chân, ô trống và căn đoạn.",false,
+                        FixKind.AdministrativeFormat,Citation:Citation(date),Title:date?"Định dạng địa danh/ngày tháng":"Định dạng số/ký hiệu",
+                        CharacterFormat:new(assessment.Size,date,PreserveSize:assessment.PreserveSize)));
+                }
+                else if(assessment.State is FormatState.Unknown or FormatState.NeedsReview || !known && assessment.State==FormatState.Repairable)
+                    result.Add(Notice(p,date,"Chưa thể sửa định dạng cả dòng an toàn; giữ nguyên cỡ hợp lệ khác và kiểm tra thủ công."));
+            }
+            else if(p.FormatObserved && (p.FormatMixed || p.Font!="Times New Roman" ||
                 p.Color is not (0 or -16777216) || !float.IsFinite(p.Size) ||
                 (date ? p.Size<12.99f || p.Size>14.01f || !p.Italic : Math.Abs(p.Size-13)>.01f || p.Italic)))
             {
