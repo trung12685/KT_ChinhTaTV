@@ -12,7 +12,9 @@ B01 của đợt mới bổ sung sửa cỡ hỗn hợp trong các vùng đã nh
 
 B03 cho viết hoa tên loại cỡ hỗn hợp, ví dụ `Báo cáo` có chữ13/14 → `BÁO CÁO`, giữ từng cỡ và gạch chân. Có proof định dạng từng ký tự/căn đoạn sau lưu và sau Line; chọn riêng giữ phần chưa chọn, chọn chung chỉ sửa đúng thuộc tính đã duyệt. [Thiết kế](docs/CASE-PRESERVATION.md).
 
-Code dùng **0.1.62**, hiện **3 bước**, **chưa có bản tải .62**. Gói gần nhất là [0.1.61](https://github.com/trung12685/KT_ChinhTaTV/releases/tag/v0.1.61), đã phát hành với 2435 Core/OpenXML +144 WPF +1 kiểm metadata gói. Gom khoảng 5–10 bước mới tạo gói tiếp; chưa có bằng chứng runtime Office2021 để khép lỗi phông cũ. [Nhật ký mới](docs/BATCH-AFTER-0.1.61.md) · [Thiết kế](docs/SELECTIVE-SIZE-REPAIR.md).
+B04 bổ sung mục nhiều cấp: trong mục1, chuỗi `1.1., 1.2., 1.4.` → `1.1., 1.2., 1.3.`; chỉ sửa phần số cuối, giữ tiền tố/tab. Đổi cha còn nhãn con phụ thuộc hoặc có dẫn chiếu liên quan vẫn cần duyệt cả nhóm. [Phạm vi/ví dụ](docs/HIERARCHICAL-OUTLINE.md).
+
+Code dùng **0.1.62**, hiện **4 bước**, **chưa có bản tải .62**. Gói gần nhất là [0.1.61](https://github.com/trung12685/KT_ChinhTaTV/releases/tag/v0.1.61), đã phát hành với 2435 Core/OpenXML +144 WPF +1 kiểm metadata gói. Gom khoảng 5–10 bước mới tạo gói tiếp; chưa có bằng chứng runtime Office2021 để khép lỗi phông cũ. [Nhật ký mới](docs/BATCH-AFTER-0.1.61.md) · [Thiết kế](docs/SELECTIVE-SIZE-REPAIR.md).
 
 ## Bản thử 0.1.61 — kiểm định dạng và sửa nhiều nhóm
 

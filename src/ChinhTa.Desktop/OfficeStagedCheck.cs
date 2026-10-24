@@ -69,6 +69,7 @@ internal static class OfficeStagedCheck
             !Digest(source).SequenceEqual(sourceDigest) || !Digest(full).SequenceEqual(fullDigest))
             throw new InvalidOperationException("Lưu/mở nhiều nhóm chưa đúng hoặc nguồn mẫu bị thay đổi.");
         pass("Nhiều nhóm: chữ/phông → căn giữa → ba nét XPS, quét, một Undo, lưu/mở và nguồn nguyên vẹn");
+        OfficeHierarchicalOutlineCheck.Run(test,modern,folder,pass);
     }
     private static IReadOnlyList<Issue> Review(WordSession test)
     {

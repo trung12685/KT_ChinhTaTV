@@ -11,7 +11,7 @@ public static class CurrentTextPlan
             if(!requested.CanFix || requested.LineFix is not null || requested.CenterFix is not null ||
                 available.Count(i=>i.Start==requested.Start && i.Length==requested.Length &&
                     i.Original==requested.Original && i.Replacement==requested.Replacement &&
-                    i.Kind==requested.Kind && i.Format==requested.Format && i.CharacterFormat==requested.CharacterFormat)!=1)
+                    i.Kind==requested.Kind && i.OutlineContext==requested.OutlineContext && i.Format==requested.Format && i.CharacterFormat==requested.CharacterFormat)!=1)
                 throw new InvalidOperationException("Gợi ý chữ/định dạng đã thay đổi hoặc vùng này chưa cho phép sửa; chưa áp dụng lượt sửa. Hãy quét lại.");
     }
 }

@@ -41,6 +41,7 @@ DocumentTypeTextChecks.Run(Assert);
 DocumentTypeCatalogChecks.Run(Assert);
 DocumentTypeConsistencyChecks.Run(Assert);
 OutlineChecks.Run(Assert);
+HierarchicalOutlineChecks.Run(Assert);
 HeadingPostSaveChecks.Run(Assert);
 CheckpointCleanupChecks.Run(Assert);
 RepeatedTextChecks.Run(Assert);

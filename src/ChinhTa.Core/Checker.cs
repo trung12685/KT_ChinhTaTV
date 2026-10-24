@@ -35,10 +35,11 @@ public record CharacterFormat(float Size,bool Italic,bool? Bold=null,ComponentRo
         (PreserveSize?size>=SizeRange.Minimum && size<=SizeRange.Maximum:Math.Abs(size-Size)<.01f) && italic==(Italic?-1:0) && color is 0 or -16777216 &&
         (Bold is null || bold==(Bold==true?-1:0));
 }
+public sealed record OutlineEditContext(int? ParentStart,int GroupStart,string Label,string Delimiter);
 public record Issue(int Start, int Length, string Original, string Replacement,
     string Message, bool BatchSafe, FixKind Kind = FixKind.Text,
     bool CanFix = true, string? Citation = null, HeadingFormat? Format = null, string? Title = null, ShapeLineFix? LineFix = null,
-    CharacterFormat? CharacterFormat = null, AdministrativeCenterFix? CenterFix = null,IReadOnlyList<Issue>? Prerequisites=null)
+    CharacterFormat? CharacterFormat = null, AdministrativeCenterFix? CenterFix = null,IReadOnlyList<Issue>? Prerequisites=null,OutlineEditContext? OutlineContext=null)
 {
     public string DisplayText => Title ?? Original;
     public bool AddsSpaceAfterColon => Kind==FixKind.ColonSpace && Original==":" && Replacement==": ";

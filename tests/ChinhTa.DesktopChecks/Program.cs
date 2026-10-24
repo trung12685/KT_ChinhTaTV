@@ -193,6 +193,7 @@ static class Program
         HeadingSelectiveSizeWriterChecks.Run(Assert);
         CharacterStyleReaderChecks.Run(Assert);
         DependencyReviewChecks.Run(Assert);
+        HierarchicalReviewChecks.Run(Assert);
         RepairProgressDesktopChecks.Run(Assert);
         DocumentTypeCatalogDesktopChecks.Run(Assert);
         Console.WriteLine($"{checks} WPF checks passed.");

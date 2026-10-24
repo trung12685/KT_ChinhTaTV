@@ -1,0 +1,81 @@
+using System.IO;
+using System.IO.Compression;
+using System.Security.Cryptography;
+using System.Xml.Linq;
+using ChinhTa.Core;
+
+namespace ChinhTa.Desktop;
+
+internal static class OfficeHierarchicalOutlineCheck
+{
+    public static void Run(WordSession test,string modern,string folder,Action<string> pass)
+    {
+        string isolated=Path.Combine(folder,"decimal-outline");Directory.CreateDirectory(isolated);
+        string seed=OfficeComponentCheck.Create(modern,isolated,false),source=Create(seed,isolated,false),guarded=Create(seed,isolated,true);
+        byte[] hash=SHA256.HashData(File.ReadAllBytes(source));test.Profile=DocumentProfile.State;test.Open(source);
+        bool Body(Issue i)=>i.CanFix && i.Kind is FixKind.OutlineOrder or FixKind.OutlineMarker or FixKind.Text or FixKind.RepeatedText;
+        var found=test.Check();var orders=found.Where(i=>i.CanFix && i.Kind==FixKind.OutlineOrder).ToArray();
+        if(orders.Length!=2 || orders.Any(i=>i.Original!="4" || i.Replacement!="2"))
+            throw new InvalidOperationException("Mẫu số nhiều cấp chưa nhận đúng hai phần số cuối cần sửa.");
+        string original=test.ReadCheckText();var first=orders[0];
+        var prefix=first with {Start=first.Start-2,Length=2,Original="1.",Replacement="1."};
+        var decoration=test.ReadCheckDecorations(prefix);
+        test.Fix(first);test.Check();
+        if(test.ReadCheckText()!=original.Replace("1.4.","1.2.",StringComparison.Ordinal) || test.ReadCheckDecorations(prefix)!=decoration ||
+            test.Check().Count(i=>i.CanFix && i.Kind==FixKind.OutlineOrder)!=1)
+            throw new InvalidOperationException("Sửa riêng số cuối làm đổi tiền tố/kiểu hoặc mất mục chưa chọn.");
+        test.Undo();test.Check();
+        if(test.ReadCheckText()!=original)throw new InvalidOperationException("Undo riêng số nhiều cấp chưa phục hồi chữ.");
+        Issue[] Select()=>test.Check().Where(Body).Concat(OfficeComponentCheck.ReadLines(test).Where(i=>i.LineFix?.Role==LineRole.Subject)).ToArray();
+        var selected=Select();bool restored=false;
+        try{test.FixStagedFailureProbe(selected,3);}catch(InvalidOperationException e) when(e.InnerException is OfficeStagedProbeException){restored=true;}
+        if(!restored || test.ReadCheckText()!=original || test.CheckUndoCount!=0 || test.Changed)
+            throw new InvalidOperationException("Lỗi sau Line chưa phục hồi cả nhóm số nhiều cấp/dấu đơn/chữ.");
+        test.FixSelection(Select());test.Check();
+        string expected=original.Replace("1.4.","1.2.",StringComparison.Ordinal).Replace("2.4.","2.2.",StringComparison.Ordinal)
+            .Replace("- Nội dung  kế hoạch kế hoạch","Nội dung kế hoạch",StringComparison.Ordinal);
+        if(test.ReadCheckText()!=expected || test.Check().Any(Body) || test.CheckUndoCount!=1 ||
+            !OfficeComponentCheck.ReadLines(test).Select(i=>i.LineFix!.Role).OrderBy(r=>r).SequenceEqual(new[]{LineRole.Agency,LineRole.Motto}))
+            throw new InvalidOperationException("Nhóm số nhiều cấp/chữ/Line chưa đúng phạm vi, quét lại hoặc một Undo.");
+        string saved=Path.Combine(isolated,"decimal-fixed.docx");test.SaveCopy(saved);test.Undo();test.Check();
+        if(test.ReadCheckText()!=original)throw new InvalidOperationException("Một Undo chưa phục hồi toàn lượt số nhiều cấp.");
+        test.Open(saved);test.Check();
+        if(test.ReadCheckText()!=expected || test.Check().Any(Body) || !hash.SequenceEqual(SHA256.HashData(File.ReadAllBytes(source))))
+            throw new InvalidOperationException("Lưu/mở số nhiều cấp chưa đúng hoặc nguồn thay đổi.");
+        test.Open(guarded);var blocked=test.Check();
+        if(blocked.Any(i=>i.CanFix && i.Title?.Contains("1.4 → 1.2",StringComparison.Ordinal)==true) ||
+            !blocked.Any(i=>!i.CanFix && i.Kind==FixKind.OutlineOrder))
+            throw new InvalidOperationException("Dẫn chiếu đến nhãn dự kiến chưa chặn sửa riêng chuỗi liên quan.");
+        pass("Số nhiều cấp: sửa riêng/chung số cuối, giữ tiền tố/tab/kiểu, dẫn chiếu chặn nhóm liên quan, lỗi sau Line/rollback, một Undo/lưu-mở/băm nguồn");
+    }
+    private static string Create(string seed,string folder,bool reference)
+    {
+        string path=Path.Combine(folder,reference?"decimal-referenced.docx":"decimal-input.docx");File.Copy(seed,path);
+        using var zip=ZipFile.Open(path,ZipArchiveMode.Update);var entry=zip.GetEntry("word/document.xml")!;XDocument xml;
+        using(var input=entry.Open())xml=XDocument.Load(input,LoadOptions.PreserveWhitespace);
+        XNamespace w="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+        var recipient=xml.Descendants(w+"p").Single(p=>string.Concat(p.Descendants(w+"t").Select(t=>t.Value))=="Nơi nhận:").Ancestors(w+"tbl").First();
+        var greeting=xml.Descendants(w+"p").Single(p=>string.Concat(p.Descendants(w+"t").Select(t=>t.Value)).StartsWith("Kính gửi:",StringComparison.Ordinal));
+        if(greeting.Parent!=recipient.Parent)throw new InvalidOperationException("Mẫu kiểm số nhiều cấp chưa có ranh giới thân trực tiếp.");
+        foreach(var old in greeting.ElementsAfterSelf().TakeWhile(e=>e!=recipient).ToArray())old.Remove();
+        XElement Run(string text,bool decorated=false)=>new(w+"r",new XElement(w+"rPr",
+            new XElement(w+"rFonts",new XAttribute(w+"ascii","Times New Roman"),new XAttribute(w+"hAnsi","Times New Roman")),
+            new XElement(w+"sz",new XAttribute(w+"val",26)),new XElement(w+"b",new XAttribute(w+"val",decorated?1:0)),
+            new XElement(w+"u",new XAttribute(w+"val",decorated?"single":"none"))),new XElement(w+"t",new XAttribute(XNamespace.Xml+"space","preserve"),text));
+        XElement Row(string text)
+        {
+            var p=new XElement(w+"p",new XElement(w+"pPr",new XElement(w+"numPr",new XElement(w+"numId",new XAttribute(w+"val",0)))));
+            foreach(var part in text.Split('\t').Select((text,i)=>(text,i)))
+            {
+                if(part.i>0)p.Add(new XElement(w+"r",new XElement(w+"tab")));
+                if(part.text.StartsWith("1.4.",StringComparison.Ordinal))p.Add(Run("1.",true),Run(part.text[2..]));
+                else p.Add(Run(part.text));
+            }
+            return p;
+        }
+        var rows=new[]{"1. Mục cha","\t1.1.\tNhánh đầu","\t1.4.\tNhánh sau","- Nội dung  kế hoạch kế hoạch",
+            "2. Mục cha sau","\t2.1.\tNhánh đầu","\t2.4.\tNhánh sau"}.Select(Row).ToList();
+        if(reference)rows.Add(Row("Xem mục 1.2 để đối chiếu."));recipient.AddBeforeSelf(rows);
+        entry.Delete();using(var output=zip.CreateEntry("word/document.xml").Open())xml.Save(output);return path;
+    }
+}

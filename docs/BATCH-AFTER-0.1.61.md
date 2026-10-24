@@ -34,6 +34,16 @@ Core kiểm toàn danh mục/bổ sung/alias, padding, CP không phải chỉ s�
 
 [Thiết kế/cách thử](CASE-PRESERVATION.md). B01–B03 là **3 hạng mục**, vẫn25 đề xuất/8 thủ công/1 minh họa; báo cáo UI/TXT có ví dụ C24. Kết quả đúng commit và trạng thái hoàn thành theo [PR38](https://github.com/trung12685/KT_ChinhTaTV/pull/38)/Windows checks; không thay tổng CI bằng runner cục bộ. Chưa tạo gói/tag .62, tiếp tục gom khoảng5–10 bước.
 
+## B04 — Mục số nhiều cấp, chỉ sửa phần số cuối
+
+Mở C20 từ nhãn đơn sang2–4 cấp gõ tay có dấu `.`/`)` và khoảng phân cách, cha số trực tiếp duy nhất đang mở, mỗi thành phần1–999 không số0 đầu, sibling bắt đầu1 và cùng kiểu/thụt lề. Ví dụ trong mục1: `1.1., 1.2., 1.4.` →`1.1., 1.2., 1.3.`. Span chỉ gồm số cuối; giữ tiền tố, delimiter, leading/separator tabs và nội dung. Các cha khác có bộ đếm riêng, chọn một nhóm không đổi phần chưa chọn. OutlineEditContext gắn nhãn/kiểu dấu, cha và đầu nhóm vào proposal; đổi tiền tố không được dùng lại gợi ý cũ dù span số cuối còn y hệt. C21 đếm dash/plus đúng theo cha nhiều cấp.
+
+Chặn đổi số cha nếu còn tiền tố con hoặc hint chưa chắc phụ thuộc; giữ cả nhóm sửa thứ tự để tránh tạo trùng/sai tiền tố quanh mục thủ công. Thiếu/nhảy/ambiguous cha, số0 đầu, trộn cách ghi hoặc sâu hơn4 cấp không được tự sửa. Không coi một số thập phân trong nội dung là lỗi mục; thiếu chứng cứ thì chỉ dừng phép sửa chưa chắc. Dẫn chiếu chữ đến nhãn hiện tại, nhãn dự kiến hoặc hậu duệ, gồm danh sách/range đơn giản, cùng REF fields giữ thủ công nhóm liên quan; không tự sửa dẫn chiếu. Index một lần và chỉ lấy4 prefix ancestor cần thiết. Không gán các lựa chọn này thành điều khoản NĐ30.
+
+Core kiểm 2–4 cấp/punctuation/tab/Unicode, multi-digit tail, nhiều cha, sửa riêng/chung với dấu đơn/khoảng trắng/lặp, missing/ambiguous/zero/restart/auto/reference/unknown-scope, stale và rollback; 1200 đoạn giả kiểm300 cha độc lập, không là benchmark Word. XML thật/giả kiểm LabelThroughTabs giữ quyền chữ chung đóng. Desktop kiểm compact full-label rows, RequiredFormat, check nhóm/từng lỗi và manual cascade. OfficeHierarchicalOutlineCheck dùng mẫu giả có nhãn con, giữ prefix đậm/gạch chân, sửa riêng/chung chữ + Line, lỗi sau Line, một Undo/lưu-mở/băm nguồn; CI chỉ biên dịch Word.
+
+B01–B04 là **4 hạng mục** trong .62, vẫn25 đề xuất/8 thủ công/1 minh họa. [Phạm vi/cách thử](HIERARCHICAL-OUTLINE.md); C20 trong báo cáo TXT có ví dụ mới. Kết quả đúng commit và hoàn thành theo [PR38](https://github.com/trung12685/KT_ChinhTaTV/pull/38)/Windows checks. Chưa gói/tag .62, chưa Office2021 PASS hoặc khép .56 chỉ bằng CI. Khi chốt gói tiếp theo cần kèm hướng dẫn CASE-PRESERVATION và HIERARCHICAL-OUTLINE cùng tài liệu định dạng/đợt.
+
 ## Việc tiếp theo
 
 Tiếp tục các vùng thể thức còn thiếu khi có nhận diện/căn cứ rõ, mở rộng lỗi chữ có ngoại lệ và giảm thao tác Word trùng khi có bằng chứng. Phần từ điển/chính tả đầy đủ và ngữ nghĩa vẫn theo giai đoạn sau; không coi chức năng cỡ chữ là hoàn thành các phần này. Chỉ tạo Windows sau đủ đợt và kiểm bắt buộc đạt.
