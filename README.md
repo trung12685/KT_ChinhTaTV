@@ -12,7 +12,9 @@ B01 thêm C26 kiểm/sửa phông, màu và cỡ đoạn văn xuôi thường đ
 
 B02 thêm C27 căn đều và thụt dòng đầu văn xuôi chắc: căn trái/0cm → căn đều/1,27cm. Giữ mức1cm hoặc1,27cm đang đúng, chữ/phông/cỡ và khoảng đoạn/giãn dòng chưa chọn; sửa riêng/chung C26/chữ/Line, quét mới và một Undo/rollback. Không mở bảng/mục/chữ ký hoặc toàn thân bài. [Phạm vi C27](docs/BODY-PARAGRAPH.md).
 
-Tổng code: **27 đề xuất/8 thủ công/1 minh họa**. Chưa đóng gói .63; tích lũy khoảng 5–10 bước. [Phạm vi C26](docs/BODY-FORMAT.md) · [Nhật ký và bước tiếp theo](docs/BATCH-AFTER-0.1.62.md). [Windows gần nhất .62](https://github.com/trung12685/KT_ChinhTaTV/releases/tag/v0.1.62); chưa xác nhận Word runtime từ CI.
+B03–B04 thêm C28 khoảng giữa hai đoạn (After trước + Before sau còn dưới6pt → sau đoạn trước6pt) và C29 giãn dòng (Double/Multiple ngoài1–1,5 → Single). Không báo thiếu chỉ từ After<6; khác trang, auto/contextual/grid, kiểu gộp hoặc Exactly/AtLeast chưa đo giữ ngoài phạm vi. Ghép cùng chữ/phông/căn/Line, giữ phần chưa chọn và kiểm lại đoạn kế sau lưu/Line. [Chi tiết](docs/BODY-SPACING.md).
+
+Tổng code: **29 đề xuất/8 thủ công/1 minh họa**, hoàn thành4 bước. Chưa đóng gói .63; tích lũy khoảng 5–10 bước. [Phạm vi C26](docs/BODY-FORMAT.md) · [Nhật ký và bước tiếp theo](docs/BATCH-AFTER-0.1.62.md). [Windows gần nhất .62](https://github.com/trung12685/KT_ChinhTaTV/releases/tag/v0.1.62); chưa xác nhận Word runtime từ CI.
 
 ## Bản thử tích lũy 0.1.62 — năm hạng mục sau .61
 

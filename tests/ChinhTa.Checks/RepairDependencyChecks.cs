@@ -55,6 +55,6 @@ public static class RepairDependencyChecks
             !tooltip.Action.Contains("10 pt"),"A deferred Line tooltip describes prerequisites/re-measurement without advertising provisional geometry as final");
         var report=DevelopmentReport.Build("0.1.61",DateTimeOffset.UnixEpoch);
         assert(report.Contains("B05") && report.Contains("chọn kèm đúng") && report.Contains("bỏ đọc CP") &&
-            DevelopmentReport.Count(CapabilityMode.Reviewable)==27,"The report describes dependency-aware repair and actual measurement without inflating the capability count");
+            DevelopmentReport.Count(CapabilityMode.Reviewable)==29,"The report describes dependency-aware repair and actual measurement without inflating the capability count");
     }
 }

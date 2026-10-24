@@ -98,6 +98,7 @@ public sealed partial class WordSession
         }
         Checkpoint();
         string original=ReadStoryText(),expected=AtomicTextBatch.ExpectedStory(text,original,ReadPrefix);
+        var spacingProofs=BodySpacingVerification.Build(text,original,ReadPrefix);
         var requests=selected.Select(i=>new DeferredRepair(i,StagedRepairBatch.Stage(i)==RepairStage.Text?i.Replacement:
             StagedRepairBatch.ExpectedReference(i,text,original,ReadPrefix))).ToArray();
         var formats=text.Where(i=>i.Format is not null || i.CharacterFormat is not null).Select(i=>new StagedFormat(i,
@@ -156,6 +157,7 @@ public sealed partial class WordSession
                     if(requests.Where(r=>StagedRepairBatch.Stage(r.Requested)!=RepairStage.Text).Any(r=>StagedGeometryResolver.Resolve(r,review) is not null))
                         throw new InvalidOperationException("Còn mục đã chọn chưa đạt sau hậu kiểm; phải khôi phục cả lượt.");
                     VerifyStagedFormats(formats);
+                    VerifyBodySpacing(spacingProofs,expected);
                 },
                 ()=>
                 {

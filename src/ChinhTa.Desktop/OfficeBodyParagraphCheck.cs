@@ -61,5 +61,6 @@ internal static class OfficeBodyParagraphCheck
         if(test.ReadCheckText()!=expectedText || !expected.Matches(test.ReadCheckCurrentStyles(expected.Text)) || !correctStyle.Matches(test.ReadCheckCurrentStyles(Correct)) ||
             !hash.SequenceEqual(SHA256.HashData(File.ReadAllBytes(source))))throw new InvalidOperationException("Lưu/mở căn/thụt chưa giữ đủ cỡ/khoảng đoạn hoặc nguồn bị đổi.");
         pass("Căn/thụt văn xuôi: sửa riêng giữ lỗi phông, sửa chung chữ/phông/ba Line, giữ cỡ/gạch chân/giãn dòng, rollback/một Undo/lưu-mở/nguồn");
+        OfficeBodySpacingCheck.Run(test,source,isolated,pass);
     }
 }

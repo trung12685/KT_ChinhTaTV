@@ -1,5 +1,7 @@
 # C27 — căn đều và thụt đầu dòng văn xuôi thường
 
+B03/B04 đã có [C28/C29](BODY-SPACING.md) với duyệt riêng cho khoảng đoạn/giãn dòng đủ bằng chứng. Các giới hạn dưới đây là phạm vi riêng của C26/C27 lúc bổ sung; không mở toàn bộ thân bài hoặc mọi kiểu giãn dòng.
+
 B02 sau .62, code .63 đang phát triển; chưa đóng gói Windows .63. Căn cứ đã đối chiếu trang nguồn: NĐ30 Phụ lục I, phần I, II.6.e (PDF25): nội dung căn đều hai lề; dòng đầu lùi1cm hoặc1,27cm. Không gọi phần này là điểm b.
 
 ## Ví dụ và phạm vi

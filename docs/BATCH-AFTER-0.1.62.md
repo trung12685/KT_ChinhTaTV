@@ -23,11 +23,23 @@ Tổng danh mục: **26 nhóm đề xuất, 8 thủ công, 1 minh họa**; khôn
 
 Tổng code sau B02: **27 đề xuất/8 thủ công/1 minh họa**. Hoàn thành2 hạng mục sau .62, chưa đóng gói .63. [Phạm vi C27](BODY-PARAGRAPH.md).
 
+## B03 — C28 khoảng cách giữa hai đoạn
+
+Hai đoạn văn xuôi liền nhau cùng trang, After trước0pt + Before sau0pt → sau đoạn trước6pt. Xét cả hai khoảng và chỉ kết luận khi tổng chưa thể đạt6pt, không chỉ thấy After<6 là báo lỗi. Giữ ngoài phạm vi tổng có thể đủ nhưng gộp chưa rõ, auto/contextual/grid, page/keep, khoảng trống/mục/bảng xen giữa. Chụp XML/ngữ cảnh/trang vật lý và đoạn kế, hậu kiểm cặp sau lưu/Line; chỉ ghi After, giữ phần chưa chọn.
+
+## B04 — C29 giãn dòng
+
+Double hoặc Multiple ngoài1–1,5 → Single; Single/1,5/Multiple trong khoảng giữ đúng. Exactly/AtLeast chưa có phép đo tương đương giữ ngoài phạm vi. Writer chỉ đổi rule, không ghi pt làm chuyển sang Exactly; giữ Before/After/căn/thụt/glyph chưa chọn. Ghép C26/C27/C28/C29 từ snapshot bất biến theo thứ tự checkbox nào cũng đúng, sau chữ đo lại Line; một Undo/rollback.
+
+Core/desktop kiểm riêng/chung, biên trang/đoạn/context/style, chế độ giãn dòng, stale/neighbor, writer/drift/COM/checkbox. Fixture Word kiểm riêng/chung chữ/phông/căn/ba Line, khôi phục/lưu-mở/nguồn; CI chỉ biên dịch fixture. Kết quả mới theo đúng commit tại PR39/Actions, không lấy tổng B02 làm bằng chứng. [Phạm vi C28/C29](BODY-SPACING.md).
+
+Sau B04: **4 hạng mục**, code .63 **29 đề xuất/8 thủ công/1 minh họa**, chưa đóng gói Windows .63. Bản tải .62, main/stable giữ nguyên. Chưa có Word runtime hoặc bằng chứng khép phản hồi Office2021 cũ.
+
 ## Hạng mục tiếp theo
 
 1. Mở rộng nhận diện thân bài từng trường hợp có bằng chứng, giữ các phần nhấn mạnh và cấu trúc riêng.
 2. Kiểm tổng thể C27 căn/thụt trên Word thực tế và mở phạm vi từng vùng khi có bằng chứng, không tự áp toàn văn bản.
-3. Kiểm khoảng đoạn tối thiểu 6 pt và giãn dòng đơn đến 1,5 lines; giữ ngoại lệ và chưa tự đổi khi chưa nhận diện đủ.
+3. Đo các ngoại lệ khoảng đoạn cộng/gộp/contextual/auto và giãn Exactly/AtLeast/grid; C28/C29 đã có phạm vi chắc riêng, không tự kết luận các phần chưa đo.
 4. Kiểm tổng thể nhiều nhóm, danh sách mới sau sửa, tiến độ, Undo/lưu-mở và Office 2021.
 5. Tiếp tục lỗi chữ cơ bản có mẫu/ngoại lệ; từ điển/ngữ nghĩa sau cùng.
 

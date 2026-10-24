@@ -41,11 +41,17 @@ public sealed class CharacterStyleEvidence
                 (s.Font.Size<format.SizeRange.Minimum || s.Font.Size>format.SizeRange.Maximum)?format.Size:s.Font.Size
         }}),Paragraph);
     }
-    public CharacterStyleEvidence WithParagraph(BodyParagraphFix fix)
+    public CharacterStyleEvidence WithParagraph(BodyParagraphFix fix,ObservedParagraphStyle? baseline=null)
     {
-        if(!fix.Valid || Paragraph is null || !fix.Before.Matches(Paragraph))
+        if(!fix.Valid || Paragraph is null || !fix.Before.Matches(baseline??Paragraph))
             throw new InvalidOperationException("Căn/thụt hoặc khoảng đoạn đã đổi; hãy quét lại trước khi sửa.");
-        return new(Text,Styles,fix.Expected);
+        return new(Text,Styles,Paragraph with {Alignment=fix.Alignment??Paragraph.Alignment,First=fix.First??Paragraph.First});
+    }
+    public CharacterStyleEvidence WithSpacing(BodySpacingFix fix,ObservedParagraphStyle? baseline=null)
+    {
+        if(!fix.Valid || Paragraph is null || !fix.Before.Matches(baseline??Paragraph))
+            throw new InvalidOperationException("Khoảng đoạn/giãn dòng đã đổi; hãy quét lại.");
+        return new(Text,Styles,fix.Apply(Paragraph));
     }
     public CharacterStyleEvidence Project(IReadOnlyList<Issue> edits,Func<Issue,string> readPrefix)
     {

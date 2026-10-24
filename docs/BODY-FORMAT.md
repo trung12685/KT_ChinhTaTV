@@ -1,5 +1,7 @@
 # C26 — phông/cỡ chữ đoạn văn xuôi thường
 
+B03/B04 đã có [C28/C29](BODY-SPACING.md) với duyệt riêng cho khoảng đoạn/giãn dòng đủ bằng chứng. Các giới hạn dưới đây là phạm vi riêng của C26/C27 lúc bổ sung; không mở toàn bộ thân bài hoặc mọi kiểu giãn dòng.
+
 B02 sau .62 đã có [C27 căn/thụt dòng đầu](BODY-PARAGRAPH.md) với phạm vi/duyệt riêng. Tài liệu C26 này chỉ mô tả phông/màu/cỡ; các giới hạn về căn/thụt dưới đây thuộc C26.
 
 Bổ sung từ đợt B01 sau .62, code .63 đang phát triển; **chưa phát hành Windows .63**.

@@ -1,5 +1,9 @@
 # Tiếp tục phát triển Chính tả Việt
 
+## Sau .62, B03/B04 — khoảng đoạn/giãn dòng
+
+Nền B02 `86e16d52421ec772616f2545fbe55e06a72851e8` đạt3007 Core +220 WPF, chưa Word runtime. C28 chỉ cặp văn xuôi liền nhau cùng trang với tổng After+Before chưa thể đạt6pt; C29 Double/Multiple ngoài1–1,5 vềSingle, Exactly/AtLeast/grid và khoảng gộp/auto/contextual còn phải đo. Payload/checkbox riêng; writer chỉ After hoặc rule, không Font/Before/pt/căn/thụt. Ghép snapshot bất biến với C26/C27/chữ trước Line, đối chiếu glyph/thuộc tính/ngữ cảnh/đoạn kế sau lưu/Line; một Undo/rollback. Flow dựa trang đầu/cuối Range hiện tại, XML on/off kế thừa và docGrid; tra ngữ cảnh chung một lần, prefix ràng buộc cuối không đọc lặp cùng đoạn. Core/desktop/fixture Word kiểm riêng/chung/Line/khôi phục/lưu-mở/nguồn, CI chỉ biên dịch fixture.4 bước, tổng29/8/1; .63 chưa đóng gói, không khép phản hồi Office2021. [Chi tiết](BODY-SPACING.md), [nhật ký](BATCH-AFTER-0.1.62.md); bằng chứng kiểm mới theo đúng head tại PR/Actions.
+
 ## Sau .62, B02 — căn đều và dòng đầu văn xuôi
 
 Nền B01 `4462ea0670705fc978c05861317e3dbd1d8ffecd` đạt2950 Core +210 WPF, không Word runtime. C27 riêng theo II.6.e, giữ1cm/1,27cm và sửa sai về1,27cm; chỉ ghi căn/thụt đã duyệt. Snapshot chặn stale và hậu kiểm glyph/phông/cỡ/gạch chân, căn/thụt và giãn dòng/khoảng đoạn/auto spacing. Ghép cùng C26 + chữ trước đo lại Line, một Undo/rollback. Phạm vi thường, không nhấn mạnh/mục/bảng/field/căn giữa/phải/hanging/thụt cả đoạn. Test Core, Desktop writer/nhóm và fixture Word riêng/chung/Line/khôi phục/lưu-mở/nguồn; CI chỉ biên dịch fixture. Tổng27/8/1;2 bước, .63 chưa đóng gói, .62 tải cũ giữ nguyên. [Chi tiết](BODY-PARAGRAPH.md), [nhật ký](BATCH-AFTER-0.1.62.md); kết quả mới theo đúng commit tại PR/Actions.

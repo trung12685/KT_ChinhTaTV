@@ -46,6 +46,10 @@ public static class IssueTooltipCatalog
         bool party=citation.StartsWith("05-HD/VPTW",StringComparison.Ordinal);
         if(state)
         {
+            if(issue.Kind==FixKind.BodyGap)
+                return Decree+"mục II.6, điểm e: khoảng cách giữa các đoạn văn tối thiểu 6 pt.";
+            if(issue.Kind==FixKind.BodyLineSpacing)
+                return Decree+"mục II.6, điểm e: giãn dòng từ dòng đơn đến 1,5 lines.";
             if(issue.Kind==FixKind.BodyParagraph)
                 return Decree+"mục II.6, điểm e: nội dung căn đều hai lề; đầu dòng lùi 1 cm hoặc 1,27 cm.";
             if(issue.Kind==FixKind.BodyFormat)

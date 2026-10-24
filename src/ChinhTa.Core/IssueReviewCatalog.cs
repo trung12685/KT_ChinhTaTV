@@ -35,6 +35,8 @@ public static class IssueReviewCatalog
             FixKind.AdministrativeDate=>("date","Địa danh, ngày tháng",31,issue.Title??"Cách ghi địa danh, ngày tháng"),
             FixKind.AdministrativeFormat=>("admin-font","Phông số và ngày tháng",32,issue.Title??"Phông số/ngày tháng chưa đúng"),
             FixKind.DocumentHeadingFormat or FixKind.DocumentTypeText=>("document-font","Tên loại và trích yếu",33,issue.Title??"Tên loại/trích yếu chưa đúng"),
+            FixKind.BodyGap=>("body-gap","Khoảng cách giữa các đoạn",37,issue.Title??"Khoảng cách đoạn thiếu"),
+            FixKind.BodyLineSpacing=>("body-lines","Giãn dòng nội dung",38,issue.Title??"Giãn dòng nội dung chưa đúng"),
             FixKind.BodyParagraph=>("body-paragraph","Căn/thụt đầu dòng nội dung",36,issue.Title??"Căn/thụt đầu dòng chưa đúng"),
             FixKind.BodyFormat=>("body-font","Phông/cỡ chữ nội dung",35,issue.Title??"Phông/cỡ chữ nội dung chưa đúng"),
             FixKind.AdministrativePosition=>("position","Vị trí số và ngày tháng",34,issue.Title??"Kiểm tra vị trí số/ngày tháng"),
@@ -59,7 +61,7 @@ public static class IssueReviewCatalog
         // Geometry/centering based on user tolerances remains reviewable. Only a
         // verified missing Line joins the required-format section here.
         bool required=issue.Kind is FixKind.OutlineOrder or FixKind.OutlineMarker || cited && (issue.Kind is FixKind.AdministrativeNumber or FixKind.AdministrativeDate or
-            FixKind.AdministrativeFormat or FixKind.BodyFormat or FixKind.BodyParagraph or FixKind.DocumentHeadingFormat or FixKind.DocumentTypeText or FixKind.AgencyFormat or FixKind.AgencyText or FixKind.RecipientFormat or FixKind.RecipientText ||
+            FixKind.AdministrativeFormat or FixKind.BodyFormat or FixKind.BodyParagraph or FixKind.BodyGap or FixKind.BodyLineSpacing or FixKind.DocumentHeadingFormat or FixKind.DocumentTypeText or FixKind.AgencyFormat or FixKind.AgencyText or FixKind.RecipientFormat or FixKind.RecipientText ||
             issue.Kind is FixKind.NationalHeading or FixKind.StateMotto or FixKind.PartyHeading &&
                 (issue.Format is {Alignment:null} || issue.Original!=issue.Replacement) ||
             issue.Kind==FixKind.ShapeLine && issue.LineFix is {ShapeId:null});

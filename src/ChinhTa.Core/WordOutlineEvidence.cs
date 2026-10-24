@@ -5,7 +5,7 @@ using System.Xml.Linq;
 namespace ChinhTa.Core;
 
 public enum OutlineScope { PlainBody, AutomaticList, Complex, Recipient }
-public sealed record OutlineParagraphInfo(OutlineScope Scope,int Indent=0,int? HeadingLevel=null,bool HasReferences=false,bool LabelThroughTabs=false,ComponentRole? RecipientRole=null,bool LastRecipient=false,int? Alignment=null);
+public sealed record OutlineParagraphInfo(OutlineScope Scope,int Indent=0,int? HeadingLevel=null,bool HasReferences=false,bool LabelThroughTabs=false,ComponentRole? RecipientRole=null,bool LastRecipient=false,int? Alignment=null,BodySpacingContext? SpacingContext=null);
 
 // Resolve paragraph-list evidence from the same live XML used for text proof.
 // Unknown/cyclic styles or indentation never become ordinary manual list text.
@@ -16,6 +16,7 @@ internal sealed class WordOutlineEvidence(XDocument xml)
     private readonly XElement? styles=xml.Descendants(W+"styles").FirstOrDefault();
     private readonly Dictionary<string,XElement[]> definitions=xml.Descendants(W+"styles").FirstOrDefault()?.Elements(W+"style")
         .GroupBy(s=>(string?)s.Attribute(W+"styleId")??"",StringComparer.Ordinal).ToDictionary(g=>g.Key,g=>g.ToArray(),StringComparer.Ordinal)??new();
+    private readonly bool grid=xml.Descendants(W+"docGrid").Any(e=>((string?)e.Attribute(W+"type")??"default")!="default");
     private readonly bool references=xml.Descendants().Any(e=>
         (e.Name==W+"instrText" || e.Name==W+"fldSimple") &&
         Regex.IsMatch(e.Name==W+"fldSimple"?(string?)e.Attribute(W+"instr")??"":e.Value,@"\b(?:REF|PAGEREF|NOTEREF)\b",RegexOptions.IgnoreCase|RegexOptions.CultureInvariant));
@@ -61,6 +62,15 @@ internal sealed class WordOutlineEvidence(XDocument xml)
         {if(!int.TryParse(heading,out int n) || n is <0 or >9)return Complex();if(n<9)level=n;}
         string? justify=sources.Select(s=>(string?)s?.Element(W+"jc")?.Attribute(W+"val")).FirstOrDefault(v=>v is not null);
         int? alignment=justify switch {null or "left"=>0,"center"=>1,"right"=>2,"both"=>3,_=>null};
-        return new(OutlineScope.PlainBody,left.Value+first.Value-hanging.Value,level,references,labelTabs,Alignment:alignment);
+        bool? Flag(string name)
+        {
+            var node=sources.Select(s=>s?.Element(W+name)).FirstOrDefault(e=>e is not null);
+            if(node is null)return false;
+            return (string?)node.Attribute(W+"val") switch {null or "1" or "true" or "on"=>true,"0" or "false" or "off"=>false,_=>null};
+        }
+
+        var contextual=Flag("contextualSpacing");var pageBreak=Flag("pageBreakBefore");var keep=Flag("keepNext");
+        BodySpacingContext? spacingContext=contextual is bool c && pageBreak is bool b && keep is bool k?new(c,grid,b,k):null;
+        return new(OutlineScope.PlainBody,left.Value+first.Value-hanging.Value,level,references,labelTabs,Alignment:alignment,SpacingContext:spacingContext);
     }
 }

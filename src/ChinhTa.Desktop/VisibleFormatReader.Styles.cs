@@ -54,10 +54,11 @@ public static partial class VisibleFormatReader
         }
         finally{Release(paragraph);}
     }
-    public static void ApplyParagraph(object rangeObject,string expected,BodyParagraphFix fix)
+    public static void ApplyParagraph(object rangeObject,string expected,BodyParagraphFix fix,ObservedParagraphStyle? expectedBefore=null)
     {
         dynamic range=rangeObject;
-        if(!fix.Valid || (string?)range.Text!=expected || !fix.Before.Matches(ReadParagraph(rangeObject)))
+        var before=expectedBefore??fix.Before;
+        if(!fix.Valid || (string?)range.Text!=expected || !before.Matches(ReadParagraph(rangeObject)))
             throw new InvalidOperationException("Căn/thụt hoặc chữ đã đổi trước khi sửa; hãy quét lại.");
         dynamic paragraph=range.ParagraphFormat;
         try
@@ -66,7 +67,23 @@ public static partial class VisibleFormatReader
             if(fix.First is float first)paragraph.FirstLineIndent=first;
         }
         finally{Release(paragraph);}
-        if((string?)range.Text!=expected || !fix.Expected.Matches(ReadParagraph(rangeObject)))
+        if((string?)range.Text!=expected || !(before with {Alignment=fix.Alignment??before.Alignment,First=fix.First??before.First}).Matches(ReadParagraph(rangeObject)))
             throw new InvalidOperationException("Căn/thụt sau sửa chưa đúng hoặc khoảng đoạn đã đổi; phải phục hồi.");
     }
+    public static void ApplySpacing(object rangeObject,string expected,BodySpacingFix fix,ObservedParagraphStyle? expectedBefore=null)
+    {
+        dynamic range=rangeObject;var before=expectedBefore??fix.Before;
+        if(!fix.Valid || (string?)range.Text!=expected || !before.Matches(ReadParagraph(rangeObject)))
+            throw new InvalidOperationException("Khoảng đoạn/giãn dòng hoặc chữ đã đổi; hãy quét lại.");
+        dynamic paragraph=range.ParagraphFormat;
+        try
+        {
+            if(fix.After is float after)paragraph.SpaceAfter=after;
+            if(fix.Rule is int rule)paragraph.LineSpacingRule=rule;
+        }
+        finally{Release(paragraph);}
+        if((string?)range.Text!=expected || !fix.Apply(before).Matches(ReadParagraph(rangeObject)))
+            throw new InvalidOperationException("Khoảng đoạn/giãn dòng sau sửa chưa đạt hoặc phần chưa chọn đã đổi; phải phục hồi.");
+    }
+
 }
