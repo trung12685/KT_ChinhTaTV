@@ -5,7 +5,7 @@ using System.Xml.Linq;
 namespace ChinhTa.Core;
 
 public enum OutlineScope { PlainBody, AutomaticList, Complex, Recipient }
-public sealed record OutlineParagraphInfo(OutlineScope Scope,int Indent=0,int? HeadingLevel=null,bool HasReferences=false,bool LabelThroughTabs=false,ComponentRole? RecipientRole=null,bool LastRecipient=false);
+public sealed record OutlineParagraphInfo(OutlineScope Scope,int Indent=0,int? HeadingLevel=null,bool HasReferences=false,bool LabelThroughTabs=false,ComponentRole? RecipientRole=null,bool LastRecipient=false,int? Alignment=null);
 
 // Resolve paragraph-list evidence from the same live XML used for text proof.
 // Unknown/cyclic styles or indentation never become ordinary manual list text.
@@ -59,6 +59,8 @@ internal sealed class WordOutlineEvidence(XDocument xml)
         int? level=null;
         if(heading is not null)
         {if(!int.TryParse(heading,out int n) || n is <0 or >9)return Complex();if(n<9)level=n;}
-        return new(OutlineScope.PlainBody,left.Value+first.Value-hanging.Value,level,references,labelTabs);
+        string? justify=sources.Select(s=>(string?)s?.Element(W+"jc")?.Attribute(W+"val")).FirstOrDefault(v=>v is not null);
+        int? alignment=justify switch {null or "left"=>0,"center"=>1,"right"=>2,"both"=>3,_=>null};
+        return new(OutlineScope.PlainBody,left.Value+first.Value-hanging.Value,level,references,labelTabs,Alignment:alignment);
     }
 }

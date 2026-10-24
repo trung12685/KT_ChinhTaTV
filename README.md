@@ -2,9 +2,15 @@
 
 Ứng dụng C# / WPF chạy trên Windows với Microsoft Word desktop, làm việc offline trên bản sao DOCX và xem trước bằng XPS. Không gửi nội dung tài liệu tới dịch vụ AI.
 
-**[Danh sách nhóm sửa và bảng kiểm bản thử 0.1.61](docs/SUPPORTED-FIXES-0.1.61.md)** — gồm điều kiện, ví dụ, ngoại lệ ô trống và các mục chỉ cảnh báo.
+**[Danh sách nhóm sửa và bảng kiểm bản thử 0.1.62](docs/SUPPORTED-FIXES-0.1.62.md)** — gồm điều kiện, ví dụ, ngoại lệ ô trống và các mục chỉ cảnh báo.
 
 Ưu tiên đã thống nhất: **thể thức → lỗi chữ và lặp từ/cụm từ → ngữ cảnh và thư viện sau cùng**. Phần chính tả tiếng Việt đầy đủ còn cần xây dựng; không coi quy tắc minh họa hiện tại là bộ kiểm hoàn chỉnh.
+
+## Đợt sau .62 — code .63 đang phát triển
+
+B01 thêm C26 kiểm/sửa phông, màu và cỡ đoạn văn xuôi thường đủ bằng chứng: Arial đỏ cỡ12 xen chữ cỡ14 → Times New Roman đen, chỉ cỡ12 về13, giữ chữ cỡ14/gạch chân/căn đoạn. Có mốc tên loại/trích yếu, Kính gửi và chữ ký/Nơi nhận; loại trừ nhấn mạnh, tiêu đề/danh sách/bảng/field và vùng chưa chắc. Sửa riêng/chung chữ/Line, quét mới, một Undo/rollback. Chưa sửa toàn bộ thân bài hoặc căn/giãn đoạn.
+
+Tổng code: **26 đề xuất/8 thủ công/1 minh họa**. Chưa đóng gói .63; tích lũy khoảng 5–10 bước. [Phạm vi C26](docs/BODY-FORMAT.md) · [Nhật ký và bước tiếp theo](docs/BATCH-AFTER-0.1.62.md). [Windows gần nhất .62](https://github.com/trung12685/KT_ChinhTaTV/releases/tag/v0.1.62); chưa xác nhận Word runtime từ CI.
 
 ## Bản thử tích lũy 0.1.62 — năm hạng mục sau .61
 

@@ -46,6 +46,8 @@ public static class IssueTooltipCatalog
         bool party=citation.StartsWith("05-HD/VPTW",StringComparison.Ordinal);
         if(state)
         {
+            if(issue.Kind==FixKind.BodyFormat)
+                return Decree+"mục I.4 và II.6, điểm e: Times New Roman, đen, cỡ 13–14, đứng. Chỉ áp dụng đoạn văn xuôi thường đã xác minh.";
             if(issue.Kind is FixKind.AgencyFormat or FixKind.AgencyText)
                 return Decree+"mục I.4 và II.2, điểm b: Times New Roman, đen, in hoa, cỡ 12–13, đứng; tên cơ quan ban hành đậm, tên cơ quan chủ quản đứng.";
             if(issue.Kind is FixKind.RecipientFormat or FixKind.RecipientText)

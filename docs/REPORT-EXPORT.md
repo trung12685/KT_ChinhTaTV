@@ -1,5 +1,7 @@
 # Xem và xuất tiến độ, chức năng
 
+Đợt sau .62 (code .63 chưa đóng gói): thêm C26 phông/cỡ văn xuôi thường có ranh giới và proof chắc, tổng26 đề xuất/8 thủ công/1 minh họa. TXT có ví dụ Arial đỏ cỡ12 xen14 → Times New Roman đen,12 về13 giữ14; ghi rõ không áp toàn bộ thân bài, chưa sửa căn/giãn đoạn và chưa xác nhận Word runtime. Lịch sử .62 là mốc trước, không lấy tổng25 thay cho code mới. Kết quả build vẫn lấy metadata đúng phiên bản/commit, không hard-code.
+
 Bản .62 gom năm hạng mục sau .61: sửa riêng cỡ sai, quốc hiệu/tiêu ngữ, viết hoa giữ kiểu, mục số nhiều cấp và khoảng cuối sau chấm phẩy. TXT có ví dụ/giới hạn và số kiểm từ build-checks.json đúng phiên bản/commit. [Nội dung .62](CHANGES-0.1.62.md) · [Danh sách chức năng](SUPPORTED-FIXES-0.1.62.md). CI không chạy Word.
 
 Bản .61 gom năm hạng mục sau .60, trọng tâm kiểm định dạng và chọn/sửa nhiều nhóm có mục cần sửa trước. TXT có ví dụ sửa phông giữ từng cỡ hợp lệ, C12 chọn kèm rồi đo lại, ba mở rộng lỗi chữ và giới hạn Word runtime. Số kiểm thực tế lấy từ build-checks.json đúng phiên bản/commit; không lấy số dự kiến hoặc lời gọi giả để khẳng định tốc độ Office. Xem [nội dung .61](CHANGES-0.1.61.md).

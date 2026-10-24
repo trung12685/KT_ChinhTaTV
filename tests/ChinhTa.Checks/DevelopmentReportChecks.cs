@@ -12,9 +12,9 @@ public static class DevelopmentReportChecks
         assert(DevelopmentReport.Capabilities.Select(c=>c.Id).Distinct().Count()==DevelopmentReport.Capabilities.Count &&
             DevelopmentReport.Capabilities.All(c=>c.Name.Length>0 && c.Scope.Length>0 && c.Detail.Length>0 && !string.IsNullOrWhiteSpace(c.Example.Before) && !string.IsNullOrWhiteSpace(c.Example.Outcome)),
             "The exported capability catalog has unique IDs, scopes and limits instead of empty headline claims");
-        assert(DevelopmentReport.Count(CapabilityMode.Reviewable)==25 && DevelopmentReport.Count(CapabilityMode.Manual)==8 &&
-            DevelopmentReport.Count(CapabilityMode.Demonstration)==1 && DevelopmentReport.Capabilities.Count==34,
-            "Feature totals distinguish twenty-five reviewed repair groups, eight manual groups and one demo rather than counting repaired document errors");
+        assert(DevelopmentReport.Count(CapabilityMode.Reviewable)==26 && DevelopmentReport.Count(CapabilityMode.Manual)==8 &&
+            DevelopmentReport.Count(CapabilityMode.Demonstration)==1 && DevelopmentReport.Capabilities.Count==35,
+            "Feature totals distinguish twenty-six reviewed repair groups, eight manual groups and one demo rather than counting repaired document errors");
         assert(text.Contains("Phiên bản: 0.1.59") && text.Contains("2026-10-23 09:15 +07:00") &&
             text.Contains("17 Core/OpenXML và 29 WPF đạt.") && text.Contains(evidence.RunUrl) && text.Contains(evidence.Commit),
             "The report renders the supplied version, local offset and actual matching build counts without hard-coded test totals");

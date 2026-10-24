@@ -1,5 +1,9 @@
 # Tiếp tục phát triển Chính tả Việt
 
+## Sau .62, B01 — phông/cỡ văn xuôi thường
+
+Nền `68865ca574b3c32f170b378080e6663287d036cd` (.62: 2882 Core +206 WPF +1 package; không Word runtime). Code .63 đang phát triển, chưa đóng gói. C26 mới, tổng26/8/1: cần ranh giới tên loại/trích yếu → Kính gửi → chữ ký/Nơi nhận, XML chữ/style/căn đoạn và phông thực tế. Chỉ văn xuôi thường không nhấn mạnh/danh sách/bảng/field; sửa phông/màu/cỡ sai, giữ13/14/gạch chân/căn-thụt. Mở tracking kiểu đã có cho C26, đối chiếu sau lưu/Line. Test Core/GUI và fixture Word sửa riêng/chung/rollback/Undo/lưu-mở/nguồn. Căn cứ đúng II.6.e đã đọc trang nguồn; chưa mở căn/giãn đoạn. [Chi tiết](BODY-FORMAT.md), [kế hoạch đợt](BATCH-AFTER-0.1.62.md). Kết quả tự động theo đúng commit tại PR/CI; fixture Word chỉ biên dịch trong CI, không khép phản hồi Office2021.
+
 ## B05 / chốt đợt .62 — khoảng cuối sau chấm phẩy
 
 Tiếp nối B04 `f2ec57528c8339b29046ba0e314d8abe5b2bd7f3`, 2844 Core/OpenXML +206 WPF. C25 thêm dấu cuối ; qua cùng Supported/ClearEnding, chỉ xóa ASCII spaces cuối, giữ dấu/CR/LF/cell-end và trước dấu chưa chọn; không mở mã, tab/NBSP, ô trống hoặc XML chưa chắc. Giữ enum, nhóm spacing, backend/giao dịch/XPS cũ. Core kiểm ba profile, Unicode, loại trừ, sửa riêng/chung và stale/rollback; OfficeParagraphEndCheck mở rộng mẫu giả semicolon, chọn riêng/chung chữ và lưu/mở/Undo/nguồn, CI chỉ biên dịch Word. Chuẩn bị CHANGES/SUPPORTED .62, báo cáo và tài liệu đủ B01–B05; đóng gói chỉ sau kiểm đúng commit, không khép Office2021 .56 bằng CI. [Nhật ký](BATCH-AFTER-0.1.61.md).

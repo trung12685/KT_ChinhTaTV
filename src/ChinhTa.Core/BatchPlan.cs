@@ -31,7 +31,8 @@ public static class BatchPlan
                 current.CharacterFormat is not null || current.Format is not null || current.LineFix is not null || current.CenterFix is not null))
                 throw new InvalidOperationException("Gợi ý khoảng trắng cuối đoạn chưa hợp lệ. Hãy quét lại.");
             if(current.CharacterFormat is CharacterFormat style && (!style.Valid ||
-                !(current.Kind==FixKind.AdministrativeFormat && style.Bold is null && style.Role is null ||
+                !(current.Kind==FixKind.BodyFormat && style.Role==ComponentRole.Body && style.Bold==false && !style.Italic ||
+                  current.Kind==FixKind.AdministrativeFormat && style.Bold is null && style.Role is null ||
                   current.Kind==FixKind.DocumentHeadingFormat && style.Bold==true && !style.Italic && style.Role is null ||
                   current.Kind==FixKind.AgencyFormat && style.Role is ComponentRole.Agency or ComponentRole.AgencyParent ||
                   current.Kind==FixKind.RecipientFormat && style.Role is ComponentRole.RecipientItem or ComponentRole.RecipientLabel) ||
@@ -44,7 +45,7 @@ public static class BatchPlan
                 current.CharacterFormat is not null || current.Format is not null || current.LineFix is not null) ||
                 current.Kind==FixKind.AdministrativePosition && current.CenterFix is null)
                 throw new InvalidOperationException("Gợi ý căn giữa không hợp lệ. Hãy quét lại.");
-            if(current.Kind is FixKind.DocumentHeadingFormat or FixKind.AgencyFormat or FixKind.RecipientFormat && current.CharacterFormat is null)
+            if(current.Kind is FixKind.DocumentHeadingFormat or FixKind.AgencyFormat or FixKind.RecipientFormat or FixKind.BodyFormat && current.CharacterFormat is null)
                 throw new InvalidOperationException("Gợi ý tên loại/trích yếu thiếu định dạng đã xác minh. Hãy quét lại.");
             active.RemoveAll(previous=>(long)previous.Start+previous.Length<=current.Start);
             foreach(var previous in active)

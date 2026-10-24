@@ -206,6 +206,7 @@ public sealed partial class WordSession : IDisposable
         lastFormatLayout=liveText.Where(p=>editableStarts.Contains(p.Start) || formatEditableStarts.Contains(p.Start)).ToArray();
         paragraphs=WordTextProof.Apply(paragraphs,editableStarts,outlineEvidence,formatEditableStarts).ToList();
         var observeStarts=ComponentRules.Identify(paragraphs,headerLayout,Profile).Select(t=>t.Row.Start)
+            .Concat(BodyFormatRules.ObservationTargets(paragraphs,headerLayout,Profile).Select(p=>p.Start))
             .Concat(DocumentHeadingRules.ObservationTargets(paragraphs,headerLayout,Profile).Select(p=>p.Start))
             .Concat(paragraphs.Where(p=>p.Page==1 && HeadingRules.IsCandidate(p.Text,Profile)).Select(p=>p.Start))
             .Concat(paragraphs.Take(40).Where(p=>Profile==DocumentProfile.State && AdministrativeHeaderRules.IsCandidate(p.Text)).Select(p=>p.Start)).ToHashSet();
@@ -219,6 +220,7 @@ public sealed partial class WordSession : IDisposable
         var issues = Checker.Check(paragraphs, Profile).ToList();
         issues.AddRange(DocumentHeadingRules.Check(paragraphs,headerLayout,Profile));
         issues.AddRange(ComponentRules.Check(paragraphs,headerLayout,Profile));
+        issues.AddRange(BodyFormatRules.Check(paragraphs,headerLayout,Profile));
         foreach(var issue in issues.Where(i=>!i.CanFix && i.Kind is FixKind.AgencyFormat or FixKind.DocumentHeadingFormat))
         {
             var row=paragraphs.FirstOrDefault(p=>p.Start==issue.Start);
@@ -754,7 +756,7 @@ public sealed partial class WordSession : IDisposable
                             if((string)target.Text!=styled.Expected || !matches)
                                 throw new InvalidOperationException("Định dạng sau lưu chưa khớp gợi ý hoặc vùng chữ bị thay đổi; phải khôi phục cả lượt.");
                             if(styled.Styles is not null && !styled.Styles.Matches(VisibleFormatReader.ReadStyles((object)target,styled.Expected)))
-                                throw new InvalidOperationException("Định dạng sau viết hoa chưa khớp các mục đã duyệt; phải khôi phục cả lượt.");
+                                throw new InvalidOperationException("Định dạng ký tự sau sửa chưa khớp các mục đã duyệt; phải khôi phục cả lượt.");
                             if(styled.Sizes is not null && !styled.Sizes.Matches(VisibleFormatReader.ReadSizes((object)target,styled.Expected)))
                                 throw new InvalidOperationException("Cỡ chữ hợp lệ đã đổi sau sửa phông; phải khôi phục cả lượt.");
                         }

@@ -53,6 +53,7 @@ ParenthesisAfterSpaceChecks.Run(Assert);
 SentenceEndSpaceChecks.Run(Assert);
 ParagraphEndSpaceChecks.Run(Assert);
 SemicolonEndSpaceChecks.Run(Assert);
+BodyFormatChecks.Run(Assert);
 ColonSpaceChecks.Run(Assert);
 ColonAfterSpaceChecks.Run(Assert);
 DevelopmentReportChecks.Run(Assert);

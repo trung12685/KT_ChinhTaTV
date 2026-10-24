@@ -8,22 +8,22 @@ public static class CasePreservationPlan
     // never enter the edit selection or create an extra write/approval item.
     public static IReadOnlyList<Issue> Regions(IReadOnlyList<Issue> selection,IReadOnlyList<WordParagraphSnapshot> proven)
     {
-        var cases=selection.Where(i=>i.Kind==FixKind.DocumentTypeText).ToArray();
+        var cases=selection.Where(i=>i.Kind is FixKind.DocumentTypeText or FixKind.BodyFormat).ToArray();
         if(cases.Length==0)return [];
         BatchPlan.Create(selection);
         var result=new Dictionary<int,Issue>();
         foreach(var item in cases)
         {
             var rows=proven.Where(p=>p.Start<=item.Start && (long)item.Start+item.Length<=p.End).ToArray();
-            if(rows.Length!=1)throw new InvalidOperationException("Chưa có một đoạn đã đối chiếu XML duy nhất để giữ định dạng tên loại.");
+            if(rows.Length!=1)throw new InvalidOperationException("Chưa có một đoạn đã đối chiếu XML duy nhất để giữ định dạng vùng chữ.");
             var row=rows[0];string text=row.Text.TrimEnd('\r','\a','\n');
-            var probe=new Issue(row.Start,text.Length,text,text,"",false,FixKind.DocumentTypeText);
+            var probe=new Issue(row.Start,text.Length,text,text,"",false,item.Kind);
             if(!Inside(item,probe) || text.IndexOfAny(['\r','\n','\a','\t','\v','\f'])>=0)
-                throw new InvalidOperationException("Vùng giữ định dạng tên loại chưa khớp đoạn chữ thuần.");
+                throw new InvalidOperationException("Vùng giữ định dạng chưa khớp đoạn chữ thuần.");
             foreach(var patch in selection.Where(i=>(i.Format is not null || i.CharacterFormat is not null) && Overlaps(i,probe)))
-                if(patch.Kind!=FixKind.DocumentHeadingFormat || patch.CharacterFormat is null || patch.Format is not null ||
+                if(patch.Kind!=(item.Kind==FixKind.BodyFormat?FixKind.BodyFormat:FixKind.DocumentHeadingFormat) || patch.CharacterFormat is null || patch.Format is not null ||
                     patch.Start!=probe.Start || patch.Length!=probe.Length || patch.Original!=probe.Original)
-                    throw new InvalidOperationException("Định dạng chọn kèm chưa phủ đúng đoạn tên loại để đối chiếu bảo toàn.");
+                    throw new InvalidOperationException("Định dạng chọn kèm chưa phủ đúng đoạn đã chọn để đối chiếu bảo toàn.");
             result[row.Start]=probe;
         }
         return result.Values.OrderBy(i=>i.Start).ToArray();
@@ -32,11 +32,14 @@ public static class CasePreservationPlan
     {
         BatchPlan.Create(selection);
         if(source.Text!=probe.Original || !source.Complete)
-            throw new InvalidOperationException("Chưa đọc đủ định dạng ký tự của tên loại trước sửa.");
+            throw new InvalidOperationException("Chưa đọc đủ định dạng ký tự của vùng chữ trước sửa.");
         foreach(var format in selection.Where(i=>i.CharacterFormat is not null && Overlaps(i,probe)))
         {
-            if(format.Kind!=FixKind.DocumentHeadingFormat || format.Start!=probe.Start || format.Length!=probe.Length || format.Original!=probe.Original)
-                throw new InvalidOperationException("Định dạng tên loại chọn kèm đã thay đổi.");
+            if(format.Kind!=(probe.Kind==FixKind.BodyFormat?FixKind.BodyFormat:FixKind.DocumentHeadingFormat) || format.Start!=probe.Start || format.Length!=probe.Length || format.Original!=probe.Original)
+                throw new InvalidOperationException("Định dạng vùng chữ chọn kèm đã thay đổi.");
+            if(probe.Kind==FixKind.BodyFormat && (format.CharacterFormat?.Role!=ComponentRole.Body ||
+                source.Paragraph is not {Alignment:0 or 3} || source.Styles.Any(s=>s is not null && (s.Font.Bold!=0 || s.Font.Italic!=0))))
+                throw new InvalidOperationException("Đoạn nội dung có kiểu nhấn mạnh hoặc căn đoạn chưa phù hợp phạm vi sửa; hãy quét lại.");
             source=source.WithFormat(format.CharacterFormat!);
         }
         return source.Project(selection.Where(i=>i.CharacterFormat is null && i.Format is null && Inside(i,probe)).ToArray(),readPrefix);
