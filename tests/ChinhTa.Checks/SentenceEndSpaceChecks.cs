@@ -11,7 +11,7 @@ public static class SentenceEndSpaceChecks
             return AtomicTextBatch.ExpectedStory(plan,text,i=>text[..i.Start]);
         }
         foreach(var sample in new[]{("Đã hoàn thành .","Đã hoàn thành."),("Đã hoàn thành  ?","Đã hoàn thành?"),
-            ("Xin cảm ơn   !  ","Xin cảm ơn!  "),("Nội dung đã duyệt .\r\a","Nội dung đã duyệt.\r\a"),
+            ("Xin cảm ơn   !  ","Xin cảm ơn!"),("Nội dung đã duyệt .\r\a","Nội dung đã duyệt.\r\a"),
             ("😀 Nội dung đã duyệt .","😀 Nội dung đã duyệt."),
             ("Bản ke\u0302\u0301 hoa\u0323ch .","Bản ke\u0302\u0301 hoa\u0323ch."),
             ("Nội dung  ( kế hoạch kế hoạch ) đã duyệt;hoàn thành  .","Nội dung (kế hoạch) đã duyệt; hoàn thành.")})
@@ -20,9 +20,12 @@ public static class SentenceEndSpaceChecks
             assert(found.Length==1 && found[0].CanFix && !found[0].BatchSafe && found[0].Replacement=="" &&
                 found[0].Original.All(c=>c==' ') && found[0].Original==sample.Item1.Substring(found[0].Start,found[0].Length) &&
                 found[0].Suggestion.Contains("giữ chữ") && Apply(sample.Item1)==sample.Item2,
-                "Final punctuation repair deletes only the exact positive ASCII space span, preserving punctuation, Unicode, trailing spaces and paragraph/cell terminators");
+                "Selected final punctuation and other supported repairs preserve punctuation, Unicode and paragraph/cell terminators");
             assert(!Checker.Check([new(0,sample.Item2)]).Any(i=>i.CanFix),"One combined repair leaves no stale repaired text/spacing proposals");
         }
+        const string beforeOnly="Xin cảm ơn   !  ";
+        assert(Apply(beforeOnly,Find(beforeOnly))=="Xin cảm ơn!  ",
+            "Selecting only spaces before the final mark still preserves the unselected trailing paragraph spaces");
         foreach(string text in new[]{"Nội dung đã duyệt.","Nội dung đã duyệt?","Nội dung đã duyệt!","Nội dung . Tiếp theo.",
             "Nội dung . tiếp theo", "Nội dung ...","Nội dung . . .","Nội dung ? !","Nội dung !?","Nội dung …",
             "Giá trị 1 .","Giá trị 1,25 .","Dòng số ii .","Ô để trống ....","Nội dung TS .","Nội dung ThS .","Nội dung Tp .",

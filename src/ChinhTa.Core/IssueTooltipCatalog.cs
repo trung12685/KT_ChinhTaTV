@@ -31,10 +31,11 @@ public static class IssueTooltipCatalog
             return "Theo yêu cầu người dùng: bỏ dấu - hoặc + nếu chỉ có một dấu cùng cấp trong cùng mục cha.";
         if(Spacing(issue))return "Quy tắc ứng dụng: giữa các từ dùng một dấu cách; giữ ô số/ngày để trống theo mẫu.";
         if(issue.Kind==FixKind.RepeatedText)return "Quy tắc ứng dụng: phát hiện từ/cụm từ giống nhau liền nhau; cần duyệt ngữ cảnh.";
-        if(issue.Kind is FixKind.PunctuationSpace or FixKind.ParenthesisSpace or FixKind.SentenceEndSpace or
+        if(issue.Kind is FixKind.PunctuationSpace or FixKind.ParenthesisSpace or FixKind.SentenceEndSpace or FixKind.ParagraphEndSpace or
             FixKind.ColonSpace or FixKind.SentenceInnerSpace or FixKind.SentenceAfterSpace)
             return issue.Kind switch
             {
+                FixKind.ParagraphEndSpace=>"Quy tắc ứng dụng: bỏ dấu cách thừa sau dấu kết câu ở cuối đoạn chữ thuần.",
                 FixKind.ParenthesisSpace=>"Quy tắc ứng dụng: không có dấu cách sát bên trong ngoặc tròn chứa chữ.",
                 FixKind.SentenceAfterSpace=>"Quy tắc ứng dụng: có một dấu cách giữa dấu kết câu và câu tiếp theo.",
                 _=>"Quy tắc ứng dụng: không có dấu cách trước dấu câu; có khoảng cách sau dấu câu khi tiếp tục viết."
@@ -126,6 +127,7 @@ public static class IssueTooltipCatalog
             FixKind.ParenthesisSpace=>"Bỏ dấu cách sát trong ngoặc đã chọn; giữ chữ và ngoặc.",
             FixKind.SentenceAfterSpace=>"Thêm một dấu cách sau dấu kết câu đã chọn.",
             FixKind.ColonSpace when issue.AddsSpaceAfterColon=>"Thêm một dấu cách sau dấu hai chấm; giữ chữ, dấu câu và khoảng trước chưa chọn.",
+            FixKind.ParagraphEndSpace=>"Bỏ dấu cách cuối đoạn; giữ chữ, dấu câu, khoảng trước chưa chọn và dấu kết đoạn/ô.",
             FixKind.SentenceEndSpace or FixKind.SentenceInnerSpace or FixKind.ColonSpace=>"Bỏ dấu cách trước dấu câu đã chọn; giữ chữ và dấu câu.",
             _=>issue.Replacement.Length==0?"Xóa phần đã đánh dấu; cần duyệt ngữ cảnh.":"Thay phần đã đánh dấu bằng “"+Brief(issue.Replacement,80)+"”; cần duyệt ngữ cảnh."
         };

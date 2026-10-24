@@ -26,6 +26,7 @@ public static class IssueReviewCatalog
         var (key,family,order,label)=issue.Kind switch
         {
             FixKind.Text when space=>("spacing","Khoảng trắng thừa",10,"Khoảng trắng thừa"),
+            FixKind.ParagraphEndSpace=>("spacing","Khoảng trắng thừa",10,issue.CanFix?"Thừa khoảng trắng cuối đoạn":issue.Title??"Kiểm tra khoảng trắng cuối đoạn"),
             FixKind.Text=>("spelling","Gợi ý chính tả",90,"Gợi ý chính tả: "+Brief(issue.Original,20)+" → "+Brief(issue.Replacement,20)),
             FixKind.NationalHeading=>("national","Quốc hiệu",20,"Quốc hiệu chưa đúng thể thức"),
             FixKind.StateMotto=>("motto","Tiêu ngữ",21,"Tiêu ngữ chưa đúng thể thức"),

@@ -17,7 +17,7 @@ internal static class SentenceSpaceContext
         return !(AdministrativeHeaderRules.IsCandidate(text) || DateWords.IsMatch(text) ||
             text.IndexOfAny(['\t','\r','\n','\a','\v','\f','\u00a0','@','/','\\','_','=','`','<','>','[',']','{','}','+','*','^','|'])>=0);
     }
-    internal static bool Clear(string text,int leftEnd,int rightStart)
+    internal static bool ClearEnding(string text,int leftEnd)
     {
         int lastStart=leftEnd;
         while(lastStart>0 && WordChar(text[lastStart-1]))lastStart--;
@@ -29,6 +29,11 @@ internal static class SentenceSpaceContext
         int previousStart=previousEnd;
         while(previousStart>0 && WordChar(text[previousStart-1]))previousStart--;
         if(!Word(text,previousStart,previousEnd) || previousStart>0 && text[previousStart-1] is not (' ' or ',' or ';'))return false;
+        return true;
+    }
+    internal static bool Clear(string text,int leftEnd,int rightStart)
+    {
+        if(!ClearEnding(text,leftEnd))return false;
         int rightEnd=rightStart;
         while(rightEnd<text.Length && WordChar(text[rightEnd]))rightEnd++;
         if(!Word(text,rightStart,rightEnd) || !char.IsUpper(text[rightStart]) ||

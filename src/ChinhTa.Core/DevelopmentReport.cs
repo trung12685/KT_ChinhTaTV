@@ -103,6 +103,9 @@ public static class DevelopmentReport
         new("C24","Viết hoa tên loại văn bản",CapabilityMode.Reviewable,"Nhà nước, tên loại thuộc danh mục hành chính/bổ sung đã nhận diện chắc trong khối đầu trang",
             "Theo NĐ30 PL I.II.5.b: tên loại in hoa. 27 tên theo PL III.I và Báo cáo đề xuất/BCĐX theo yêu cầu người dùng; không nhận tên bản sao theo mẫu văn bản gốc. Chỉ đổi hoa/thường tên chính xác, có proof chữ thuần và định dạng đồng nhất; giữ khoảng trắng ngoài tên, trích yếu nhiều đoạn, phông và căn đoạn. Không suy đoán tên loại từ nội dung, không tự viết thường trích yếu hoặc áp cho Công văn/V/v, bảng/field/drawing/vùng chưa rõ. Có thể chọn chung sửa phông, một Undo/rollback.",
             new ReportExample("Báo cáo","BÁO CÁO")),
+        new("C25","Khoảng trắng cuối đoạn sau dấu kết câu",CapabilityMode.Reviewable,"Cả ba chế độ, đoạn chữ thuần có kết thúc rõ bằng .?!",
+            "Xóa dấu cách ASCII sau dấu kết câu cuối đoạn, giữ dấu kết đoạn/ô, dấu câu, chữ và khoảng trước chưa chọn. Cần hai từ rõ bên trái; bỏ qua số/ngày, mã/đường dẫn/viết tắt, khoảng không ngắt, tab, ô trống, đoạn chưa kết câu và vùng XML chưa chắc. Có thể sửa chung các nhóm chữ/phông đủ điều kiện; cần duyệt.",
+            new ReportExample("Đã hoàn thành.   ","Đã hoàn thành.")),
         new("M01","Khổ giấy và lề",CapabilityMode.Manual,"Nhà nước/Đảng",
             "Cảnh báo A4/lề, trang ngang/lề đối xứng và ngoại lệ; chưa tự đổi thiết lập trang.",
             new ReportExample("Văn bản Nhà nước trên A4 có lề trái 20 mm.","Cảnh báo đối chiếu quy định và ngoại lệ; chưa tự đổi khổ giấy/lề.")),
@@ -159,7 +162,7 @@ public static class DevelopmentReport
         new("0.1.57","Thêm cửa sổ tiến độ độc lập khi sửa: bước hiện tại, số mục hậu kiểm tạm thời, thời gian chờ, đo lại/quét lại/phục hồi; chưa hoàn tất trước quét lại. Mở proof định dạng cho Line trong nhánh tương thích/run gộp, đọc từng ký tự Word khi phông vùng bị trộn; giữ kiểm nét và rollback, chưa xác nhận runtime Office 2021."),
         new("0.1.58","Thêm C24 viết hoa chính xác tên loại văn bản đã nhận diện chắc theo NĐ30 II.5.b; giữ trích yếu, khoảng ngoài tên, phông/căn đoạn, chặn trường/đối tượng/vùng chưa rõ; sửa chung phông, quét lại và một Undo/rollback. Lỗi cơ quan/trích yếu trên .56 vẫn chờ bằng chứng runtime .57 hoặc mới hơn."),
         new("0.1.59","Danh mục đủ 27 tên hành chính/3 bản sao theo NĐ30 PL III.I trang 40; thêm Báo cáo đề xuất/BCĐX theo người dùng, tách nguồn. Dùng chung nhận diện/C24/phông/mốc trích yếu, không áp thể thức gốc cho bản sao; sửa cảnh báo nhầm chữ thường ở QyĐ/CTr/TTr/TrS, giữ mã cơ quan. Có cửa sổ tra cứu và danh mục đầy đủ trong TXT."),
-        new("0.1.60 — đang phát triển","B01: chuẩn hóa hoa/thường viết tắt tên loại đã khớp danh mục trong dòng Số; đối chiếu một tên loại tương ứng duy nhất để tránh đổi mã cơ quan; giữ số/mã, nguồn BCĐX, guard sửa chữ và rollback. Gom 5–10 bước mới đóng gói Windows; kiểm thử mỗi bước, chưa phát hành .60.")
+        new("0.1.60 — đang phát triển","Đợt 4 bước: B01 chuẩn hóa hoa/thường viết tắt theo một tên loại tương ứng duy nhất; B02 cảnh báo tên loại/ký hiệu mâu thuẫn, không đoán bên sai; B03 thêm khoảng sau hai chấm, chọn riêng/cả hai phía; B04 thêm C25 bỏ dấu cách ASCII sau dấu kết câu cuối đoạn, giữ dấu kết đoạn/ô và phần chưa chọn. Tổng25/8/1; giữ sửa nhóm, XPS, một Undo/rollback. Gom khoảng5–10 bước mới đóng gói; chưa phát hành .60 hoặc xác nhận Word runtime.")
     });
     public static IReadOnlyList<string> NextSteps { get; }=Array.AsReadOnly(new[]
     {

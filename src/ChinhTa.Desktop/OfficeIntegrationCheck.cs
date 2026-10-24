@@ -1062,6 +1062,8 @@ public static class OfficeIntegrationCheck
             OfficeStagedCheck.Run(test,modern,folder,Pass);
             stage="Tên cơ quan, trích yếu xuống dòng và nơi nhận";
             OfficeComponentCheck.Run(test,modern,folder,Pass);
+            stage="Khoảng trắng cuối đoạn sau dấu kết câu";
+            OfficeParagraphEndCheck.Run(test,modern,folder,Pass);
             File.AppendAllText(report,"RESULT PASS\nKiểm thao tác Word/Line, vị trí nét XPS, sửa riêng/nhóm số-ngày, lưu/mở và Hoàn tác trên mẫu giả; không xác nhận mọi tài liệu.\n");
             return new(true,stage,folder);
         }

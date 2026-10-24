@@ -1,5 +1,11 @@
 # Tiếp tục phát triển Chính tả Việt
 
+## B04 — C25 khoảng trắng cuối đoạn
+
+Tiếp nối B03 `ef45c4a1e12c8f305f2e298aaee9e5a43ded4819`, cùng nhánh đợt. ParagraphEndSpaceRules chỉ xóa ASCII gap sau một dấu kết câu cuối đoạn có chữ đủ rõ, giữ CR/LF/kết ô và phần chưa chọn. SentenceSpaceContext.ClearEnding tách nguyên điều kiện trái đang dùng cho Clear, không đổi guard cũ; số/ngày/mã/technical/NBSP/control/không kết câu vẫn ngoài phạm vi. FixKind.ParagraphEndSpace append cuối enum; BatchPlan chặn payload không phải xóa space thuần/giả định dạng, cho chia sẻ span phông. CurrentTextPlan vẫn phải quét mới trước ghi. C25 cùng Family spacing cạnh C01, ReviewSuggestion, nguồn quy tắc ứng dụng.
+
+TXT thêm C25/ví dụ giữ literal trailing spaces trong dấu nháy; tổng25/8/1, lịch sử .60 nay ghi đủ B01–B04. Local1960 assertion, có chọn riêng phần trước/sau và giữ dấu kết đoạn, tổ hợp/emoji, kiểu chữ, stale/context/payload và rollback sau lỗi lưu. OfficeParagraphEndCheck được gọi ở cuối bài Word tự động, có mẫu giả sửa/quét/Undo/rollback/lưu-mở/giữ nguồn, chỉ biên dịch trong CI; không đánh dấu Word runtime đạt. Hiện4 bước, chưa đóng gói .60. [Nhật ký/checklist](BATCH-AFTER-0.1.59.md).
+
 ## B03 — Khoảng sau dấu hai chấm
 
 Tiếp nối B02 `7e996ba19dd0249bb9dec584612deaf73cf847f8` trên cùng nhánh đợt. ColonSpaceRules nhận thiếu sau bằng span `:` → `: `, chỉ khi qua cùng bộ nhận diện chữ rõ của C17; bỏ điều kiện cũ buộc phải có dấu cách sau mới xét phía trước. Hai lỗi độc lập cho hai phía, span dương/liền nhau không chồng; không viết lại từ. Không thêm FixKind hoặc nới BatchPlan. Issue.AddsSpaceAfterColon chỉ phân biệt nhãn/Suggestion/tooltip, không cấp CanFix; cùng Family colon/ReviewSuggestion. Giờ, tỉ lệ, chữ hoa/mã, protocol, đường dẫn, tab/control/header/ngày và vùng chưa đủ giữ guard cũ.

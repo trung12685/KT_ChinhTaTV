@@ -57,3 +57,7 @@ Từ .59, TXT có đủ 27 tên hành chính/3 bản sao theo PL III.I trang40, 
 ## Bổ sung chưa phát hành — B03 sau .59
 
 C17 đổi thành Khoảng trắng quanh dấu hai chấm, ví dụ `Ghi chú :nội dung` → `Ghi chú: nội dung`: sửa riêng thừa trước/thiếu sau hoặc cả hai phía. Đây là quy tắc ứng dụng có duyệt và có giới hạn về chữ/giờ/mã/protocol/vùng XML, không phải kiểm mọi dấu hai chấm. Báo cáo đang trong code chuẩn bị .60, chưa có trong ZIP .59. Đợt có 3 bước, [nhật ký](BATCH-AFTER-0.1.59.md); tổng nhóm vẫn 24/8/1.
+
+## Bổ sung chưa phát hành — B04/C25
+
+Báo cáo thêm C25 Khoảng trắng cuối đoạn sau dấu kết câu, ví dụ dấu cách thật `Đã hoàn thành.   ` → `Đã hoàn thành.`. Tổng hiện25 nhóm đề xuất/8 thủ công/1 minh họa, lịch sử ghi đủ B01–B04. Chỉ áp cho đoạn chữ thuần có kết thúc rõ, giữ dấu kết đoạn/ô và khoảng trước chưa chọn; xem [phạm vi và ngoại lệ](BATCH-AFTER-0.1.59.md). Code chuẩn bị .60, chưa có trong ZIP .59; chưa đóng gói trong bước4.

@@ -50,9 +50,27 @@ Mở rộng nhóm C17 thành **Khoảng trắng quanh dấu hai chấm**, giữ 
 
 Giao diện dùng cùng nhóm Dấu hai chấm, nhãn thiếu sau/thừa trước và tooltip tương ứng, không đổi quyền sửa. Khi chọn cả hai phía, hai span liền nhau không ghi chồng; ghép cùng khoảng trắng/ngoặc/cụm lặp/dấu câu và phông qua giao dịch cũ. Giữ khoảng chưa chọn, nguyên văn, CP Word, checkbox theo nhóm, quét mới, checkpoint, một Undo và rollback. XML/field/control chưa đủ bằng chứng giữ thủ công; nếu từ sau đã đổi thành số dù `:` còn nguyên thì CurrentTextPlan vẫn chặn gợi ý cũ.
 
-Core thêm 75 assertion, chuyển một trường hợp thiếu sau khỏi danh sách loại trừ cũ; local runner tổng **1880 assertion đạt**. Có Unicode tổ hợp/emoji, offset, giờ/tỉ lệ/protocol/đường dẫn/mã, chọn riêng/cả hai phía, cùng nhiều lỗi, phông, mất quyền/context và lỗi lưu phục hồi cả lượt. OfficeIntegrationCheck bổ sung hai lượt sửa riêng trước/sau, giữ kiểu đậm/gạch chân, quét/Undo/rollback/lưu-mở trên mẫu giả; CI chỉ biên dịch bài Word, chưa chạy runtime. TXT cập nhật C17 và ví dụ cả hai phía. Windows CI theo đúng commit sẽ ghi trong PR/checks; không đóng gói.
+Core thêm 75 assertion, chuyển một trường hợp thiếu sau khỏi danh sách loại trừ cũ; local runner tổng **1880 assertion đạt**. Có Unicode tổ hợp/emoji, offset, giờ/tỉ lệ/protocol/đường dẫn/mã, chọn riêng/cả hai phía, cùng nhiều lỗi, phông, mất quyền/context và lỗi lưu phục hồi cả lượt. OfficeIntegrationCheck bổ sung hai lượt sửa riêng trước/sau, giữ kiểu đậm/gạch chân, quét/Undo/rollback/lưu-mở trên mẫu giả; CI chỉ biên dịch bài Word, chưa chạy runtime. TXT cập nhật C17 và ví dụ cả hai phía. Windows CI B03 đã đạt **1957 Core/OpenXML + 113 WPF** trên `ef45c4a1e12c8f305f2e298aaee9e5a43ded4819`, [run 40043399042](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40043399042); không đóng gói.
 
-Tiến độ đợt: **3 bước tính năng (B01–B03)**. Còn tích lũy đến khoảng 5–10 bước mới chuẩn bị bản tải Windows.
+## B04 — C25: Khoảng trắng cuối đoạn sau dấu kết câu
+
+Thêm nhóm C25, tổng **25 nhóm đề xuất / 8 thủ công / 1 minh họa**. Chỉ xóa dấu cách ASCII sau một dấu `.`, `?`, `!` ở cuối đoạn có chữ thuần và hai từ bên trái đủ rõ; từ cuối ít nhất hai chữ, chữ thường, không phải viết tắt/La Mã đã loại trừ. Giữ dấu câu, phần chữ, khoảng trước chưa chọn và toàn bộ dấu kết đoạn/ô. Đây là quy tắc ứng dụng cần duyệt, không gán căn cứ pháp lý.
+
+| Trước (`·` chỉ minh họa dấu cách trong bảng này) | Khi duyệt |
+|---|---|
+| `Đã hoàn thành.···` | `Đã hoàn thành.` |
+| `Đã hoàn thành··.···` — chỉ chọn cuối đoạn | `Đã hoàn thành··.`; lỗi trước dấu câu còn để chọn |
+| `Đã hoàn thành··.···` — chọn cả hai | `Đã hoàn thành.` |
+| `Đã hoàn thành···` chưa có dấu kết câu | Giữ ngoài phạm vi C25 |
+| `Số:········/BC-ABC`, ô trống, ngày chưa điền | Giữ nguyên; không dùng C25 để thu hẹp ô trống |
+
+Không áp cho số/giờ, từ viết tắt, mã, đường dẫn, chuỗi dấu/ba chấm, từ cuối toàn hoa/tên riêng, tab/NBSP/ngắt dòng trong đoạn, khoảng trống sau đoạn chưa kết câu hoặc XML/control chưa đủ. Không xóa CR/LF/kết ô. FixKind nối cuối enum để giữ giá trị cũ; BatchPlan chỉ nhận payload xóa ASCII spaces và cho ghép phông đã xác minh, CurrentTextPlan phải còn cùng gợi ý từ quét mới. Gom C25 cạnh C01 trong nhóm Khoảng trắng thừa, tooltip ba dòng chỉ rõ giữ dấu kết đoạn/ô.
+
+C25 kết hợp hai phía hai chấm/ngoặc/lặp/dấu câu/phông qua giao dịch cũ, hậu quét và rollback toàn lượt. Core kiểm Unicode/CP, chọn riêng/hai phía, blank/date/technical, mất quyền/context, payload giả, lưu thất bại và giữ nguyên dấu kết đoạn. Local runner tổng **1960 assertion đạt**; kiểm Windows sẽ gắn đúng commit trong PR/checks. Báo cáo TXT có C25/ví dụ dấu cách thật, đếm25/8/1 và lịch sử đủ B01–B04.
+
+OfficeParagraphEndCheck thêm mẫu giả có kiểu đậm/gạch chân: sửa riêng và nhóm trước/sau dấu câu, quét lại, một Undo, rollback, lưu/mở và kiểm nguồn còn nguyên. Bài được gọi từ Kiểm tra Word tự động; CI chỉ biên dịch, chưa có Word runtime xác nhận. Không phát hành Windows trong bước này.
+
+Tiến độ đợt: **4 bước tính năng (B01–B04)**. Còn tích lũy đến khoảng 5–10 bước mới chuẩn bị bản tải Windows.
 
 ## Nội dung tiếp theo
 
