@@ -1,5 +1,11 @@
 # Tiếp tục phát triển Chính tả Việt
 
+## B03 — Khoảng sau dấu hai chấm
+
+Tiếp nối B02 `7e996ba19dd0249bb9dec584612deaf73cf847f8` trên cùng nhánh đợt. ColonSpaceRules nhận thiếu sau bằng span `:` → `: `, chỉ khi qua cùng bộ nhận diện chữ rõ của C17; bỏ điều kiện cũ buộc phải có dấu cách sau mới xét phía trước. Hai lỗi độc lập cho hai phía, span dương/liền nhau không chồng; không viết lại từ. Không thêm FixKind hoặc nới BatchPlan. Issue.AddsSpaceAfterColon chỉ phân biệt nhãn/Suggestion/tooltip, không cấp CanFix; cùng Family colon/ReviewSuggestion. Giờ, tỉ lệ, chữ hoa/mã, protocol, đường dẫn, tab/control/header/ngày và vùng chưa đủ giữ guard cũ.
+
+C17 đổi tên/phạm vi/ví dụ TXT, số nhóm vẫn24/8/1. Core 75 assertion mới và cập nhật một negative cũ, local1880. OfficeIntegrationCheck mẫu hai chấm có cả thiếu sau/thừa trước; sửa riêng từng phía giữ phần chưa chọn và kiểu chữ, vẫn quét/Undo/rollback/lưu-mở; chỉ được biên dịch trong CI, chưa có Word runtime. Nhật ký đợt có ví dụ và trạng thái chính xác; hiện3 bước, chưa đóng gói .60, không nhập main. [Chi tiết](BATCH-AFTER-0.1.59.md).
+
 ## B02 — Đối chiếu tên loại và ký hiệu
 
 Trên nhánh đợt sau .59, tiếp nối B01 `030d599daf8b8db0aeeac0da0ee2295b8c193263`. AdministrativeHeaderRules thêm cảnh báo TypeMismatchTitle thuộc AdministrativeNumber, CanFix=false; chỉ đối chiếu namedType chữ thuần duy nhất trước nội dung và prefix đã có trong danh mục NamedHeading, bỏ bản sao/unknown. Căn cứ NĐ30 PL I.I.II.3.b PDF22 đã đọc bản ký, bảng PL III.I PDF40. Prefix khác loại có một cảnh báo chính, không thêm cảnh báo lowercase trùng trên prefix đó; mã cơ quan chữ thường vẫn xét riêng. Không chọn đổi tên hay mã. Tooltip ba dòng, Family number/Manual, M04 và ví dụ TXT cập nhật; 24/8/1 giữ nguyên.

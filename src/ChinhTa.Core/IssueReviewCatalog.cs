@@ -44,7 +44,8 @@ public static class IssueReviewCatalog
             FixKind.PunctuationSpace=>("comma","Dấu phẩy, chấm phẩy",60,issue.Title??"Khoảng trắng quanh dấu câu"),
             FixKind.ParenthesisSpace=>("parenthesis","Ngoặc tròn",61,"Khoảng trắng sát trong ngoặc tròn"),
             FixKind.SentenceEndSpace=>("sentence-end","Dấu kết câu cuối đoạn",62,"Thừa khoảng trước dấu kết câu cuối đoạn"),
-            FixKind.ColonSpace=>("colon","Dấu hai chấm",63,"Thừa khoảng trước dấu hai chấm"),
+            FixKind.ColonSpace=>("colon","Dấu hai chấm",63,!issue.CanFix?issue.Title??"Kiểm tra khoảng trắng quanh dấu hai chấm":
+                issue.AddsSpaceAfterColon?"Thiếu khoảng trắng sau dấu hai chấm":"Thừa khoảng trước dấu hai chấm"),
             FixKind.SentenceInnerSpace=>("sentence-before","Khoảng trước dấu kết câu",64,"Thừa khoảng trước dấu kết câu"),
             FixKind.SentenceAfterSpace=>("sentence-after","Khoảng sau dấu kết câu",65,"Thiếu khoảng sau dấu kết câu"),
             FixKind.PageLayout=>("page","Khổ giấy và lề",70,issue.Title??"Kiểm tra khổ giấy/lề"),

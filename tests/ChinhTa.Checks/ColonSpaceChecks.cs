@@ -21,7 +21,7 @@ public static class ColonSpaceChecks
                 "Colon proposals delete exact positive ASCII space spans before the colon without rewriting the punctuation or Unicode words");
             assert(!Checker.Check([new(0,sample.Item2)]).Any(i=>i.CanFix),"A combined repair leaves no stale fixed colon or spacing proposals");
         }
-        foreach(string text in new[]{"Ghi chú: nội dung","Ghi chú :nội dung","Ghi chú :","Ghi chú : 12","Ghi chú : NỘI DUNG",
+        foreach(string text in new[]{"Ghi chú: nội dung","Ghi chú :","Ghi chú : 12","Ghi chú : NỘI DUNG",
             "Nội dung 12 : 30","Tỉ lệ 1 : 2","Tỉ lệ iv : vi","Ghi chú : x","Ghi x : nội dung","Ghi chú :: nội dung","Ghi chú : : nội dung",
             "Ghi chú\t: nội dung","Ghi chú :\tnội dung","Ghi chú\u00a0: nội dung","Ghi chú :\u00a0nội dung","Ghi chú\r: nội dung",
             "Ghi chú\vnội dung : văn bản","Ghi chú\nnội dung : văn bản","Ghi chú : host.com","Ghi chú : name@example.com",
@@ -66,7 +66,7 @@ public static class ColonSpaceChecks
         try{AtomicTextBatch.Apply(plan,Read,i=>{var value=Write(i);if(writes==8)throw new IOException("injected");return value;},()=>saves++,()=>{restores++;current=mixed;});}
         catch(IOException){failed=true;}
         assert(failed && current==mixed && writes==8 && restores==1 && saves==0,"Failure immediately after deleting the colon gap rolls back all preceding selected edits once without partial commit");
-        assert(DevelopmentReport.Capabilities.Single(c=>c.Id=="C17").Example.Before=="Ghi chú : nội dung" &&
+        assert(DevelopmentReport.Capabilities.Single(c=>c.Id=="C17").Example.Before=="Ghi chú :nội dung" &&
             DevelopmentReport.Milestones.Any(m=>m.Version=="0.1.46"),"The report includes the new capability's concrete before/after example and milestone");
     }
 }

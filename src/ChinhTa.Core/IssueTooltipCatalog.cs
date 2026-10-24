@@ -125,6 +125,7 @@ public static class IssueTooltipCatalog
             FixKind.PunctuationSpace=>"Bỏ khoảng trước, chuẩn hóa khoảng sau dấu đã chọn; cần duyệt cả câu.",
             FixKind.ParenthesisSpace=>"Bỏ dấu cách sát trong ngoặc đã chọn; giữ chữ và ngoặc.",
             FixKind.SentenceAfterSpace=>"Thêm một dấu cách sau dấu kết câu đã chọn.",
+            FixKind.ColonSpace when issue.AddsSpaceAfterColon=>"Thêm một dấu cách sau dấu hai chấm; giữ chữ, dấu câu và khoảng trước chưa chọn.",
             FixKind.SentenceEndSpace or FixKind.SentenceInnerSpace or FixKind.ColonSpace=>"Bỏ dấu cách trước dấu câu đã chọn; giữ chữ và dấu câu.",
             _=>issue.Replacement.Length==0?"Xóa phần đã đánh dấu; cần duyệt ngữ cảnh.":"Thay phần đã đánh dấu bằng “"+Brief(issue.Replacement,80)+"”; cần duyệt ngữ cảnh."
         };

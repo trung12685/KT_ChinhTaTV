@@ -40,6 +40,7 @@ PunctuationSpaceChecks.Run(Assert);
 ParenthesisSpaceChecks.Run(Assert);
 SentenceEndSpaceChecks.Run(Assert);
 ColonSpaceChecks.Run(Assert);
+ColonAfterSpaceChecks.Run(Assert);
 DevelopmentReportChecks.Run(Assert);
 var text = "Tôi đi trên một con đo. Đây  là văn bản.\r";
 var issues = Checker.Check([new(37, text)]);

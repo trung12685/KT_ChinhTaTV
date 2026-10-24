@@ -8,7 +8,7 @@
 
 ## Đợt đang phát triển sau 0.1.59
 
-Theo yêu cầu người dùng, gom khoảng **5–10 bước có kiểm thử** rồi mới tạo bản tải Windows. Code hiện chuẩn bị .60, chưa phát hành; gói tải mới nhất vẫn .59. **B01**: đề xuất sửa hoa/thường của viết tắt đã biết (`TTR → TTr`, `CTR → CTr`, `QYĐ → QyĐ`), chỉ khi có tên loại tương ứng duy nhất ở đầu văn bản; giữ số và mã cơ quan, BCĐX giữ nguồn bổ sung. **B02**: cảnh báo khi tên loại và viết tắt đã nhận diện nhưng khác nhau (KẾ HOẠCH/KH so với BC), người dùng đối chiếu bên ghi sai; không tự đổi tên/mã. Đợt hiện có **2 bước**. [Nhật ký/việc tiếp theo](docs/BATCH-AFTER-0.1.59.md) · [Chu kỳ kiểm thử/phát hành](docs/RELEASE-CADENCE.md).
+Theo yêu cầu người dùng, gom khoảng **5–10 bước có kiểm thử** rồi mới tạo bản tải Windows. Code hiện chuẩn bị .60, chưa phát hành; gói tải mới nhất vẫn .59. **B01**: đề xuất sửa hoa/thường của viết tắt đã biết (`TTR → TTr`, `CTR → CTr`, `QYĐ → QyĐ`), chỉ khi có tên loại tương ứng duy nhất ở đầu văn bản; giữ số và mã cơ quan, BCĐX giữ nguồn bổ sung. **B02**: cảnh báo khi tên loại và viết tắt đã nhận diện nhưng khác nhau (KẾ HOẠCH/KH so với BC), người dùng đối chiếu bên ghi sai; không tự đổi tên/mã. **B03**: thêm dấu cách còn thiếu sau hai chấm (`Ghi chú:nội dung → Ghi chú: nội dung`), chọn riêng hoặc cùng lỗi trước hai chấm và các nhóm chữ khác. Đợt hiện có **3 bước**. [Nhật ký/việc tiếp theo](docs/BATCH-AFTER-0.1.59.md) · [Chu kỳ kiểm thử/phát hành](docs/RELEASE-CADENCE.md).
 
 ## Bản thử 0.1.59
 

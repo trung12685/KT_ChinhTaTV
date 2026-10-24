@@ -34,9 +34,25 @@ Mở rộng cảnh báo M04, giữ 24 nhóm đề xuất / 8 nhóm thủ công /
 
 Đây là cảnh báo **không tích sửa tự động**: chưa biết tên loại hay ký hiệu đã ghi sai; không tự đổi BC thành KH, không đoán tên loại theo nội dung. Không đoán mã lạ/thiếu dấu, không áp bảng tên loại gốc cho bản sao. Chặn khi tên loại/số trùng, tên loại sau nội dung, trang 2, field/control/XML chưa đủ, tab và mẫu số chưa hỗ trợ. Giữ nguyên số, cơ quan, nội dung, khối nhiều đoạn, XPS và giao dịch đang có. Sau khi sửa đúng một bên trong Word và quét mới thì cảnh báo hết; sửa khoảng trắng/số/dấu nối đơn thuần không được làm ẩn mâu thuẫn.
 
-Bài mẫu OfficeComponentCheck dùng Báo cáo đề xuất nay ghi BCĐX tương ứng để không trộn mâu thuẫn tên loại vào bài phông/Line; bài này chỉ biên dịch trong CI, chưa xác nhận runtime Word. Core mới có 117 assertion: 28 tên/nguồn, phạm vi, không báo nhầm, offset, tooltip, phối hợp sửa số và quét lại, cấm kế hoạch manual và chặn đề xuất case cũ khi đổi tên loại. Local runner tổng 1806 assertion đạt. Windows CI gắn đúng commit sẽ được ghi trong PR/checks; packaging không chạy.
+Bài mẫu OfficeComponentCheck dùng Báo cáo đề xuất nay ghi BCĐX tương ứng để không trộn mâu thuẫn tên loại vào bài phông/Line; bài này chỉ biên dịch trong CI, chưa xác nhận runtime Word. Core mới có 117 assertion: 28 tên/nguồn, phạm vi, không báo nhầm, offset, tooltip, phối hợp sửa số và quét lại, cấm kế hoạch manual và chặn đề xuất case cũ khi đổi tên loại. Local runner tổng 1806 assertion đạt. Windows CI B02 đã đạt **1883 Core/OpenXML + 113 WPF** trên `7e996ba19dd0249bb9dec584612deaf73cf847f8`, [run 40042437109](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40042437109); packaging không chạy.
 
-Tiến độ đợt: **2 bước tính năng (B01–B02)**. Còn tích lũy đến khoảng 5–10 bước mới chuẩn bị bản tải Windows.
+## B03 — Thiếu khoảng trắng sau dấu hai chấm
+
+Mở rộng nhóm C17 thành **Khoảng trắng quanh dấu hai chấm**, giữ tổng 24 nhóm đề xuất / 8 thủ công / 1 minh họa. Đây là quy tắc ứng dụng về dấu câu, không gán thành một điều/khoản của NĐ30. Cùng điều kiện hai từ rõ ở trái, từ cuối chữ thường, từ phải ít nhất hai chữ có chữ thường, không phải mẫu kỹ thuật/header/ngày. Chỉ thêm một dấu cách ASCII còn thiếu sau `:`; dấu hai chấm làm mốc nguồn có độ dài 1, giữ hai từ ngoài vùng ghi.
+
+| Trước | Khi duyệt sửa |
+|---|---|
+| `Ghi chú:nội dung` | `Ghi chú: nội dung` |
+| `Ghi chú :nội dung` — chọn cả hai phía | `Ghi chú: nội dung` |
+| `Ghi chú  :nội dung` — chỉ chọn thiếu sau | `Ghi chú  : nội dung`; lỗi trước còn để chọn |
+| `Ghi chú  :nội dung` — chỉ chọn thừa trước | `Ghi chú:nội dung`; lỗi sau còn để chọn |
+| `12:30`, `1:2`, `http:host`, `Ghi chú:NỘI DUNG` | Không áp quy tắc thiếu sau này |
+
+Giao diện dùng cùng nhóm Dấu hai chấm, nhãn thiếu sau/thừa trước và tooltip tương ứng, không đổi quyền sửa. Khi chọn cả hai phía, hai span liền nhau không ghi chồng; ghép cùng khoảng trắng/ngoặc/cụm lặp/dấu câu và phông qua giao dịch cũ. Giữ khoảng chưa chọn, nguyên văn, CP Word, checkbox theo nhóm, quét mới, checkpoint, một Undo và rollback. XML/field/control chưa đủ bằng chứng giữ thủ công; nếu từ sau đã đổi thành số dù `:` còn nguyên thì CurrentTextPlan vẫn chặn gợi ý cũ.
+
+Core thêm 75 assertion, chuyển một trường hợp thiếu sau khỏi danh sách loại trừ cũ; local runner tổng **1880 assertion đạt**. Có Unicode tổ hợp/emoji, offset, giờ/tỉ lệ/protocol/đường dẫn/mã, chọn riêng/cả hai phía, cùng nhiều lỗi, phông, mất quyền/context và lỗi lưu phục hồi cả lượt. OfficeIntegrationCheck bổ sung hai lượt sửa riêng trước/sau, giữ kiểu đậm/gạch chân, quét/Undo/rollback/lưu-mở trên mẫu giả; CI chỉ biên dịch bài Word, chưa chạy runtime. TXT cập nhật C17 và ví dụ cả hai phía. Windows CI theo đúng commit sẽ ghi trong PR/checks; không đóng gói.
+
+Tiến độ đợt: **3 bước tính năng (B01–B03)**. Còn tích lũy đến khoảng 5–10 bước mới chuẩn bị bản tải Windows.
 
 ## Nội dung tiếp theo
 

@@ -35,6 +35,7 @@ public record Issue(int Start, int Length, string Original, string Replacement,
     CharacterFormat? CharacterFormat = null, AdministrativeCenterFix? CenterFix = null)
 {
     public string DisplayText => Title ?? Original;
+    public bool AddsSpaceAfterColon => Kind==FixKind.ColonSpace && Original==":" && Replacement==": ";
     public string Suggestion => !CanFix ? "Kiểm tra thủ công; không tự sửa."
         : LineFix is not null ? "Tạo/đặt lại Shape Line theo số đo và cấu hình đã chọn."
         : CenterFix is not null ? "Căn giữa trong ô đã xác minh, bỏ thụt lề ngang; giữ nguyên chữ và khoảng cách dọc."
@@ -44,6 +45,7 @@ public record Issue(int Start, int Length, string Original, string Replacement,
         : Kind==FixKind.OutlineMarker ? "Bỏ dấu đầu dòng và dấu cách phân cách; giữ nội dung và thụt đầu dòng, cần duyệt mục cha."
         : Kind==FixKind.SentenceAfterSpace ? "Thêm một dấu cách sau dấu kết câu; giữ chữ, dấu câu và khoảng trước, cần duyệt cả câu."
         : Kind==FixKind.SentenceInnerSpace ? "Xóa dấu cách trước dấu kết câu giữa đoạn; giữ chữ và dấu câu, cần duyệt cả câu."
+        : AddsSpaceAfterColon ? "Thêm một dấu cách sau dấu hai chấm; giữ chữ, dấu câu và khoảng trước, cần duyệt cả câu."
         : Kind==FixKind.ColonSpace ? "Xóa dấu cách trước dấu hai chấm; giữ chữ và dấu câu, cần duyệt cả câu."
         : Kind==FixKind.SentenceEndSpace ? "Xóa dấu cách trước dấu kết câu cuối đoạn; giữ chữ và dấu câu, cần duyệt cả câu."
         : Kind==FixKind.ParenthesisSpace ? "Xóa dấu cách sát bên trong ngoặc; giữ chữ và dấu ngoặc, cần duyệt cả câu."

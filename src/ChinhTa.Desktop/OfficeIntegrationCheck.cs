@@ -756,19 +756,27 @@ public static class OfficeIntegrationCheck
             string colonOriginal=test.ReadCheckText();
             var colonEdits=test.Check().Where(i=>i.CanFix && i.Kind is FixKind.ColonSpace or FixKind.SentenceEndSpace or FixKind.ParenthesisSpace or FixKind.PunctuationSpace or FixKind.RepeatedText or FixKind.Text).ToArray();
             var colonOnly=colonEdits.Where(i=>i.Kind==FixKind.ColonSpace).OrderBy(i=>i.Start).ToArray();
-            if(colonOnly.Length!=2 || colonEdits.Length!=9)
-                throw new InvalidOperationException("Chưa phân biệt đúng hai dấu hai chấm và bảy lỗi độc lập hoặc mẫu giờ/tỉ lệ/đường dẫn bị sửa");
+            if(colonOnly.Length!=3 || colonEdits.Length!=9)
+                throw new InvalidOperationException("Chưa phân biệt đúng ba lỗi khoảng trắng hai chấm và sáu lỗi độc lập hoặc mẫu giờ/tỉ lệ/đường dẫn bị sửa");
             var colonOpen=colonEdits.Where(i=>i.Kind==FixKind.ParenthesisSpace).OrderBy(i=>i.Start).First();
             var colonProbe=new Issue(colonOpen.Start+colonOpen.Length,"kế hoạch".Length,"kế hoạch","kế hoạch","",false);
             var colonDecoration=test.ReadCheckDecorations(colonProbe);
             if(colonDecoration.Bold!=-1 || colonDecoration.Underline!=1)
                 throw new InvalidOperationException("Mẫu chữ giữ lại chưa có kiểu riêng");
             test.Fix(colonOnly[0]);
-            if(test.ReadCheckText()!=colonOriginal.Replace("Ghi chú  :  nội dung","Ghi chú:  nội dung",StringComparison.Ordinal) ||
-                test.Check().Count(i=>i.CanFix && i.Kind==FixKind.ColonSpace)!=1 ||
+            if(test.ReadCheckText()!=colonOriginal.Replace("Ghi chú  :nội dung","Ghi chú:nội dung",StringComparison.Ordinal) ||
+                test.Check().Count(i=>i.CanFix && i.Kind==FixKind.ColonSpace)!=2 ||
                 test.ReadCheckDecorations(colonProbe with {Start=colonProbe.Start-colonOnly[0].Length})!=colonDecoration)
                 throw new InvalidOperationException("Sửa riêng hai chấm đổi chữ/kiểu hoặc làm mất khoảng trắng chưa chọn");
             test.Undo();if(test.ReadCheckText()!=colonOriginal)throw new InvalidOperationException("Undo hai chấm chưa về nguyên bản");
+            var missingColonGap=colonOnly.Single(i=>i.AddsSpaceAfterColon);
+            test.Fix(missingColonGap);
+            if(test.ReadCheckText()!=colonOriginal.Replace("Ghi chú  :nội dung","Ghi chú  : nội dung",StringComparison.Ordinal) ||
+                test.Check().Count(i=>i.CanFix && i.Kind==FixKind.ColonSpace)!=2 ||
+                test.ReadCheckDecorations(colonProbe with {Start=colonProbe.Start+1})!=colonDecoration)
+                throw new InvalidOperationException("Thêm khoảng sau hai chấm chưa giữ khoảng trước/chữ/kiểu hoặc còn lỗi đã sửa.");
+            test.Undo();if(test.ReadCheckText()!=colonOriginal || test.ReadCheckDecorations(colonProbe)!=colonDecoration)
+                throw new InvalidOperationException("Undo thêm khoảng sau hai chấm chưa phục hồi nguyên văn/kiểu.");
             Pass(stage);
             test.Open(colonSource);
             stage="Lỗi giữa nhóm hai chấm/chữ: rollback toàn bộ, không tạo Undo";
@@ -776,12 +784,12 @@ public static class OfficeIntegrationCheck
             try{test.FixTextFailureProbe(colonEdits,4);}
             catch(InvalidOperationException error) when(error.InnerException is OfficeTextProbeException){colonRollback=true;}
             if(!colonRollback || test.ReadCheckText()!=colonOriginal || test.Changed || test.ReadCheckDecorations(colonProbe)!=colonDecoration ||
-                test.Check().Count(i=>i.CanFix && i.Kind==FixKind.ColonSpace)!=2)
+                test.Check().Count(i=>i.CanFix && i.Kind==FixKind.ColonSpace)!=3)
                 throw new InvalidOperationException("Rollback nhóm hai chấm chưa giữ nguyên chữ/kiểu");
             test.Undo();if(test.ReadCheckText()!=colonOriginal)throw new InvalidOperationException("Nhóm hai chấm lỗi đã tạo Undo");
             Pass(stage);
             stage="Sửa nhóm hai chấm/chữ: quét, một Undo, lưu/mở và giữ nguồn";
-            string colonExpected=colonOriginal.Replace("Ghi chú  :  nội dung  ( kế hoạch kế hoạch ) đã duyệt;hoàn thành  .","Ghi chú: nội dung (kế hoạch) đã duyệt; hoàn thành.",StringComparison.Ordinal)
+            string colonExpected=colonOriginal.Replace("Ghi chú  :nội dung  ( kế hoạch kế hoạch ) đã duyệt;hoàn thành  .","Ghi chú: nội dung (kế hoạch) đã duyệt; hoàn thành.",StringComparison.Ordinal)
                 .Replace("Kính gửi : cơ quan.","Kính gửi: cơ quan.",StringComparison.Ordinal);
             var colonFresh=test.Check().Where(i=>i.CanFix && i.Kind is FixKind.ColonSpace or FixKind.SentenceEndSpace or FixKind.ParenthesisSpace or FixKind.PunctuationSpace or FixKind.RepeatedText or FixKind.Text).ToArray();
             int colonShift=colonFresh.Where(i=>(long)i.Start+i.Length<=colonProbe.Start).Sum(i=>i.Replacement.Length-i.Length);
@@ -792,7 +800,7 @@ public static class OfficeIntegrationCheck
                 throw new InvalidOperationException("Nhóm hai chấm chưa đúng chữ/kiểu hoặc còn mục đã sửa");
             string colonSaved=Path.Combine(folder,"colon-fixed.docx");test.SaveCopy(colonSaved);test.Undo();
             if(test.ReadCheckText()!=colonOriginal || test.ReadCheckDecorations(colonProbe)!=colonDecoration ||
-                test.Check().Count(i=>i.CanFix && i.Kind==FixKind.ColonSpace)!=2)
+                test.Check().Count(i=>i.CanFix && i.Kind==FixKind.ColonSpace)!=3)
                 throw new InvalidOperationException("Một Undo chưa phục hồi toàn nhóm hai chấm");
             test.Open(colonSaved);
             if(test.ReadCheckText()!=colonExpected || test.Check().Any(i=>i.CanFix && i.Kind is FixKind.ColonSpace or FixKind.SentenceEndSpace or FixKind.ParenthesisSpace or FixKind.PunctuationSpace or FixKind.RepeatedText or FixKind.Text) ||
@@ -1191,7 +1199,7 @@ public static class OfficeIntegrationCheck
             new XElement(w+"b",new XAttribute(w+"val",kept?1:0)),new XElement(w+"sz",new XAttribute(w+"val",26)),
             new XElement(w+"u",new XAttribute(w+"val",kept?"single":"none"))),
             new XElement(w+"t",new XAttribute(XNamespace.Xml+"space","preserve"),text));
-        var rows=new[]{new XElement(w+"p",Run("Ghi chú  :  nội dung  ( "),Run("kế hoạch",true),Run(" kế hoạch ) đã duyệt;hoàn thành  .")),
+        var rows=new[]{new XElement(w+"p",Run("Ghi chú  :nội dung  ( "),Run("kế hoạch",true),Run(" kế hoạch ) đã duyệt;hoàn thành  .")),
             new XElement(w+"p",Run("Kính gửi : cơ quan.")),new XElement(w+"p",Run("Giờ mở cửa 12 : 30.")),
             new XElement(w+"p",Run("Tỉ lệ 1 : 2.")),new XElement(w+"p",Run("Truy cập http : host.")),
             new XElement(w+"p",Run("Số:    /BC-ABC")),new XElement(w+"p",Run("Địa chỉ https://host/a và name@example.com."))};
