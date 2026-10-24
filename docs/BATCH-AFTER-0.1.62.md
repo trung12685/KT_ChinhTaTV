@@ -2,7 +2,7 @@
 
 Mốc nền: `68865ca574b3c32f170b378080e6663287d036cd`, tag `v0.1.62`. Bản nền đạt 2882 Core/OpenXML + 206 WPF + 1 kiểm metadata gói; chưa xác nhận Word runtime. Main và stable .27 giữ nguyên.
 
-Phiên bản code: **0.1.63 đang phát triển**, chưa có gói Windows .63. Sau khoảng 5–10 hạng mục hoàn chỉnh mới chuẩn bị phát hành theo yêu cầu người dùng. [Windows gần nhất .62](https://github.com/trung12685/KT_ChinhTaTV/releases/tag/v0.1.62).
+Phiên bản code: **0.1.63**, đủ5 bước B01–B05; chỉ có gói khi kiểm bắt buộc và pipeline phát hành đúng commit đạt. Các ghi chú chưa đóng gói ở B01–B04 là lịch sử từng mốc. Sau khoảng 5–10 hạng mục hoàn chỉnh mới chuẩn bị phát hành theo yêu cầu người dùng. [Windows gần nhất .62](https://github.com/trung12685/KT_ChinhTaTV/releases/tag/v0.1.62).
 
 ## B01 — phông, màu, cỡ đoạn văn xuôi thường
 
@@ -34,6 +34,14 @@ Double hoặc Multiple ngoài1–1,5 → Single; Single/1,5/Multiple trong kho�
 Core/desktop kiểm riêng/chung, biên trang/đoạn/context/style, chế độ giãn dòng, stale/neighbor, writer/drift/COM/checkbox. Fixture Word kiểm riêng/chung chữ/phông/căn/ba Line, khôi phục/lưu-mở/nguồn; CI chỉ biên dịch fixture. Kết quả mới theo đúng commit tại PR39/Actions, không lấy tổng B02 làm bằng chứng. [Phạm vi C28/C29](BODY-SPACING.md).
 
 Sau B04: **4 hạng mục**, code .63 **29 đề xuất/8 thủ công/1 minh họa**, chưa đóng gói Windows .63. Bản tải .62, main/stable giữ nguyên. Chưa có Word runtime hoặc bằng chứng khép phản hồi Office2021 cũ.
+
+## B05 — mở đầu không Kính gửi / chuẩn bị .63
+
+Tiếp nối B04 `9445ce25e7c45805cdb7040c7b267f09f5bb234a` (3080 Core/OpenXML +232 WPF). Mở C26–C29 cho văn bản có tên loại/trích yếu nhưng không Kính gửi khi hai mốc mở đầu văn xuôi có XML căn đều, lề trái/phải0, không hanging, firstLine1cm hoặc1,27cm và nằm trong vùng trang đầu đã đối chiếu. Font/kiểu và căn/thụt Word thực tế phải rõ/khớp XML; quan sát tạm không cấp quyền sửa. Hai mốc ngắn sau xóa lặp vẫn giữ vai trò để không che lỗi chưa chọn phía sau; vẫn cần chữ ký/Nơi nhận đóng khối. Không mở Công văn không tên loại/nhấn mạnh/mục/bảng/field/kiểu chưa rõ hoặc toàn thân bài.
+
+Thêm Core về mốc đúng/sai/stale/kế thừa/bidi/proof tạm, fixture Word ghép bốn nhóm/chữ/ba Line, giữ1cm/1,27cm, cỡ/gạch chân/spacing, rollback/Undo/lưu-mở/nguồn. CI chỉ biên dịch fixture, không Word runtime. [Chi tiết](BODY-OPENING.md).
+
+Đủ **5 hạng mục**, tổng29/8/1. Chuẩn bị release notes/checklist .63, đưa cả5 bước vào TXT và gói. Kết quả thực tế theo commit tại PR39/Actions/release; không lấy số B04 làm kết quả mới hoặc coi version là đã có bản tải. Main/stable .27 và .62 giữ nguyên.
 
 ## Hạng mục tiếp theo
 

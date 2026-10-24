@@ -37,7 +37,7 @@ public static class BodySpacingRules
         row.FormatEvidence is {Fonts.Count:>0} e && e.Text==row.Text.TrimEnd('\r','\n','\a') && e.Fonts.All(f=>f.Known() && f.Bold==0 && f.Italic==0);
     public static IReadOnlyList<Issue> Check(IReadOnlyList<Paragraph> paragraphs,IReadOnlyList<LayoutParagraph> layout,DocumentProfile profile)
     {
-        var candidates=BodyFormatRules.ObservationTargets(paragraphs,layout,profile).Where(Eligible).ToDictionary(p=>p.Start);
+        var candidates=BodyFormatRules.RepairTargets(paragraphs,layout,profile).Where(Eligible).ToDictionary(p=>p.Start);
         var result=new List<Issue>();
         foreach(var row in candidates.Values)
         {

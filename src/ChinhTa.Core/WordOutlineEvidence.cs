@@ -4,8 +4,9 @@ using System.Xml.Linq;
 
 namespace ChinhTa.Core;
 
+public sealed record BodyIndent(int Left,int Right,int First,int Hanging);
 public enum OutlineScope { PlainBody, AutomaticList, Complex, Recipient }
-public sealed record OutlineParagraphInfo(OutlineScope Scope,int Indent=0,int? HeadingLevel=null,bool HasReferences=false,bool LabelThroughTabs=false,ComponentRole? RecipientRole=null,bool LastRecipient=false,int? Alignment=null,BodySpacingContext? SpacingContext=null);
+public sealed record OutlineParagraphInfo(OutlineScope Scope,int Indent=0,int? HeadingLevel=null,bool HasReferences=false,bool LabelThroughTabs=false,ComponentRole? RecipientRole=null,bool LastRecipient=false,int? Alignment=null,BodySpacingContext? SpacingContext=null,BodyIndent? BodyIndent=null);
 
 // Resolve paragraph-list evidence from the same live XML used for text proof.
 // Unknown/cyclic styles or indentation never become ordinary manual list text.
@@ -71,6 +72,8 @@ internal sealed class WordOutlineEvidence(XDocument xml)
 
         var contextual=Flag("contextualSpacing");var pageBreak=Flag("pageBreakBefore");var keep=Flag("keepNext");
         BodySpacingContext? spacingContext=contextual is bool c && pageBreak is bool b && keep is bool k?new(c,grid,b,k):null;
-        return new(OutlineScope.PlainBody,left.Value+first.Value-hanging.Value,level,references,labelTabs,Alignment:alignment,SpacingContext:spacingContext);
+        int? right=ReadIndent("right","end");
+        BodyIndent? bodyIndent=right is int r && Flag("bidi")==false?new(left.Value,r,first.Value,hanging.Value):null;
+        return new(OutlineScope.PlainBody,left.Value+first.Value-hanging.Value,level,references,labelTabs,Alignment:alignment,SpacingContext:spacingContext,BodyIndent:bodyIndent);
     }
 }

@@ -1,5 +1,9 @@
 # Tiếp tục phát triển Chính tả Việt
 
+## B05 / chuẩn bị .63 — thân bài không Kính gửi
+
+Nền B04 `9445ce25e7c45805cdb7040c7b267f09f5bb234a` đạt3080 Core +232 WPF, chưa Word runtime. Hai đoạn mở đầu văn xuôi có XML từng indent/căn đều1cm hoặc1,27cm, font/kiểu và layout Word khớp, mốc tên loại/trích yếu và chữ ký/Nơi nhận; quan sát tạm tách quyền sửa. Mốc ngắn đi sau xóa lặp vẫn giữ lỗi chưa chọn phía sau. Core/fixture Word kiểm riêng/chung4 nhóm/chữ/Line, nguồn/Undo/rollback/lưu-mở; fixture chỉ biên dịch trong CI. Đủ5 bước .63, tổng29/8/1; release notes/checklist/TXT/gói theo đúng commit và các kiểm bắt buộc, chưa xác nhận Office2021. [Phạm vi](BODY-OPENING.md), [nhật ký](BATCH-AFTER-0.1.62.md).
+
 ## Sau .62, B03/B04 — khoảng đoạn/giãn dòng
 
 Nền B02 `86e16d52421ec772616f2545fbe55e06a72851e8` đạt3007 Core +220 WPF, chưa Word runtime. C28 chỉ cặp văn xuôi liền nhau cùng trang với tổng After+Before chưa thể đạt6pt; C29 Double/Multiple ngoài1–1,5 vềSingle, Exactly/AtLeast/grid và khoảng gộp/auto/contextual còn phải đo. Payload/checkbox riêng; writer chỉ After hoặc rule, không Font/Before/pt/căn/thụt. Ghép snapshot bất biến với C26/C27/chữ trước Line, đối chiếu glyph/thuộc tính/ngữ cảnh/đoạn kế sau lưu/Line; một Undo/rollback. Flow dựa trang đầu/cuối Range hiện tại, XML on/off kế thừa và docGrid; tra ngữ cảnh chung một lần, prefix ràng buộc cuối không đọc lặp cùng đoạn. Core/desktop/fixture Word kiểm riêng/chung/Line/khôi phục/lưu-mở/nguồn, CI chỉ biên dịch fixture.4 bước, tổng29/8/1; .63 chưa đóng gói, không khép phản hồi Office2021. [Chi tiết](BODY-SPACING.md), [nhật ký](BATCH-AFTER-0.1.62.md); bằng chứng kiểm mới theo đúng head tại PR/Actions.

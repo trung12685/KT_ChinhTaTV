@@ -26,7 +26,7 @@ public static class BodyParagraphRules
     public static IReadOnlyList<Issue> Check(IReadOnlyList<Paragraph> paragraphs,IReadOnlyList<LayoutParagraph> layout,DocumentProfile profile)
     {
         var result=new List<Issue>();
-        foreach(var row in BodyFormatRules.ObservationTargets(paragraphs,layout,profile))
+        foreach(var row in BodyFormatRules.RepairTargets(paragraphs,layout,profile))
         {
             string text=row.Text.TrimEnd('\r','\n','\a');var style=row.ParagraphStyle;
             if(style is null || !style.Known || style.Spacing is not {Known:true} || style.Alignment is not (0 or 3) ||

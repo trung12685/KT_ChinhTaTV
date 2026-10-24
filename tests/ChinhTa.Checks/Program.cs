@@ -56,6 +56,7 @@ SemicolonEndSpaceChecks.Run(Assert);
 BodyFormatChecks.Run(Assert);
 BodyParagraphChecks.Run(Assert);
 BodySpacingChecks.Run(Assert);
+BodyOpeningChecks.Run(Assert);
 ColonSpaceChecks.Run(Assert);
 ColonAfterSpaceChecks.Run(Assert);
 DevelopmentReportChecks.Run(Assert);

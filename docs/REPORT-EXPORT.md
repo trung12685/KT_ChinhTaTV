@@ -1,5 +1,7 @@
 # Xem và xuất tiến độ, chức năng
 
+Mốc .63 gom đủ5 bước sau .62, tổng29 đề xuất/8 thủ công/1 minh họa. B05 mở C26–C29 cho văn bản có tên loại không Kính gửi bằng hai mốc văn xuôi XML/layout/kiểu chắc; chưa mở toàn thân bài. TXT giữ ví dụ các lỗi hiện có, giới hạn từng phạm vi, lịch sử B01–B05 và việc còn lại. Các dòng chưa đóng gói bên dưới là lịch sử lúc code chưa đủ5 bước; chỉ metadata/pipeline đúng commit chứng minh gói và số kiểm mới. CI không có Word/Office2021.
+
 B03/B04 sau .62: C28 khoảng giữa hai đoạn và C29 giãn dòng, tổng hiện tại29 đề xuất/8 thủ công/1 minh họa. TXT có ví dụ0+0pt → After6pt, Double → Single; nói rõ không kết luận sai từ After đơn lẻ, Exactly/AtLeast/contextual/auto/grid chưa đo và phạm vi văn xuôi chắc. Sửa riêng/chung giữ phần chưa chọn, hậu kiểm đoạn kế/glyph/thuộc tính sau lưu/Line. Các tổng27/26 ở dưới là lịch sử B02/B01, không phải tổng code mới. .63 chưa có gói, CI không có Word.
 
 B02 sau .62 bổ sung C27, tổng hiện tại27 đề xuất/8 thủ công/1 minh họa. Ví dụ căn trái/dòng đầu0cm → căn đều/1,27cm; giữ1cm/1,27cm đúng và các thuộc tính chưa chọn. Chưa sửa giãn dòng/khoảng đoạn hoặc toàn thân bài; có snapshot và hậu kiểm sau lưu/Line, một Undo/rollback. Đoạn bên dưới về B01 là lịch sử phạm vi khi có26 nhóm. .63 chưa có gói tải, không coi code/CI là Word pass.

@@ -1,5 +1,7 @@
 # C28/C29 — khoảng đoạn và giãn dòng văn xuôi thường
 
+B05 mở thêm nhánh [không Kính gửi có hai mốc văn xuôi đủ proof](BODY-OPENING.md). Các hạn chế Kính gửi dưới đây là phạm vi ban đầu; .63 chỉ có bản tải khi pipeline phát hành đúng commit đạt.
+
 B03/B04 sau .62, code .63 đang phát triển; chưa đóng gói Windows .63. Tái dùng ranh giới Nhà nước C26/C27: khối tên loại/trích yếu chắc, Kính gửi, chữ ký/Nơi nhận; XML chữ/style và phông đã quan sát. Không áp toàn văn bản, Đảng/cá nhân, nhấn mạnh/mục/bảng/field, hanging/thụt cả đoạn hoặc vùng chưa chắc.
 
 Căn cứ đã đọc nguồn NĐ30, Phụ lục I, phần I, mục II.6.e (PDF25): giữa các đoạn tối thiểu6pt; giữa các dòng từ dòng đơn đến1,5lines. Hai nhóm ở Bắt buộc sửa nhưng vẫn cần người dùng duyệt, checkbox riêng/nhóm/all và tooltip3 dòng Lỗi/Căn cứ/Cách xử lý.
