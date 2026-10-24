@@ -12,7 +12,7 @@ Giữ thủ công khi chưa đọc chắc, mất quyền XML hoặc ngoài nhậ
 
 Core/Desktop kiểm policy/role, cỡ đúng/ngoài khoảng, sai payload, Unicode/CP thực, sửa chung chữ, stale, đọc/ghi COM lỗi, hậu kiểm drift/rollback, checkbox phụ thuộc và glyph/nét mới. Fixture Word mở rộng mẫu đúng/sai cỡ hỗn hợp và lưu/mở/Undo/rollback/băm nguồn, CI chỉ biên dịch. Kết quả Windows đúng commit ghi tại PR và workflow checks; không lấy số kiểm cục bộ thay cho CI. Chưa xác nhận Office2021 hoặc khép phản hồi .56.
 
-[Thiết kế và cách thử](SELECTIVE-SIZE-REPAIR.md). Kết quả kiểm đang được hoàn tất trước khi chốt bước.
+[Thiết kế và cách thử](SELECTIVE-SIZE-REPAIR.md). Bước B01 đã hoàn thành kiểm bắt buộc: commit triển khai `3a9d2267b6bf060c60e4e5f261bd665b55313c0d` đạt **2471 Core/OpenXML +163 WPF**, build ứng dụng thành công, không có warning/error biên dịch trong log. [CI đúng commit](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40074445118) · [PR38 và kết quả head mới nhất](https://github.com/trung12685/KT_ChinhTaTV/pull/38). Runner cục bộ chọn lọc đạt2436 lượt assertion, không thay cho tổng CI hoặc Word PASS. Hiện **1 bước hoàn tất**, chưa đóng gói/tag .62. Các commit chốt tài liệu không tính thêm bước.
 
 ## Việc tiếp theo
 
