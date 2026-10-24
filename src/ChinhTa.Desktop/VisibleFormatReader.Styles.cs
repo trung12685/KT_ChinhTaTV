@@ -5,7 +5,7 @@ namespace ChinhTa.Desktop;
 
 public static partial class VisibleFormatReader
 {
-    public static CharacterStyleEvidence ReadStyles(object rangeObject,string expected)
+    public static CharacterStyleEvidence ReadStyles(object rangeObject,string expected,bool includeSpacing=false)
     {
         dynamic range=rangeObject;
         if((string?)range.Text!=expected)throw new InvalidOperationException("Vùng giữ định dạng ký tự đã thay đổi.");
@@ -39,8 +39,34 @@ public static partial class VisibleFormatReader
         finally{Release(characters);}
         if(cursor!=end || text.ToString()!=expected || (string?)range.Text!=expected)
             throw new InvalidOperationException("Chưa đối chiếu đủ định dạng ký tự.");
-        dynamic paragraph=range.ParagraphFormat;
-        try{return new(expected,styles,new((int)paragraph.Alignment,(float)paragraph.LeftIndent,(float)paragraph.RightIndent,(float)paragraph.FirstLineIndent));}
+        return new(expected,styles,ReadParagraph(rangeObject,includeSpacing));
+    }
+    public static ObservedParagraphStyle ReadParagraph(object rangeObject,bool includeSpacing=true)
+    {
+        dynamic range=rangeObject;dynamic paragraph=range.ParagraphFormat;
+        try
+        {
+            var style=new ObservedParagraphStyle((int)paragraph.Alignment,(float)paragraph.LeftIndent,(float)paragraph.RightIndent,(float)paragraph.FirstLineIndent,
+                includeSpacing?new((float)paragraph.SpaceBefore,(float)paragraph.SpaceAfter,(int)paragraph.LineSpacingRule,(float)paragraph.LineSpacing,
+                    (int)paragraph.SpaceBeforeAuto,(int)paragraph.SpaceAfterAuto):null);
+            if(!style.Known)throw new InvalidOperationException("Chưa đọc chắc căn/thụt và khoảng đoạn.");
+            return style;
+        }
         finally{Release(paragraph);}
+    }
+    public static void ApplyParagraph(object rangeObject,string expected,BodyParagraphFix fix)
+    {
+        dynamic range=rangeObject;
+        if(!fix.Valid || (string?)range.Text!=expected || !fix.Before.Matches(ReadParagraph(rangeObject)))
+            throw new InvalidOperationException("Căn/thụt hoặc chữ đã đổi trước khi sửa; hãy quét lại.");
+        dynamic paragraph=range.ParagraphFormat;
+        try
+        {
+            if(fix.Alignment is int alignment)paragraph.Alignment=alignment;
+            if(fix.First is float first)paragraph.FirstLineIndent=first;
+        }
+        finally{Release(paragraph);}
+        if((string?)range.Text!=expected || !fix.Expected.Matches(ReadParagraph(rangeObject)))
+            throw new InvalidOperationException("Căn/thụt sau sửa chưa đúng hoặc khoảng đoạn đã đổi; phải phục hồi.");
     }
 }

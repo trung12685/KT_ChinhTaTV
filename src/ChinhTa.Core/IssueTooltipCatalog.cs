@@ -46,6 +46,8 @@ public static class IssueTooltipCatalog
         bool party=citation.StartsWith("05-HD/VPTW",StringComparison.Ordinal);
         if(state)
         {
+            if(issue.Kind==FixKind.BodyParagraph)
+                return Decree+"mục II.6, điểm e: nội dung căn đều hai lề; đầu dòng lùi 1 cm hoặc 1,27 cm.";
             if(issue.Kind==FixKind.BodyFormat)
                 return Decree+"mục I.4 và II.6, điểm e: Times New Roman, đen, cỡ 13–14, đứng. Chỉ áp dụng đoạn văn xuôi thường đã xác minh.";
             if(issue.Kind is FixKind.AgencyFormat or FixKind.AgencyText)
@@ -118,7 +120,7 @@ public static class IssueTooltipCatalog
                 (line.Role==LineRole.Motto?"dài bằng tiêu ngữ.":"mức tự sửa theo cấu hình (mặc định 3/7).");
         }
         if(issue.CenterFix is not null)return "Căn giữa trong ô đã xác minh, bỏ thụt lề ngang; giữ chữ và khoảng cách dọc.";
-        if(issue.CharacterFormat is not null)return issue.Suggestion;
+        if(issue.IsStyleOnly)return issue.Suggestion;
         if(issue.Format?.RepairInvalidSizes==true)return issue.Suggestion;
         if(issue.Format is HeadingFormat format)
             return (issue.Original==issue.Replacement?"Đặt":"Sửa chữ và đặt")+" Times New Roman, đen, đậm, đứng, cỡ "+Number(format.Size)+

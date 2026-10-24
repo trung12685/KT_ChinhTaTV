@@ -8,9 +8,11 @@
 
 ## Đợt sau .62 — code .63 đang phát triển
 
-B01 thêm C26 kiểm/sửa phông, màu và cỡ đoạn văn xuôi thường đủ bằng chứng: Arial đỏ cỡ12 xen chữ cỡ14 → Times New Roman đen, chỉ cỡ12 về13, giữ chữ cỡ14/gạch chân/căn đoạn. Có mốc tên loại/trích yếu, Kính gửi và chữ ký/Nơi nhận; loại trừ nhấn mạnh, tiêu đề/danh sách/bảng/field và vùng chưa chắc. Sửa riêng/chung chữ/Line, quét mới, một Undo/rollback. Chưa sửa toàn bộ thân bài hoặc căn/giãn đoạn.
+B01 thêm C26 kiểm/sửa phông, màu và cỡ đoạn văn xuôi thường đủ bằng chứng: Arial đỏ cỡ12 xen chữ cỡ14 → Times New Roman đen, chỉ cỡ12 về13, giữ chữ cỡ14/gạch chân/căn đoạn. Có mốc tên loại/trích yếu, Kính gửi và chữ ký/Nơi nhận; loại trừ nhấn mạnh, tiêu đề/danh sách/bảng/field và vùng chưa chắc. Sửa riêng/chung chữ/Line, quét mới, một Undo/rollback. C26 chưa sửa toàn bộ thân bài hoặc căn/giãn đoạn.
 
-Tổng code: **26 đề xuất/8 thủ công/1 minh họa**. Chưa đóng gói .63; tích lũy khoảng 5–10 bước. [Phạm vi C26](docs/BODY-FORMAT.md) · [Nhật ký và bước tiếp theo](docs/BATCH-AFTER-0.1.62.md). [Windows gần nhất .62](https://github.com/trung12685/KT_ChinhTaTV/releases/tag/v0.1.62); chưa xác nhận Word runtime từ CI.
+B02 thêm C27 căn đều và thụt dòng đầu văn xuôi chắc: căn trái/0cm → căn đều/1,27cm. Giữ mức1cm hoặc1,27cm đang đúng, chữ/phông/cỡ và khoảng đoạn/giãn dòng chưa chọn; sửa riêng/chung C26/chữ/Line, quét mới và một Undo/rollback. Không mở bảng/mục/chữ ký hoặc toàn thân bài. [Phạm vi C27](docs/BODY-PARAGRAPH.md).
+
+Tổng code: **27 đề xuất/8 thủ công/1 minh họa**. Chưa đóng gói .63; tích lũy khoảng 5–10 bước. [Phạm vi C26](docs/BODY-FORMAT.md) · [Nhật ký và bước tiếp theo](docs/BATCH-AFTER-0.1.62.md). [Windows gần nhất .62](https://github.com/trung12685/KT_ChinhTaTV/releases/tag/v0.1.62); chưa xác nhận Word runtime từ CI.
 
 ## Bản thử tích lũy 0.1.62 — năm hạng mục sau .61
 

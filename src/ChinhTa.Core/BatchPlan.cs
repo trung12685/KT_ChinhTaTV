@@ -13,6 +13,11 @@ public static class BatchPlan
                 throw new InvalidOperationException("Có cảnh báo chỉ kiểm tra thủ công, không thể sửa tự động.");
             if (current.Start < 0 || current.Length <= 0 || current.Original.Length != current.Length)
                 throw new InvalidOperationException("Vị trí lỗi không hợp lệ. Hãy quét lại.");
+            if(current.ParagraphFix is { } paragraph && (current.Kind!=FixKind.BodyParagraph || !paragraph.Valid ||
+                current.Original!=current.Replacement || current.CharacterFormat is not null || current.Format is not null ||
+                current.CenterFix is not null || current.LineFix is not null || current.Original.Any(char.IsControl)) ||
+                current.Kind==FixKind.BodyParagraph && current.ParagraphFix is null)
+                throw new InvalidOperationException("Gợi ý căn/thụt đầu dòng chưa hợp lệ; hãy quét lại.");
             if(current.OutlineContext is not null && current.Kind!=FixKind.OutlineOrder)
                 throw new InvalidOperationException("Ngữ cảnh mục không đúng loại sửa. Hãy quét lại.");
             if(current.Format?.RepairInvalidSizes==true && current.Format.MaximumSize is null)
@@ -49,18 +54,20 @@ public static class BatchPlan
                 throw new InvalidOperationException("Gợi ý tên loại/trích yếu thiếu định dạng đã xác minh. Hãy quét lại.");
             active.RemoveAll(previous=>(long)previous.Start+previous.Length<=current.Start);
             foreach(var previous in active)
-                if(!SharesFormat(previous,current) && !SharesFormat(current,previous))
+                if(!SharesFormat(previous,current) && !SharesFormat(current,previous) && !SharesBodyStyles(previous,current))
                     throw new InvalidOperationException("Các lỗi chồng lấn vị trí. Hãy sửa riêng từng lỗi rồi quét lại.");
             active.Add(current);
         }
         // Character-only formatting does not change CPs. Apply it before descending text edits.
-        return ordered.OrderByDescending(i=>i.CharacterFormat is not null).ThenByDescending(i=>i.Start).ToArray();
+        return ordered.OrderByDescending(i=>i.IsStyleOnly).ThenByDescending(i=>i.Start).ToArray();
     }
-    private static bool SharesFormat(Issue format,Issue text)=>format.CharacterFormat is not null &&
-        text.CharacterFormat is null && text.Format is null && text.LineFix is null &&
+    private static bool SharesFormat(Issue format,Issue text)=>format.IsStyleOnly &&
+        !text.IsStyleOnly && text.Format is null && text.LineFix is null &&
         text.Kind is FixKind.Text or FixKind.AdministrativeNumber or FixKind.AdministrativeDate or FixKind.RepeatedText or FixKind.PunctuationSpace or FixKind.ParenthesisSpace or FixKind.SentenceEndSpace or FixKind.ParagraphEndSpace or FixKind.ColonSpace or FixKind.SentenceInnerSpace or FixKind.SentenceAfterSpace or FixKind.OutlineOrder or FixKind.OutlineMarker or FixKind.AgencyText or FixKind.RecipientText or FixKind.DocumentTypeText &&
         (text.Kind!=FixKind.DocumentTypeText || format.Kind==FixKind.DocumentHeadingFormat) &&
         text.Start>=format.Start && (long)text.Start+text.Length<=(long)format.Start+format.Length;
+    private static bool SharesBodyStyles(Issue a,Issue b)=>(a.Kind==FixKind.BodyFormat && b.Kind==FixKind.BodyParagraph ||
+        b.Kind==FixKind.BodyFormat && a.Kind==FixKind.BodyParagraph) && a.Start==b.Start && a.Length==b.Length && a.Original==b.Original;
     public static void Validate(IReadOnlyList<Issue> plan, Func<Issue, string> read)
     {
         foreach (var issue in plan)

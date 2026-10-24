@@ -1,10 +1,10 @@
 namespace ChinhTa.Core;
 
-public sealed record ObservedParagraphStyle(int Alignment,float Left,float Right,float First)
+public sealed record ObservedParagraphStyle(int Alignment,float Left,float Right,float First,ObservedParagraphSpacing? Spacing=null)
 {
-    public bool Known=>Alignment is >=0 and <=9 && new[]{Left,Right,First}.All(v=>float.IsFinite(v) && Math.Abs(v)<9999999);
+    public bool Known=>Alignment is >=0 and <=9 && new[]{Left,Right,First}.All(v=>float.IsFinite(v) && Math.Abs(v)<9999999) && (Spacing is null || Spacing.Known);
     public bool Matches(ObservedParagraphStyle actual)=>Known && actual.Known && Alignment==actual.Alignment &&
-        Math.Abs(Left-actual.Left)<.01f && Math.Abs(Right-actual.Right)<.01f && Math.Abs(First-actual.First)<.01f;
+        Math.Abs(Left-actual.Left)<.01f && Math.Abs(Right-actual.Right)<.01f && Math.Abs(First-actual.First)<.01f && (Spacing is null || actual.Spacing is { } spacing && Spacing.Matches(spacing));
 }
 
 public sealed record ObservedCharacterStyle(ObservedFont Font,int Underline)
@@ -40,6 +40,12 @@ public sealed class CharacterStyleEvidence
             Size=!format.PreserveSize?format.Size:format.RepairInvalidSizes &&
                 (s.Font.Size<format.SizeRange.Minimum || s.Font.Size>format.SizeRange.Maximum)?format.Size:s.Font.Size
         }}),Paragraph);
+    }
+    public CharacterStyleEvidence WithParagraph(BodyParagraphFix fix)
+    {
+        if(!fix.Valid || Paragraph is null || !fix.Before.Matches(Paragraph))
+            throw new InvalidOperationException("Căn/thụt hoặc khoảng đoạn đã đổi; hãy quét lại trước khi sửa.");
+        return new(Text,Styles,fix.Expected);
     }
     public CharacterStyleEvidence Project(IReadOnlyList<Issue> edits,Func<Issue,string> readPrefix)
     {

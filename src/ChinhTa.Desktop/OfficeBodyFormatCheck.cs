@@ -48,7 +48,7 @@ internal static class OfficeBodyFormatCheck
         Issue[] Selected()
         {
             var current=test.Check();var fonts=current.Where(i=>i.CanFix && Owned(i)).ToArray();
-            var text=current.Where(i=>i.CanFix && i.CharacterFormat is null && i.Format is null &&
+            var text=current.Where(i=>i.CanFix && !i.IsStyleOnly && i.Format is null &&
                 fonts.Any(f=>i.Start>=f.Start && (long)i.Start+i.Length<=(long)f.Start+f.Length)).ToArray();
             return fonts.Concat(text).Concat(OfficeComponentCheck.ReadLines(test)).ToArray();
         }
@@ -58,7 +58,7 @@ internal static class OfficeBodyFormatCheck
         if(!restored || test.ReadCheckText()!=original || test.CheckUndoCount!=0 || test.Changed || !sourceStyle.Matches(test.ReadCheckCurrentStyles(First)))
             throw new InvalidOperationException("Rollback sau Line chưa phục hồi lượt thân bài/chữ/đường kẻ.");
         selected=Selected();var first=selected.Single(i=>Owned(i) && i.Original==First);
-        var firstEdits=selected.Where(i=>i.CharacterFormat is null && i.Format is null && i.LineFix is null && i.Start>=first.Start &&
+        var firstEdits=selected.Where(i=>!i.IsStyleOnly && i.Format is null && i.LineFix is null && i.Start>=first.Start &&
             (long)i.Start+i.Length<=(long)first.Start+first.Length).ToArray();
         var finalStyle=sourceStyle.WithFormat(first.CharacterFormat!).Project(firstEdits,i=>First[..(i.Start-first.Start)]);
         test.FixSelection(selected);test.Check();
@@ -74,5 +74,6 @@ internal static class OfficeBodyFormatCheck
             !correctStyle.Matches(test.ReadCheckCurrentStyles(Correct)) || !hash.SequenceEqual(SHA256.HashData(File.ReadAllBytes(source))))
             throw new InvalidOperationException("Lưu/mở thân bài chưa đúng hoặc nguồn bị đổi.");
         pass("Thân bài văn xuôi thường: sửa riêng/chung chữ và ba Line, giữ13/14/gạch chân/căn đoạn, rollback, một Undo, lưu-mở và nguồn");
+        OfficeBodyParagraphCheck.Run(test,source,isolated,pass);
     }
 }

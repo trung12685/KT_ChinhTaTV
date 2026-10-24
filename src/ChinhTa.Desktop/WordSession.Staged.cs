@@ -74,7 +74,7 @@ public sealed partial class WordSession
                 bool correct=proof.Styles is not null || VisibleFormatReader.Matches((object)range,proof.Text,proof.Issue.CharacterFormat,proof.Issue.Format,alignment);
                 if((string)range.Text!=proof.Text || !correct)
                     throw new InvalidOperationException("Phông sau các nhóm sửa không còn khớp đề xuất; phải khôi phục cả lượt.");
-                if(proof.Styles is not null && !proof.Styles.Matches(VisibleFormatReader.ReadStyles((object)range,proof.Text)))
+                if(proof.Styles is not null && !proof.Styles.Matches(VisibleFormatReader.ReadStyles((object)range,proof.Text,includeSpacing:proof.Styles.Paragraph?.Spacing is not null)))
                     throw new InvalidOperationException("Định dạng ký tự sau các nhóm sửa chưa khớp phần cần giữ/phần đã duyệt; phải khôi phục cả lượt.");
                 if(proof.Sizes is not null && !proof.Sizes.Matches(VisibleFormatReader.ReadSizes((object)range,proof.Text)))
                     throw new InvalidOperationException("Cỡ chữ đã đổi sau các nhóm sửa; phải khôi phục cả lượt.");

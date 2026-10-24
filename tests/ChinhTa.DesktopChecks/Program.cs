@@ -195,6 +195,7 @@ static class Program
         DependencyReviewChecks.Run(Assert);
         HierarchicalReviewChecks.Run(Assert);
         BodyReviewChecks.Run(Assert);
+        BodyParagraphWriterChecks.Run(Assert);
         RepairProgressDesktopChecks.Run(Assert);
         DocumentTypeCatalogDesktopChecks.Run(Assert);
         Console.WriteLine($"{checks} WPF checks passed.");

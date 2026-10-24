@@ -205,14 +205,16 @@ public sealed partial class WordSession : IDisposable
         lastLayout=liveLayout.ToArray();
         lastFormatLayout=liveText.Where(p=>editableStarts.Contains(p.Start) || formatEditableStarts.Contains(p.Start)).ToArray();
         paragraphs=WordTextProof.Apply(paragraphs,editableStarts,outlineEvidence,formatEditableStarts).ToList();
+        var bodyStarts=BodyFormatRules.ObservationTargets(paragraphs,headerLayout,Profile).Select(p=>p.Start).ToHashSet();
         var observeStarts=ComponentRules.Identify(paragraphs,headerLayout,Profile).Select(t=>t.Row.Start)
-            .Concat(BodyFormatRules.ObservationTargets(paragraphs,headerLayout,Profile).Select(p=>p.Start))
+            .Concat(bodyStarts)
             .Concat(DocumentHeadingRules.ObservationTargets(paragraphs,headerLayout,Profile).Select(p=>p.Start))
             .Concat(paragraphs.Where(p=>p.Page==1 && HeadingRules.IsCandidate(p.Text,Profile)).Select(p=>p.Start))
             .Concat(paragraphs.Take(40).Where(p=>Profile==DocumentProfile.State && AdministrativeHeaderRules.IsCandidate(p.Text)).Select(p=>p.Start)).ToHashSet();
-        foreach(var row in paragraphs.Where(p=>observeStarts.Contains(p.Start)).ToArray())
+        for(int index=0;index<paragraphs.Count;index++)
         {
-            int index=paragraphs.FindIndex(p=>p.Start==row.Start);paragraphs[index]=ObserveComponent(row);
+            var row=paragraphs[index];
+            if(observeStarts.Contains(row.Start))paragraphs[index]=ObserveComponent(row,bodyStarts.Contains(row.Start));
         }
         LineTargets = lineLayoutUnavailable ? [] : ShapeLineRules.Identify(headerLayout, Profile);
         AdministrativePositionTargets=AdministrativePositionRules.Identify(paragraphs,headerLayout,Profile);
@@ -221,6 +223,7 @@ public sealed partial class WordSession : IDisposable
         issues.AddRange(DocumentHeadingRules.Check(paragraphs,headerLayout,Profile));
         issues.AddRange(ComponentRules.Check(paragraphs,headerLayout,Profile));
         issues.AddRange(BodyFormatRules.Check(paragraphs,headerLayout,Profile));
+        issues.AddRange(BodyParagraphRules.Check(paragraphs,headerLayout,Profile));
         foreach(var issue in issues.Where(i=>!i.CanFix && i.Kind is FixKind.AgencyFormat or FixKind.DocumentHeadingFormat))
         {
             var row=paragraphs.FirstOrDefault(p=>p.Start==issue.Start);
@@ -655,7 +658,7 @@ public sealed partial class WordSession : IDisposable
             });
             foreach(var formatIssue in plan.Where(i=>i.CharacterFormat is not null))
             {
-                var rowEdits=plan.Where(i=>i.CharacterFormat is null && i.Start>=formatIssue.Start &&
+                var rowEdits=plan.Where(i=>!i.IsStyleOnly && i.Start>=formatIssue.Start &&
                     (long)i.Start+i.Length<=(long)formatIssue.Start+formatIssue.Length).ToArray();
                 string expectedRow=AtomicTextBatch.ExpectedStory(rowEdits,formatIssue.Original,item=>
                 {
@@ -696,6 +699,7 @@ public sealed partial class WordSession : IDisposable
                                 item.Original.ToUpperInvariant()==item.Replacement)range.Case=1; // wdUpperCase preserves run formatting.
                             else range.Text=item.Replacement;
                         }
+                        if(item.ParagraphFix is { } paragraphFix)VisibleFormatReader.ApplyParagraph((object)range,item.Original,paragraphFix);
                         if(item.CharacterFormat is CharacterFormat character)
                         {
                             dynamic font=range.Font;
@@ -755,7 +759,7 @@ public sealed partial class WordSession : IDisposable
                             bool matches=styled.Styles is not null || VisibleFormatReader.Matches((object)target,styled.Expected,styled.Issue.CharacterFormat,styled.Issue.Format,alignment);
                             if((string)target.Text!=styled.Expected || !matches)
                                 throw new InvalidOperationException("Định dạng sau lưu chưa khớp gợi ý hoặc vùng chữ bị thay đổi; phải khôi phục cả lượt.");
-                            if(styled.Styles is not null && !styled.Styles.Matches(VisibleFormatReader.ReadStyles((object)target,styled.Expected)))
+                            if(styled.Styles is not null && !styled.Styles.Matches(VisibleFormatReader.ReadStyles((object)target,styled.Expected,includeSpacing:styled.Styles.Paragraph?.Spacing is not null)))
                                 throw new InvalidOperationException("Định dạng ký tự sau sửa chưa khớp các mục đã duyệt; phải khôi phục cả lượt.");
                             if(styled.Sizes is not null && !styled.Sizes.Matches(VisibleFormatReader.ReadSizes((object)target,styled.Expected)))
                                 throw new InvalidOperationException("Cỡ chữ hợp lệ đã đổi sau sửa phông; phải khôi phục cả lượt.");

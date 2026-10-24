@@ -1,5 +1,9 @@
 # Tiếp tục phát triển Chính tả Việt
 
+## Sau .62, B02 — căn đều và dòng đầu văn xuôi
+
+Nền B01 `4462ea0670705fc978c05861317e3dbd1d8ffecd` đạt2950 Core +210 WPF, không Word runtime. C27 riêng theo II.6.e, giữ1cm/1,27cm và sửa sai về1,27cm; chỉ ghi căn/thụt đã duyệt. Snapshot chặn stale và hậu kiểm glyph/phông/cỡ/gạch chân, căn/thụt và giãn dòng/khoảng đoạn/auto spacing. Ghép cùng C26 + chữ trước đo lại Line, một Undo/rollback. Phạm vi thường, không nhấn mạnh/mục/bảng/field/căn giữa/phải/hanging/thụt cả đoạn. Test Core, Desktop writer/nhóm và fixture Word riêng/chung/Line/khôi phục/lưu-mở/nguồn; CI chỉ biên dịch fixture. Tổng27/8/1;2 bước, .63 chưa đóng gói, .62 tải cũ giữ nguyên. [Chi tiết](BODY-PARAGRAPH.md), [nhật ký](BATCH-AFTER-0.1.62.md); kết quả mới theo đúng commit tại PR/Actions.
+
 ## Sau .62, B01 — phông/cỡ văn xuôi thường
 
 Nền `68865ca574b3c32f170b378080e6663287d036cd` (.62: 2882 Core +206 WPF +1 package; không Word runtime). Code .63 đang phát triển, chưa đóng gói. C26 mới, tổng26/8/1: cần ranh giới tên loại/trích yếu → Kính gửi → chữ ký/Nơi nhận, XML chữ/style/căn đoạn và phông thực tế. Chỉ văn xuôi thường không nhấn mạnh/danh sách/bảng/field; sửa phông/màu/cỡ sai, giữ13/14/gạch chân/căn-thụt. Mở tracking kiểu đã có cho C26, đối chiếu sau lưu/Line. Test Core/GUI và fixture Word sửa riêng/chung/rollback/Undo/lưu-mở/nguồn. Căn cứ đúng II.6.e đã đọc trang nguồn; chưa mở căn/giãn đoạn. [Chi tiết](BODY-FORMAT.md), [kế hoạch đợt](BATCH-AFTER-0.1.62.md). Kết quả tự động theo đúng commit tại PR/CI; fixture Word chỉ biên dịch trong CI, không khép phản hồi Office2021.
