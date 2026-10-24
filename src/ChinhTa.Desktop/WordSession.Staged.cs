@@ -52,7 +52,7 @@ public sealed partial class WordSession
             var lineIssues=LineInspection.Inspect(sequence,preview,lines,LineShapes,anchors,found,
                 LinePolicy.Decree30,HasGroupedShapes,VerifiedLineEdits).Select(e=>e.Issue).ToArray();
             var evidence=centers.Select(t=>AdministrativePositionInspection.MeasureCentering(sequence,preview,t,anchors)).ToArray();
-            var centerIssues=AdministrativePositionInspection.Inspect(sequence,preview,centers,anchors).Select(e=>e.Issue).ToArray();
+            var centerIssues=AdministrativePositionInspection.InspectMeasured(evidence,anchors).Select(e=>e.Issue).ToArray();
             if(ReadStoryText()!=expectedStory)throw new InvalidOperationException("Nội dung thay đổi giữa các bước sửa; phải khôi phục cả lượt.");
             return new(lines,lineIssues,evidence,centerIssues);
         }

@@ -1,5 +1,13 @@
 # Tiếp tục phát triển Chính tả Việt
 
+## B05 / chuẩn bị mốc .61 — sửa nhiều nhóm có mục cần trước
+
+Tiếp nối B04 `52fd60993737f106617889abdc80fa54de2f0ad9`, 2411 Core/OpenXML +127 WPF. Thêm RepairDependencies gắn đúng lỗi cần sửa trước vào Line, nối model checkbox/nhóm/all/single-fix → duyệt rõ → backend. Dùng geometry mới sau chữ/phông; Line hiện đã đạt chỉ đo lại/không ghi nếu vẫn đạt, không nhãn thiếu. Thiếu/phát sinh phụ thuộc chưa duyệt thì dừng/rollback. Nhận mốc cơ quan thường theo cấu trúc số/tên rõ, không đoán tên chính thức hay lấy chủ quản thay ban hành.
+
+PreviewAnchorBatch đọc trang/prefix một lần mỗi CP mỗi export, riêng original/length vẫn kiểm; không cache qua sửa. AdministrativePositionInspection dùng chung dữ liệu vừa đo trên XPS thay đo lặp. Không bỏ lần đo sau phông/Line, không dùng số Shape thay nét. Tests Word component/format không gạt blocker mà dùng đúng dependency inspection/model của UI. Thêm Core/Desktop hồi quy lựa chọn/permission/stale/vòng/geometry mới/rollback/CP và trường hợp nét đang đạt cần đo lại.
+
+Đủ5 hạng mục sau .60, chuẩn bị CHANGES/SUPPORTED .61 và báo cáo có ví dụ, ghi actual CI trong build-checks/TXT trước ZIP/SHA-256. [Nhật ký](BATCH-AFTER-0.1.60.md) · [Thiết kế/chọn nhóm](REPAIR-DEPENDENCIES.md). Giữ main/stable .27 và gói .60; chưa khép runtime Office2021 .56 chỉ bằng kiểm code/CI.
+
 ## B04 sau .60 — hạng mục kiểm định dạng theo hệ thống
 
 Người dùng yêu cầu tăng phạm vi thay vì tiếp tục từng lỗi chữ nhỏ. Tiếp nối B03 `e92ec19e048d6805e5cc3fee9eedaee786f10337` đạt 2344 Core/OpenXML +113 WPF. Thêm FormatEvidence gắn text và FormatPolicy dùng chung: phân biệt hợp lệ/sai thật/chưa chắc/sai cỡ hỗn hợp; chấp nhận các cỡ hợp lệ/đen tương đương và bỏ ràng buộc đậm khi vai trò giữ đậm.

@@ -2,7 +2,7 @@
 
 Tiếp tục ứng dụng hiện tại; prompt dành cho Claude chỉ là tài liệu nghiên cứu, không thay mục tiêu phát triển. Mốc đầu đợt là tag v0.1.60, commit `bd86e13f005fe41d3b9d068a317dd8a8795753ab`, gói đã phát hành với 2105 Core/OpenXML + 113 WPF và 1 kiểm metadata gói. CI không có Word.
 
-Code mới dùng version **0.1.61**, chưa tạo gói/tag/release. Gom khoảng 5–10 bước có kiểm thử rồi chuẩn bị một gói; giữ nguyên bản .60 và main/stable .27.
+Đợt dùng version **0.1.61**, đã gom B01–B05 để chuẩn bị một gói sau kiểm bắt buộc. Kết quả phát hành đúng commit, số kiểm và SHA-256 ghi trong PR/release; không suy có gói chỉ từ version trong code. Giữ nguyên bản .60 và main/stable .27.
 
 ## B01 — Cụm từ lặp chỉ khác chữ hoa đầu đoạn
 
@@ -70,6 +70,16 @@ Hai lỗi chung tái hiện được: mọi quan sát khác nhau bị coi là tr
 [Thiết kế và giới hạn](FORMAT-ASSESSMENT.md). Kiểm Core/Desktop có vai trò, scalar undefined, dữ liệu stale/quyền XML, Word thật/giả theo nguồn, Word ranges vượt biên, COM lỗi/mất kết nối, số lời gọi, một glyph sai, giả payload và hậu kiểm cỡ. OfficeFormatSystemCheck tạo mẫu giả đúng/sai, nhiều run/cỡ, dấu cách/ngắt dòng khác kiểu, sửa riêng/chung ba Line, XPS, quét/Undo/rollback/lưu-mở/băm nguồn; CI chỉ biên dịch.
 
 Hiện **4 hạng mục** trong code .61, chưa tạo gói. Chưa khẳng định đã khép phản hồi thực tế .56 trên Office 2021: các nguyên nhân trong code đã sửa và có hồi quy, vẫn cần chạy bài Word/tài liệu thực tế. Gói .60/main/stable .27 giữ nguyên.
+
+## B05 — Nối luồng chọn/sửa nhiều nhóm và giảm đọc/đo trùng
+
+Điểm nghẽn: Line bị khóa khi vùng còn font/chữ sửa được, dù bộ điều phối hỗ trợ đo lại. Giờ Line có mục cần sửa trước rõ; checkbox tích kèm đúng các mục đó, bỏ tích mục cần trước thì bỏ Line phụ thuộc, single-fix cũng hiển thị cả nhóm cần duyệt. Không kéo mục không liên quan hoặc mục thủ công. Backend chặn thiếu/đổi/trùng/vòng, dùng số đo mới và rollback khi phát sinh phụ thuộc chưa duyệt. Nét hiện đã đạt có thể chỉ cần đo lại sau phông, không ghi dư hoặc gán nhãn thiếu. Cơ quan chữ thường nhận theo một mốc Số/một-hai tên cùng ô đủ rõ, không lấy cơ quan chủ quản thay thế chỉ vì viết hoa.
+
+Xuất preview đọc trang/prefix một lần mỗi CP và vẫn đối chiếu mỗi original/length; cache nằm trong đúng một export, không qua sửa/Undo/mở file. Đo vị trí số/ngày một lần trên cùng XPS và dùng lại bằng chứng vừa đo để phân loại, không bỏ anchor/frame. Các lần đo lại sau thay phông/Line vẫn giữ. Mẫu giả1200 anchor/600CP cần600 lượt đọc, không phải đo thời gian Office.
+
+Core/Desktop kiểm closure, checkbox lỗi/nhóm/all và phụ thuộc chung, thiếu/stale/manual/vòng, nét đang đúng/thiếu/ngoài vùng/đường lạ, geometry cũ/new, Line đã đạt không ghi, residual mới rollback, CP khác UTF16/emoji và cache chỉ trong export. Fixture Word component/format dùng cùng inspection/model thật, không xóa blocker trong test để tạo Line; chọn ba Line kèm phông/chữ, sửa riêng/chung, quét/Undo/rollback/lưu-mở/giữ cỡ/nguồn. CI chỉ biên dịch Word fixture.
+
+[Cách dùng/giới hạn](REPAIR-DEPENDENCIES.md). Đủ5 hạng mục, tài liệu phát hành .61 và bảng chức năng được chuẩn bị; pipeline phải đạt đúng commit trước khi tạo ZIP/TXT/SHA-256. Chưa khép phản hồi .56 hoặc xác nhận toàn bộ Office2021 bằng CI. Tổng25/8/1; không đưa file/log riêng vào kho/gói.
 
 ## Tiếp theo
 

@@ -22,22 +22,25 @@ public static class AdministrativePositionInspection
     }
     public static IReadOnlyList<(Issue Issue,PreviewAnchor Anchor)> Inspect(FixedDocumentSequence document,PreviewHighlighter preview,
         IReadOnlyList<AdministrativePositionTarget> targets,IReadOnlyDictionary<Issue,PreviewAnchor> anchors)
+        =>InspectMeasured(targets.Select(t=>MeasureCentering(document,preview,t,anchors)).ToArray(),anchors);
+    public static IReadOnlyList<(Issue Issue,PreviewAnchor Anchor)> InspectMeasured(
+        IReadOnlyList<AdministrativeCenterEvidence> evidence,IReadOnlyDictionary<Issue,PreviewAnchor> anchors)
     {
         var result=new List<(Issue,PreviewAnchor)>();
         var measured=new Dictionary<AdministrativePositionRole,(AdministrativePositionTarget Target,RenderedTextLine Line)>();
-        foreach(var target in targets)
+        foreach(var observation in evidence)
         {
+            var target=observation.Target;
             bool mapped=anchors.TryGetValue(target.Probe,out var anchor);
             // No text-only fallback: a missing Word anchor must not highlight a duplicate elsewhere.
             anchor??=new(1,"",0,0);
-            var row=mapped && anchor.Page==1?preview.MeasureSingleLine(document,anchor):null;
-            var refs=target.References.Select(reference=>anchors.TryGetValue(reference.Probe,out var a) && a.Page==anchor.Page && a.Page==1?
-                preview.MeasureSingleLine(document,a):null).ToArray();
+            var row=mapped && anchor.Page==1?observation.Row:null;
+            var refs=mapped && anchor.Page==1?observation.References:observation.References.Select(_=>(RenderedTextLine?)null).ToArray();
             var assessment=AdministrativePositionRules.Assess(target,row,refs);
             if(assessment.Measured && row is not null)measured[target.Role]=(target,row);
             if(assessment.Warnings.Count>0)
             {
-                bool canCenter=AdministrativeCentering.CanOffer(MeasureCentering(document,preview,target,anchors));
+                bool canCenter=mapped && anchor.Page==1 && AdministrativeCentering.CanOffer(observation);
                 result.Add((target.Probe with {Message=string.Join(" ",assessment.Warnings),Citation=AdministrativePositionRules.Citation,
                     CanFix=canCenter,CenterFix=canCenter?new(target.Role):null},anchor));
             }

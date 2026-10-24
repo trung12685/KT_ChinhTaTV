@@ -39,9 +39,21 @@ public static class ShapeLineRules
                 if (left.Length > 0)
                 {
                     int nearestCell = left.Max(p => p.CellStart);
-                    var agency = left.Where(p => p.CellStart == nearestCell && Clean(p.Text).Trim().Any(char.IsLetter) &&
-                        Clean(p.Text).Trim() == Clean(p.Text).Trim().ToUpperInvariant() &&
-                        !HeadingRules.IsCandidate(p.Text, DocumentProfile.State)).OrderBy(p => p.Start).LastOrDefault();
+                    var cell=left.Where(p=>p.CellStart==nearestCell && !string.IsNullOrWhiteSpace(Clean(p.Text))).OrderBy(p=>p.Start).ToArray();
+                    var numbers=cell.Where(p=>AdministrativeHeaderRules.IsNumber(p.Text)).ToArray();
+                    LayoutParagraph? agency;
+                    if(numbers.Length==1)
+                    {
+                        var names=cell.Where(p=>p.Start<numbers[0].Start).ToArray();
+                        agency=names.Length is >=1 and <=2 && names.All(p=>Clean(p.Text).Count(char.IsLetter)>=3 &&
+                            Clean(p.Text).IndexOfAny(['\t','\v','\f'])<0)?names[^1]:null;
+                    }
+                    else
+                    {
+                        var names=cell.Where(p=>Clean(p.Text).Trim().Any(char.IsLetter) && !HeadingRules.IsCandidate(p.Text,DocumentProfile.State)).ToArray();
+                        agency=numbers.Length==0 && names.Length is >=1 and <=2 &&
+                            names.All(p=>Clean(p.Text).Trim()==Clean(p.Text).Trim().ToUpperInvariant())?names[^1]:null;
+                    }
                     if (agency is not null) targets.Add(new(LineRole.Agency, agency.Start, Clean(agency.Text), agency.CellStart, agency.CellEnd, agency.Centered));
                 }
             }

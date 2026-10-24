@@ -27,6 +27,8 @@ ShortFinalSentenceChecks.Run(Assert);
 IssueReviewCatalogChecks.Run(Assert);
 IssueTooltipChecks.Run(Assert);
 StagedRepairChecks.Run(Assert);
+RepairDependencyChecks.Run(Assert);
+PreviewAnchorBatchChecks.Run(Assert);
 ComponentChecks.Run(Assert);
 FormatAssessmentChecks.Run(Assert);
 FontSizeEvidenceChecks.Run(Assert);

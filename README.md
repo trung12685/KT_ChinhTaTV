@@ -2,15 +2,17 @@
 
 Ứng dụng C# / WPF chạy trên Windows với Microsoft Word desktop, làm việc offline trên bản sao DOCX và xem trước bằng XPS. Không gửi nội dung tài liệu tới dịch vụ AI.
 
-**[Danh sách nhóm sửa và bảng kiểm bản thử 0.1.60](docs/SUPPORTED-FIXES-0.1.60.md)** — gồm điều kiện, ví dụ, ngoại lệ ô trống và các mục chỉ cảnh báo.
+**[Danh sách nhóm sửa và bảng kiểm bản thử 0.1.61](docs/SUPPORTED-FIXES-0.1.61.md)** — gồm điều kiện, ví dụ, ngoại lệ ô trống và các mục chỉ cảnh báo.
 
 Ưu tiên đã thống nhất: **thể thức → lỗi chữ và lặp từ/cụm từ → ngữ cảnh và thư viện sau cùng**. Phần chính tả tiếng Việt đầy đủ còn cần xây dựng; không coi quy tắc minh họa hiện tại là bộ kiểm hoàn chỉnh.
 
-## Đang phát triển sau 0.1.60 — B04: kiểm định dạng theo hệ thống
+## Bản thử 0.1.61 — kiểm định dạng và sửa nhiều nhóm
 
 B04 sửa chung luồng kiểm phông/cỡ/màu/kiểu cho quốc hiệu/tiêu ngữ, số/ngày, tên loại/trích yếu, cơ quan và nơi nhận. Các cỡ cùng hợp lệ, hai mã màu đen hoặc kiểu khác ở dấu cách/ngắt dòng không tự thành lỗi. Đọc sau proof XML, mỗi vùng một lần; aggregate rõ dùng ngay, chưa rõ thì đọc từ rồi ký tự cần thiết. Sửa phông/màu giữ từng cỡ hợp lệ và hậu kiểm cỡ ký tự còn lại sau sửa chữ/Line; chưa đọc chắc thì giữ thủ công. Không mở sửa chữ qua đối tượng hoặc bỏ kiểm nét XPS/Undo/rollback.
 
-B01–B03 trước đó: cụm lặp chỉ khác chữ hoa đầu đoạn, dấu phẩy/chấm phẩy sau ngoặc và câu cuối một từ. Code **0.1.61**, đã **4 hạng mục**, chưa ZIP/tag/release .61. [Nhật ký và giới hạn](docs/BATCH-AFTER-0.1.60.md) · [Luồng định dạng và hồi quy](docs/FORMAT-ASSESSMENT.md). Gom 5–10 hạng mục đã kiểm rồi đóng gói; cảnh báo cũ trên Office 2021 chưa khép chỉ bằng CI.
+B05 nối luồng chọn/sửa nhiều nhóm: chọn đường kẻ tích kèm đúng lỗi chữ/phông cần sửa trước, duyệt rõ, sửa rồi đo lại và chỉ ghi Line khi cần. Bỏ đọc trang/prefix trùng CP và đo trùng mốc trong cùng XPS; không tái dùng qua sửa. B01–B03 trước đó thêm cụm lặp khác chữ hoa đầu đoạn, dấu câu sau ngoặc và câu cuối một từ. Đủ **5 hạng mục**, tổng25/8/1, chuẩn bị gói .61 sau các kiểm bắt buộc; cảnh báo cũ Office 2021 chưa khép chỉ bằng CI.
+
+[Windows .61](https://github.com/trung12685/KT_ChinhTaTV/releases/tag/v0.1.61) · [Nội dung/cách thử](docs/CHANGES-0.1.61.md) · [Nhật ký](docs/BATCH-AFTER-0.1.60.md) · [Chọn nhiều nhóm](docs/REPAIR-DEPENDENCIES.md) · [Luồng định dạng](docs/FORMAT-ASSESSMENT.md). Link tải có gói khi pipeline phát hành đạt. Main/stable .27 giữ nguyên.
 
 ## Bản thử 0.1.60 — gom B01–B05
 

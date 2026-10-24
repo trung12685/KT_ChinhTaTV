@@ -417,6 +417,8 @@ public sealed partial class WordSession : IDisposable
     }
     private IReadOnlyList<Issue> ApplyLinePackage(IReadOnlyList<Issue> plan, string before, bool verifyReference = true)
     {
+        if(plan.Any(i=>i.Prerequisites is {Count:>0}))
+            throw new InvalidOperationException("Phát sinh lỗi chữ/phông cần xử lý trước đường kẻ; phải phục hồi cả lượt và quét lại.");
         string candidate = Path.Combine(folder, Guid.NewGuid() + ".candidate.docx");
         bool previousChanged = Changed;
         IReadOnlyList<Issue> acceptancePlan=plan;
@@ -571,6 +573,8 @@ public sealed partial class WordSession : IDisposable
     private void FixManyCore(IEnumerable<Issue> issues,bool verifyReference,int? failTextAfter=null,bool driftHeading=false)
     {
         var plan = BatchPlan.Create(issues);
+        if(plan.Any(i=>i.LineFix is not null && i.Prerequisites is {Count:>0}))
+            throw new InvalidOperationException("Đường kẻ cần đo lại sau các lỗi liên quan; chưa được ghi nét từ số đo trước sửa.");
         if (plan.Count == 0) return;
         if (plan.Any(i => i.LineFix is not null) && plan.Any(i => i.LineFix is null))
             throw new InvalidOperationException("Sửa chữ/định dạng trước, quét lại rồi sửa nhóm Shape Line để dùng số đo mới.");
@@ -819,30 +823,21 @@ public sealed partial class WordSession : IDisposable
         string text;
         try { contentStart = (int)content.Start; text = (string)content.Text; }
         finally { Release(content); }
-        var prefixes=new Dictionary<int,string>();
-        foreach (var issue in issues)
+        var mapped=PreviewAnchorBatch.Read(issues,text,cp=>
         {
-            dynamic point = document.Range(issue.Start, issue.Start);
+            dynamic point = document.Range(cp,cp);
             int page;
             try { page = (int)point.Information[3]; } finally { Release(point); }
-            if(!prefixes.TryGetValue(issue.Start,out string? prefix))
-            {
-                dynamic range=document.Range(contentStart,issue.Start);
-                try{prefix=Convert.ToString((object?)range.Text)??"";}
-                finally{Release(range);}
-                prefixes.Add(issue.Start,prefix);
-            }
-            if(prefix.Length!=issue.Start-contentStart)
-                Diagnostics.Write("Word.Preview.CpMapping",null,FormattableString.Invariant(
-                    $"Kind={issue.Kind}; CP={issue.Start}; StoryStart={contentStart}; StringOffset={prefix.Length}; Length={issue.Length}"));
-            try{anchors[issue]=WordPreviewAnchor.Create(page,text,prefix,issue.Original);}
-            catch(InvalidOperationException)
-            {
-                // A missing anchor becomes a manual Line notice in the UI and blocks candidate acceptance.
+            dynamic range=document.Range(contentStart,cp);
+            try{return (page,Convert.ToString((object?)range.Text)??"");}
+            finally{Release(range);}
+        },(issue,length)=>
                 Diagnostics.Write("Word.Preview.Unmapped",null,FormattableString.Invariant(
-                    $"Kind={issue.Kind}; CP={issue.Start}; StoryLength={text.Length}; PrefixLength={prefix.Length}; Length={issue.Length}"));
-            }
-        }
+                    $"Kind={issue.Kind}; CP={issue.Start}; StoryLength={text.Length}; PrefixLength={length}; Length={issue.Length}")),
+            (issue,length)=>
+            {if(length!=issue.Start-contentStart)Diagnostics.Write("Word.Preview.CpMapping",null,FormattableString.Invariant(
+                $"Kind={issue.Kind}; CP={issue.Start}; StoryStart={contentStart}; StringOffset={length}; Length={issue.Length}"));});
+        foreach(var entry in mapped)anchors[entry.Key]=entry.Value;
         string output = Path.Combine(folder, Guid.NewGuid() + ".xps");
         document.ExportAsFixedFormat(output, 18, OpenAfterExport: false);
         return output;

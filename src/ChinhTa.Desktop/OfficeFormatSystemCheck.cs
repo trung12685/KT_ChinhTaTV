@@ -42,12 +42,22 @@ internal static class OfficeFormatSystemCheck
             !agencySizes.Matches(test.ReadCheckSizes(agency)) || test.ReadCheckText()!=original)
             throw new InvalidOperationException("Sửa riêng phông cơ quan làm mất lỗi chưa chọn hoặc đổi cỡ/chữ.");
         test.Undo();if(test.ReadCheckText()!=original)throw new InvalidOperationException("Undo phông riêng chưa phục hồi chữ.");
-        var selected=test.Check().Where(i=>i.CanFix && Component(i)).Concat(OfficeComponentCheck.ReadLines(test,true)).ToArray();
+        Issue[] SelectLines()
+        {
+            var current=test.Check();var intents=OfficeComponentCheck.ReadLines(test);
+            var model=new IssueReviewModel(current.Concat(intents));
+            foreach(var choice in model.Choices.Where(c=>c.Issue.LineFix is not null))choice.IsChecked=true;
+            var chosen=model.Choices.Where(c=>c.IsChecked).Select(c=>c.Issue).ToArray();
+            if(chosen.Count(i=>i.LineFix is not null)!=3 || chosen.Count(i=>i.CharacterFormat?.PreserveSize==true)<3)
+                throw new InvalidOperationException("Chọn ba đường kẻ chưa tích kèm đủ lỗi phông cần sửa trước.");
+            return chosen;
+        }
+        var selected=SelectLines();
         bool rolledBack=false;
         try{test.FixStagedFailureProbe(selected,3);}catch(InvalidOperationException e) when(e.InnerException is OfficeStagedProbeException){rolledBack=true;}
         if(!rolledBack || test.ReadCheckText()!=original || test.CheckUndoCount!=0 || test.Changed || !agencySizes.Matches(test.ReadCheckSizes(agency)))
             throw new InvalidOperationException("Lỗi sau Line chưa phục hồi cả nhóm phông/chữ/cỡ.");
-        selected=test.Check().Where(i=>i.CanFix && Component(i)).Concat(OfficeComponentCheck.ReadLines(test,true)).ToArray();
+        selected=SelectLines();
         if(selected.Count(i=>i.LineFix is not null)!=3)throw new InvalidOperationException("Lượt chung thiếu ba Line đo thực tế.");
         test.FixSelection(selected);test.Check();
         string expected=original.Replace("đơn vị ban hành","ĐƠN VỊ BAN HÀNH",StringComparison.Ordinal);
@@ -61,7 +71,7 @@ internal static class OfficeFormatSystemCheck
         test.Open(saved);test.Check();
         if(test.Check().Any(Component) || test.ReadCheckText()!=expected || !beforeTitle.Matches(test.ReadCheckSizes(Title(test))) ||
             !SHA256.HashData(File.ReadAllBytes(bad)).SequenceEqual(digest))throw new InvalidOperationException("Lưu/mở hệ thống chưa đúng hoặc nguồn bị đổi.");
-        pass("Định dạng hệ thống: sai thật sửa riêng/chung ba Line, giữ từng cỡ và gạch chân, viết hoa giữ run, rollback cả lượt, một Undo/lưu-mở/nguồn");
+        pass("Định dạng hệ thống: chọn ba Line tích kèm đúng phông/chữ, sửa riêng/chung giữ từng cỡ/gạch chân, rollback cả lượt, một Undo/lưu-mở/nguồn");
     }
     private static string Create(string source,string folder,bool bad)
     {
