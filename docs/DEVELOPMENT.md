@@ -1,5 +1,9 @@
 # Tiếp tục phát triển Chính tả Việt
 
+## B02 sau .61 — quốc hiệu/tiêu ngữ cỡ sai trộn cỡ đúng
+
+Tiếp nối B01 đã chốt `3ebcfa965afd6d007f2d38f7200ea7b3bcd40014`, 2471 Core/OpenXML +163 WPF. HeadingFormat.RepairInvalidSizes chỉ hợp lệ với MaximumSize và đúng cặp vai trò quốc hiệu12–13, tiêu ngữ13–14; Original==Replacement. HeadingRules chỉ opt-in khi chữ đã khớp, giữ HÒA/HOÀ và dấu nối được chấp nhận. XML FormatEditable qua Line vẫn riêng với TextEditable; thiếu proof/glyph chưa chắc không mở sửa. Hai loại format gọi chung writer Range ký tự và proof chuẩn hóa cỡ trước lưu/Line; không bỏ nguyên văn, quét mới, một Undo hoặc rollback. Core có role/ngoại lệ/real-owned-Line XML/payload/stale/drift; Desktop có writer lỗi COM và đo glyph/nét tiêu ngữ; fixture Office mới có Line sẵn và CP sau mở lại. [Nhật ký](BATCH-AFTER-0.1.61.md) · [Thiết kế](SELECTIVE-SIZE-REPAIR.md). Tổng25/8/1, hai bước trong code .62 chưa gói; kết quả đúng commit tại PR38, chưa xác nhận runtime Office2021.
+
 ## B01 sau .61 — sửa cỡ hỗn hợp, giữ phần đúng
 
 Mốc nguồn v0.1.61 `1a53d2c6f304adc913c139fb4e4f3d3b03d2db46`, CI 2435 Core/OpenXML +144 WPF, gói thêm1 kiểm metadata. Đợt mới code .62, chưa gói, một bước chức năng. CharacterFormat.RepairInvalidSizes chỉ hợp lệ khi PreserveSize và vai trò có khoảng cỡ; FormatPolicy chỉ opt-in ở cơ quan/tên loại/trích yếu/ngày. Giữ nguyên quốc hiệu/tiêu ngữ/Đảng và quyền XML. Không cắt thành nhiều Issue gây chồng với text edit. Chụp cỡ nguồn → chỉ chuẩn hóa ngoài khoảng → chiếu qua sửa chữ → hậu kiểm exact glyph sau lưu/Line. Setter dùng Range ký tự Word thực, đối chiếu toàn text/biên trước khi ghi Size, bỏ ký tự trắng; lỗi vào rollback toàn lượt cũ. [Nhật ký](BATCH-AFTER-0.1.61.md) · [Thiết kế/giới hạn](SELECTIVE-SIZE-REPAIR.md). Core/Desktop có guard, CP/UTF16, lỗi COM, hậu kiểm và lựa chọn; bài Word mở rộng mẫu hỗn hợp, sửa riêng/chung ba Line, một Undo/lưu-mở/băm nguồn, CI chỉ biên dịch. Chưa khép phản hồi .56 trên Office2021.

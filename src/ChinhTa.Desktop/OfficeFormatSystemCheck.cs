@@ -32,6 +32,7 @@ internal static class OfficeFormatSystemCheck
         pass("Định dạng hệ thống: hai cỡ hợp lệ/màu đen/ngắt dòng/dấu cách khác kiểu vẫn đúng trước-sau ba Line, lưu/mở và Undo");
         RunBad(test,bad,isolated,decoration,pass,false);
         RunBad(test,selective,isolated,decoration,pass,true);
+        OfficeHeadingSizeCheck.Run(test,goodSaved,isolated,pass);
     }
     private static void RunBad(WordSession test,string bad,string isolated,(int Bold,int Underline,int Alignment) decoration,Action<string> pass,bool selective)
     {

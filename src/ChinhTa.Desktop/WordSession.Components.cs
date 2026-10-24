@@ -9,6 +9,13 @@ public sealed partial class WordSession
         try{return VisibleFormatReader.ReadSizes((object)range,probe.Original);}
         finally{Release(range);}
     }
+    internal FontSizeEvidence ReadCheckCurrentSizes(Issue original)
+    {
+        if(LineCheckArtifactFolder is null)throw new InvalidOperationException("Chỉ dùng trong phiên kiểm Word riêng.");
+        var rows=lastFormatLayout.Where(p=>p.Text.TrimEnd('\r','\a','\n')==original.Original).ToArray();
+        if(rows.Length!=1)throw new InvalidOperationException("Mẫu kiểm chưa có một vùng phông hiện tại duy nhất.");
+        return ReadCheckSizes(original with {Start=rows[0].Start});
+    }
     private FontSizeEvidence? ExpectedSizesFor(Issue issue,IReadOnlyList<Issue> edits)
     {
         if(issue.CharacterFormat?.PreserveSize!=true && issue.Format?.MaximumSize is null)return null;
@@ -18,6 +25,8 @@ public sealed partial class WordSession
             var source=VisibleFormatReader.ReadSizes((object)range,issue.Original);
             if(issue.CharacterFormat is {RepairInvalidSizes:true} selective)
                 source=source.CorrectInvalid(selective.SizeRange.Minimum,selective.SizeRange.Maximum);
+            else if(issue.Format is {RepairInvalidSizes:true,MaximumSize:float maximum} heading)
+                source=source.CorrectInvalid(heading.Size,maximum);
             var contained=edits.Where(i=>i.CharacterFormat is null && i.Format is null && i.Start>=issue.Start &&
                 (long)i.Start+i.Length<=(long)issue.Start+issue.Length).ToArray();
             return source.Project(contained,item=>

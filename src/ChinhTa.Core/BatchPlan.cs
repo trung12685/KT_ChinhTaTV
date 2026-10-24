@@ -13,6 +13,8 @@ public static class BatchPlan
                 throw new InvalidOperationException("Có cảnh báo chỉ kiểm tra thủ công, không thể sửa tự động.");
             if (current.Start < 0 || current.Length <= 0 || current.Original.Length != current.Length)
                 throw new InvalidOperationException("Vị trí lỗi không hợp lệ. Hãy quét lại.");
+            if(current.Format?.RepairInvalidSizes==true && current.Format.MaximumSize is null)
+                throw new InvalidOperationException("Gợi ý sửa riêng cỡ tiêu đề thiếu khoảng cỡ hợp lệ. Hãy quét lại.");
             if(current.Format?.MaximumSize is float maximum && (current.Original!=current.Replacement ||
                 !(current.Kind==FixKind.NationalHeading && current.Format.Size==12 && maximum==13 ||
                   current.Kind==FixKind.StateMotto && current.Format.Size==13 && maximum==14)))

@@ -35,11 +35,11 @@ public static class DevelopmentReport
             "Gộp dấu cách thường liên tiếp giữa chữ; giữ ô số/ngày trống theo mẫu nhận diện và ngoặc tròn chỉ chứa dấu cách. Không tự xóa tab hoặc thụt đầu dòng.",
             new ReportExample("hôm       nay là thứ 2","hôm nay là thứ 2")),
         new("C02","Quốc hiệu",CapabilityMode.Reviewable,"Nhà nước, trang đầu",
-            "Chuẩn hóa chữ/khoảng trắng của dòng nhận diện; Times New Roman, đen, đậm, đứng, cỡ 12–13. Không tự thêm dòng bị thiếu hoặc đoán dòng sai chữ chưa nhận ra.",
-            new ReportExample("cộng hòa xã hội chủ nghĩa việt nam","CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM; phông Times New Roman, đen, đậm, đứng, cỡ 12–13 theo điều kiện nhận diện.")),
+            "Chuẩn hóa chữ/khoảng trắng của dòng nhận diện; Times New Roman, đen, đậm, đứng, cỡ 12–13. Khi chữ đã đúng, sửa riêng cỡ sai và giữ mỗi cỡ đúng, kể cả qua Line đã xác minh; cỡ trộn kèm thay chữ vẫn có giới hạn. Không tự thêm dòng bị thiếu hoặc đoán dòng sai chữ chưa nhận ra.",
+            new ReportExample("Quốc hiệu đúng chữ nhưng có ký tự cỡ 10, 12 và 13.","Chỉ đưa ký tự cỡ 10 về 12, giữ từng cỡ 12/13 và chữ HÒA/HOÀ; sửa Times New Roman, đen, đậm, đứng khi đủ bằng chứng. Chữ chưa đúng vẫn cần qua guard thay chữ riêng.")),
         new("C03","Tiêu ngữ",CapabilityMode.Reviewable,"Nhà nước, trang đầu",
-            "Chuẩn hóa dòng nhận diện; Times New Roman, đen, đậm, đứng, cỡ 13–14. Đường kẻ được kiểm riêng.",
-            new ReportExample("độc lập - tự do - hạnh phúc","Độc lập - Tự do - Hạnh phúc; phông Times New Roman, đen, đậm, đứng, cỡ 13–14 theo điều kiện nhận diện.")),
+            "Chuẩn hóa dòng nhận diện; Times New Roman, đen, đậm, đứng, cỡ 13–14. Khi chữ đã đúng, sửa riêng cỡ ngoài khoảng về 13, giữ từng cỡ đúng; đường kẻ được đo lại và kiểm nét riêng.",
+            new ReportExample("Tiêu ngữ đúng chữ nhưng có ký tự cỡ 12, 13 và 14.","Chỉ đưa 12 về 13, giữ từng cỡ 13/14 và dấu -/– được chấp nhận; sửa Times New Roman, đen, đậm, đứng và đo lại đường kẻ khi chọn kèm.")),
         new("C04","Tiêu đề Đảng",CapabilityMode.Reviewable,"Đảng, trang đầu",
             "Chuẩn hóa dòng ĐẢNG CỘNG SẢN VIỆT NAM đã nhận diện và phông đen, đậm, đứng, cỡ 15. Chưa tự đặt vị trí toàn trang.",
             new ReportExample("đảng cộng sản việt nam","ĐẢNG CỘNG SẢN VIỆT NAM; phông Times New Roman, đen, đậm, đứng, cỡ 15 trong chế độ Đảng.")),
@@ -164,7 +164,7 @@ public static class DevelopmentReport
         new("0.1.59","Danh mục đủ 27 tên hành chính/3 bản sao theo NĐ30 PL III.I trang 40; thêm Báo cáo đề xuất/BCĐX theo người dùng, tách nguồn. Dùng chung nhận diện/C24/phông/mốc trích yếu, không áp thể thức gốc cho bản sao; sửa cảnh báo nhầm chữ thường ở QyĐ/CTr/TTr/TrS, giữ mã cơ quan. Có cửa sổ tra cứu và danh mục đầy đủ trong TXT."),
         new("0.1.60","Gom 5 bước sau .59: B01 hoa/thường viết tắt theo tên loại chắc chắn; B02 cảnh báo tên loại/ký hiệu mâu thuẫn, không đoán bên sai; B03 thêm khoảng sau hai chấm; B04 C25 bỏ dấu cách cuối đoạn có điều kiện, giữ kết đoạn/ô; B05 C15 thêm khoảng sau ngoặc đóng trong cụm chữ rõ. Chọn riêng/chung, giữ khoảng chưa chọn, XPS, một Undo/rollback; tổng25/8/1. Bản thử, chưa xác nhận toàn bộ bài Word trên Office 2021."),
         new("0.1.61","Gom B01–B05 sau .60. B01–B03: cụm lặp khác chữ hoa đầu đoạn, dấu câu sau ngoặc, câu cuối một từ. B04: luồng kiểm định dạng chung, gắn dữ liệu vào text, phân biệt đúng/sai/chưa chắc; aggregate → từ → ký tự, giữ cỡ hợp lệ và kiểm từng cỡ sau lưu/Line. B05: chọn đường kẻ tích kèm đúng lỗi cần sửa trước, duyệt rõ; sửa chữ/phông → đo lại → Line, chỉ ghi nếu cần; bỏ đọc CP và đo mốc lặp trong cùng bản xem trước. Giữ XPS, quét mới, một Undo/rollback; tổng25/8/1. Bản thử, chưa xác nhận bài Word Office 2021 hoặc khép phản hồi .56 chỉ bằng CI."),
-        new("0.1.62 — đang phát triển","B01 sau .61: sửa riêng cỡ sai trong cơ quan 12–13, tên loại/trích yếu/ngày 13–14 đã nhận diện chắc; giữ mỗi cỡ đúng, chữ/kiểu và sửa chung chữ → đo lại → Line. Chụp cỡ nguồn, chuẩn hóa đúng glyph sai, chiếu qua sửa chữ và hậu kiểm từng cỡ sau lưu/Line; sai thì rollback một lượt. Chưa tạo gói .62, chưa xác nhận runtime Office 2021.")
+        new("0.1.62 — đang phát triển","B01 sau .61: sửa riêng cỡ sai trong cơ quan 12–13, tên loại/trích yếu/ngày 13–14 đã nhận diện chắc; giữ mỗi cỡ đúng, chữ/kiểu và sửa chung chữ → đo lại → Line. Chụp cỡ nguồn, chuẩn hóa đúng glyph sai, chiếu qua sửa chữ và hậu kiểm từng cỡ sau lưu/Line; sai thì rollback một lượt. B02: mở sửa cỡ hỗn hợp quốc hiệu/tiêu ngữ khi giữ nguyên chữ; dùng cùng writer Range ký tự, bảo toàn cỡ, quyền định dạng qua Line và hậu kiểm sau lưu/Line. Giữ guard khi đồng thời cần thay chữ, Đảng vẫn cỡ15 riêng. Chưa tạo gói .62, chưa xác nhận runtime Office 2021.")
     });
     public static IReadOnlyList<string> NextSteps { get; }=Array.AsReadOnly(new[]
     {

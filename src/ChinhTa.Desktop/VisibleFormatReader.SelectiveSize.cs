@@ -11,6 +11,16 @@ public static partial class VisibleFormatReader
     {
         if(!style.Valid || !style.RepairInvalidSizes)
             throw new InvalidOperationException("Chưa có đề xuất sửa riêng cỡ chữ hợp lệ.");
+        RepairSizes(rangeObject,expected,style.SizeRange.Minimum,style.SizeRange.Maximum,style.Size);
+    }
+    public static void RepairSizes(object rangeObject,string expected,HeadingFormat style)
+    {
+        if(!style.RepairInvalidSizes || !(style.Size==12 && style.MaximumSize==13 || style.Size==13 && style.MaximumSize==14))
+            throw new InvalidOperationException("Chưa có khoảng cỡ quốc hiệu/tiêu ngữ hợp lệ.");
+        RepairSizes(rangeObject,expected,style.Size,style.MaximumSize!.Value,style.Size);
+    }
+    private static void RepairSizes(object rangeObject,string expected,float minimum,float maximum,float target)
+    {
         dynamic range=rangeObject;
         if((string?)range.Text!=expected)throw new InvalidOperationException("Vùng sửa cỡ chữ đã thay đổi.");
         int start=(int)range.Start,end=(int)range.End;
@@ -37,7 +47,7 @@ public static partial class VisibleFormatReader
                         try{size=(float)font.Size;}finally{Release(font);}
                         if(!float.IsFinite(size) || size<=0 || size>1638)
                             throw new InvalidOperationException("Chưa đọc chắc cỡ của một ký tự cần sửa.");
-                        if(size<style.SizeRange.Minimum || size>style.SizeRange.Maximum)
+                        if(size<minimum || size>maximum)
                         {repairs.Add((object)child);child=null!;}
                     }
                 }
@@ -48,7 +58,7 @@ public static partial class VisibleFormatReader
             foreach(dynamic child in repairs)
             {
                 dynamic font=child.Font;
-                try{font.Size=style.Size;}finally{Release(font);}
+                try{font.Size=target;}finally{Release(font);}
             }
         }
         finally

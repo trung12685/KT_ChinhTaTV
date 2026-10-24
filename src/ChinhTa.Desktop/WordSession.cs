@@ -705,6 +705,7 @@ public sealed partial class WordSession : IDisposable
                                 if(heading.Alignment is int alignment)format.Alignment=alignment;
                             }
                             finally{Release(format);Release(font);}
+                            if(heading.RepairInvalidSizes)VisibleFormatReader.RepairSizes((object)range,item.Original,heading);
                         }
                         if(item.Format is not null)
                         {

@@ -36,7 +36,7 @@ public static class HeadingRules
         // Local centering of a national heading in a cell follows the user-requested layout convention.
         int? align = !party && p.InTable ? 1 : null;
         bool validSize = p.Size >= min - .01f && p.Size <= max + .01f;
-        var assessment=p.FormatEvidence is null?null:new FormatPolicy(min,max,false,true).Assess(p);
+        var assessment=p.FormatEvidence is null?null:new FormatPolicy(min,max,false,true).Assess(p,allowSelectiveSizeRepair:text==expected);
         bool validFormat=assessment is null?p.Bold && !p.Italic && validSize && p.Font=="Times New Roman" && p.Color is 0 or -16777216:
             assessment.State==FormatState.Correct;
         if (text == expected && validFormat && (align is null || p.Alignment == align)) yield break;
@@ -61,7 +61,7 @@ public static class HeadingRules
             (align is not null ? "Căn giữa trong ô. " : "") +
             "Chưa kiểm tra tọa độ vùng đặt; đường kẻ được đánh giá riêng khi nhận diện/đo được.", false,
             party ? FixKind.PartyHeading : motto ? FixKind.StateMotto : FixKind.NationalHeading,
-            Citation: citation, Format: new(targetSize, align,assessment?.PreserveSize==true?max:null));
+            Citation: citation, Format: new(targetSize, align,assessment?.PreserveSize==true?max:null,assessment?.RepairInvalidSizes==true));
     }
     public static IEnumerable<Issue> CheckConsistency(IReadOnlyList<Paragraph> paragraphs, DocumentProfile profile)
     {

@@ -117,6 +117,7 @@ public static class IssueTooltipCatalog
         }
         if(issue.CenterFix is not null)return "Căn giữa trong ô đã xác minh, bỏ thụt lề ngang; giữ chữ và khoảng cách dọc.";
         if(issue.CharacterFormat is not null)return issue.Suggestion;
+        if(issue.Format?.RepairInvalidSizes==true)return issue.Suggestion;
         if(issue.Format is HeadingFormat format)
             return (issue.Original==issue.Replacement?"Đặt":"Sửa chữ và đặt")+" Times New Roman, đen, đậm, đứng, cỡ "+Number(format.Size)+
                 (format.MaximumSize is float maximum?"–"+Number(maximum)+" (giữ cỡ hợp lệ)":"")+

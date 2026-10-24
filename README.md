@@ -8,9 +8,9 @@
 
 ## Đang phát triển sau 0.1.61 — sửa riêng phần sai cỡ
 
-B01 của đợt mới bổ sung sửa cỡ hỗn hợp trong các vùng đã nhận diện chắc: cơ quan 12–13; tên loại, trích yếu và ngày 13–14. Ví dụ trích yếu có chữ cỡ 12/13/14: chỉ đưa 12 về 13, giữ mỗi chữ 13/14, ngắt dòng và nội dung. Một mục duyệt cho toàn vùng vẫn sửa chung được với hoa/thường, khoảng trắng và cụm lặp; đo lại trước Line, hậu kiểm từng cỡ và rollback nếu sai. Quốc hiệu/tiêu ngữ/tiêu đề Đảng vẫn giữ guard riêng, không mở sửa chữ qua đối tượng.
+B01 của đợt mới bổ sung sửa cỡ hỗn hợp trong các vùng đã nhận diện chắc: cơ quan 12–13; tên loại, trích yếu và ngày 13–14. Ví dụ trích yếu có chữ cỡ 12/13/14: chỉ đưa 12 về 13, giữ mỗi chữ 13/14, ngắt dòng và nội dung. Một mục duyệt cho toàn vùng vẫn sửa chung được với hoa/thường, khoảng trắng và cụm lặp; đo lại trước Line, hậu kiểm từng cỡ và rollback nếu sai. B02 bổ sung quốc hiệu/tiêu ngữ khi giữ nguyên chữ: chỉ sửa cỡ ngoài12–13 hoặc13–14, kể cả vùng có Line đã xác minh; dùng cùng writer/hậu kiểm. Khi đồng thời cần thay chữ vẫn giữ guard riêng, không mở sửa chữ qua đối tượng; Đảng vẫn cỡ15 cố định.
 
-Code dùng **0.1.62**, hiện **1 bước**, **chưa có bản tải .62**. Gói gần nhất là [0.1.61](https://github.com/trung12685/KT_ChinhTaTV/releases/tag/v0.1.61), đã phát hành với 2435 Core/OpenXML +144 WPF +1 kiểm metadata gói. Gom khoảng 5–10 bước mới tạo gói tiếp; chưa có bằng chứng runtime Office2021 để khép lỗi phông cũ. [Nhật ký mới](docs/BATCH-AFTER-0.1.61.md) · [Thiết kế](docs/SELECTIVE-SIZE-REPAIR.md).
+Code dùng **0.1.62**, hiện **2 bước**, **chưa có bản tải .62**. Gói gần nhất là [0.1.61](https://github.com/trung12685/KT_ChinhTaTV/releases/tag/v0.1.61), đã phát hành với 2435 Core/OpenXML +144 WPF +1 kiểm metadata gói. Gom khoảng 5–10 bước mới tạo gói tiếp; chưa có bằng chứng runtime Office2021 để khép lỗi phông cũ. [Nhật ký mới](docs/BATCH-AFTER-0.1.61.md) · [Thiết kế](docs/SELECTIVE-SIZE-REPAIR.md).
 
 ## Bản thử 0.1.61 — kiểm định dạng và sửa nhiều nhóm
 

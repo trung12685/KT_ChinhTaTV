@@ -189,6 +189,7 @@ static class Program
         VisibleFormatChecks.Run(Assert);
         FormatObservationChecks.Run(Assert);
         SelectiveSizeWriterChecks.Run(Assert);
+        HeadingSelectiveSizeWriterChecks.Run(Assert);
         DependencyReviewChecks.Run(Assert);
         RepairProgressDesktopChecks.Run(Assert);
         DocumentTypeCatalogDesktopChecks.Run(Assert);
