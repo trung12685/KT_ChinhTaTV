@@ -36,6 +36,7 @@ OutlineChecks.Run(Assert);
 HeadingPostSaveChecks.Run(Assert);
 CheckpointCleanupChecks.Run(Assert);
 RepeatedTextChecks.Run(Assert);
+InitialRepeatChecks.Run(Assert);
 PunctuationSpaceChecks.Run(Assert);
 ParenthesisSpaceChecks.Run(Assert);
 ParenthesisAfterSpaceChecks.Run(Assert);

@@ -67,9 +67,9 @@ public static class DevelopmentReport
         new("C12","Ba đường kẻ Nhà nước",CapabilityMode.Reviewable,"Cơ quan, tiêu ngữ, trích yếu nhận diện và đo được",
             "Tạo Line thiếu hoặc đặt lại Line của ứng dụng. Đường cơ quan/trích yếu chấp nhận 1/3–1/2 dòng tham chiếu, tự tạo 3/7; tiêu ngữ theo bề rộng chữ. Kiểm nét XPS thật, không chỉ đếm Shape.",
             new ReportExample("Dòng cơ quan rộng 210 pt nhưng đường kẻ chỉ dài 50 pt.","Độ dài hợp lệ 70–105 pt; nếu tự sửa, đích 90 pt (3/7), căn giữa và kiểm vị trí nét thật trên XPS.")),
-        new("C13","Từ/cụm từ lặp liên tiếp",CapabilityMode.Reviewable,"Cùng đoạn, dấu cách thường, đúng chữ hoa/thường",
-            "Cụm 2–8 tiếng: đề xuất xóa bản lặp, giữ lần đầu sau khi duyệt. Một tiếng như đều đều/nhà nhà, toàn chữ hoa hoặc dòng số/ngày giữ thủ công. Chưa suy nghĩa câu.",
-            new ReportExample("Nội dung kế hoạch kế hoạch đã duyệt.","Nội dung kế hoạch đã duyệt.")),
+        new("C13","Từ/cụm từ lặp liên tiếp",CapabilityMode.Reviewable,"Cùng đoạn, dấu cách thường; chỉ chấp nhận khác chữ hoa đầu tiên tại đầu đoạn",
+            "Cụm 2–8 tiếng: đề xuất xóa bản lặp, giữ nguyên lần đầu sau duyệt. Cho phép duy nhất chữ đầu đoạn hoa, bản lặp bắt đầu thường; các chữ khác vẫn khớp chính xác sau đối chiếu Unicode, không đổi chữ của lần đầu. Không gộp hoa/thường giữa câu hoặc sau nhãn mục. Một tiếng như đều đều/nhà nhà, toàn chữ hoa hoặc dòng số/ngày giữ thủ công. Chưa suy nghĩa câu.",
+            new ReportExample("Kế hoạch kế hoạch đã duyệt.","Kế hoạch đã duyệt.")),
         new("C14","Khoảng trắng quanh dấu phẩy/chấm phẩy",CapabilityMode.Reviewable,"Giữa hai từ có ít nhất hai chữ cái, dấu cách thường",
             "Đề xuất bỏ khoảng trắng trước và giữ một khoảng trắng sau dấu phẩy/chấm phẩy. Cần duyệt; bỏ qua dòng số/ngày, tab và dấu hiệu địa chỉ/đường dẫn/mã. Chưa mở rộng sang mọi dấu câu.",
             new ReportExample("Nội dung  ,  báo cáo;công tác.","Nội dung, báo cáo; công tác.")),
@@ -162,7 +162,8 @@ public static class DevelopmentReport
         new("0.1.57","Thêm cửa sổ tiến độ độc lập khi sửa: bước hiện tại, số mục hậu kiểm tạm thời, thời gian chờ, đo lại/quét lại/phục hồi; chưa hoàn tất trước quét lại. Mở proof định dạng cho Line trong nhánh tương thích/run gộp, đọc từng ký tự Word khi phông vùng bị trộn; giữ kiểm nét và rollback, chưa xác nhận runtime Office 2021."),
         new("0.1.58","Thêm C24 viết hoa chính xác tên loại văn bản đã nhận diện chắc theo NĐ30 II.5.b; giữ trích yếu, khoảng ngoài tên, phông/căn đoạn, chặn trường/đối tượng/vùng chưa rõ; sửa chung phông, quét lại và một Undo/rollback. Lỗi cơ quan/trích yếu trên .56 vẫn chờ bằng chứng runtime .57 hoặc mới hơn."),
         new("0.1.59","Danh mục đủ 27 tên hành chính/3 bản sao theo NĐ30 PL III.I trang 40; thêm Báo cáo đề xuất/BCĐX theo người dùng, tách nguồn. Dùng chung nhận diện/C24/phông/mốc trích yếu, không áp thể thức gốc cho bản sao; sửa cảnh báo nhầm chữ thường ở QyĐ/CTr/TTr/TrS, giữ mã cơ quan. Có cửa sổ tra cứu và danh mục đầy đủ trong TXT."),
-        new("0.1.60","Gom 5 bước sau .59: B01 hoa/thường viết tắt theo tên loại chắc chắn; B02 cảnh báo tên loại/ký hiệu mâu thuẫn, không đoán bên sai; B03 thêm khoảng sau hai chấm; B04 C25 bỏ dấu cách cuối đoạn có điều kiện, giữ kết đoạn/ô; B05 C15 thêm khoảng sau ngoặc đóng trong cụm chữ rõ. Chọn riêng/chung, giữ khoảng chưa chọn, XPS, một Undo/rollback; tổng25/8/1. Bản thử, chưa xác nhận toàn bộ bài Word trên Office 2021.")
+        new("0.1.60","Gom 5 bước sau .59: B01 hoa/thường viết tắt theo tên loại chắc chắn; B02 cảnh báo tên loại/ký hiệu mâu thuẫn, không đoán bên sai; B03 thêm khoảng sau hai chấm; B04 C25 bỏ dấu cách cuối đoạn có điều kiện, giữ kết đoạn/ô; B05 C15 thêm khoảng sau ngoặc đóng trong cụm chữ rõ. Chọn riêng/chung, giữ khoảng chưa chọn, XPS, một Undo/rollback; tổng25/8/1. Bản thử, chưa xác nhận toàn bộ bài Word trên Office 2021."),
+        new("0.1.61 — đang phát triển","B01 sau .60: C13 nhận cụm lặp chỉ khác chữ hoa đầu đoạn, ví dụ Kế hoạch kế hoạch → Kế hoạch; giữ nguyên Unicode/kiểu của lần đầu, không gộp hoa/thường giữa câu, từ đơn hoặc sau nhãn mục. Sửa riêng/chung, kiểm kế hoạch mới và rollback. Mới một bước, chưa có gói Windows .61; không phải bộ kiểm chính tả/ngữ nghĩa đầy đủ.")
     });
     public static IReadOnlyList<string> NextSteps { get; }=Array.AsReadOnly(new[]
     {

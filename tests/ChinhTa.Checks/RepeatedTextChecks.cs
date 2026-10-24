@@ -32,9 +32,9 @@ public static class RepeatedTextChecks
         }
         foreach(string text in new[]{"kế hoạch, kế hoạch","kế hoạch. kế hoạch","kế hoạch; kế hoạch","kế hoạch\tkế hoạch",
             "kế hoạch\rkế hoạch","kế hoạch\nkế hoạch","kế hoạch\vkế hoạch","kế hoạch\fkế hoạch",
-            "kế hoạch\u00a0kế hoạch","Cơ quan cơ quan","12 12","AB1 AB1","mã_AB mã_AB","báo-cáo báo-cáo",
+            "kế hoạch\u00a0kế hoạch","Theo Cơ quan cơ quan","12 12","AB1 AB1","mã_AB mã_AB","báo-cáo báo-cáo",
             "thông tin và thông tin","một hai ba bốn năm sáu bảy tám chín một hai ba bốn năm sáu bảy tám chín"})
-            assert(Repeats(text).Length==0,"Repetition matching does not cross punctuation, controls, tabs or NBSP, fold case, match numbers/codes or infer long phrases");
+            assert(Repeats(text).Length==0,"Repetition matching does not cross punctuation, controls, tabs or NBSP, fold case inside prose, match numbers/codes or infer long phrases");
         const string decomposed="ke\u0302\u0301 hoa\u0323ch kế hoạch";
         var canonical=Repeats(decomposed).Single();
         assert(canonical.CanFix && decomposed[..canonical.Start]=="ke\u0302\u0301 hoa\u0323ch" && Apply(decomposed)=="ke\u0302\u0301 hoa\u0323ch",

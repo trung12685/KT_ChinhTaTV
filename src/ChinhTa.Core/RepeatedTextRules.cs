@@ -13,6 +13,14 @@ public static class RepeatedTextRules
     {
         string text=paragraph.Text;
         var tokens=Words.Matches(text).Select(m=>new Token(m.Index,m.Index+m.Length,m.Value.Normalize(NormalizationForm.FormC))).ToArray();
+        bool paragraphInitial=tokens.Length>0 && text.AsSpan(0,tokens[0].Start).IndexOfAnyExcept(' ')<0;
+        bool SameUnit(int first,int next,int size)
+        {
+            for(int k=0;k<size;k++)
+                if(tokens[first+k].Key!=tokens[next+k].Key && !(k==0 && first==0 && size>=2 && paragraphInitial &&
+                    InitialCapitalOnly(tokens[first].Key,tokens[next].Key)))return false;
+            return true;
+        }
         var found=new List<Issue>();
         for(int runStart=0;runStart<tokens.Length;)
         {
@@ -23,10 +31,10 @@ public static class RepeatedTextRules
             {
                 int unit=0;
                 for(int size=1;size<=8 && i+2*size<=runEnd;size++)
-                    if(Enumerable.Range(0,size).All(k=>tokens[i+k].Key==tokens[i+size+k].Key)){unit=size;break;}
+                    if(SameUnit(i,i+size,size)){unit=size;break;}
                 if(unit==0){i++;continue;}
                 int end=i+2*unit;
-                while(end+unit<=runEnd && Enumerable.Range(0,unit).All(k=>tokens[i+k].Key==tokens[end+k].Key))end+=unit;
+                while(end+unit<=runEnd && SameUnit(i,end,unit))end+=unit;
                 if(!paragraph.TextEditable)
                 {
                     string whole=text.TrimEnd('\r','\a','\n');
@@ -40,7 +48,9 @@ public static class RepeatedTextRules
                 int start=canFix?firstEnd:tokens[i].Start;
                 string original=text[start..lastEnd];
                 found.Add(new(paragraph.Start+start,original.Length,original,canFix?"":original,
-                    canFix?"Cụm chữ giống nhau lặp liền nhau. Đề xuất chỉ xóa phần lặp, giữ lần đầu; phải đọc cả câu trước khi duyệt, có thể là lặp có chủ ý.":
+                    canFix?(tokens[i].Key!=tokens[i+unit].Key?
+                        "Cụm chữ lặp ở đầu đoạn, chỉ khác chữ hoa đầu tiên. Đề xuất xóa phần lặp, giữ nguyên chữ hoa và kiểu của lần đầu; cần duyệt cả câu, có thể là lặp có chủ ý.":
+                        "Cụm chữ giống nhau lặp liền nhau. Đề xuất chỉ xóa phần lặp, giữ lần đầu; phải đọc cả câu trước khi duyệt, có thể là lặp có chủ ý."):
                         "Một tiếng, chuỗi toàn chữ hoa hoặc dòng số/ngày đang lặp. Có thể là từ láy, cách nhấn mạnh hoặc mã/tên; chỉ cảnh báo, không tự xóa.",
                     false,FixKind.RepeatedText,CanFix:canFix,Title:(canFix?"Cụm từ lặp: ":"Lặp cần duyệt: ")+phrase));
                 i=end;
@@ -49,4 +59,10 @@ public static class RepeatedTextRules
         }
         return found;
     }
+    // One initial capital at the actual paragraph start is presentation, not a
+    // license to fold names/codes throughout a sentence or to remove single words.
+    private static bool InitialCapitalOnly(string first,string next)=>
+        first.Count(char.IsLetter)>=2 && char.IsUpper(first[0]) &&
+        first.Skip(1).All(c=>!char.IsLetter(c) || char.IsLower(c)) &&
+        next==char.ToLowerInvariant(first[0])+first[1..];
 }

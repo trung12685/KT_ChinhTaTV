@@ -1,5 +1,13 @@
 # Tiếp tục phát triển Chính tả Việt
 
+## B01 sau .60 — cụm lặp chỉ khác chữ hoa đầu đoạn
+
+Mốc đầu đợt mới: tag v0.1.60, commit `bd86e13f005fe41d3b9d068a317dd8a8795753ab`, đã có gói với 2105 Core/OpenXML + 113 WPF + 1 kiểm metadata; CI không có Word. Code mới version .61, chỉ một bước, chưa ZIP/tag/release.
+
+C13 nhận `Kế hoạch kế hoạch` và giữ `Kế hoạch`, chỉ khi duy nhất ký tự đầu của từ đầu đoạn khác hoa/thường. Cụm 2–8 tiếng, đối chiếu NFC nhưng giữ nguyên UTF-16/kiểu của lần đầu, chỉ xóa đuôi. Không gộp giữa câu/sau nhãn, từ đơn, mã/allcaps hoặc vượt dấu câu/tab/NBSP. Vẫn duyệt và phải có quyền sửa chữ; quét mới chặn lựa chọn cũ khi first-word/context hoặc XML thay đổi. SameUnit dùng vòng lặp thoát sớm thay Range/All trong so sánh cụm; không tuyên bố tăng tốc Word khi chưa đo.
+
+Kiểm hồi quy cũ và mới gồm Unicode tổ hợp, offset, giữ phần chưa chọn, các chế độ, XML, stale, tooltip/report, sửa chung khoảng trắng/hai chấm/dấu kết câu/cuối đoạn/phông và rollback. Bài Word giả mới có giữ đậm/gạch chân, sửa riêng/chung, quét, Undo/rollback/lưu-mở/băm nguồn; CI chỉ biên dịch. [Nhật ký hiện tại](BATCH-AFTER-0.1.60.md). Lỗi phông cơ quan/trích yếu .56 vẫn chờ bằng chứng runtime, main/stable .27 giữ nguyên.
+
 ## B05 / mốc bản thử .60 — gom đủ 5 bước
 
 Tiếp nối B04 `9e5449df1655acb789b01726767a71de126e0922`, nhánh feature/format-batch-after-0.1.59. C15 thêm `)` → `) ` khi các từ trước/trong/sau đủ rõ, giữ guard hàm/công thức/ngoặc thiếu-lồng/ô trống/header/date/control/XML. Các mép độc lập, giữ phần chưa chọn; cùng FixKind/Family parenthesis, property UI không cấp CanFix. Core có Unicode/CP, guard, một mép/cả nhóm, stale khi đổi quyền/context, ghép phông/cụm lặp/hai chấm/C25 và rollback lỗi lưu. Local2028 assertion. OfficeParenthesisAfterCheck giả giữ kiểu, quét/Undo/rollback/lưu-mở; CI chỉ biên dịch.

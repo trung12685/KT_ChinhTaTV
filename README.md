@@ -6,11 +6,15 @@
 
 Ưu tiên đã thống nhất: **thể thức → lỗi chữ và lặp từ/cụm từ → ngữ cảnh và thư viện sau cùng**. Phần chính tả tiếng Việt đầy đủ còn cần xây dựng; không coi quy tắc minh họa hiện tại là bộ kiểm hoàn chỉnh.
 
+## Đang phát triển sau 0.1.60 — B01
+
+Mở rộng C13: `Kế hoạch kế hoạch đã duyệt.` → `Kế hoạch đã duyệt.` khi khác biệt duy nhất là chữ hoa đầu đoạn. Giữ nguyên lần đầu, Unicode và kiểu chữ; không gộp hoa/thường giữa câu, từ đơn, mã hoặc sau nhãn mục. Vẫn cần duyệt, sửa riêng/chung và một Undo/rollback. Code mang version **0.1.61**, mới **1 bước**, chưa tạo ZIP/tag/release .61. [Nhật ký, ví dụ và giới hạn](docs/BATCH-AFTER-0.1.60.md). Gom 5–10 bước đã kiểm rồi mới tạo gói tiếp theo.
+
 ## Bản thử 0.1.60 — gom B01–B05
 
 Gom **5 bước** sau .59: chuẩn hóa hoa/thường viết tắt theo tên loại chắc chắn; cảnh báo tên loại/ký hiệu mâu thuẫn để đối chiếu; sửa thiếu khoảng sau hai chấm; C25 bỏ dấu cách cuối đoạn có điều kiện; C15 thêm khoảng sau ngoặc đóng trong cụm chữ rõ. Ví dụ `Ghi chú:nội dung` → `Ghi chú: nội dung`, `Theo mẫu (nội dung)đã duyệt.` → `Theo mẫu (nội dung) đã duyệt.`. Chọn riêng/chung, giữ từ/khoảng chưa chọn, dấu kết đoạn/ô, kiểm nét XPS và một Undo/rollback. Tổng **25/8/1**, TXT có ví dụ và lịch sử đợt. **Chưa xác nhận toàn bộ bài Word .60 trên Office 2021; lỗi phông sau nhóm .56 vẫn chờ bằng chứng.**
 
-[Tải Windows .60](https://github.com/trung12685/KT_ChinhTaTV/releases/tag/v0.1.60) · [Nội dung/cách thử](docs/CHANGES-0.1.60.md) · [Nhật ký B01–B05](docs/BATCH-AFTER-0.1.59.md) · [Chu kỳ 5–10 bước](docs/RELEASE-CADENCE.md). Link bản mới có gói khi pipeline phát hành đạt; main/stable vẫn .27.
+[Tải Windows .60](https://github.com/trung12685/KT_ChinhTaTV/releases/tag/v0.1.60) · [Nội dung/cách thử](docs/CHANGES-0.1.60.md) · [Nhật ký B01–B05](docs/BATCH-AFTER-0.1.59.md) · [Chu kỳ 5–10 bước](docs/RELEASE-CADENCE.md). Gói .60 đã phát hành từ commit bd86e13, đạt 2105 Core/OpenXML + 113 WPF và kiểm metadata gói; chưa xác nhận bài Word trên Office 2021. Main/stable vẫn .27.
 
 ## Bản thử 0.1.59
 
