@@ -1,5 +1,13 @@
 # Xem và xuất tiến độ, chức năng
 
+Mốc .64 gom B01–B05 sau .63, tổng30 đề xuất/8 thủ công/1 minh họa. TXT ghi giữ nhấn mạnh/phông/cỡ và căn/spacing, quét chung một lượt nhận diện, C30 mép ngoặc kép và câu có một dấu .?!, đầy đủ ví dụ/ngoại lệ và việc tiếp theo. Metadata gói lấy từ pipeline đúng commit; không dùng tổng kiểm cũ hoặc coi gói thành Word runtime PASS. Các trạng thái chưa đóng gói bên dưới là lịch sử từng bước.
+
+Đợt sau .63, code .64 chưa đóng gói; B04 bổ sung C30 khoảng trắng trong ngoặc kép cong, ví dụ “ nội dung báo cáo ” → “nội dung báo cáo”. Tổng hiện30 đề xuất/8 thủ công/1 minh họa. C30 ghi rõ giữ dấu/chữ/kiểu và phía chưa chọn, ô trống/unknown ngoài phạm vi, không coi là điều khoản riêng của NĐ30. Các tổng29 ở phần lịch sử B01–B03 dưới đây không phải tổng code B04.
+
+B01–B02: C26 giữ đậm/nghiêng/gạch chân khi sửa phông/màu/cỡ, tránh ép size cả vùng; unknown kiểu/paragraph snapshot không cấp sửa. B02 mở C27–C29 cho đoạn văn thường có từ nhấn mạnh xen chữ thường đứng; giữ kiểu/cỡ từng glyph, chưa sửa bố cục đoạn toàn đậm/nghiêng hoặc không chắc. No-greeting anchors không mở rộng. TXT có ví dụ và giới hạn từng nhóm, tổng vẫn29/8/1; các mốc .63 là lịch sử phát hành trước, không lấy số cũ cho CI mới hoặc coi là Word pass.
+
+B03 ghi trong mốc .64: nhận diện thân bài một lần cho C26–C29 trong mỗi lần quét thay ba lượt; giữ kết quả/thứ tự/giới hạn từng loại, quét mới và hậu kiểm. Không tăng số nhóm lỗi, không coi giảm CPU phân tích là bằng chứng tốc độ Word hoặc Office2021 đạt. Khi chốt B03 có ba bước, chưa đóng gói.
+
 Mốc .63 gom đủ5 bước sau .62, tổng29 đề xuất/8 thủ công/1 minh họa. B05 mở C26–C29 cho văn bản có tên loại không Kính gửi bằng hai mốc văn xuôi XML/layout/kiểu chắc; chưa mở toàn thân bài. TXT giữ ví dụ các lỗi hiện có, giới hạn từng phạm vi, lịch sử B01–B05 và việc còn lại. Các dòng chưa đóng gói bên dưới là lịch sử lúc code chưa đủ5 bước; chỉ metadata/pipeline đúng commit chứng minh gói và số kiểm mới. CI không có Word/Office2021.
 
 B03/B04 sau .62: C28 khoảng giữa hai đoạn và C29 giãn dòng, tổng hiện tại29 đề xuất/8 thủ công/1 minh họa. TXT có ví dụ0+0pt → After6pt, Double → Single; nói rõ không kết luận sai từ After đơn lẻ, Exactly/AtLeast/contextual/auto/grid chưa đo và phạm vi văn xuôi chắc. Sửa riêng/chung giữ phần chưa chọn, hậu kiểm đoạn kế/glyph/thuộc tính sau lưu/Line. Các tổng27/26 ở dưới là lịch sử B02/B01, không phải tổng code mới. .63 chưa có gói, CI không có Word.

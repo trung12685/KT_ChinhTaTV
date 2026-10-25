@@ -30,7 +30,7 @@ public sealed partial class WordSession
         dynamic range=document!.Range(probe.Start,probe.Start+probe.Length);
         try
         {
-            var source=VisibleFormatReader.ReadStyles((object)range,probe.Original,includeSpacing:plan.Any(i=>(i.ParagraphFix is not null || i.SpacingFix is not null) && i.Start==probe.Start));
+            var source=VisibleFormatReader.ReadStyles((object)range,probe.Original,includeSpacing:plan.Any(i=>(i.ParagraphFix is not null || i.SpacingFix is not null || i.CharacterFormat is {Role:ComponentRole.Body,PreserveEmphasis:true}) && i.Start==probe.Start));
             return CasePreservationPlan.Expected(probe,plan,source,item=>
             {
                 dynamic prefix=document!.Range(probe.Start,item.Start);
@@ -64,6 +64,9 @@ public sealed partial class WordSession
     }
     private FontSizeEvidence? ExpectedSizesFor(Issue issue,IReadOnlyList<Issue> edits)
     {
+        // Body emphasis repairs always carry a complete retained-style proof,
+        // including exact sizes. Avoid an additional per-character size pass.
+        if(issue.CharacterFormat is {Role:ComponentRole.Body,PreserveEmphasis:true})return null;
         if(issue.CharacterFormat?.PreserveSize!=true && issue.Format?.MaximumSize is null)return null;
         dynamic range=document!.Range(issue.Start,issue.Start+issue.Length);
         try

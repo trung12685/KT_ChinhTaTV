@@ -20,20 +20,20 @@ public sealed record FormatAssessment(FormatState State,float Size,bool Preserve
 
 // Shared role policy: variation is not itself a defect. In particular both black
 // encodings and every allowed size may coexist. Unknown data never grants a write.
-public sealed record FormatPolicy(float Minimum,float Maximum,bool Italic,bool? Bold)
+public sealed record FormatPolicy(float Minimum,float Maximum,bool Italic,bool? Bold,bool PreserveEmphasis=false)
 {
     public bool SizeMatches(float size)=>float.IsFinite(size) && size>=Minimum && size<=Maximum;
-    public bool Matches(ObservedFont font)=>font.Known(Bold is not null) &&
+    public bool Matches(ObservedFont font)=>font.Known(PreserveEmphasis || Bold is not null) &&
         font.Name.Equals("Times New Roman",StringComparison.OrdinalIgnoreCase) && SizeMatches(font.Size) &&
-        font.Italic==(Italic?-1:0) && font.Color is 0 or -16777216 && (Bold is null || font.Bold==(Bold.Value?-1:0));
+        font.Color is 0 or -16777216 && (PreserveEmphasis || font.Italic==(Italic?-1:0) && (Bold is null || font.Bold==(Bold.Value?-1:0)));
     public FormatAssessment Assess(Paragraph row,bool allowSelectiveSizeRepair=false)
     {
         if(!row.FormatObserved || !(row.TextEditable || row.FormatEditable))return new(FormatState.Unknown,Minimum);
         var evidence=row.FormatEvidence;
         if(evidence is not null && evidence.Text!=row.Text.TrimEnd('\r','\a','\n'))return new(FormatState.Unknown,Minimum);
         IReadOnlyList<ObservedFont> fonts=evidence?.Fonts??[new(row.Font,row.Size,row.Bold?-1:0,row.Italic?-1:0,row.Color)];
-        if(fonts.Count==0 || fonts.Any(f=>!f.Known(Bold is not null)) ||
-            evidence is null && (row.FormatMixed || Bold is not null && row.BoldMixed))return new(FormatState.Unknown,Minimum);
+        if(fonts.Count==0 || fonts.Any(f=>!f.Known(PreserveEmphasis || Bold is not null)) ||
+            evidence is null && (row.FormatMixed || (PreserveEmphasis || Bold is not null) && row.BoldMixed))return new(FormatState.Unknown,Minimum);
         if(fonts.All(Matches))return new(FormatState.Correct,fonts[0].Size,fonts.Select(f=>f.Size).Distinct().Count()>1);
         var sizes=fonts.Select(f=>SizeMatches(f.Size)?f.Size:Minimum).Distinct().ToArray();
         if(sizes.Length==1)return new(FormatState.Repairable,sizes[0]);

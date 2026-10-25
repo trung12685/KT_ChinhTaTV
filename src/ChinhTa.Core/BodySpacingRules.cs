@@ -19,8 +19,8 @@ public sealed record BodySpacingFix(ObservedParagraphStyle Before,BodySpacingCon
             After is null && Next is null && Rule==0 && Line is null && BodySpacingRules.LineTooFar(Before.Spacing!));
     public ObservedParagraphStyle Apply(ObservedParagraphStyle current)=>current with {Spacing=current.Spacing! with
         {After=After??current.Spacing.After,Rule=Rule??current.Spacing.Rule,Line=Line??current.Spacing.Line}};
-    public string Suggestion=>IsGap?"Đặt khoảng sau đoạn 6 pt; giữ khoảng trước đoạn sau và giãn dòng chưa chọn.":
-        "Đặt giãn dòng đơn; giữ khoảng trước/sau đoạn và căn/thụt chưa chọn.";
+    public string Suggestion=>IsGap?"Đặt khoảng sau đoạn 6 pt; giữ khoảng trước đoạn sau, giãn dòng và kiểu chữ chưa chọn.":
+        "Đặt giãn dòng đơn; giữ khoảng trước/sau đoạn, căn/thụt và kiểu chữ chưa chọn.";
 }
 
 public static class BodySpacingRules
@@ -34,10 +34,12 @@ public static class BodySpacingRules
     private static bool Eligible(Paragraph row)=>Ordinary(row.ParagraphStyle) && row.Outline is {SpacingContext:not null} &&
         row.Outline.Alignment==row.ParagraphStyle!.Alignment && row.Flow is {Known:true} && row.FormatObserved &&
         row.Text.TrimEnd('\r','\n','\a')==row.Text.TrimEnd('\r','\n','\a').Trim(' ') &&
-        row.FormatEvidence is {Fonts.Count:>0} e && e.Text==row.Text.TrimEnd('\r','\n','\a') && e.Fonts.All(f=>f.Known() && f.Bold==0 && f.Italic==0);
+        row.FormatEvidence is {Fonts.Count:>0} e && e.Text==row.Text.TrimEnd('\r','\n','\a') && BodyParagraphRules.KnownProseFonts(e.Fonts);
     public static IReadOnlyList<Issue> Check(IReadOnlyList<Paragraph> paragraphs,IReadOnlyList<LayoutParagraph> layout,DocumentProfile profile)
+        =>CheckTargets(paragraphs,BodyFormatRules.RepairTargets(paragraphs,layout,profile));
+    internal static IReadOnlyList<Issue> CheckTargets(IReadOnlyList<Paragraph> paragraphs,IReadOnlyList<Paragraph> targets)
     {
-        var candidates=BodyFormatRules.RepairTargets(paragraphs,layout,profile).Where(Eligible).ToDictionary(p=>p.Start);
+        var candidates=targets.Where(Eligible).ToDictionary(p=>p.Start);
         var result=new List<Issue>();
         foreach(var row in candidates.Values)
         {

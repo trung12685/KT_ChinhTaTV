@@ -86,4 +86,24 @@ public static partial class VisibleFormatReader
             throw new InvalidOperationException("Khoảng đoạn/giãn dòng sau sửa chưa đạt hoặc phần chưa chọn đã đổi; phải phục hồi.");
     }
 
+    public static void ApplyCharacters(object rangeObject,string expected,CharacterFormat format)
+    {
+        dynamic range=rangeObject;
+        if(!format.Valid || (string?)range.Text!=expected)throw new InvalidOperationException("Vùng phông/cỡ đã đổi hoặc gợi ý chưa hợp lệ; hãy quét lại.");
+        dynamic font=range.Font;
+        try
+        {
+            font.Name="Times New Roman";
+            if(!format.PreserveSize)font.Size=format.Size;
+            font.Color=0;
+            if(!format.PreserveEmphasis)
+            {
+                font.Italic=format.Italic?-1:0;
+                if(format.Bold is bool bold)font.Bold=bold?-1:0;
+            }
+        }
+        finally{Release(font);}
+        if(format.RepairInvalidSizes)RepairSizes(rangeObject,expected,format);
+    }
+
 }

@@ -44,8 +44,9 @@ public static class CasePreservationPlan
             if(!Compatible(probe,format) || format.Start!=probe.Start || format.Length!=probe.Length || format.Original!=probe.Original)
                 throw new InvalidOperationException("Định dạng vùng chữ chọn kèm đã thay đổi.");
             if(IsBody(probe) && (
-                source.Paragraph is not {Alignment:0 or 3} || source.Styles.Any(s=>s is not null && (s.Font.Bold!=0 || s.Font.Italic!=0))))
-                throw new InvalidOperationException("Đoạn nội dung có kiểu nhấn mạnh hoặc căn đoạn chưa phù hợp phạm vi sửa; hãy quét lại.");
+                source.Paragraph is not {Alignment:0 or 3} || format.CharacterFormat?.PreserveEmphasis!=true &&
+                !BodyParagraphRules.KnownProseFonts(source.Styles.Where(s=>s is not null).Select(s=>s!.Font).ToArray())))
+                throw new InvalidOperationException("Đoạn nội dung chưa có chữ thường đứng hoặc căn đoạn chưa phù hợp phạm vi sửa; hãy quét lại.");
             source=format.ParagraphFix is { } paragraph?source.WithParagraph(paragraph,baseline):
                 format.SpacingFix is { } spacing?source.WithSpacing(spacing,baseline):source.WithFormat(format.CharacterFormat!);
         }

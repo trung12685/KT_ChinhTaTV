@@ -36,7 +36,7 @@ public sealed class CharacterStyleEvidence
         if(!format.Valid || !Complete)throw new InvalidOperationException("Chưa có định dạng đã duyệt để đối chiếu sau sửa.");
         return new(Text,Styles.Select(s=>s is null?null:s with {Font=s.Font with
         {
-            Name="Times New Roman",Color=0,Italic=format.Italic?-1:0,Bold=format.Bold is bool bold?bold?-1:0:s.Font.Bold,
+            Name="Times New Roman",Color=0,Italic=format.PreserveEmphasis?s.Font.Italic:format.Italic?-1:0,Bold=format.PreserveEmphasis?s.Font.Bold:format.Bold is bool bold?bold?-1:0:s.Font.Bold,
             Size=!format.PreserveSize?format.Size:format.RepairInvalidSizes &&
                 (s.Font.Size<format.SizeRange.Minimum || s.Font.Size>format.SizeRange.Maximum)?format.Size:s.Font.Size
         }}),Paragraph);

@@ -11,7 +11,7 @@ public static class BodyFormatChecks
         {
             string text=$"Nội dung  công tác công tác đã được kiểm tra đầy đủ {i}.\r";
             rows.Add(new(start,text,Alignment:3,Page:2,FormatObserved:true,Outline:new(OutlineScope.PlainBody,Alignment:3),
-                FormatEvidence:new(text.TrimEnd('\r'),[new("Arial",12,0,0,255),new("Times New Roman",14,0,0,0)])));
+                FormatEvidence:new(text.TrimEnd('\r'),[new("Arial",12,0,0,255),new("Times New Roman",14,0,0,0)]),ParagraphStyle:new(3,0,0,36,new(0,6,0,12,0,0))));
             start+=text.Length;
         }
         rows[9]=rows[9] with {Outline=new(OutlineScope.PlainBody,Alignment:0)};
@@ -49,10 +49,10 @@ public static class BodyFormatChecks
             assert(!Check(rows).Any(i=>i.Start==body.Start) && Check(rows).Any(i=>i.Start==p[11].Start),
                 "Unknown proof, structure, numbering, title level or unsupported alignment closes only that body row without inventing a manual defect");
         }
-        foreach(var font in new[]{new ObservedFont("Arial",12,-1,0,255),new("Arial",12,0,-1,255),new("",12,0,0,255),new("Arial",float.NaN,0,0,255),new("Arial",12,0,9999999,255)})
+        foreach(var font in new[]{new ObservedFont("Arial",12,9999999,0,255),new("",12,0,0,255),new("Arial",float.NaN,0,0,255),new("Arial",12,0,9999999,255)})
         {
             var rows=p.ToArray();rows[10]=body with {FormatEvidence=new(body.Text.TrimEnd('\r'),[font])};
-            assert(!Check(rows).Any(i=>i.Start==body.Start),"Emphasis and unreadable attributes never grant body formatting or produce a false defect");
+            assert(!Check(rows).Any(i=>i.Start==body.Start),"Unreadable emphasis or font attributes never grant body formatting or produce a false defect");
         }
         foreach(string text in new[]{"1. Nội dung công tác đã được kiểm tra đầy đủ.","a) Nội dung công tác đã được kiểm tra đầy đủ.","A) Nội dung công tác đã được kiểm tra đầy đủ.","A)Nội dung công tác đã được kiểm tra đầy đủ.","IV.Nội dung công tác đã được kiểm tra đầy đủ.","- Nội dung công tác đã được kiểm tra đầy đủ.",
             "Điều 1. Nội dung công tác đã được kiểm tra đầy đủ.","Căn cứ nội dung công tác đã được kiểm tra đầy đủ.","NỘI DUNG CÔNG TÁC ĐÃ ĐƯỢC KIỂM TRA ĐẦY ĐỦ.",

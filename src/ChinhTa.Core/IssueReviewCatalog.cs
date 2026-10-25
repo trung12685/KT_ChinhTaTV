@@ -54,6 +54,7 @@ public static class IssueReviewCatalog
                 issue.AddsSpaceAfterColon?"Thiếu khoảng trắng sau dấu hai chấm":"Thừa khoảng trước dấu hai chấm"),
             FixKind.SentenceInnerSpace=>("sentence-before","Khoảng trước dấu kết câu",64,"Thừa khoảng trước dấu kết câu"),
             FixKind.SentenceAfterSpace=>("sentence-after","Khoảng sau dấu kết câu",65,"Thiếu khoảng sau dấu kết câu"),
+            FixKind.QuoteSpace=>("quotes","Ngoặc kép",66,issue.Title??"Thừa khoảng trắng trong ngoặc kép"),
             FixKind.PageLayout=>("page","Khổ giấy và lề",70,issue.Title??"Kiểm tra khổ giấy/lề"),
             _=>("notice:"+(issue.Title??"other"),Brief(issue.Title??"Kiểm tra thủ công",60),80,issue.Title??"Kiểm tra thủ công")
         };

@@ -225,9 +225,7 @@ public sealed partial class WordSession : IDisposable
         var issues = Checker.Check(paragraphs, Profile).ToList();
         issues.AddRange(DocumentHeadingRules.Check(paragraphs,headerLayout,Profile));
         issues.AddRange(ComponentRules.Check(paragraphs,headerLayout,Profile));
-        issues.AddRange(BodyFormatRules.Check(paragraphs,headerLayout,Profile));
-        issues.AddRange(BodyParagraphRules.Check(paragraphs,headerLayout,Profile));
-        issues.AddRange(BodySpacingRules.Check(paragraphs,headerLayout,Profile));
+        issues.AddRange(BodyRuleScan.Check(paragraphs,headerLayout,Profile));
         foreach(var issue in issues.Where(i=>!i.CanFix && i.Kind is FixKind.AgencyFormat or FixKind.DocumentHeadingFormat))
         {
             var row=paragraphs.FirstOrDefault(p=>p.Start==issue.Start);
@@ -706,14 +704,7 @@ public sealed partial class WordSession : IDisposable
                         }
                         if(item.ParagraphFix is { } paragraphFix)VisibleFormatReader.ApplyParagraph((object)range,item.Original,paragraphFix,BodyStylePatchPlan.Before(item,plan));
                         if(item.SpacingFix is { } spacingFix)VisibleFormatReader.ApplySpacing((object)range,item.Original,spacingFix,BodyStylePatchPlan.Before(item,plan));
-                        if(item.CharacterFormat is CharacterFormat character)
-                        {
-                            dynamic font=range.Font;
-                            try{font.Name="Times New Roman";if(!character.PreserveSize)font.Size=character.Size;font.Italic=character.Italic?-1:0;font.Color=0;
-                                if(character.Bold is bool bold)font.Bold=bold?-1:0;}
-                            finally{Release(font);}
-                            if(character.RepairInvalidSizes)VisibleFormatReader.RepairSizes((object)range,item.Original,character);
-                        }
+                        if(item.CharacterFormat is CharacterFormat character)VisibleFormatReader.ApplyCharacters((object)range,item.Original,character);
                         if(item.Format is HeadingFormat heading)
                         {
                             dynamic font=range.Font;dynamic format=range.ParagraphFormat;

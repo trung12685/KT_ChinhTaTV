@@ -2,9 +2,21 @@
 
 Ứng dụng C# / WPF chạy trên Windows với Microsoft Word desktop, làm việc offline trên bản sao DOCX và xem trước bằng XPS. Không gửi nội dung tài liệu tới dịch vụ AI.
 
-**[Danh sách nhóm sửa và bảng kiểm bản thử 0.1.63](docs/SUPPORTED-FIXES-0.1.63.md)** — gồm điều kiện, ví dụ, ngoại lệ ô trống và các mục chỉ cảnh báo.
+**[Danh sách nhóm sửa và bảng kiểm bản thử 0.1.64](docs/SUPPORTED-FIXES-0.1.64.md)** — gồm điều kiện, ví dụ, ngoại lệ ô trống và các mục chỉ cảnh báo.
 
 Ưu tiên đã thống nhất: **thể thức → lỗi chữ và lặp từ/cụm từ → ngữ cảnh và thư viện sau cùng**. Phần chính tả tiếng Việt đầy đủ còn cần xây dựng; không coi quy tắc minh họa hiện tại là bộ kiểm hoàn chỉnh.
+
+## Bản thử tích lũy 0.1.64 — năm hạng mục sau .63
+
+- B01: sửa phông/màu/cỡ thân bài giữ từng đậm/nghiêng/gạch chân và cỡ13/14 đúng, không ép size cả vùng.
+- B02: căn/thụt/khoảng đoạn/giãn dòng cho đoạn thường có từ nhấn mạnh xen chữ thường đứng; chọn riêng giữ lỗi phông/chữ chưa chọn.
+- B03: nhận diện chung thân bài C26–C29 một lần thay ba lượt trùng trong mỗi lần quét, giữ đầy đủ quét mới và hậu kiểm.
+- B04: C30 `“ nội dung báo cáo ”` → `“nội dung báo cáo”`, giữ mẫu trống `“    ”`.
+- B05: C30 `“ Đã hoàn thành. ”` → `“Đã hoàn thành.”`, giữ dấu kết câu và kiểu/cỡ.
+
+Tổng30 đề xuất/8 thủ công/1 minh họa. Giữ các guard XML/vùng chưa chắc, chọn riêng/chung chữ/phông/Line, nét XPS thực, một Undo và rollback. Đủ5 bước để đóng gói theo chu kỳ5–10 bước; chỉ có bản tải khi pipeline đúng commit đạt. CI không chạy Word/Office2021, chưa khép phản hồi phông cũ hoặc chứng minh tốc độ toàn phiên Word.
+
+[Trang phát hành .64](https://github.com/trung12685/KT_ChinhTaTV/releases/tag/v0.1.64) · [Thay đổi/cách thử](docs/CHANGES-0.1.64.md) · [Danh sách chức năng](docs/SUPPORTED-FIXES-0.1.64.md) · [Nhật ký](docs/BATCH-AFTER-0.1.63.md). Main/stable .27 và gói .63 giữ nguyên.
 
 ## Bản thử tích lũy 0.1.63 — năm hạng mục thân bài
 

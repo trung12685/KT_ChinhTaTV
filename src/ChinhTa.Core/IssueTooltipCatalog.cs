@@ -30,6 +30,7 @@ public static class IssueTooltipCatalog
         if(issue.Kind==FixKind.OutlineMarker)
             return "Theo yêu cầu người dùng: bỏ dấu - hoặc + nếu chỉ có một dấu cùng cấp trong cùng mục cha.";
         if(Spacing(issue))return "Quy tắc ứng dụng: giữa các từ dùng một dấu cách; giữ ô số/ngày để trống theo mẫu.";
+        if(issue.Kind==FixKind.QuoteSpace)return "Quy tắc ứng dụng: không có dấu cách sát bên trong cặp ngoặc kép cong chứa lời văn rõ.";
         if(issue.Kind==FixKind.RepeatedText)return "Quy tắc ứng dụng: phát hiện từ/cụm từ giống nhau liền nhau; cần duyệt ngữ cảnh.";
         if(issue.Kind is FixKind.PunctuationSpace or FixKind.ParenthesisSpace or FixKind.SentenceEndSpace or FixKind.ParagraphEndSpace or
             FixKind.ColonSpace or FixKind.SentenceInnerSpace or FixKind.SentenceAfterSpace)
@@ -53,7 +54,7 @@ public static class IssueTooltipCatalog
             if(issue.Kind==FixKind.BodyParagraph)
                 return Decree+"mục II.6, điểm e: nội dung căn đều hai lề; đầu dòng lùi 1 cm hoặc 1,27 cm.";
             if(issue.Kind==FixKind.BodyFormat)
-                return Decree+"mục I.4 và II.6, điểm e: Times New Roman, đen, cỡ 13–14, đứng. Chỉ áp dụng đoạn văn xuôi thường đã xác minh.";
+                return Decree+"mục I.4 và II.6, điểm e: Times New Roman, đen, cỡ 13–14; kiểu đứng của phần lời văn xét riêng.";
             if(issue.Kind is FixKind.AgencyFormat or FixKind.AgencyText)
                 return Decree+"mục I.4 và II.2, điểm b: Times New Roman, đen, in hoa, cỡ 12–13, đứng; tên cơ quan ban hành đậm, tên cơ quan chủ quản đứng.";
             if(issue.Kind is FixKind.RecipientFormat or FixKind.RecipientText)
@@ -137,6 +138,7 @@ public static class IssueTooltipCatalog
             FixKind.RepeatedText=>"Bỏ phần lặp đã đánh dấu, giữ lần đầu; cần duyệt cả câu.",
             FixKind.OutlineOrder=>$"Đổi {Brief(issue.Original,20)} → {Brief(issue.Replacement,20)}; giữ nội dung, cần duyệt dẫn chiếu.",
             FixKind.OutlineMarker=>"Bỏ dấu đầu dòng đơn và dấu cách phân cách; giữ nội dung và thụt đầu dòng.",
+            FixKind.QuoteSpace=>"Bỏ dấu cách sát trong ngoặc kép đã chọn; giữ chữ, dấu ngoặc và khoảng cách chưa chọn.",
             FixKind.PunctuationSpace=>"Bỏ khoảng trước, chuẩn hóa khoảng sau dấu đã chọn; cần duyệt cả câu.",
             FixKind.ParenthesisSpace when issue.AddsSpaceAfterClosingParenthesis=>"Thêm một dấu cách sau ngoặc đóng; giữ chữ, ngoặc và khoảng trong chưa chọn.",
             FixKind.ParenthesisSpace=>"Bỏ dấu cách sát trong ngoặc đã chọn; giữ chữ và ngoặc.",

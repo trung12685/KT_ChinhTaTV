@@ -5,7 +5,7 @@ namespace ChinhTa.Core;
 public record Paragraph(int Start, string Text, bool Bold = false, float Size = 13,
     int Alignment = 1, string Font = "Times New Roman", bool Italic = false,
     int Color = 0, bool InTable = false, int Page = 1, bool FormatObserved = false, bool FormatMixed = false, bool TextEditable = true, bool BoldMixed = false, OutlineParagraphInfo? Outline = null, bool FormatEditable = false,FormatEvidence? FormatEvidence=null,ObservedParagraphStyle? ParagraphStyle=null,BodyFlow? Flow=null);
-public enum FixKind { Text, NationalHeading, StateMotto, PartyHeading, Advisory, PageLayout, ShapeLine, AdministrativeNumber, AdministrativeDate, AdministrativeFormat, AdministrativePosition, DocumentHeadingFormat, RepeatedText, PunctuationSpace, ParenthesisSpace, SentenceEndSpace, ColonSpace, SentenceInnerSpace, SentenceAfterSpace, OutlineOrder, OutlineMarker, AgencyFormat, AgencyText, RecipientFormat, RecipientText, DocumentTypeText, ParagraphEndSpace, BodyFormat, BodyParagraph, BodyGap, BodyLineSpacing }
+public enum FixKind { Text, NationalHeading, StateMotto, PartyHeading, Advisory, PageLayout, ShapeLine, AdministrativeNumber, AdministrativeDate, AdministrativeFormat, AdministrativePosition, DocumentHeadingFormat, RepeatedText, PunctuationSpace, ParenthesisSpace, SentenceEndSpace, ColonSpace, SentenceInnerSpace, SentenceAfterSpace, OutlineOrder, OutlineMarker, AgencyFormat, AgencyText, RecipientFormat, RecipientText, DocumentTypeText, ParagraphEndSpace, BodyFormat, BodyParagraph, BodyGap, BodyLineSpacing, QuoteSpace }
 public record HeadingFormat(float Size, int? Alignment = null,float? MaximumSize=null,bool RepairInvalidSizes=false)
 {
     public bool Matches(string font,float size,int bold,int italic,int color,int? alignment)=>
@@ -14,7 +14,7 @@ public record HeadingFormat(float Size, int? Alignment = null,float? MaximumSize
         color is 0 or -16777216 && (Alignment is null || alignment==Alignment);
 }
 public enum ComponentRole { AgencyParent, Agency, RecipientLabel, RecipientItem, Body }
-public record CharacterFormat(float Size,bool Italic,bool? Bold=null,ComponentRole? Role=null,bool PreserveSize=false,bool RepairInvalidSizes=false)
+public record CharacterFormat(float Size,bool Italic,bool? Bold=null,ComponentRole? Role=null,bool PreserveSize=false,bool RepairInvalidSizes=false,bool PreserveEmphasis=false)
 {
     public (float Minimum,float Maximum) SizeRange=>Role switch
     {
@@ -23,9 +23,9 @@ public record CharacterFormat(float Size,bool Italic,bool? Bold=null,ComponentRo
         ComponentRole.RecipientLabel=>(12,12),ComponentRole.RecipientItem=>(11,11),
         _=>Bold==true || Italic?(13,14):(13,13)
     };
-    public bool Valid => (!RepairInvalidSizes || PreserveSize) && float.IsFinite(Size) && (!PreserveSize || SizeRange.Minimum<SizeRange.Maximum && Size==SizeRange.Minimum) && (Role is not null ? Role switch
+    public bool Valid => (!PreserveEmphasis || Role==ComponentRole.Body && Bold is null && !Italic) && (!RepairInvalidSizes || PreserveSize) && float.IsFinite(Size) && (!PreserveSize || SizeRange.Minimum<SizeRange.Maximum && Size==SizeRange.Minimum) && (Role is not null ? Role switch
     {
-        ComponentRole.Body=>Size>=13 && Size<=14 && !Italic && Bold==false,
+        ComponentRole.Body=>Size>=13 && Size<=14 && !Italic && (PreserveEmphasis?Bold is null:Bold==false),
         ComponentRole.AgencyParent=>Size>=12 && Size<=13 && !Italic && Bold==false,
         ComponentRole.Agency=>Size>=12 && Size<=13 && !Italic && Bold==true,
         ComponentRole.RecipientLabel=>Size==12 && Italic && Bold==true,
@@ -34,8 +34,8 @@ public record CharacterFormat(float Size,bool Italic,bool? Bold=null,ComponentRo
     } : Bold is null?(Italic?Size>=13 && Size<=14:Math.Abs(Size-13)<.01f):Bold==true && !Italic && Size>=13 && Size<=14);
     public bool Matches(string font,float size,int italic,int color,int? bold=null)=>
         font.Equals("Times New Roman",StringComparison.OrdinalIgnoreCase) && float.IsFinite(size) &&
-        (PreserveSize?size>=SizeRange.Minimum && size<=SizeRange.Maximum:Math.Abs(size-Size)<.01f) && italic==(Italic?-1:0) && color is 0 or -16777216 &&
-        (Bold is null || bold==(Bold==true?-1:0));
+        (PreserveSize?size>=SizeRange.Minimum && size<=SizeRange.Maximum:Math.Abs(size-Size)<.01f) && color is 0 or -16777216 &&
+        (PreserveEmphasis?italic is 0 or -1 && bold is 0 or -1:italic==(Italic?-1:0) && (Bold is null || bold==(Bold==true?-1:0)));
 }
 public sealed record OutlineEditContext(int? ParentStart,int GroupStart,string Label,string Delimiter);
 public record Issue(int Start, int Length, string Original, string Replacement,
@@ -53,11 +53,15 @@ public record Issue(int Start, int Length, string Original, string Replacement,
         : Format is {RepairInvalidSizes:true,MaximumSize:float headingMaximum} selectiveHeading ? $"Times New Roman, đen, đứng, đậm; chỉ đưa cỡ ngoài {selectiveHeading.Size:0.#}–{headingMaximum:0.#} về {selectiveHeading.Size:0.#}; giữ cỡ đúng và chữ."+(selectiveHeading.Alignment is null?"":" Căn giữa trong ô.")
         : SpacingFix is not null ? SpacingFix.Suggestion
         : ParagraphFix is not null ? ParagraphFix.Suggestion
+        : CharacterFormat is {PreserveEmphasis:true} retained ? "Times New Roman, đen; "+
+            (retained.RepairInvalidSizes?$"chỉ đưa cỡ ngoài 13–14 về {retained.Size:0.#}, giữ cỡ đúng":retained.PreserveSize?"giữ từng cỡ 13–14 đang đúng":$"cỡ {retained.Size:0.#}")+
+            "; giữ chữ, đậm/nghiêng và gạch chân."
         : CharacterFormat?.RepairInvalidSizes==true ? $"Times New Roman, đen, {(CharacterFormat.Italic?"nghiêng":"đứng")}{(CharacterFormat.Bold==true?", đậm":CharacterFormat.Bold==false?", không đậm":"")}; chỉ đưa cỡ ngoài {CharacterFormat.SizeRange.Minimum:0.#}–{CharacterFormat.SizeRange.Maximum:0.#} về {CharacterFormat.Size:0.#}; giữ từng cỡ đúng và chữ."
         : CharacterFormat is not null ? $"Times New Roman, màu đen, cỡ {(CharacterFormat.PreserveSize?$"{CharacterFormat.SizeRange.Minimum:0.#}–{CharacterFormat.SizeRange.Maximum:0.#} (giữ cỡ hợp lệ)":$"{CharacterFormat.Size:0.#}")}, chữ {(CharacterFormat.Italic?"nghiêng":"đứng")}{(CharacterFormat.Bold==true?", đậm":CharacterFormat.Bold==false?", không đậm":"")}; giữ nguyên chữ."
         : Kind==FixKind.DocumentTypeText ? "Viết hoa tên loại thành “"+Replacement+"”; giữ nội dung trích yếu, phông và căn đoạn."
         : Kind==FixKind.OutlineOrder ? $"Đổi ký hiệu mục {Original} → {Replacement}; giữ nội dung, cần duyệt thứ tự và dẫn chiếu."
         : Kind==FixKind.OutlineMarker ? "Bỏ dấu đầu dòng và dấu cách phân cách; giữ nội dung và thụt đầu dòng, cần duyệt mục cha."
+        : Kind==FixKind.QuoteSpace ? "Xóa dấu cách sát trong ngoặc kép; giữ chữ, dấu ngoặc và khoảng cách chưa chọn, cần duyệt cả câu."
         : Kind==FixKind.SentenceAfterSpace ? "Thêm một dấu cách sau dấu kết câu; giữ chữ, dấu câu và khoảng trước, cần duyệt cả câu."
         : Kind==FixKind.SentenceInnerSpace ? "Xóa dấu cách trước dấu kết câu giữa đoạn; giữ chữ và dấu câu, cần duyệt cả câu."
         : AddsSpaceAfterColon ? "Thêm một dấu cách sau dấu hai chấm; giữ chữ, dấu câu và khoảng trước, cần duyệt cả câu."
@@ -99,7 +103,7 @@ public static class Checker
                     char.IsUpper(word.Value[0]) ? "Đò" : "đò",
                     "Có thể là ‘con đò’. Đây là quy tắc minh họa, cần người dùng xác nhận.", false));
             }
-            var punctuation=PunctuationSpaceRules.Check(p).Concat(ParenthesisSpaceRules.Check(p)).Concat(SentenceEndSpaceRules.Check(p)).Concat(ParagraphEndSpaceRules.Check(p)).Concat(ColonSpaceRules.Check(p)).Concat(SentenceInnerSpaceRules.Check(p)).Concat(SentenceAfterSpaceRules.Check(p)).ToArray();
+            var punctuation=PunctuationSpaceRules.Check(p).Concat(ParenthesisSpaceRules.Check(p)).Concat(QuoteSpaceRules.Check(p)).Concat(SentenceEndSpaceRules.Check(p)).Concat(ParagraphEndSpaceRules.Check(p)).Concat(ColonSpaceRules.Check(p)).Concat(SentenceInnerSpaceRules.Check(p)).Concat(SentenceAfterSpaceRules.Check(p)).ToArray();
             // A punctuation span owns its adjacent spaces; do not offer an overlapping
             // generic spacing write for the same characters in a multi-selection.
             textIssues.RemoveAll(candidate=>punctuation.Any(r=>r.CanFix &&
