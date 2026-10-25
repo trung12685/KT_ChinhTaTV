@@ -1,5 +1,9 @@
 # Tiếp tục phát triển Chính tả Việt
 
+## Mốc lưu 0.1.67 — trước thử nghiệm hiệu năng
+
+Yêu cầu người dùng ngày 25/10/2026: đóng gói bản hiện tại và giữ lại trước khi thử tối ưu. Nguồn chức năng 0.1.65 tại `56891d501a32f183ba6154e9a5829b2cd65c34e4`; giữ thuật toán, bảng và Preview Word/XPS. Không triển khai tối ưu trong mốc này. Chỉ version/report-history/docs/metadata đóng gói thay đổi; ghi SHA-256 nguồn giữ nguyên trong BASELINE-0.1.67.json. Phiên bản thử tiếp theo phải tách nhánh/version, không di chuyển tag .67 hoặc ghi đè gói. Đánh giá tốc độ phải kèm đủ dữ liệu/Preview, kết quả sửa và rollback. Giới hạn/điểm Office2021 còn mở tiếp tục giữ. [Hướng dẫn mốc và quay lại](CHANGES-0.1.67.md).
+
 ## Sau .64, B03–B05 — gom cụm, chốt .65
 
 Tiếp nối B02 `17002f9045ae5919e691ed0e0f8cca49ef10a3f4` đạt3480 Core/OpenXML +249 WPF. Theo phản hồi chia quá nhỏ, triển khai ba hạng mục chung một lượt: thiếu khoảng trước dấu mở, quote thẳng trước/trong/sau/C14/ô trống, câu có .?! trong ngoặc tròn. Parser/prose/prefix chung giữ từng gate; exact anchor payload, phép chiếu giữ dấu, C14 giữ lỗi nội bộ sau sửa mép. Test72 tổ hợp/ba profile/Unicode/CP/unknown, sửa riêng/chung/chữ/phông/bốn nhóm thân bài/stale/glyph/rollback; fixture tổng hợp Word/native CP có nhiều dạng trong cùng DOCX, giữ kiểu/cỡ và nguồn, riêng/chung/baLine/mộtUndo/lưu-mở. CI chỉ biên dịch Word. Đủ5 bước, tổng30/8/1; release notes/catalog/TXT và package sau đúng commit đạt, không suy Word PASS từ CI. [Thay đổi](CHANGES-0.1.65.md), [cụm sửa](DELIMITER-CLUSTER.md), [nhật ký](BATCH-AFTER-0.1.64.md).
