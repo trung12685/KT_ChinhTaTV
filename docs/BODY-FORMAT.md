@@ -1,5 +1,7 @@
 # C26 — phông/cỡ chữ đoạn văn xuôi thường
 
+Đợt sau .63, code .64 mở C26 [giữ đậm/nghiêng từng glyph](BODY-EMPHASIS.md) khi sửa phông/màu/cỡ. Các mô tả không nhấn mạnh dưới đây là phạm vi .63; không thay guard C27–C29 hoặc hai mốc no-greeting.
+
 B05 mở thêm nhánh [không Kính gửi có hai mốc văn xuôi đủ proof](BODY-OPENING.md). Các hạn chế Kính gửi dưới đây là phạm vi ban đầu; .63 chỉ có bản tải khi pipeline phát hành đúng commit đạt.
 
 B03/B04 đã có [C28/C29](BODY-SPACING.md) với duyệt riêng cho khoảng đoạn/giãn dòng đủ bằng chứng. Các giới hạn dưới đây là phạm vi riêng của C26/C27 lúc bổ sung; không mở toàn bộ thân bài hoặc mọi kiểu giãn dòng.

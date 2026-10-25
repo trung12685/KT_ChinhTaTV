@@ -197,6 +197,7 @@ static class Program
         BodyReviewChecks.Run(Assert);
         BodyParagraphWriterChecks.Run(Assert);
         BodySpacingWriterChecks.Run(Assert);
+        BodyEmphasisWriterChecks.Run(Assert);
         RepairProgressDesktopChecks.Run(Assert);
         DocumentTypeCatalogDesktopChecks.Run(Assert);
         Console.WriteLine($"{checks} WPF checks passed.");

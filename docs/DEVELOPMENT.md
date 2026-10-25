@@ -1,5 +1,9 @@
 # Tiếp tục phát triển Chính tả Việt
 
+## Sau .63, B01 — C26 giữ nhấn mạnh
+
+Nền `e693191ff6caf93b0ca28c9532e0df3a7d622f4d` đạt3116 Core +232 WPF +1 metadata gói, chưa Word runtime. C26 có PreserveEmphasis chỉ cho Body, giữ bold/italic/underline và cỡ từng glyph, tránh Size cả vùng và giữ spacing/căn/thụt source. Writer ký tự tách riêng, kiểm text/valid trước setter; proof style đầy đủ thay lượt đọc size riêng bị trùng, không giảm hậu kiểm. Không mở C27–C29 hoặc no-greeting anchors cho nhấn mạnh. Core/Desktop/fixture Word kiểm riêng/chung chữ/Line, stale/drift/COM/Undo/lưu-mở/nguồn, fixture chỉ biên dịch trong CI. Code .64,1 bước, tổng29/8/1, chưa đóng gói. [Phạm vi](BODY-EMPHASIS.md), [nhật ký](BATCH-AFTER-0.1.63.md); số kiểm mới theo đúng commit tại PR/Actions.
+
 ## B05 / chuẩn bị .63 — thân bài không Kính gửi
 
 Nền B04 `9445ce25e7c45805cdb7040c7b267f09f5bb234a` đạt3080 Core +232 WPF, chưa Word runtime. Hai đoạn mở đầu văn xuôi có XML từng indent/căn đều1cm hoặc1,27cm, font/kiểu và layout Word khớp, mốc tên loại/trích yếu và chữ ký/Nơi nhận; quan sát tạm tách quyền sửa. Mốc ngắn đi sau xóa lặp vẫn giữ lỗi chưa chọn phía sau. Core/fixture Word kiểm riêng/chung4 nhóm/chữ/Line, nguồn/Undo/rollback/lưu-mở; fixture chỉ biên dịch trong CI. Đủ5 bước .63, tổng29/8/1; release notes/checklist/TXT/gói theo đúng commit và các kiểm bắt buộc, chưa xác nhận Office2021. [Phạm vi](BODY-OPENING.md), [nhật ký](BATCH-AFTER-0.1.62.md).

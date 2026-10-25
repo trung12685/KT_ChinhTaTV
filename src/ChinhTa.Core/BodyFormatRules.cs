@@ -7,7 +7,7 @@ namespace ChinhTa.Core;
 // not infer a body from page number, font, or every paragraph after the title.
 public static class BodyFormatRules
 {
-    public const string Citation="NĐ30, PL I, Phần I.I.4 và II.6.e (PDF 21, 25): Times New Roman, màu đen, nội dung cỡ 13–14, đứng. Bước này chỉ sửa phông/màu/cỡ đoạn văn xuôi thường; chưa kiểm toàn bộ nội dung hoặc căn/giãn đoạn.";
+    public const string Citation="NĐ30, PL I, Phần I.I.4 và II.6.e (PDF 21, 25): Times New Roman, màu đen, nội dung cỡ 13–14, đứng. Bước này chỉ sửa phông/màu/cỡ đoạn văn xuôi thường; giữ đậm/nghiêng để duyệt riêng; chưa kiểm toàn bộ nội dung hoặc căn/giãn đoạn.";
     private static string Clean(string text)=>text.TrimEnd('\r','\a','\n');
     private static bool Stop(string text)=>RecipientContext.Label(text) || Regex.IsMatch(text.Trim(),
         @"^(?:(?:TM|KT|TL|TUQ|Q)\s*\.|(?:GIÁM ĐỐC|PHÓ GIÁM ĐỐC|TRƯỞNG PHÒNG|PHÓ TRƯỞNG PHÒNG|CHỦ TỊCH|PHÓ CHỦ TỊCH|BỘ TRƯỞNG|THỨ TRƯỞNG|THỦ TRƯỞNG|HIỆU TRƯỞNG|CHÁNH VĂN PHÒNG)$)",RegexOptions.CultureInvariant|RegexOptions.IgnoreCase);
@@ -69,17 +69,16 @@ public static class BodyFormatRules
         var result=new List<Issue>();
         foreach(var row in RepairTargets(paragraphs,layout,profile))
         {
-            // Mixed emphasis can be deliberate. Do not erase it or call it a
-            // defect; later scopes can distinguish ordinary text and emphasis.
+            // Emphasis is retained per glyph; it never becomes a font/color/size defect.
             var fonts=row.FormatEvidence?.Fonts;
-            if(fonts is null || fonts.Count==0 || fonts.Any(f=>!f.Known() || f.Bold!=0 || f.Italic!=0))continue;
-            var assessment=new FormatPolicy(13,14,false,false).Assess(row,allowSelectiveSizeRepair:true);
+            if(fonts is null || fonts.Count==0 || fonts.Any(f=>!f.Known()) || row.ParagraphStyle is not {Known:true,Spacing:{Known:true}})continue;
+            var assessment=new FormatPolicy(13,14,false,null,PreserveEmphasis:true).Assess(row,allowSelectiveSizeRepair:true);
             if(assessment.State!=FormatState.Repairable)continue;
             string text=Clean(row.Text);
             result.Add(new(row.Start,text.Length,text,text,
-                "Đoạn văn xuôi thường: Times New Roman, đen, cỡ 13–14; chỉ sửa cỡ sai về 13, giữ từng cỡ đúng, chữ, gạch chân và bố cục đoạn.",
+                "Đoạn văn xuôi thường: Times New Roman, đen, cỡ 13–14; chỉ sửa cỡ sai về 13, giữ từng cỡ đúng, chữ, đậm/nghiêng, gạch chân và bố cục đoạn.",
                 false,FixKind.BodyFormat,Citation:Citation,Title:"Phông/cỡ chữ nội dung chưa đúng",
-                CharacterFormat:new(assessment.Size,false,false,ComponentRole.Body,assessment.PreserveSize,assessment.RepairInvalidSizes)));
+                CharacterFormat:new(13,false,null,ComponentRole.Body,PreserveSize:true,RepairInvalidSizes:fonts.Any(f=>f.Size<13 || f.Size>14),PreserveEmphasis:true)));
         }
         return result;
     }

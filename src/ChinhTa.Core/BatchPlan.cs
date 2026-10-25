@@ -42,7 +42,7 @@ public static class BatchPlan
                 current.CharacterFormat is not null || current.Format is not null || current.LineFix is not null || current.CenterFix is not null))
                 throw new InvalidOperationException("Gợi ý khoảng trắng cuối đoạn chưa hợp lệ. Hãy quét lại.");
             if(current.CharacterFormat is CharacterFormat style && (!style.Valid ||
-                !(current.Kind==FixKind.BodyFormat && style.Role==ComponentRole.Body && style.Bold==false && !style.Italic ||
+                !(current.Kind==FixKind.BodyFormat && style.Role==ComponentRole.Body && (style.PreserveEmphasis?style.Bold is null:style.Bold==false) && !style.Italic ||
                   current.Kind==FixKind.AdministrativeFormat && style.Bold is null && style.Role is null ||
                   current.Kind==FixKind.DocumentHeadingFormat && style.Bold==true && !style.Italic && style.Role is null ||
                   current.Kind==FixKind.AgencyFormat && style.Role is ComponentRole.Agency or ComponentRole.AgencyParent ||

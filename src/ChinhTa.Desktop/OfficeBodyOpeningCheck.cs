@@ -67,5 +67,6 @@ internal static class OfficeBodyOpeningCheck
         if(test.ReadCheckText()!=expectedText || expected.Any(p=>!p.Value.Matches(test.ReadCheckCurrentStyles(p.Value.Text))) ||
             !hash.SequenceEqual(SHA256.HashData(File.ReadAllBytes(source))))throw new InvalidOperationException("Lưu/mở thân bài không Kính gửi chưa đúng hoặc nguồn đã đổi.");
         pass("Không Kính gửi: hai đoạn mở đầu có proof; sửa chung bốn nhóm/chữ/ba Line, giữ1cm/1,27cm/cỡ/gạch chân, rollback/một Undo/lưu-mở/nguồn");
+        OfficeBodyEmphasisCheck.Run(test,source,isolated,pass);
     }
 }

@@ -6,6 +6,12 @@
 
 Ưu tiên đã thống nhất: **thể thức → lỗi chữ và lặp từ/cụm từ → ngữ cảnh và thư viện sau cùng**. Phần chính tả tiếng Việt đầy đủ còn cần xây dựng; không coi quy tắc minh họa hiện tại là bộ kiểm hoàn chỉnh.
 
+## Đợt sau .63 — code .64 đang phát triển
+
+B01 mở C26 sửa phông/màu/cỡ thân bài có nhấn mạnh: Arial đỏ12 ở từ đậm xen14 ở từ nghiêng → TNR đen13/14, giữ từng đậm/nghiêng/gạch chân và cỡ đúng. Không mở căn/spacing hoặc mốc mở đầu chưa chắc; không coi nhấn mạnh tự nó là lỗi. Snapshot kiểu/cỡ/đoạn được kiểm sau lưu/Line, sửa riêng/chung chữ, một Undo/rollback. Bỏ lượt đọc cỡ riêng trùng với proof kiểu đầy đủ.
+
+Tổng vẫn29/8/1. Chưa đóng gói .64, tiếp tục gom5–10 bước. [Phạm vi](docs/BODY-EMPHASIS.md) · [Nhật ký](docs/BATCH-AFTER-0.1.63.md). Bản tải gần nhất vẫn .63; CI không có Word runtime.
+
 ## Bản thử tích lũy 0.1.63 — năm hạng mục thân bài
 
 - B01/C26: Arial đỏ12 xen14 → Times New Roman đen13/14; giữ từng cỡ đang đúng, glyph/gạch chân và bố cục chưa chọn.
