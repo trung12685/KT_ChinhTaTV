@@ -38,9 +38,9 @@ public static class BatchPlan
                 current.Original.Length!=current.Replacement.Length || current.CharacterFormat is not null ||
                 current.Format is not null || current.LineFix is not null || current.CenterFix is not null))
                 throw new InvalidOperationException("Gợi ý viết hoa tên loại chưa hợp lệ. Hãy quét lại.");
-            if(current.Kind==FixKind.ParagraphEndSpace && (current.Replacement.Length!=0 || current.Original.Any(c=>c!=' ') ||
+            if(current.Kind is FixKind.ParagraphEndSpace or FixKind.QuoteSpace && (current.Replacement.Length!=0 || current.Original.Any(c=>c!=' ') ||
                 current.CharacterFormat is not null || current.Format is not null || current.LineFix is not null || current.CenterFix is not null))
-                throw new InvalidOperationException("Gợi ý khoảng trắng cuối đoạn chưa hợp lệ. Hãy quét lại.");
+                throw new InvalidOperationException("Gợi ý xóa khoảng trắng chưa hợp lệ. Hãy quét lại.");
             if(current.CharacterFormat is CharacterFormat style && (!style.Valid ||
                 !(current.Kind==FixKind.BodyFormat && style.Role==ComponentRole.Body && (style.PreserveEmphasis?style.Bold is null:style.Bold==false) && !style.Italic ||
                   current.Kind==FixKind.AdministrativeFormat && style.Bold is null && style.Role is null ||
@@ -69,7 +69,7 @@ public static class BatchPlan
     }
     private static bool SharesFormat(Issue format,Issue text)=>format.IsStyleOnly &&
         !text.IsStyleOnly && text.Format is null && text.LineFix is null &&
-        text.Kind is FixKind.Text or FixKind.AdministrativeNumber or FixKind.AdministrativeDate or FixKind.RepeatedText or FixKind.PunctuationSpace or FixKind.ParenthesisSpace or FixKind.SentenceEndSpace or FixKind.ParagraphEndSpace or FixKind.ColonSpace or FixKind.SentenceInnerSpace or FixKind.SentenceAfterSpace or FixKind.OutlineOrder or FixKind.OutlineMarker or FixKind.AgencyText or FixKind.RecipientText or FixKind.DocumentTypeText &&
+        text.Kind is FixKind.QuoteSpace or FixKind.Text or FixKind.AdministrativeNumber or FixKind.AdministrativeDate or FixKind.RepeatedText or FixKind.PunctuationSpace or FixKind.ParenthesisSpace or FixKind.SentenceEndSpace or FixKind.ParagraphEndSpace or FixKind.ColonSpace or FixKind.SentenceInnerSpace or FixKind.SentenceAfterSpace or FixKind.OutlineOrder or FixKind.OutlineMarker or FixKind.AgencyText or FixKind.RecipientText or FixKind.DocumentTypeText &&
         (text.Kind!=FixKind.DocumentTypeText || format.Kind==FixKind.DocumentHeadingFormat) &&
         text.Start>=format.Start && (long)text.Start+text.Length<=(long)format.Start+format.Length;
     public static void Validate(IReadOnlyList<Issue> plan, Func<Issue, string> read)

@@ -28,6 +28,14 @@ Không thêm cache dài hạn, không dùng ObservationTargets làm quyền sử
 
 Kiểm hợp đồng đối chiếu toàn bộ Issue và thứ tự trên ba profile, biến thể an toàn/unknown/nhấn mạnh/list/grid/stale/duplicate-start/boundary; no-greeting chưa quan sát không cấp quyền. Mẫu500 đoạn giữ đủ từng lỗi; bộ đếm đọc layout chứng minh chỉ còn một lần phân tích thay ba; quét sau sửa bỏ lỗi đã sửa, mất ranh giới thu hồi quyền và snapshot cũ không được thay đổi/tái dùng. Đối chiếu riêng assembly B02 với luồng mới trên51 trường hợp giả cho JSON Issue giống từng byte; xem hash trong tài liệu thiết kế. Toàn bộ fixture Word cũ vẫn đi qua CheckCore mới khi chạy thật; CI chỉ biên dịch fixture. Tổng29/8/1, ba bước .64 chưa đóng gói. [Chi tiết](BODY-RULE-SCAN.md).
 
+## B04 — C30 khoảng trắng sát trong ngoặc kép
+
+Ví dụ: `Theo mẫu “ nội dung báo cáo ” đã duyệt.` → `Theo mẫu “nội dung báo cáo” đã duyệt.` Hai mép được tích riêng/nhóm; chọn riêng không đổi phía còn lại hoặc khoảng chữ/phông/cụm lặp chưa chọn. Chọn chung lỗi chữ, bốn nhóm thể thức thân bài và Line vẫn ghép qua CP/whole-story/glyph/native/XML/XPS hiện có. Xóa đúng ASCII spaces có length dương; không thay dấu ngoặc hoặc nội dung trích dẫn.
+
+Chỉ nhận cặp ngoặc kép cong cân bằng, không lồng, ít nhất hai từ có chữ thường, ranh giới và ngữ cảnh rõ. Bỏ qua chữ số/mã/allcaps/một từ, thiếu/lồng/mixed quote, tab/NBSP/control/date/header/unknownXML. Cặp rỗng `“    ”` được guard chung giữ độ rộng khi FixAll. C14 nhận ranh giới “…” để lỗi dấu câu bên trong vẫn phát hiện sau xóa mép, không làm mất lỗi chưa chọn. Đây là quy tắc ứng dụng, tooltip không gán điều khoản pháp lý giả.
+
+Enum nối cuối, BatchPlan chỉ nhận payload xóa spaces và cho chọn cùng phông, nhóm quotes/checkbox và tooltip ba dòng; báo cáo TXT thêm C30/ví dụ/ngoại lệ. Core kiểm dương/âm, ba profile/Unicode/CP, riêng/chung/phông/chữ/4 nhóm thân bài, proof glyph/stale/rollback; Desktop kiểm từng mép/nhóm/all/manual/quét mới. Fixture Word kiểm riêng/chung chữ/baLine, kiểu/cỡ, rollback/mộtUndo/lưu-mở/nguồn; CI chỉ biên dịch. Tổng30/8/1; bốn bước code .64 chưa đóng gói. [Chi tiết](QUOTE-SPACING.md).
+
 ## Tiếp theo
 
 Kiểm tổng thể C26 mới trên Word; mở từng phạm vi thể thức/lỗi chữ có bằng chứng, hoàn thiện đo spacing còn thiếu theo mẫu và ngoại lệ. Không tự đoán ngữ nghĩa hoặc coi nhấn mạnh là sai để xóa. [Chi tiết](BODY-EMPHASIS.md).

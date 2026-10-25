@@ -81,11 +81,11 @@ public static class PunctuationSpaceRules
         text[start..end].Count(char.IsLetter)>=2;
     private static bool Upper(string text,int start,int end)=>text[start..end].All(c=>!char.IsLetter(c) || char.IsUpper(c));
     private static bool LeftBoundary(string text,int start)=>start==0 || text[start-1]==' ' ||
-        text[start-1]=='(' && (start==1 || text[start-2]==' ');
+        text[start-1] is '(' or '“' && (start==1 || text[start-2]==' ');
     private static bool RightBoundary(string text,int end)
     {
         if(end==text.Length || text[end] is ' ' or '\r' or '\n' or '\a' or ',' or ';')return true;
-        if(text[end]==')')return end+1==text.Length || text[end+1] is ' ' or '\r' or '\n' or '\a' or ',' or ';' or '.' or ':' or '!' or '?';
+        if(text[end] is ')' or '”')return end+1==text.Length || text[end+1] is ' ' or '\r' or '\n' or '\a' or ',' or ';' or '.' or ':' or '!' or '?';
         // A sentence-ending dot is allowed; a domain/file extension is not.
         return text[end] is '.' or '!' or '?' && (end+1==text.Length || text[end+1] is ' ' or '\r' or '\n' or '\a');
     }

@@ -45,6 +45,7 @@ internal static class OfficeShortFinalSentenceCheck
         if(test.ReadCheckText()!=expected || test.Check().Any(Chosen) || test.ReadCheckDecorations(probe)!=decoration ||
             !SHA256.HashData(File.ReadAllBytes(path)).SequenceEqual(digest))throw new InvalidOperationException("Lưu/mở câu cuối một từ chưa đúng hoặc nguồn bị đổi.");
         pass("Câu cuối một từ: sửa hai phía, rollback, một Undo, lưu/mở; giữ nguồn/chữ hoa/kiểu");
+        OfficeQuoteSpaceCheck.Run(test,source,folder,pass);
     }
     private static string Create(string source,string folder)
     {

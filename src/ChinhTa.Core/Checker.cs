@@ -5,7 +5,7 @@ namespace ChinhTa.Core;
 public record Paragraph(int Start, string Text, bool Bold = false, float Size = 13,
     int Alignment = 1, string Font = "Times New Roman", bool Italic = false,
     int Color = 0, bool InTable = false, int Page = 1, bool FormatObserved = false, bool FormatMixed = false, bool TextEditable = true, bool BoldMixed = false, OutlineParagraphInfo? Outline = null, bool FormatEditable = false,FormatEvidence? FormatEvidence=null,ObservedParagraphStyle? ParagraphStyle=null,BodyFlow? Flow=null);
-public enum FixKind { Text, NationalHeading, StateMotto, PartyHeading, Advisory, PageLayout, ShapeLine, AdministrativeNumber, AdministrativeDate, AdministrativeFormat, AdministrativePosition, DocumentHeadingFormat, RepeatedText, PunctuationSpace, ParenthesisSpace, SentenceEndSpace, ColonSpace, SentenceInnerSpace, SentenceAfterSpace, OutlineOrder, OutlineMarker, AgencyFormat, AgencyText, RecipientFormat, RecipientText, DocumentTypeText, ParagraphEndSpace, BodyFormat, BodyParagraph, BodyGap, BodyLineSpacing }
+public enum FixKind { Text, NationalHeading, StateMotto, PartyHeading, Advisory, PageLayout, ShapeLine, AdministrativeNumber, AdministrativeDate, AdministrativeFormat, AdministrativePosition, DocumentHeadingFormat, RepeatedText, PunctuationSpace, ParenthesisSpace, SentenceEndSpace, ColonSpace, SentenceInnerSpace, SentenceAfterSpace, OutlineOrder, OutlineMarker, AgencyFormat, AgencyText, RecipientFormat, RecipientText, DocumentTypeText, ParagraphEndSpace, BodyFormat, BodyParagraph, BodyGap, BodyLineSpacing, QuoteSpace }
 public record HeadingFormat(float Size, int? Alignment = null,float? MaximumSize=null,bool RepairInvalidSizes=false)
 {
     public bool Matches(string font,float size,int bold,int italic,int color,int? alignment)=>
@@ -61,6 +61,7 @@ public record Issue(int Start, int Length, string Original, string Replacement,
         : Kind==FixKind.DocumentTypeText ? "Viết hoa tên loại thành “"+Replacement+"”; giữ nội dung trích yếu, phông và căn đoạn."
         : Kind==FixKind.OutlineOrder ? $"Đổi ký hiệu mục {Original} → {Replacement}; giữ nội dung, cần duyệt thứ tự và dẫn chiếu."
         : Kind==FixKind.OutlineMarker ? "Bỏ dấu đầu dòng và dấu cách phân cách; giữ nội dung và thụt đầu dòng, cần duyệt mục cha."
+        : Kind==FixKind.QuoteSpace ? "Xóa dấu cách sát trong ngoặc kép; giữ chữ, dấu ngoặc và khoảng cách chưa chọn, cần duyệt cả câu."
         : Kind==FixKind.SentenceAfterSpace ? "Thêm một dấu cách sau dấu kết câu; giữ chữ, dấu câu và khoảng trước, cần duyệt cả câu."
         : Kind==FixKind.SentenceInnerSpace ? "Xóa dấu cách trước dấu kết câu giữa đoạn; giữ chữ và dấu câu, cần duyệt cả câu."
         : AddsSpaceAfterColon ? "Thêm một dấu cách sau dấu hai chấm; giữ chữ, dấu câu và khoảng trước, cần duyệt cả câu."
@@ -102,7 +103,7 @@ public static class Checker
                     char.IsUpper(word.Value[0]) ? "Đò" : "đò",
                     "Có thể là ‘con đò’. Đây là quy tắc minh họa, cần người dùng xác nhận.", false));
             }
-            var punctuation=PunctuationSpaceRules.Check(p).Concat(ParenthesisSpaceRules.Check(p)).Concat(SentenceEndSpaceRules.Check(p)).Concat(ParagraphEndSpaceRules.Check(p)).Concat(ColonSpaceRules.Check(p)).Concat(SentenceInnerSpaceRules.Check(p)).Concat(SentenceAfterSpaceRules.Check(p)).ToArray();
+            var punctuation=PunctuationSpaceRules.Check(p).Concat(ParenthesisSpaceRules.Check(p)).Concat(QuoteSpaceRules.Check(p)).Concat(SentenceEndSpaceRules.Check(p)).Concat(ParagraphEndSpaceRules.Check(p)).Concat(ColonSpaceRules.Check(p)).Concat(SentenceInnerSpaceRules.Check(p)).Concat(SentenceAfterSpaceRules.Check(p)).ToArray();
             // A punctuation span owns its adjacent spaces; do not offer an overlapping
             // generic spacing write for the same characters in a multi-selection.
             textIssues.RemoveAll(candidate=>punctuation.Any(r=>r.CanFix &&

@@ -14,7 +14,9 @@ B02 mở C27–C29 cho đoạn văn thường có từ nhấn mạnh xen chữ t
 
 B03 gom nhận diện thân bài C26–C29 từ ba lượt còn một lượt trong mỗi lần quét; danh sách lỗi/đề xuất và hậu kiểm giữ nguyên, không tái dùng kết quả qua sửa văn bản. [Thiết kế và kiểm đối chiếu](docs/BODY-RULE-SCAN.md).
 
-Tổng vẫn29/8/1; ba bước. Chưa đóng gói .64, tiếp tục gom5–10 bước. [Phạm vi](docs/BODY-EMPHASIS.md) · [Nhật ký](docs/BATCH-AFTER-0.1.63.md). Bản tải gần nhất vẫn .63; CI không có Word runtime.
+B04 thêm C30: `“ nội dung báo cáo ”` → `“nội dung báo cáo”`; chọn từng mép hoặc chung lỗi chữ/phông/Line, giữ dấu/chữ/kiểu/cỡ và mẫu trống `“    ”`. Dấu ngoặc chưa khép/lồng, mã hoặc XML chưa chắc không cấp sửa C30. [Phạm vi và ví dụ](docs/QUOTE-SPACING.md).
+
+Tổng30/8/1; bốn bước. Chưa đóng gói .64, tiếp tục gom5–10 bước. [Phạm vi](docs/BODY-EMPHASIS.md) · [Nhật ký](docs/BATCH-AFTER-0.1.63.md). Bản tải gần nhất vẫn .63; CI không có Word runtime.
 
 ## Bản thử tích lũy 0.1.63 — năm hạng mục thân bài
 
