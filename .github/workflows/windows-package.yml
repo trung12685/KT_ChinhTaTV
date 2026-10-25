@@ -66,6 +66,8 @@ jobs:
         run: |
           Copy-Item samples artifacts/win-x64/samples -Recurse -Force
           Copy-Item $env:RELEASE_NOTES artifacts/win-x64/
+          Copy-Item docs/BASELINE-0.1.67.json artifacts/win-x64/
+          Copy-Item docs/CHANGES-0.1.65.md artifacts/win-x64/
           Copy-Item docs/RELEASE-CADENCE.md artifacts/win-x64/
           Copy-Item docs/BATCH-AFTER-0.1.59.md artifacts/win-x64/
           Copy-Item docs/BATCH-AFTER-0.1.60.md artifacts/win-x64/

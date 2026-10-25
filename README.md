@@ -2,9 +2,15 @@
 
 Ứng dụng C# / WPF chạy trên Windows với Microsoft Word desktop, làm việc offline trên bản sao DOCX và xem trước bằng XPS. Không gửi nội dung tài liệu tới dịch vụ AI.
 
-**[Danh sách nhóm sửa và bảng kiểm bản thử 0.1.65](docs/SUPPORTED-FIXES-0.1.65.md)** — gồm điều kiện, ví dụ, ngoại lệ ô trống và các mục chỉ cảnh báo.
+**[Danh sách nhóm sửa và bảng kiểm mốc lưu 0.1.67](docs/SUPPORTED-FIXES-0.1.67.md)** — gồm điều kiện, ví dụ, ngoại lệ ô trống và các mục chỉ cảnh báo.
 
 Ưu tiên đã thống nhất: **thể thức → lỗi chữ và lặp từ/cụm từ → ngữ cảnh và thư viện sau cùng**. Phần chính tả tiếng Việt đầy đủ còn cần xây dựng; không coi quy tắc minh họa hiện tại là bộ kiểm hoàn chỉnh.
+
+## Mốc lưu 0.1.67 — trước thử nghiệm tăng tốc
+
+Giữ nguyên chức năng/thuật toán từ 0.1.65 (`56891d501a32f183ba6154e9a5829b2cd65c34e4`), bảng, Preview Word/XPS, hậu kiểm và rollback. Chỉ cập nhật phiên bản, lịch sử báo cáo và tài liệu; chưa áp dụng tối ưu đọc DOCX. Giữ ZIP/source/tag 0.1.67 riêng để quay lại nếu thử nghiệm sau không đạt. Số kiểm đúng commit do pipeline ghi; chưa có xác nhận runtime Word/Office2021 mới.
+
+[Trang phát hành .67](https://github.com/trung12685/KT_ChinhTaTV/releases/tag/v0.1.67) · [Nội dung và cách quay lại](docs/CHANGES-0.1.67.md) · [Danh sách chức năng/ví dụ](docs/SUPPORTED-FIXES-0.1.67.md).
 
 ## Bản thử tích lũy 0.1.65 — sửa cùng cụm ngoặc và dấu câu
 
