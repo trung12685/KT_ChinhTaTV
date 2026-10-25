@@ -28,7 +28,7 @@ public static class ParenthesisSpaceChecks
             "( a )","( a\u0301 )","( x + y )","( alpha = beta )","( tên_tệp )","( host/name )","( host\\name )",
             "( name@example.com )","( nội\tdung )","(\tnội dung )","( nội dung\u00a0 )","(\u00a0nội dung )",
             "( nội\rdung )","( nội\ndung )","( nội dung ) ( phụ ( thêm ) )","( nội dung ) ( còn thiếu",
-            "( nội dung ) )","fn( nội dung )","( nội dung )tiếp","( nội dung. )","( - nội dung )","( nội dung - )",
+            "( nội dung ) )","fn( nội dung )","( nội dung )tiếp","( - nội dung )","( nội dung - )",
             "[ nội dung ]","“ nội dung ”","Số: ( nội dung )","Ninh Bình ( bản nháp ), ngày 03 tháng 10 năm 2026"})
             assert(Find(text).Length==0,"The new rule leaves blank/numeric/technical/all-uppercase/short/nested/unbalanced/unsupported boundary forms outside its repair scope: "+text);
         foreach(string text in new[]{"(    )","Theo mẫu (      ) giữ trống.","(    ) và (    )"})

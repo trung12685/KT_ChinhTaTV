@@ -1,4 +1,6 @@
-# C30 — khoảng trắng sát trong ngoặc kép
+# C30 — khoảng trắng quanh ngoặc kép
+
+Cụm B03–B05 của .65 mở khoảng trước dấu mở và quote thẳng, xem [cụm sửa](DELIMITER-CLUSTER.md); các giới hạn cong-only bên dưới là lịch sử phạm vi .64. B02 sau .64 mở thiếu khoảng sau dấu đóng, xem [phạm vi thêm sau](QUOTE-AFTER-SPACING.md); phần dưới ghi điều kiện xóa mép và câu trích dẫn đã có trong .64.
 
 B04–B05 sau .63 trong đợt .64; gói/kết quả theo đúng commit tại release. Quy tắc ứng dụng về khoảng trắng; không tự gán một điều khoản của NĐ30 cho quy tắc này. Ví dụ `Theo mẫu “ nội dung báo cáo ” đã duyệt.` → `Theo mẫu “nội dung báo cáo” đã duyệt.`
 
@@ -8,6 +10,6 @@ C30 không cấp sửa cho cặp rỗng/ô trống, số/mã/đường dẫn, to
 
 Hai mép có thể tích từng mục, tích nhóm Ngoặc kép hoặc tích tất cả cùng các nhóm khác. Ví dụ `Nội dung  “  kế hoạch kế hoạch  ” đã duyệt;hoàn thành.` → `Nội dung “kế hoạch” đã duyệt; hoàn thành.` khi chọn toàn bộ lỗi chữ hợp lệ. Chỉ tích một mép giữ mép còn lại và các lỗi chưa chọn. C14 nhận ranh giới ngoặc kép, nên `“ nội,dung ”` sửa riêng mép thành `“nội,dung”` vẫn còn lỗi dấu phẩy có thể tích; chọn cả hai nhóm được `“nội, dung”` một lượt.
 
-QuoteSpace nối cuối enum để giữ các giá trị cũ. Payload chỉ nhận xóa spaces, không gắn phép thay chữ/định dạng khác. BatchPlan chấp nhận chọn kèm phông phủ đúng đoạn, các vùng không chồng lấn; các nhóm thể thức thân bài vẫn giữ proof glyph/spacing/source/neighbor riêng. Không thêm đọc COM hoặc xuất XPS vào việc phát hiện C30; giao dịch Word và các hậu kiểm hiện có vẫn áp dụng. Bất kỳ lỗi ghi/lưu/hậu kiểm đều phục hồi cả lượt; một Undo và giữ tệp nguồn.
+QuoteSpace nối cuối enum để giữ các giá trị cũ. Payload chỉ nhận xóa spaces hoặc thêm đúng một ASCII space qua mốc quote đóng đã chứng minh; không gắn phép thay chữ/định dạng khác. BatchPlan chấp nhận chọn kèm phông phủ đúng đoạn, các vùng không chồng lấn; các nhóm thể thức thân bài vẫn giữ proof glyph/spacing/source/neighbor riêng. Không thêm đọc COM hoặc xuất XPS vào việc phát hiện C30; giao dịch Word và các hậu kiểm hiện có vẫn áp dụng. Bất kỳ lỗi ghi/lưu/hậu kiểm đều phục hồi cả lượt; một Undo và giữ tệp nguồn.
 
 Core kiểm NFC/NFD/emoji/CP, các loại trừ và ô trống, ba profile, chọn từng mép/nhóm/all, C14/cụm lặp/phông/bốn nhóm thân bài, giữ glyph/đậm/nghiêng/gạch chân/cỡ đúng, stale/forged payload và rollback. Desktop kiểm chọn nhóm/tri-state/all/manual và quét mới xóa mục đã sửa. Fixture Word có hai biến thể cụm trích dẫn và câu có dấu kết, một mép/chung chữ/baLine, kiểu/cỡ, Undo/rollback/lưu-mở/hash nguồn; Windows CI chỉ biên dịch fixture. Chưa có xác nhận runtime Office2021 cho phần mới.

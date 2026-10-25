@@ -38,7 +38,8 @@ public static class BatchPlan
                 current.Original.Length!=current.Replacement.Length || current.CharacterFormat is not null ||
                 current.Format is not null || current.LineFix is not null || current.CenterFix is not null))
                 throw new InvalidOperationException("Gợi ý viết hoa tên loại chưa hợp lệ. Hãy quét lại.");
-            if(current.Kind is FixKind.ParagraphEndSpace or FixKind.QuoteSpace && (current.Replacement.Length!=0 || current.Original.Any(c=>c!=' ') ||
+            if(current.Kind is FixKind.ParagraphEndSpace or FixKind.QuoteSpace or FixKind.ParenthesisSpace &&
+                (!(current.Replacement.Length==0 && current.Original.All(c=>c==' ') || current.AddsSpaceAfterClosingQuote || current.AddsSpaceBeforeOpeningQuote || current.AddsSpaceBeforeOpeningParenthesis || current.AddsSpaceAfterClosingParenthesis) ||
                 current.CharacterFormat is not null || current.Format is not null || current.LineFix is not null || current.CenterFix is not null))
                 throw new InvalidOperationException("Gợi ý xóa khoảng trắng chưa hợp lệ. Hãy quét lại.");
             if(current.CharacterFormat is CharacterFormat style && (!style.Valid ||
