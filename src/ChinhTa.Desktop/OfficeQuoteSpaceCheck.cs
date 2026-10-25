@@ -12,6 +12,7 @@ internal static class OfficeQuoteSpaceCheck
     {
         RunVariant(test,seed,folder,pass,false);
         RunVariant(test,seed,folder,pass,true);
+        OfficeQuotedPunctuationCheck.Run(test,seed,folder,pass);
     }
     private static void RunVariant(WordSession test,string seed,string folder,Action<string> pass,bool sentenceEnd)
     {

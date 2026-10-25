@@ -3,7 +3,7 @@ using System.Globalization;
 namespace ChinhTa.Core;
 
 // ASCII spaces around comma/semicolon between words, or after a verified simple
-// prose parenthesis. The parenthetical path has its own stricter context gate.
+// prose parenthesis/curly quotation. Delimited paths have a stricter context gate.
 // No semantic inference, number punctuation, general token splitting or tabs.
 public static class PunctuationSpaceRules
 {
@@ -13,7 +13,7 @@ public static class PunctuationSpaceRules
         if(AdministrativeHeaderRules.IsCandidate(text) || text.IndexOfAny(['\t','@','/','\\','_','=','`','<','>','[',']','{','}'])>=0)
             return Array.Empty<Issue>();
         var result=new List<Issue>();
-        Dictionary<int,int>? parentheses=null;
+        Dictionary<char,Dictionary<int,int>>? delimiters=null;
         for(int mark=0;mark<text.Length;mark++)
         {
             if(text[mark] is not (',' or ';'))continue;
@@ -24,10 +24,10 @@ public static class PunctuationSpaceRules
             while(left>0 && WordChar(text[left-1]))left--;
             while(right<text.Length && WordChar(text[right]))right++;
             bool wordLeft=Word(text,left,start) && LeftBoundary(text,left);
-            bool parentheticalLeft=!wordLeft && start>0 && text[start-1]==')' && ParentheticalLeft(start-1);
-            if(!Word(text,end,right) || !RightBoundary(text,right) || !wordLeft && !parentheticalLeft ||
+            bool delimitedLeft=!wordLeft && start>0 && (text[start-1] is ')' or '”') && DelimitedLeft(start-1,text[start-1]);
+            if(!Word(text,end,right) || !RightBoundary(text,right) || !wordLeft && !delimitedLeft ||
                 wordLeft && Upper(text,left,start) && Upper(text,end,right) ||
-                parentheticalLeft && Upper(text,end,right))continue;
+                delimitedLeft && Upper(text,end,right))continue;
             string original=text[start..end],replacement=text[mark]+" ";
             if(original==replacement)continue;
             if(!paragraph.TextEditable)
@@ -42,28 +42,31 @@ public static class PunctuationSpaceRules
                 false,FixKind.PunctuationSpace,Title:text[mark]==','?"Khoảng trắng quanh dấu phẩy":"Khoảng trắng quanh dấu chấm phẩy"));
         }
         return result;
-        bool ParentheticalLeft(int close)
+        bool DelimitedLeft(int close,char closing)
         {
-            // Parse once per paragraph, only if a punctuation candidate follows ')'.
-            if(parentheses is null)
+            // Parse each delimiter kind once per paragraph, only on demand.
+            // Cache failure as an empty map; no repeated scans for later marks.
+            delimiters??=new();
+            if(!delimiters.TryGetValue(closing,out var pairs))
             {
-                parentheses=new();
-                if(!SentenceSpaceContext.Supported(text.TrimEnd('\r','\n','\a')))return false;
-                int open=-1;
+                pairs=new();delimiters.Add(closing,pairs);
+                if(!SentenceSpaceContext.Supported(text.TrimEnd('\r','\n','\a')) ||
+                    closing=='”' && text.IndexOfAny(['"','«','»','„','‟','‘','’'])>=0)return false;
+                char openingMark=closing==')'?'(':'“';int open=-1;
                 for(int i=0;i<text.Length;i++)
-                    if(text[i]=='(')
+                    if(text[i]==openingMark)
                     {
-                        if(open>=0){parentheses.Clear();return false;}
+                        if(open>=0){pairs.Clear();return false;}
                         open=i;
                     }
-                    else if(text[i]==')')
+                    else if(text[i]==closing)
                     {
-                        if(open<0){parentheses.Clear();return false;}
-                        parentheses.Add(i,open);open=-1;
+                        if(open<0){pairs.Clear();return false;}
+                        pairs.Add(i,open);open=-1;
                     }
-                if(open>=0)parentheses.Clear();
+                if(open>=0)pairs.Clear();
             }
-            if(!parentheses.TryGetValue(close,out int opening))return false;
+            if(!pairs.TryGetValue(close,out int opening))return false;
             int leftEnd=opening;
             while(leftEnd>0 && text[leftEnd-1]==' ')leftEnd--;
             if(leftEnd==opening || !SentenceSpaceContext.ClearEnding(text,leftEnd))return false;

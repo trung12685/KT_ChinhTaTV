@@ -1,5 +1,9 @@
 # Tiếp tục phát triển Chính tả Việt
 
+## Sau .64, B01 — C14 dấu câu ngay sau ngoặc kép
+
+Nền `f5971a5a8754df45bf68e2ba845ed4b73893eac4`, gói .64 đạt3357 Core/OpenXML +244 WPF +1 kiểm metadata, chưa Word runtime. C14 nhận dấu phẩy/chấm phẩy sau cặp “…” chứa ít nhất hai từ chữ, có hai từ trái và từ phải rõ; chỉ chuẩn hóa span dấu/space ngoài, giữ quote/nội dung/mép trong. Hai loại ngoặc tròn/kép dùng parser theo từng kind một lần khi cần, giữ guard cũ cho ngoặc tròn và unknown, thêm chặn mixed quote ở nhánh kép. Không thêm COM hoặc cache xuyên sửa, không đổi batch/XPS/Undo/rollback. Core kiểm dương/âm/CP/Unicode/ba profile, riêng/chung C30/chữ/phông/bốn nhóm thân bài, stale/glyph/rollback; fixture Word kiểm trong/ngoài/chung chữ/baLine, nguồn/Undo/lưu-mở, CI chỉ biên dịch. C14 và TXT có ví dụ/giới hạn, tổng30/8/1 giữ nguyên. Một bước code .65 chưa đóng gói, main/stable và gói .64 giữ nguyên; số kiểm mới theo đúng commit tại PR/Actions. [Chi tiết](QUOTED-PUNCTUATION.md), [nhật ký](BATCH-AFTER-0.1.64.md).
+
 ## Sau .63, B05 — giữ dấu kết trong câu trích dẫn, chốt .64
 
 Tiếp nối B04 `eab1f8c3039c0b38ed4184146a79885485492d1a` đạt3313 Core/OpenXML +244 WPF. C30 mở đúng một dấu .?! gắn cuối lời văn rõ, giữ dấu/quote/glyph/kiểu/cỡ, đồng nhất điều kiện nếu một mép đã đúng. Không mở .../?!, nhiều câu, khoảng trước dấu/viết tắt/header/mã/unknown. Core thêm trường hợp mỗi mép/Unicode/CP/dấu/kiểu/sửa chung/stale; fixture C30 có hai biến thể cụm/câu, terminal có kiểu riêng, CI chỉ biên dịch Word. Đủ5 bước, tổng30/8/1; chuẩn bị gói .64, ghi chú và checklist từ catalog hiện hành, TXT ghi đủ tiến độ/ví dụ/giới hạn. Bằng chứng phát hành/CI đúng commit tại PR/release; chưa xác nhận runtime Office2021 hoặc khép phản hồi phông cũ. Main/stable và gói cũ giữ nguyên. [Thay đổi và cách thử](CHANGES-0.1.64.md), [danh sách](SUPPORTED-FIXES-0.1.64.md), [nhật ký](BATCH-AFTER-0.1.63.md).

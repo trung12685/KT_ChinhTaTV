@@ -6,6 +6,12 @@
 
 Ưu tiên đã thống nhất: **thể thức → lỗi chữ và lặp từ/cụm từ → ngữ cảnh và thư viện sau cùng**. Phần chính tả tiếng Việt đầy đủ còn cần xây dựng; không coi quy tắc minh họa hiện tại là bộ kiểm hoàn chỉnh.
 
+## Đợt sau .64 — code .65 đang phát triển
+
+B01 mở C14 cho dấu phẩy/chấm phẩy sau ngoặc kép cong: `Theo mẫu “ nội dung ” ,báo cáo.` → `Theo mẫu “nội dung”, báo cáo.` khi chọn cả dấu câu ngoài và mép trong. Sửa riêng mỗi nhóm giữ nguyên lỗi chưa chọn và kiểu/cỡ của lời trích dẫn; không tự đổi chữ, dấu quote hoặc phán đoán ngữ nghĩa. Cần cặp cân bằng/không lồng và các từ hai phía rõ; số/mã/header/unknown giữ guard cũ.
+
+Tổng30/8/1 giữ nguyên, một bước code .65 chưa đóng gói; tiếp tục gom5–10 bước. [Phạm vi/ví dụ](docs/QUOTED-PUNCTUATION.md) · [Nhật ký đợt](docs/BATCH-AFTER-0.1.64.md). Bản tải gần nhất vẫn .64, CI không chạy Word/Office2021.
+
 ## Bản thử tích lũy 0.1.64 — năm hạng mục sau .63
 
 - B01: sửa phông/màu/cỡ thân bài giữ từng đậm/nghiêng/gạch chân và cỡ13/14 đúng, không ép size cả vùng.

@@ -62,6 +62,7 @@ BodyEmphasisLayoutChecks.Run(Assert);
 BodyRuleScanChecks.Run(Assert);
 QuoteSpaceChecks.Run(Assert);
 QuoteSentenceChecks.Run(Assert);
+QuotedPunctuationChecks.Run(Assert);
 ColonSpaceChecks.Run(Assert);
 ColonAfterSpaceChecks.Run(Assert);
 DevelopmentReportChecks.Run(Assert);
