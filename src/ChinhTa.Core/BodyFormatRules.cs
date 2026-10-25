@@ -65,9 +65,11 @@ public static class BodyFormatRules
         return following.Skip(start).Take(end-start).Where((p,i)=>Prose(p,!greeting && i<2?2:6)).ToArray();
     }
     public static IReadOnlyList<Issue> Check(IReadOnlyList<Paragraph> paragraphs,IReadOnlyList<LayoutParagraph> layout,DocumentProfile profile)
+        =>CheckTargets(RepairTargets(paragraphs,layout,profile));
+    internal static IReadOnlyList<Issue> CheckTargets(IReadOnlyList<Paragraph> targets)
     {
         var result=new List<Issue>();
-        foreach(var row in RepairTargets(paragraphs,layout,profile))
+        foreach(var row in targets)
         {
             // Emphasis is retained per glyph; it never becomes a font/color/size defect.
             var fonts=row.FormatEvidence?.Fonts;

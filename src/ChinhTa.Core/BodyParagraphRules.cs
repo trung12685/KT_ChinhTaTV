@@ -28,9 +28,11 @@ public static class BodyParagraphRules
         fonts.All(f=>f.Known()) && fonts.Any(f=>f.Bold==0 && f.Italic==0);
     public static bool ValidFirst(float value)=>float.IsFinite(value) && (Math.Abs(value-72/2.54f)<.05f || Math.Abs(value-36)<.05f);
     public static IReadOnlyList<Issue> Check(IReadOnlyList<Paragraph> paragraphs,IReadOnlyList<LayoutParagraph> layout,DocumentProfile profile)
+        =>CheckTargets(BodyFormatRules.RepairTargets(paragraphs,layout,profile));
+    internal static IReadOnlyList<Issue> CheckTargets(IReadOnlyList<Paragraph> targets)
     {
         var result=new List<Issue>();
-        foreach(var row in BodyFormatRules.RepairTargets(paragraphs,layout,profile))
+        foreach(var row in targets)
         {
             string text=row.Text.TrimEnd('\r','\n','\a');var style=row.ParagraphStyle;
             if(style is null || !style.Known || style.Spacing is not {Known:true} || style.Alignment is not (0 or 3) ||

@@ -12,7 +12,9 @@ B01 mở C26 sửa phông/màu/cỡ thân bài có nhấn mạnh: Arial đỏ12 
 
 B02 mở C27–C29 cho đoạn văn thường có từ nhấn mạnh xen chữ thường đứng: căn/thụt/khoảng đoạn/giãn dòng sai vẫn có đề xuất, giữ từng đậm/nghiêng/gạch chân và cỡ chữ. Chọn riêng không sửa lỗi phông/chữ chưa chọn; chọn chung bốn nhóm và chữ/Line có hậu kiểm riêng. Đoạn toàn đậm/nghiêng hoặc chưa đủ bằng chứng vẫn không sửa bố cục; mốc mở đầu không Kính gửi giữ guard cũ.
 
-Tổng vẫn29/8/1. Chưa đóng gói .64, tiếp tục gom5–10 bước. [Phạm vi](docs/BODY-EMPHASIS.md) · [Nhật ký](docs/BATCH-AFTER-0.1.63.md). Bản tải gần nhất vẫn .63; CI không có Word runtime.
+B03 gom nhận diện thân bài C26–C29 từ ba lượt còn một lượt trong mỗi lần quét; danh sách lỗi/đề xuất và hậu kiểm giữ nguyên, không tái dùng kết quả qua sửa văn bản. [Thiết kế và kiểm đối chiếu](docs/BODY-RULE-SCAN.md).
+
+Tổng vẫn29/8/1; ba bước. Chưa đóng gói .64, tiếp tục gom5–10 bước. [Phạm vi](docs/BODY-EMPHASIS.md) · [Nhật ký](docs/BATCH-AFTER-0.1.63.md). Bản tải gần nhất vẫn .63; CI không có Word runtime.
 
 ## Bản thử tích lũy 0.1.63 — năm hạng mục thân bài
 

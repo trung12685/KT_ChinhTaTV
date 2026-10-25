@@ -225,9 +225,7 @@ public sealed partial class WordSession : IDisposable
         var issues = Checker.Check(paragraphs, Profile).ToList();
         issues.AddRange(DocumentHeadingRules.Check(paragraphs,headerLayout,Profile));
         issues.AddRange(ComponentRules.Check(paragraphs,headerLayout,Profile));
-        issues.AddRange(BodyFormatRules.Check(paragraphs,headerLayout,Profile));
-        issues.AddRange(BodyParagraphRules.Check(paragraphs,headerLayout,Profile));
-        issues.AddRange(BodySpacingRules.Check(paragraphs,headerLayout,Profile));
+        issues.AddRange(BodyRuleScan.Check(paragraphs,headerLayout,Profile));
         foreach(var issue in issues.Where(i=>!i.CanFix && i.Kind is FixKind.AgencyFormat or FixKind.DocumentHeadingFormat))
         {
             var row=paragraphs.FirstOrDefault(p=>p.Start==issue.Start);

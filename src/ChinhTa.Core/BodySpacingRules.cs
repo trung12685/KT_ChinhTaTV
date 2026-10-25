@@ -36,8 +36,10 @@ public static class BodySpacingRules
         row.Text.TrimEnd('\r','\n','\a')==row.Text.TrimEnd('\r','\n','\a').Trim(' ') &&
         row.FormatEvidence is {Fonts.Count:>0} e && e.Text==row.Text.TrimEnd('\r','\n','\a') && BodyParagraphRules.KnownProseFonts(e.Fonts);
     public static IReadOnlyList<Issue> Check(IReadOnlyList<Paragraph> paragraphs,IReadOnlyList<LayoutParagraph> layout,DocumentProfile profile)
+        =>CheckTargets(paragraphs,BodyFormatRules.RepairTargets(paragraphs,layout,profile));
+    internal static IReadOnlyList<Issue> CheckTargets(IReadOnlyList<Paragraph> paragraphs,IReadOnlyList<Paragraph> targets)
     {
-        var candidates=BodyFormatRules.RepairTargets(paragraphs,layout,profile).Where(Eligible).ToDictionary(p=>p.Start);
+        var candidates=targets.Where(Eligible).ToDictionary(p=>p.Start);
         var result=new List<Issue>();
         foreach(var row in candidates.Values)
         {

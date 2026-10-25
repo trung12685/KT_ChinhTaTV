@@ -1,5 +1,9 @@
 # Tiếp tục phát triển Chính tả Việt
 
+## Sau .63, B03 — một lần nhận diện thân bài trong mỗi lần quét
+
+Tiếp nối B02 `da2a0c8fb13df754fad29c07a6fdc8f9083f49e6` đạt3174 Core/OpenXML +239 WPF. BodyRuleScan.Check tạo snapshot đoạn và RepairTargets một lần, gọi các builder nội bộ C26/C27/C28–C29; CheckCore dùng chung entry này. Giữ API kiểm riêng, payload/nhóm/thứ tự, nguồn quy tắc, adjacency gốc và mọi unknown/guard. Không cache qua sửa/lưu/repagination, không lấy observation cấp write, không bỏ đọc native/XML/XPS hay hậu kiểm/rollback. Core kiểm bằng Issue equality và bộ đếm layout,500 đoạn, ba profile, fresh-scan/stale/source/boundary/no-greeting. So sánh cục bộ thêm với bản B02; Windows build/tests theo đúng commit tại PR/Actions. Ba bước code .64, tổng29/8/1, chưa đóng gói. Chưa đo end-to-end trên Office2021. [Thiết kế](BODY-RULE-SCAN.md), [nhật ký](BATCH-AFTER-0.1.63.md).
+
 ## Sau .63, B02 — bố cục đoạn có từ nhấn mạnh
 
 Tiếp nối B01 `f3d14b5e9634a5dc1c0681fd8e4eb79428c75ea9` đạt3138 Core/OpenXML +239 WPF. C27–C29 nhận đoạn văn thường có một phần chữ thường đứng và các từ nhấn mạnh, khi font/text/XML/paragraph/spacing đã chắc. Không đổi mốc nhận thân bài, loại trừ đoạn toàn đậm/nghiêng/unknown và no-greeting anchors vẫn plain. Writer đoạn/spacing không chạm Font; proof glyph giữ từng bold/italic/underline/cỡ, fingerprint source và đoạn kế, kiểm riêng/chung4 nhóm/chữ/Line, quét mới không giữ mục đã sửa. Core thêm trường hợp mixed, không giảm guard snapshot/context/flow; fixture Word kiểm riêng từng thuộc tính, chung cả4 nhóm/chữ/baLine, rollback/mộtUndo/lưu-mở/nguồn, CI chỉ biên dịch. Hai bước .64 chưa đóng gói, tổng29/8/1. [Chi tiết](BODY-EMPHASIS-LAYOUT.md), [nhật ký](BATCH-AFTER-0.1.63.md).

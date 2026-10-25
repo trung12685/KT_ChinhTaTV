@@ -20,6 +20,14 @@ Ví dụ: đoạn văn thường có từ đậm/nghiêng, căn trái, thụt0, 
 
 Đoạn phải có ít nhất một phần chữ thường đứng đã đọc chắc; toàn đậm/nghiêng hoặc unknown không cấp sửa bố cục. Không mở cấu trúc/mục/bảng/chữ ký, mốc không Kính gửi vẫn hai đoạn plain có proof. Chỉ bỏ guard từ chối mọi nhấn mạnh trong C27–C29; writer đoạn không thêm setter Font. Core kiểm riêng/chung/đổi thứ tự chọn, postcondition từng kiểu/cỡ, stale source/neighbor/context và quét mới; fixture Word kiểm riêng từng căn/gap/line, chung4 nhóm/chữ/baLine, rollback/mộtUndo/lưu-mở/hashnguồn. CI chỉ biên dịch fixture. Tổng29/8/1; hai bước .64 chưa đóng gói.
 
+## B03 — giảm phân tích lặp khi quét thân bài
+
+Trước đây CheckCore gọi C26, C27 và C28/C29 riêng, mỗi nhóm nhận diện lại cùng tên loại/trích yếu/mốc mở đầu/ranh giới và các đoạn văn xuôi. Nay BodyRuleScan chụp một danh sách đoạn trong lần gọi, chạy RepairTargets một lần rồi truyền cùng tập đã chứng minh cho ba bộ chính sách độc lập. Giữ thứ tự C26 → C27 → C29 → C28 và mọi payload/citation/source/neighbor; spacing vẫn xét đoạn liền kề gốc, không dùng danh sách đã lọc để bắc qua đoạn trống/mục/bảng. Profile ngoài Nhà nước/vùng chưa chứng minh trả rỗng.
+
+Không thêm cache dài hạn, không dùng ObservationTargets làm quyền sửa, không bỏ đọc XML/COM/XPS hoặc quét mới trước/sau sửa/lưu/Line. Đây là giảm CPU phân tích trùng; chưa có số đo tốc độ toàn phiên Word/Office2021. Các API kiểm riêng vẫn giữ cho kiểm độc lập và so sánh, không còn gọi ba lần trong CheckCore.
+
+Kiểm hợp đồng đối chiếu toàn bộ Issue và thứ tự trên ba profile, biến thể an toàn/unknown/nhấn mạnh/list/grid/stale/duplicate-start/boundary; no-greeting chưa quan sát không cấp quyền. Mẫu500 đoạn giữ đủ từng lỗi; bộ đếm đọc layout chứng minh chỉ còn một lần phân tích thay ba; quét sau sửa bỏ lỗi đã sửa, mất ranh giới thu hồi quyền và snapshot cũ không được thay đổi/tái dùng. Đối chiếu riêng assembly B02 với luồng mới trên51 trường hợp giả cho JSON Issue giống từng byte; xem hash trong tài liệu thiết kế. Toàn bộ fixture Word cũ vẫn đi qua CheckCore mới khi chạy thật; CI chỉ biên dịch fixture. Tổng29/8/1, ba bước .64 chưa đóng gói. [Chi tiết](BODY-RULE-SCAN.md).
+
 ## Tiếp theo
 
 Kiểm tổng thể C26 mới trên Word; mở từng phạm vi thể thức/lỗi chữ có bằng chứng, hoàn thiện đo spacing còn thiếu theo mẫu và ngoại lệ. Không tự đoán ngữ nghĩa hoặc coi nhấn mạnh là sai để xóa. [Chi tiết](BODY-EMPHASIS.md).
