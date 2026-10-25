@@ -21,13 +21,13 @@ public static class QuoteAfterSpaceChecks
             assert(!Checker.Check([new(0,after)]).Any(i=>i.CanFix),"One combined inner/after-quote batch leaves no stale repaired rows");
         }
         foreach(string text in new[]{"Theo mẫu “nội dung” đã duyệt.","“ nội dung ”đã duyệt.","Mẫu “nội dung”đã duyệt.",
-            "Theo Mẫu “nội dung”đã duyệt.","Theo mẫu“nội dung”đã duyệt.","Theo mẫu “nội”đã duyệt.","Theo mẫu “x y”đã duyệt.",
+            "Theo Mẫu “nội dung”đã duyệt.","Theo mẫu “nội”đã duyệt.","Theo mẫu “x y”đã duyệt.",
             "Theo mẫu “NỘI DUNG”đã duyệt.","Theo mẫu “12 34”đã duyệt.","Theo mẫu “    ”đã duyệt.",
             "Theo mẫu “nội dung”Đã duyệt.","Theo mẫu “nội dung”a duyệt.","Theo mẫu “nội dung”đã x.",
             "Theo mẫu “nội dung”đã", "Theo mẫu “nội dung”đã duyệt.docx", "Theo mẫu “nội dung”đã duyệt.Tiếp tục",
             "Theo mẫu “nội dung.”đã duyệt.","Theo mẫu “nội dung, báo cáo”đã duyệt.","Theo mẫu “kế-hoạch mới”đã duyệt.",
             "Theo mẫu “nội dung “bổ sung” ”đã duyệt.","Theo mẫu “nội dung”đã duyệt “","Theo mẫu “nội dung”đã duyệt ”",
-            "Theo mẫu ‘nội dung’đã duyệt.","Theo mẫu \"nội dung\"đã duyệt.","Tính sin “alpha beta”gamma delta",
+            "Theo mẫu ‘nội dung’đã duyệt.","Tính sin “alpha beta”gamma delta",
             "Theo mẫu “nội dung”đã\tduyệt.","Theo mẫu “nội dung”đã\u00a0duyệt.","Theo mẫu “nội dung”đã duyệt /data",
             "Số: Theo mẫu “nội dung”đã duyệt.","Hà Nội, ngày 03 tháng 10 năm 2026 theo mẫu “nội dung”đã duyệt."})
             assert(Find(text).Length==0,"Uncertain boundaries, words, codes, numeric/blank/uppercase/mixed/nested/unbalanced/terminal/header contexts cannot grant an after-quote insertion: "+text);

@@ -1,6 +1,6 @@
 # C30 — khoảng trắng quanh ngoặc kép
 
-B02 sau .64 mở thiếu khoảng sau dấu đóng, xem [phạm vi thêm sau](QUOTE-AFTER-SPACING.md); phần dưới ghi điều kiện xóa mép và câu trích dẫn đã có trong .64.
+Cụm B03–B05 của .65 mở khoảng trước dấu mở và quote thẳng, xem [cụm sửa](DELIMITER-CLUSTER.md); các giới hạn cong-only bên dưới là lịch sử phạm vi .64. B02 sau .64 mở thiếu khoảng sau dấu đóng, xem [phạm vi thêm sau](QUOTE-AFTER-SPACING.md); phần dưới ghi điều kiện xóa mép và câu trích dẫn đã có trong .64.
 
 B04–B05 sau .63 trong đợt .64; gói/kết quả theo đúng commit tại release. Quy tắc ứng dụng về khoảng trắng; không tự gán một điều khoản của NĐ30 cho quy tắc này. Ví dụ `Theo mẫu “ nội dung báo cáo ” đã duyệt.` → `Theo mẫu “nội dung báo cáo” đã duyệt.`
 

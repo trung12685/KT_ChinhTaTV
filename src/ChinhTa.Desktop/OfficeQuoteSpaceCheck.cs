@@ -14,6 +14,7 @@ internal static class OfficeQuoteSpaceCheck
         RunVariant(test,seed,folder,pass,true);
         OfficeQuotedPunctuationCheck.Run(test,seed,folder,pass);
         OfficeQuoteAfterSpaceCheck.Run(test,seed,folder,pass);
+        OfficeDelimiterClusterCheck.Run(test,seed,folder,pass);
     }
     private static void RunVariant(WordSession test,string seed,string folder,Action<string> pass,bool sentenceEnd)
     {

@@ -30,6 +30,7 @@ public static class IssueTooltipCatalog
         if(issue.Kind==FixKind.OutlineMarker)
             return "Theo yêu cầu người dùng: bỏ dấu - hoặc + nếu chỉ có một dấu cùng cấp trong cùng mục cha.";
         if(Spacing(issue))return "Quy tắc ứng dụng: giữa các từ dùng một dấu cách; giữ ô số/ngày để trống theo mẫu.";
+        if(issue.AddsSpaceBeforeOpeningQuote || issue.AddsSpaceBeforeOpeningParenthesis)return "Quy tắc ứng dụng: có một dấu cách giữa từ và dấu mở ngoặc trong lời văn rõ.";
         if(issue.AddsSpaceAfterClosingQuote)return "Quy tắc ứng dụng: có một dấu cách giữa ngoặc kép đóng và từ tiếp theo trong câu chữ rõ.";
         if(issue.Kind==FixKind.QuoteSpace)return "Quy tắc ứng dụng: không cách sát trong ngoặc kép; có khoảng sau dấu đóng khi tiếp tục lời văn rõ.";
         if(issue.Kind==FixKind.RepeatedText)return "Quy tắc ứng dụng: phát hiện từ/cụm từ giống nhau liền nhau; cần duyệt ngữ cảnh.";
@@ -139,6 +140,8 @@ public static class IssueTooltipCatalog
             FixKind.RepeatedText=>"Bỏ phần lặp đã đánh dấu, giữ lần đầu; cần duyệt cả câu.",
             FixKind.OutlineOrder=>$"Đổi {Brief(issue.Original,20)} → {Brief(issue.Replacement,20)}; giữ nội dung, cần duyệt dẫn chiếu.",
             FixKind.OutlineMarker=>"Bỏ dấu đầu dòng đơn và dấu cách phân cách; giữ nội dung và thụt đầu dòng.",
+            FixKind.QuoteSpace when issue.AddsSpaceBeforeOpeningQuote=>"Thêm một dấu cách trước ngoặc kép mở; giữ chữ, dấu ngoặc và phần chưa chọn.",
+            FixKind.ParenthesisSpace when issue.AddsSpaceBeforeOpeningParenthesis=>"Thêm một dấu cách trước ngoặc tròn mở; giữ chữ, dấu ngoặc và phần chưa chọn.",
             FixKind.QuoteSpace when issue.AddsSpaceAfterClosingQuote=>"Thêm một dấu cách sau ngoặc kép đóng; giữ chữ, dấu ngoặc và mép trong chưa chọn.",
             FixKind.QuoteSpace=>"Bỏ dấu cách sát trong ngoặc kép đã chọn; giữ chữ, dấu ngoặc và khoảng cách chưa chọn.",
             FixKind.PunctuationSpace=>"Bỏ khoảng trước, chuẩn hóa khoảng sau dấu đã chọn; cần duyệt cả câu.",

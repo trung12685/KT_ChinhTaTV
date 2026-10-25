@@ -16,12 +16,17 @@ public sealed partial class WordSession
         if(rows.Length!=1)throw new InvalidOperationException("Mẫu kiểm chưa có một vùng phông hiện tại duy nhất.");
         return ReadCheckSizes(original with {Start=rows[0].Start});
     }
-    internal CharacterStyleEvidence ReadCheckCurrentStyles(string text)
+    internal Issue ReadCheckCurrentParagraph(string text)
     {
         if(LineCheckArtifactFolder is null)throw new InvalidOperationException("Chỉ dùng trong phiên kiểm Word riêng.");
         var rows=lastFormatLayout.Where(p=>p.Text.TrimEnd('\r','\a','\n')==text).ToArray();
         if(rows.Length!=1)throw new InvalidOperationException("Mẫu kiểm chưa có một đoạn hiện tại duy nhất để đối chiếu viết hoa.");
-        dynamic range=document!.Range(rows[0].Start,rows[0].Start+text.Length);
+        return new(rows[0].Start,text.Length,text,text,"",false);
+    }
+    internal CharacterStyleEvidence ReadCheckCurrentStyles(string text)
+    {
+        var row=ReadCheckCurrentParagraph(text);
+        dynamic range=document!.Range(row.Start,row.Start+row.Length);
         try{return VisibleFormatReader.ReadStyles((object)range,text,includeSpacing:true);}finally{Release(range);}
     }
     internal IReadOnlyList<Issue> CaseTrackingRegions(IReadOnlyList<Issue> plan)=>CasePreservationPlan.Regions(plan,lastFormatLayout);

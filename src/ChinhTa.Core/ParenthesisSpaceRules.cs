@@ -19,32 +19,20 @@ public static class ParenthesisSpaceRules
         string text=paragraph.Text;
         if(AdministrativeHeaderRules.IsCandidate(text) || DateWords.IsMatch(text) || text.IndexOfAny(['\t','@','/','\\','_','=','`','<','>','[',']','{','}'])>=0)
             return Array.Empty<Issue>();
-        var pairs=new List<(int Open,int Close)>();
-        int open=-1;
-        for(int i=0;i<text.Length;i++)
-        {
-            if(text[i]=='(')
-            {
-                if(open>=0)return Array.Empty<Issue>();
-                open=i;
-            }
-            else if(text[i]==')')
-            {
-                if(open<0)return Array.Empty<Issue>();
-                pairs.Add((open,i));open=-1;
-            }
-        }
-        if(open>=0)return Array.Empty<Issue>();
+        var pairs=ProseDelimiterContext.Parentheses(text);if(pairs is null)return [];
+        if(pairs.Count==0)return [];
+        bool boundarySupported=SentenceSpaceContext.Supported(text.TrimEnd('\r','\n','\a'));
         var result=new List<Issue>();
         foreach(var pair in pairs)
         {
-            if(pair.Open>0 && text[pair.Open-1]!=' ')continue;
+            bool missingBefore=pair.Open>0 && text[pair.Open-1]!=' ' && ProseDelimiterContext.ClearBefore(text,pair,boundarySupported);
+            if(pair.Open>0 && text[pair.Open-1]!=' ' && !missingBefore)continue;
             int first=pair.Open+1,last=pair.Close;
             while(first<last && text[first]==' ')first++;
             while(last>first && text[last-1]==' ')last--;
-            bool missingAfter=!OutsideBoundary(text,pair.Close+1) && ClearAfterDelimitedText(text,pair.Open,pair.Close,first,last);
+            bool missingAfter=!OutsideBoundary(text,pair.Close+1) && ClearAfterDelimitedText(text,pair.Open,pair.Close,first,last,boundarySupported);
             if(!OutsideBoundary(text,pair.Close+1) && !missingAfter || !Prose(text,first,last) ||
-                !missingAfter && first==pair.Open+1 && last==pair.Close)continue;
+                !missingBefore && !missingAfter && first==pair.Open+1 && last==pair.Close)continue;
             if(!paragraph.TextEditable)
             {
                 string whole=text.TrimEnd('\r','\n','\a');
@@ -52,6 +40,8 @@ public static class ParenthesisSpaceRules
                     "Có khoảng trắng quanh ngoặc cần duyệt ở vùng chưa cho phép sửa chữ. Kiểm tra thủ công.",
                     false,FixKind.ParenthesisSpace,CanFix:false,Title:"Khoảng trắng quanh ngoặc ở vùng có cấu trúc")];
             }
+            if(missingBefore)result.Add(new(paragraph.Start+pair.Open,1,"("," (",
+                "Thêm một dấu cách trước ngoặc tròn mở; giữ chữ, dấu ngoặc và khoảng chưa chọn.",false,FixKind.ParenthesisSpace,Title:"Thiếu khoảng trắng trước dấu mở ngoặc"));
             if(first>pair.Open+1)Add(pair.Open+1,first,"Khoảng trắng sau dấu mở ngoặc");
             if(last<pair.Close)Add(last,pair.Close,"Khoảng trắng trước dấu đóng ngoặc");
             if(missingAfter)result.Add(new(paragraph.Start+pair.Close,1,")",") ",
@@ -67,9 +57,9 @@ public static class ParenthesisSpaceRules
     private static bool Mark(char c)=>char.GetUnicodeCategory(c) is UnicodeCategory.NonSpacingMark or UnicodeCategory.SpacingCombiningMark;
     private static bool Letters(string value)=>value.Count(char.IsLetter)>=2 && value.All(c=>char.IsLetter(c)||Mark(c));
     // Shared strict word context; callers still prove their own balanced pair.
-    internal static bool ClearAfterDelimitedText(string text,int open,int close,int first,int last)
+    internal static bool ClearAfterDelimitedText(string text,int open,int close,int first,int last,bool? supported=null)
     {
-        if(!SentenceSpaceContext.Supported(text.TrimEnd('\r','\n','\a')))return false;
+        if(!(supported??SentenceSpaceContext.Supported(text.TrimEnd('\r','\n','\a'))))return false;
         int leftEnd=open;
         while(leftEnd>0 && text[leftEnd-1]==' ')leftEnd--;
         if(!SentenceSpaceContext.ClearEnding(text,leftEnd))return false;
@@ -89,18 +79,5 @@ public static class ParenthesisSpaceRules
         return end==text.Length || text[end] is ' ' or '\r' or '\n' or '\a' or ',' or ';' ||
             text[end] is '.' or '?' or '!' && (end+1==text.Length || text[end+1] is ' ' or '\r' or '\n' or '\a');
     }
-    private static bool Prose(string text,int start,int end)
-    {
-        if(start==end || !char.IsLetter(text[start]) || !(char.IsLetter(text[end-1]) || Mark(text[end-1])))return false;
-        bool longWord=false,lower=false;int letters=0;
-        for(int i=start;i<end;i++)
-        {
-            char c=text[i];
-            if(char.IsLetter(c)){letters++;longWord|=letters>=2;lower|=char.IsLower(c);}
-            else if(Mark(c))continue;
-            else if(c is ' ' or ',' or ';' or '-' or '–' or '—')letters=0;
-            else return false;
-        }
-        return longWord && lower;
-    }
+    private static bool Prose(string text,int start,int end)=>ProseDelimiterContext.Prose(text,start,end,1);
 }

@@ -27,7 +27,7 @@ public static class ParentheticalPunctuationChecks
         }
         foreach(string text in new[]{"Theo mẫu (nội dung), báo cáo.","Theo mẫu (nội dung); đã duyệt.",
             "(nội dung) ,báo cáo.","Mẫu (nội dung) ,báo cáo.","Theo Mẫu (nội dung) ,báo cáo.",
-            "Theo mẫu(nội dung) ,báo cáo.","Theo mẫu (nội) ,báo cáo.","Theo mẫu (x y) ,báo cáo.",
+            "Theo mẫu (nội) ,báo cáo.","Theo mẫu (x y) ,báo cáo.",
             "Theo mẫu (12 34) ,báo cáo.","Theo mẫu (NỘI DUNG) ,báo cáo.","Theo mẫu (nội dung) ,BC.",
             "Theo mẫu (nội dung) ,12 giờ.","Theo mẫu (nội dung) ,x.","Theo mẫu (nội dung) ,báo.com",
             "Theo mẫu (nội dung) ,;báo cáo.","Theo mẫu (nội dung) ,,báo cáo.",

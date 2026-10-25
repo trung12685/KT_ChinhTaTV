@@ -23,13 +23,13 @@ public static class QuotedPunctuationChecks
             assert(!Checker.Check([new(0,after)]).Any(i=>i.CanFix),"One combined quoted-punctuation repair leaves no stale actionable rows");
         }
         foreach(string text in new[]{"Theo mẫu “nội dung”, báo cáo.","“nội dung” ,báo cáo.","Mẫu “nội dung” ,báo cáo.",
-            "Theo Mẫu “nội dung” ,báo cáo.","Theo mẫu“nội dung” ,báo cáo.","Theo mẫu “nội” ,báo cáo.",
+            "Theo Mẫu “nội dung” ,báo cáo.","Theo mẫu “nội” ,báo cáo.",
             "Theo mẫu “x y” ,báo cáo.","Theo mẫu “12 34” ,báo cáo.","Theo mẫu “NỘI DUNG” ,báo cáo.",
             "Theo mẫu “nội dung” ,BC.","Theo mẫu “nội dung” ,12 giờ.","Theo mẫu “nội dung” ,x.","Theo mẫu “nội dung” ,báo.com",
             "Theo mẫu “nội dung” ,,báo cáo.","Theo mẫu “nội dung” ,;báo cáo.","Theo mẫu “nội dung.” ,báo cáo.",
             "Theo mẫu “nội dung (bổ sung)” ,báo cáo.","Theo mẫu “nội dung “bổ sung” ” ,báo cáo.",
             "Theo mẫu “nội dung” ,báo cáo “","Theo mẫu “nội dung” ,báo cáo ”","Theo mẫu “nội dung” ,báo cáo ‘mẫu’",
-            "Theo mẫu \"nội dung\" ,báo cáo.","Theo mẫu “    ” ,báo cáo.","Tính sin “alpha beta” ,gamma delta",
+            "Theo mẫu “    ” ,báo cáo.","Tính sin “alpha beta” ,gamma delta",
             "Theo mẫu “nội dung”\t,báo cáo.","Theo mẫu “nội dung”,\u00a0báo cáo.","Theo mẫu “nội\ndung” ,báo cáo.",
             "Theo mẫu “nội dung” ,báo cáo /data","Theo mẫu “nội dung” ,báo cáo a=b","Theo mẫu “nội dung” ,báo cáo x+y",
             "Số: Theo mẫu “nội dung” ,báo cáo.","Hà Nội, ngày 03 tháng 10 năm 2026 theo mẫu “nội dung” ,báo cáo."})

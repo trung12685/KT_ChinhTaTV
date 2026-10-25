@@ -1,5 +1,7 @@
 # Xem và xuất tiến độ, chức năng
 
+Mốc .65 gom đủ B01–B05 sau .64. C14/C15/C30 ghi phạm vi mới: dấu câu sau ngoặc, khoảng trước/trong/sau, quote thẳng và câu có dấu kết trong ngoặc tròn; ví dụ tổng hợp, giữ loại dấu/ô trống/unknown. Tổng30/8/1 không đổi; ba hạng mục cuối triển khai chung một lượt, kiểm72 tổ hợp. Metadata gói và số kiểm lấy đúng commit tại pipeline, chưa xác nhận Word runtime; các ghi chú chưa đóng gói bên dưới là lịch sử từng bước.
+
 Đợt sau .64, code .65 chưa đóng gói; B02 mở C30 thêm khoảng sau quote đóng, ví dụ `Theo mẫu “ nội dung ”đã duyệt.` → `Theo mẫu “nội dung” đã duyệt.` khi duyệt cả ba mục. TXT nêu rõ ngữ cảnh trước/trong/sau, giữ quote/chữ/kiểu và phần chưa chọn; hai bước, tổng30/8/1 giữ nguyên.
 
 B01:  B01 mở C14 cho dấu câu sau ngoặc kép cong, giữ quote/chữ/kiểu và mép trong chưa chọn; ví dụ `Theo mẫu “nội dung” ,báo cáo.` → `Theo mẫu “nội dung”, báo cáo.`. TXT thêm phạm vi/ví dụ/giới hạn ở C14 và mốc .65; tổng30/8/1 giữ nguyên. Các nội dung .64 bên dưới là lịch sử phát hành trước, không lấy số kiểm cũ làm bằng chứng cho code mới.

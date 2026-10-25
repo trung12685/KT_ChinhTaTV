@@ -48,7 +48,7 @@ public static class IssueReviewCatalog
             FixKind.RepeatedText=>("repeat","Từ, cụm từ lặp",50,"Lặp từ/cụm từ: "+Brief(issue.Original.Trim(),34)),
             FixKind.PunctuationSpace=>("comma","Dấu phẩy, chấm phẩy",60,issue.Title??"Khoảng trắng quanh dấu câu"),
             FixKind.ParenthesisSpace=>("parenthesis","Ngoặc tròn",61,!issue.CanFix?issue.Title??"Kiểm tra khoảng trắng quanh ngoặc":
-                issue.AddsSpaceAfterClosingParenthesis?"Thiếu khoảng trắng sau dấu đóng ngoặc":"Khoảng trắng sát trong ngoặc tròn"),
+                issue.AddsSpaceBeforeOpeningParenthesis?"Thiếu khoảng trắng trước dấu mở ngoặc":issue.AddsSpaceAfterClosingParenthesis?"Thiếu khoảng trắng sau dấu đóng ngoặc":"Khoảng trắng sát trong ngoặc tròn"),
             FixKind.SentenceEndSpace=>("sentence-end","Dấu kết câu cuối đoạn",62,"Thừa khoảng trước dấu kết câu cuối đoạn"),
             FixKind.ColonSpace=>("colon","Dấu hai chấm",63,!issue.CanFix?issue.Title??"Kiểm tra khoảng trắng quanh dấu hai chấm":
                 issue.AddsSpaceAfterColon?"Thiếu khoảng trắng sau dấu hai chấm":"Thừa khoảng trước dấu hai chấm"),

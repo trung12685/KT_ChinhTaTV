@@ -2,17 +2,21 @@
 
 Ứng dụng C# / WPF chạy trên Windows với Microsoft Word desktop, làm việc offline trên bản sao DOCX và xem trước bằng XPS. Không gửi nội dung tài liệu tới dịch vụ AI.
 
-**[Danh sách nhóm sửa và bảng kiểm bản thử 0.1.64](docs/SUPPORTED-FIXES-0.1.64.md)** — gồm điều kiện, ví dụ, ngoại lệ ô trống và các mục chỉ cảnh báo.
+**[Danh sách nhóm sửa và bảng kiểm bản thử 0.1.65](docs/SUPPORTED-FIXES-0.1.65.md)** — gồm điều kiện, ví dụ, ngoại lệ ô trống và các mục chỉ cảnh báo.
 
 Ưu tiên đã thống nhất: **thể thức → lỗi chữ và lặp từ/cụm từ → ngữ cảnh và thư viện sau cùng**. Phần chính tả tiếng Việt đầy đủ còn cần xây dựng; không coi quy tắc minh họa hiện tại là bộ kiểm hoàn chỉnh.
 
-## Đợt sau .64 — code .65 đang phát triển
+## Bản thử tích lũy 0.1.65 — sửa cùng cụm ngoặc và dấu câu
 
-B01 mở C14 cho dấu phẩy/chấm phẩy sau ngoặc kép cong: `Theo mẫu “ nội dung ” ,báo cáo.` → `Theo mẫu “nội dung”, báo cáo.` khi chọn cả dấu câu ngoài và mép trong. Sửa riêng mỗi nhóm giữ nguyên lỗi chưa chọn và kiểu/cỡ của lời trích dẫn; không tự đổi chữ, dấu quote hoặc phán đoán ngữ nghĩa. Cần cặp cân bằng/không lồng và các từ hai phía rõ; số/mã/header/unknown giữ guard cũ.
+Gom B01–B05 sau .64, trong đó ba hạng mục cuối được xử lý chung một lượt để tăng tiến độ. C14/C15/C30 phối hợp: dấu câu sau ngoặc, thiếu khoảng trước/sau, thừa khoảng trong, ngoặc kép thẳng và câu có dấu kết trong ngoặc tròn. Ví dụ:
 
-B02 mở C30 cho thiếu khoảng sau quote đóng: `Theo mẫu “ nội dung ”đã duyệt.` → `Theo mẫu “nội dung” đã duyệt.` khi chọn cả khoảng trong và sau. Có thể tích từng mép hoặc nhóm, giữ lỗi chưa chọn và kiểu/cỡ của quote; chỉ áp ngữ cảnh chữ rõ, không tự đoán câu/mã. [Phạm vi/ví dụ](docs/QUOTE-AFTER-SPACING.md).
+- `Theo mẫu( nội dung nội dung )đã  duyệt;hoàn thành.` → `Theo mẫu (nội dung) đã duyệt; hoàn thành.`
+- `Theo mẫu" kế hoạch "cần làm.` → `Theo mẫu "kế hoạch" cần làm.`
+- `( Đã hoàn thành. )` → `(Đã hoàn thành.)`.
 
-Tổng30/8/1 giữ nguyên, hai bước code .65 chưa đóng gói; tiếp tục gom5–10 bước. [Phạm vi/ví dụ](docs/QUOTED-PUNCTUATION.md) · [Nhật ký đợt](docs/BATCH-AFTER-0.1.64.md). Bản tải gần nhất vẫn .64, CI không chạy Word/Office2021.
+Giữ loại dấu, nội dung và kiểu/cỡ chưa chọn; ô trống/mã/unknown không được tự xử lý theo nhánh mới. Kiểm72 tổ hợp trước–trong–sau, sửa riêng/chung nhiều nhóm, quét mới, Undo/rollback và lưu/mở; không thay kiểm nét XPS bằng số Shape. Tổng30 đề xuất/8 thủ công/1 minh họa. Chỉ có bản tải khi pipeline đúng commit đạt; chưa xác nhận runtime Word/Office2021.
+
+[Trang phát hành .65](https://github.com/trung12685/KT_ChinhTaTV/releases/tag/v0.1.65) · [Thay đổi/cách thử](docs/CHANGES-0.1.65.md) · [Danh sách](docs/SUPPORTED-FIXES-0.1.65.md) · [Nhật ký](docs/BATCH-AFTER-0.1.64.md). Main/stable .27 và gói .64 giữ nguyên.
 
 ## Bản thử tích lũy 0.1.64 — năm hạng mục sau .63
 

@@ -1,5 +1,9 @@
 # Tiếp tục phát triển Chính tả Việt
 
+## Sau .64, B03–B05 — gom cụm, chốt .65
+
+Tiếp nối B02 `17002f9045ae5919e691ed0e0f8cca49ef10a3f4` đạt3480 Core/OpenXML +249 WPF. Theo phản hồi chia quá nhỏ, triển khai ba hạng mục chung một lượt: thiếu khoảng trước dấu mở, quote thẳng trước/trong/sau/C14/ô trống, câu có .?! trong ngoặc tròn. Parser/prose/prefix chung giữ từng gate; exact anchor payload, phép chiếu giữ dấu, C14 giữ lỗi nội bộ sau sửa mép. Test72 tổ hợp/ba profile/Unicode/CP/unknown, sửa riêng/chung/chữ/phông/bốn nhóm thân bài/stale/glyph/rollback; fixture tổng hợp Word/native CP có nhiều dạng trong cùng DOCX, giữ kiểu/cỡ và nguồn, riêng/chung/baLine/mộtUndo/lưu-mở. CI chỉ biên dịch Word. Đủ5 bước, tổng30/8/1; release notes/catalog/TXT và package sau đúng commit đạt, không suy Word PASS từ CI. [Thay đổi](CHANGES-0.1.65.md), [cụm sửa](DELIMITER-CLUSTER.md), [nhật ký](BATCH-AFTER-0.1.64.md).
+
 ## Sau .64, B02 — C30 thiếu khoảng sau ngoặc kép đóng
 
 Tiếp nối B01 `55f1bfb31ac626a3124b06d4aad0a6f979ade9f2` đạt3420 Core/OpenXML +244 WPF. C30 thêm `”` → `” ` khi hai từ trước, ít nhất hai từ trong và hai từ sau rõ, từ ngay sau thường; giữ mép trong và quote gốc/kiểu/cỡ. C15/C30 dùng chung gate ClearAfterDelimitedText, caller vẫn chứng minh đúng loại cặp và permission; không mở câu có dấu cuối trong quote/mã/unknown. AddsSpaceAfterClosingQuote phân biệt action với xóa mép; BatchPlan chỉ nhận đúng payload thêm1ASCII qua quote hoặc xóa spaces, SharesFormat giữ ghép phông. Nhóm quotes/tooltip3 dòng, chọn từng mép/nhóm/all; TXT đổi tên C30 quanh ngoặc, thêm ví dụ/giới hạn, tổng30/8/1 giữ nguyên. Core/Desktop kiểm riêng/chung/bốn nhóm thân bài/Unicode/CP, giữ quote/glyph/kiểu/cỡ/unknown/stale/forged/rollback và modelquét mới; fixture Word kiểm một phía/chung chữ/baLine, phần chưa chọn, nguồn/Undo/lưu-mở, CI chỉ biên dịch. Hai bước .65 chưa đóng gói. [Chi tiết](QUOTE-AFTER-SPACING.md), [nhật ký](BATCH-AFTER-0.1.64.md).
