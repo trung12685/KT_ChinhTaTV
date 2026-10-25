@@ -46,6 +46,7 @@ public record Issue(int Start, int Length, string Original, string Replacement,
     public bool IsStyleOnly=>CharacterFormat is not null || ParagraphFix is not null || SpacingFix is not null;
     public string DisplayText => Title ?? Original;
     public bool AddsSpaceAfterColon => Kind==FixKind.ColonSpace && Original==":" && Replacement==": ";
+    public bool AddsSpaceAfterClosingQuote => Kind==FixKind.QuoteSpace && Original=="”" && Replacement=="” ";
     public bool AddsSpaceAfterClosingParenthesis => Kind==FixKind.ParenthesisSpace && Original==")" && Replacement==") ";
     public string Suggestion => !CanFix ? "Kiểm tra thủ công; không tự sửa."
         : LineFix is not null ? Prerequisites is {Count:>0} required?$"Sửa kèm {required.Count} mục liên quan, đo lại rồi tạo/đặt lại đường kẻ.":"Tạo/đặt lại Shape Line theo số đo và cấu hình đã chọn."
@@ -61,6 +62,7 @@ public record Issue(int Start, int Length, string Original, string Replacement,
         : Kind==FixKind.DocumentTypeText ? "Viết hoa tên loại thành “"+Replacement+"”; giữ nội dung trích yếu, phông và căn đoạn."
         : Kind==FixKind.OutlineOrder ? $"Đổi ký hiệu mục {Original} → {Replacement}; giữ nội dung, cần duyệt thứ tự và dẫn chiếu."
         : Kind==FixKind.OutlineMarker ? "Bỏ dấu đầu dòng và dấu cách phân cách; giữ nội dung và thụt đầu dòng, cần duyệt mục cha."
+        : AddsSpaceAfterClosingQuote ? "Thêm một dấu cách sau ngoặc kép đóng; giữ chữ, dấu ngoặc và khoảng trong chưa chọn, cần duyệt cả câu."
         : Kind==FixKind.QuoteSpace ? "Xóa dấu cách sát trong ngoặc kép; giữ chữ, dấu ngoặc và khoảng cách chưa chọn, cần duyệt cả câu."
         : Kind==FixKind.SentenceAfterSpace ? "Thêm một dấu cách sau dấu kết câu; giữ chữ, dấu câu và khoảng trước, cần duyệt cả câu."
         : Kind==FixKind.SentenceInnerSpace ? "Xóa dấu cách trước dấu kết câu giữa đoạn; giữ chữ và dấu câu, cần duyệt cả câu."

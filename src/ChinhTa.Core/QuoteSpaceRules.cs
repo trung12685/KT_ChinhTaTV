@@ -2,7 +2,7 @@ using System.Globalization;
 
 namespace ChinhTa.Core;
 
-// Inner ASCII edge spaces only, in a proven simple “...” prose pair.
+// Inner ASCII edge spaces and a proven missing gap after a simple “...” pair.
 // Keep quote marks, all words/runs, internal and outside spacing unchanged.
 public static class QuoteSpaceRules
 {
@@ -26,23 +26,28 @@ public static class QuoteSpaceRules
         var result=new List<Issue>();
         foreach(var pair in pairs)
         {
-            if(pair.Open>0 && text[pair.Open-1] is not (' ' or '(') || pair.Close+1<text.Length &&
-                text[pair.Close+1] is not (' ' or ')' or ',' or ';' or '.' or ':' or '?' or '!'))continue;
+            if(pair.Open>0 && text[pair.Open-1] is not (' ' or '('))continue;
             int first=pair.Open+1,last=pair.Close;
             while(first<last && text[first]==' ')first++;
             while(last>first && text[last-1]==' ')last--;
-            if(first==pair.Open+1 && last==pair.Close || !Prose(text,first,last))continue;
+            bool outside=OutsideBoundary(text,pair.Close+1);
+            bool missingAfter=!outside && ParenthesisSpaceRules.ClearAfterDelimitedText(text,pair.Open,pair.Close,first,last);
+            if(!outside && !missingAfter || !Prose(text,first,last) || !missingAfter && first==pair.Open+1 && last==pair.Close)continue;
             if(!paragraph.TextEditable)return [new(paragraph.Start,text.Length,text,text,
-                "Có khoảng trắng sát trong ngoặc kép ở vùng chưa đối chiếu chắc; kiểm tra thủ công.",
-                false,FixKind.QuoteSpace,CanFix:false,Title:"Kiểm tra khoảng trắng trong ngoặc kép")];
+                "Khoảng trắng quanh ngoặc kép cần duyệt ở vùng chưa đối chiếu chắc; kiểm tra thủ công.",
+                false,FixKind.QuoteSpace,CanFix:false,Title:"Kiểm tra khoảng trắng quanh ngoặc kép")];
             if(first>pair.Open+1)Add(pair.Open+1,first,"Thừa khoảng trắng sau dấu mở ngoặc kép");
             if(last<pair.Close)Add(last,pair.Close,"Thừa khoảng trắng trước dấu đóng ngoặc kép");
+            if(missingAfter)result.Add(new(paragraph.Start+pair.Close,1,"”","” ",
+                "Thêm một dấu cách ASCII sau ngoặc kép đóng; giữ dấu/chữ, mép trong và kiểu/cỡ chưa chọn. Cần duyệt cả câu.",
+                false,FixKind.QuoteSpace,Title:"Thiếu khoảng trắng sau dấu đóng ngoặc kép"));
         }
         return result;
         void Add(int start,int end,string title)=>result.Add(new(paragraph.Start+start,end-start,text[start..end],"",
             "Xóa dấu cách ASCII sát trong ngoặc kép; giữ dấu ngoặc, chữ và khoảng cách chưa chọn. Cần duyệt cả câu.",
             false,FixKind.QuoteSpace,Title:title));
     }
+    private static bool OutsideBoundary(string text,int position)=>position==text.Length || text[position] is ' ' or ')' or ',' or ';' or '.' or ':' or '?' or '!';
     private static bool Mark(char c)=>char.GetUnicodeCategory(c) is UnicodeCategory.NonSpacingMark or UnicodeCategory.SpacingCombiningMark;
     private static bool Prose(string text,int start,int end)
     {

@@ -196,6 +196,7 @@ static class Program
         HierarchicalReviewChecks.Run(Assert);
         BodyReviewChecks.Run(Assert);
 QuoteReviewChecks.Run(Assert);
+QuoteAfterReviewChecks.Run(Assert);
         BodyParagraphWriterChecks.Run(Assert);
         BodySpacingWriterChecks.Run(Assert);
         BodyEmphasisWriterChecks.Run(Assert);

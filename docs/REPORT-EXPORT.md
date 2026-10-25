@@ -1,6 +1,8 @@
 # Xem và xuất tiến độ, chức năng
 
-Đợt sau .64, code .65 chưa đóng gói: B01 mở C14 cho dấu câu sau ngoặc kép cong, giữ quote/chữ/kiểu và mép trong chưa chọn; ví dụ `Theo mẫu “nội dung” ,báo cáo.` → `Theo mẫu “nội dung”, báo cáo.`. TXT thêm phạm vi/ví dụ/giới hạn ở C14 và mốc .65; tổng30/8/1 giữ nguyên. Các nội dung .64 bên dưới là lịch sử phát hành trước, không lấy số kiểm cũ làm bằng chứng cho code mới.
+Đợt sau .64, code .65 chưa đóng gói; B02 mở C30 thêm khoảng sau quote đóng, ví dụ `Theo mẫu “ nội dung ”đã duyệt.` → `Theo mẫu “nội dung” đã duyệt.` khi duyệt cả ba mục. TXT nêu rõ ngữ cảnh trước/trong/sau, giữ quote/chữ/kiểu và phần chưa chọn; hai bước, tổng30/8/1 giữ nguyên.
+
+B01:  B01 mở C14 cho dấu câu sau ngoặc kép cong, giữ quote/chữ/kiểu và mép trong chưa chọn; ví dụ `Theo mẫu “nội dung” ,báo cáo.` → `Theo mẫu “nội dung”, báo cáo.`. TXT thêm phạm vi/ví dụ/giới hạn ở C14 và mốc .65; tổng30/8/1 giữ nguyên. Các nội dung .64 bên dưới là lịch sử phát hành trước, không lấy số kiểm cũ làm bằng chứng cho code mới.
 
 Mốc .64 gom B01–B05 sau .63, tổng30 đề xuất/8 thủ công/1 minh họa. TXT ghi giữ nhấn mạnh/phông/cỡ và căn/spacing, quét chung một lượt nhận diện, C30 mép ngoặc kép và câu có một dấu .?!, đầy đủ ví dụ/ngoại lệ và việc tiếp theo. Metadata gói lấy từ pipeline đúng commit; không dùng tổng kiểm cũ hoặc coi gói thành Word runtime PASS. Các trạng thái chưa đóng gói bên dưới là lịch sử từng bước.
 

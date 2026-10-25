@@ -42,7 +42,7 @@ public static class ParenthesisSpaceRules
             int first=pair.Open+1,last=pair.Close;
             while(first<last && text[first]==' ')first++;
             while(last>first && text[last-1]==' ')last--;
-            bool missingAfter=!OutsideBoundary(text,pair.Close+1) && ClearAfter(text,pair.Open,pair.Close,first,last);
+            bool missingAfter=!OutsideBoundary(text,pair.Close+1) && ClearAfterDelimitedText(text,pair.Open,pair.Close,first,last);
             if(!OutsideBoundary(text,pair.Close+1) && !missingAfter || !Prose(text,first,last) ||
                 !missingAfter && first==pair.Open+1 && last==pair.Close)continue;
             if(!paragraph.TextEditable)
@@ -66,7 +66,8 @@ public static class ParenthesisSpaceRules
     private static bool OutsideBoundary(string text,int position)=>position==text.Length || text[position] is ' ' or '\r' or '\n' or '\a' or ',' or ';' or '.' or ':' or '!' or '?';
     private static bool Mark(char c)=>char.GetUnicodeCategory(c) is UnicodeCategory.NonSpacingMark or UnicodeCategory.SpacingCombiningMark;
     private static bool Letters(string value)=>value.Count(char.IsLetter)>=2 && value.All(c=>char.IsLetter(c)||Mark(c));
-    private static bool ClearAfter(string text,int open,int close,int first,int last)
+    // Shared strict word context; callers still prove their own balanced pair.
+    internal static bool ClearAfterDelimitedText(string text,int open,int close,int first,int last)
     {
         if(!SentenceSpaceContext.Supported(text.TrimEnd('\r','\n','\a')))return false;
         int leftEnd=open;

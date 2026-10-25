@@ -12,6 +12,14 @@ Parser mỗi loại ngoặc một lần khi cần, cache failure chỉ trong l�
 
 README/TXT/nhật ký ghi rõ phạm vi và ví dụ. Một bước .65 chưa đóng gói; kết quả kiểm theo đúng commit tại PR/Actions. [Chi tiết](QUOTED-PUNCTUATION.md).
 
+## B02 — C30 thiếu khoảng sau ngoặc kép đóng
+
+Ví dụ `Theo mẫu “ nội dung ”đã duyệt.` → `Theo mẫu “nội dung” đã duyệt.` khi chọn cả hai mép trong và khoảng sau. Chọn riêng `”` → `” ` giữ hai mép trong; chọn riêng mép trong giữ gap ngoài còn tích được sau quét. Quote gốc và chữ giữ kiểu/cỡ/gạch chân; khoảng mới không được giả lập là glyph cũ.
+
+Cặp cong cân bằng/không lồng và XML chắc; thêm sau chỉ khi hai từ trước, ít nhất hai từ chữ trong và hai từ sau rõ, từ ngay sau thường. C15/C30 dùng chung gate ngữ cảnh, caller vẫn có policy/cặp riêng; không thêm cho mã/hàm/date/header/uppercase/một từ/câu có dấu kết bên trong/mixed/unknown. Payload chỉ đúng1ASCII qua quote đóng; không thêm khoảng qua CP trống hoặc xóa/đổi quote.
+
+Core kiểm âm/dương, từng phía/chung, Unicode/CP/ba profile, giữ quote/glyph/cỡ/nhấn mạnh qua4 nhóm thân bài, stale/forged/rollback. Desktop kiểm ba checkbox cùng nhóm, tri-state/all và quét mới giữ chỉ lỗi chưa chọn. Fixture Word có quote kiểu riêng, sửa ngoài/trong/chung chữ/baLine, phần chưa chọn/Undo/rollback/lưu-mở/nguồn; CI chỉ biên dịch. TXT cập nhật C30 và ví dụ, tổng30/8/1; hai bước .65 chưa đóng gói. [Chi tiết](QUOTE-AFTER-SPACING.md).
+
 ## Tiếp theo
 
 Kiểm tổng thể trên Word/Office2021, xử lý lỗi thực và mở từng phạm vi thể thức/lỗi chữ có chứng cứ. Dấu sau trích dẫn kết bằng .?!, các kiểu quote khác hoặc ngữ cảnh chưa rõ cần nghiên cứu riêng; chưa tự suy nghĩa hoặc đổi loại dấu.

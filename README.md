@@ -10,7 +10,9 @@
 
 B01 mở C14 cho dấu phẩy/chấm phẩy sau ngoặc kép cong: `Theo mẫu “ nội dung ” ,báo cáo.` → `Theo mẫu “nội dung”, báo cáo.` khi chọn cả dấu câu ngoài và mép trong. Sửa riêng mỗi nhóm giữ nguyên lỗi chưa chọn và kiểu/cỡ của lời trích dẫn; không tự đổi chữ, dấu quote hoặc phán đoán ngữ nghĩa. Cần cặp cân bằng/không lồng và các từ hai phía rõ; số/mã/header/unknown giữ guard cũ.
 
-Tổng30/8/1 giữ nguyên, một bước code .65 chưa đóng gói; tiếp tục gom5–10 bước. [Phạm vi/ví dụ](docs/QUOTED-PUNCTUATION.md) · [Nhật ký đợt](docs/BATCH-AFTER-0.1.64.md). Bản tải gần nhất vẫn .64, CI không chạy Word/Office2021.
+B02 mở C30 cho thiếu khoảng sau quote đóng: `Theo mẫu “ nội dung ”đã duyệt.` → `Theo mẫu “nội dung” đã duyệt.` khi chọn cả khoảng trong và sau. Có thể tích từng mép hoặc nhóm, giữ lỗi chưa chọn và kiểu/cỡ của quote; chỉ áp ngữ cảnh chữ rõ, không tự đoán câu/mã. [Phạm vi/ví dụ](docs/QUOTE-AFTER-SPACING.md).
+
+Tổng30/8/1 giữ nguyên, hai bước code .65 chưa đóng gói; tiếp tục gom5–10 bước. [Phạm vi/ví dụ](docs/QUOTED-PUNCTUATION.md) · [Nhật ký đợt](docs/BATCH-AFTER-0.1.64.md). Bản tải gần nhất vẫn .64, CI không chạy Word/Office2021.
 
 ## Bản thử tích lũy 0.1.64 — năm hạng mục sau .63
 
