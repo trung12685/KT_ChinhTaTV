@@ -1,5 +1,9 @@
 # Tiếp tục phát triển Chính tả Việt
 
+## Sau .63, B02 — bố cục đoạn có từ nhấn mạnh
+
+Tiếp nối B01 `f3d14b5e9634a5dc1c0681fd8e4eb79428c75ea9` đạt3138 Core/OpenXML +239 WPF. C27–C29 nhận đoạn văn thường có một phần chữ thường đứng và các từ nhấn mạnh, khi font/text/XML/paragraph/spacing đã chắc. Không đổi mốc nhận thân bài, loại trừ đoạn toàn đậm/nghiêng/unknown và no-greeting anchors vẫn plain. Writer đoạn/spacing không chạm Font; proof glyph giữ từng bold/italic/underline/cỡ, fingerprint source và đoạn kế, kiểm riêng/chung4 nhóm/chữ/Line, quét mới không giữ mục đã sửa. Core thêm trường hợp mixed, không giảm guard snapshot/context/flow; fixture Word kiểm riêng từng thuộc tính, chung cả4 nhóm/chữ/baLine, rollback/mộtUndo/lưu-mở/nguồn, CI chỉ biên dịch. Hai bước .64 chưa đóng gói, tổng29/8/1. [Chi tiết](BODY-EMPHASIS-LAYOUT.md), [nhật ký](BATCH-AFTER-0.1.63.md).
+
 ## Sau .63, B01 — C26 giữ nhấn mạnh
 
 Nền `e693191ff6caf93b0ca28c9532e0df3a7d622f4d` đạt3116 Core +232 WPF +1 metadata gói, chưa Word runtime. C26 có PreserveEmphasis chỉ cho Body, giữ bold/italic/underline và cỡ từng glyph, tránh Size cả vùng và giữ spacing/căn/thụt source. Writer ký tự tách riêng, kiểm text/valid trước setter; proof style đầy đủ thay lượt đọc size riêng bị trùng, không giảm hậu kiểm. Không mở C27–C29 hoặc no-greeting anchors cho nhấn mạnh. Core/Desktop/fixture Word kiểm riêng/chung chữ/Line, stale/drift/COM/Undo/lưu-mở/nguồn, fixture chỉ biên dịch trong CI. Code .64,1 bước, tổng29/8/1, chưa đóng gói. [Phạm vi](BODY-EMPHASIS.md), [nhật ký](BATCH-AFTER-0.1.63.md); số kiểm mới theo đúng commit tại PR/Actions.

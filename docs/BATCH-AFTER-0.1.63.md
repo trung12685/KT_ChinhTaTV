@@ -14,6 +14,12 @@ C26 có proof kiểu đầy đủ gồm cỡ nên không chạy thêm một lư�
 
 Tổng vẫn29 đề xuất/8 thủ công/1 minh họa. Kết quả kiểm theo commit tại PR/Actions; không lấy tổng .63 làm chứng cứ cho code mới. Chưa xác nhận runtime Office2021 hoặc khép phản hồi phông cũ.
 
+## B02 — C27–C29 giữ từ nhấn mạnh
+
+Ví dụ: đoạn văn thường có từ đậm/nghiêng, căn trái, thụt0, Double, khoảng0+0 với đoạn kế → căn đều/thụt1,27cm/Single/sau6pt theo nhóm đã chọn; giữ đậm/nghiêng/gạch chân và từng cỡ. Không buộc chọn sửa phông kèm bố cục. Chọn riêng một thuộc tính giữ toàn bộ lỗi chữ/phông/spacing chưa chọn; chọn chung4 nhóm với chữ và baLine vẫn qua proof glyph, snapshot và XPS thực.
+
+Đoạn phải có ít nhất một phần chữ thường đứng đã đọc chắc; toàn đậm/nghiêng hoặc unknown không cấp sửa bố cục. Không mở cấu trúc/mục/bảng/chữ ký, mốc không Kính gửi vẫn hai đoạn plain có proof. Chỉ bỏ guard từ chối mọi nhấn mạnh trong C27–C29; writer đoạn không thêm setter Font. Core kiểm riêng/chung/đổi thứ tự chọn, postcondition từng kiểu/cỡ, stale source/neighbor/context và quét mới; fixture Word kiểm riêng từng căn/gap/line, chung4 nhóm/chữ/baLine, rollback/mộtUndo/lưu-mở/hashnguồn. CI chỉ biên dịch fixture. Tổng29/8/1; hai bước .64 chưa đóng gói.
+
 ## Tiếp theo
 
 Kiểm tổng thể C26 mới trên Word; mở từng phạm vi thể thức/lỗi chữ có bằng chứng, hoàn thiện đo spacing còn thiếu theo mẫu và ngoại lệ. Không tự đoán ngữ nghĩa hoặc coi nhấn mạnh là sai để xóa. [Chi tiết](BODY-EMPHASIS.md).

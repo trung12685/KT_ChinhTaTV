@@ -17,11 +17,15 @@ public sealed record BodyParagraphFix(ObservedParagraphStyle Before,int? Alignme
         (First is null || First==36 && !BodyParagraphRules.ValidFirst(Before.First)) && (Alignment is not null || First is not null);
     public ObservedParagraphStyle Expected=>Before with {Alignment=Alignment??Before.Alignment,First=First??Before.First};
     public string Suggestion=>(Alignment is null?"":"Căn đều hai lề. ")+(First is null?"":"Thụt dòng đầu 1,27 cm. ")+
-        "Giữ chữ, phông/cỡ, khoảng đoạn và giãn dòng chưa chọn.";
+        "Giữ chữ, đậm/nghiêng/gạch chân, phông/cỡ, khoảng đoạn và giãn dòng chưa chọn.";
 }
 public static class BodyParagraphRules
 {
     public const string Citation="NĐ30, PL I, Phần I.II.6.e (PDF 25): nội dung căn đều hai lề, đầu dòng lùi 1 cm hoặc 1,27 cm. Bước này chưa sửa giãn dòng/khoảng đoạn.";
+    // Fonts are observed only on visible glyphs. Require some plain prose;
+    // an entirely bold/italic paragraph remains outside layout repair scope.
+    public static bool KnownProseFonts(IReadOnlyList<ObservedFont> fonts)=>fonts.Count>0 &&
+        fonts.All(f=>f.Known()) && fonts.Any(f=>f.Bold==0 && f.Italic==0);
     public static bool ValidFirst(float value)=>float.IsFinite(value) && (Math.Abs(value-72/2.54f)<.05f || Math.Abs(value-36)<.05f);
     public static IReadOnlyList<Issue> Check(IReadOnlyList<Paragraph> paragraphs,IReadOnlyList<LayoutParagraph> layout,DocumentProfile profile)
     {
@@ -32,7 +36,7 @@ public static class BodyParagraphRules
             if(style is null || !style.Known || style.Spacing is not {Known:true} || style.Alignment is not (0 or 3) ||
                 row.Outline?.Alignment!=style.Alignment || text!=text.Trim(' ') || Math.Abs(style.Left)>=.05f || Math.Abs(style.Right)>=.05f ||
                 style.First<0 || style.First>144 || !row.FormatObserved || row.FormatEvidence is not { } evidence || evidence.Text!=text ||
-                evidence.Fonts.Count==0 || evidence.Fonts.Any(f=>!f.Known() || f.Bold!=0 || f.Italic!=0))continue;
+                !KnownProseFonts(evidence.Fonts))continue;
             var fix=new BodyParagraphFix(style,style.Alignment==3?null:3,ValidFirst(style.First)?null:36);
             if(!fix.Valid)continue;
             result.Add(new(row.Start,text.Length,text,text,fix.Suggestion,false,FixKind.BodyParagraph,Citation:Citation,

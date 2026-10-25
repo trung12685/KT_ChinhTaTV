@@ -8,7 +8,9 @@
 
 ## Đợt sau .63 — code .64 đang phát triển
 
-B01 mở C26 sửa phông/màu/cỡ thân bài có nhấn mạnh: Arial đỏ12 ở từ đậm xen14 ở từ nghiêng → TNR đen13/14, giữ từng đậm/nghiêng/gạch chân và cỡ đúng. Không mở căn/spacing hoặc mốc mở đầu chưa chắc; không coi nhấn mạnh tự nó là lỗi. Snapshot kiểu/cỡ/đoạn được kiểm sau lưu/Line, sửa riêng/chung chữ, một Undo/rollback. Bỏ lượt đọc cỡ riêng trùng với proof kiểu đầy đủ.
+B01 mở C26 sửa phông/màu/cỡ thân bài có nhấn mạnh: Arial đỏ12 ở từ đậm xen14 ở từ nghiêng → TNR đen13/14, giữ từng đậm/nghiêng/gạch chân và cỡ đúng. Không mở mốc mở đầu chưa chắc; không coi nhấn mạnh tự nó là lỗi. Snapshot kiểu/cỡ/đoạn được kiểm sau lưu/Line, sửa riêng/chung chữ, một Undo/rollback. Bỏ lượt đọc cỡ riêng trùng với proof kiểu đầy đủ.
+
+B02 mở C27–C29 cho đoạn văn thường có từ nhấn mạnh xen chữ thường đứng: căn/thụt/khoảng đoạn/giãn dòng sai vẫn có đề xuất, giữ từng đậm/nghiêng/gạch chân và cỡ chữ. Chọn riêng không sửa lỗi phông/chữ chưa chọn; chọn chung bốn nhóm và chữ/Line có hậu kiểm riêng. Đoạn toàn đậm/nghiêng hoặc chưa đủ bằng chứng vẫn không sửa bố cục; mốc mở đầu không Kính gửi giữ guard cũ.
 
 Tổng vẫn29/8/1. Chưa đóng gói .64, tiếp tục gom5–10 bước. [Phạm vi](docs/BODY-EMPHASIS.md) · [Nhật ký](docs/BATCH-AFTER-0.1.63.md). Bản tải gần nhất vẫn .63; CI không có Word runtime.
 

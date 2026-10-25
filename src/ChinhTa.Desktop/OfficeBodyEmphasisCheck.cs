@@ -59,5 +59,6 @@ internal static class OfficeBodyEmphasisCheck
         if(test.ReadCheckText()!=expectedText || !expected.Matches(test.ReadCheckCurrentStyles(expected.Text)) || !hash.SequenceEqual(SHA256.HashData(File.ReadAllBytes(source))))
             throw new InvalidOperationException("Lưu/mở nhấn mạnh chưa giữ kiểu/cỡ hoặc nguồn bị đổi.");
         pass("C26 giữ nhấn mạnh: riêng/chung chữ và ba Line, giữ đậm/nghiêng/gạch chân/cỡ đúng, rollback/một Undo/lưu-mở/nguồn");
+        OfficeBodyEmphasisLayoutCheck.Run(test,seed,folder,pass);
     }
 }

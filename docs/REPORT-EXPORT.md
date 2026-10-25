@@ -1,6 +1,6 @@
 # Xem và xuất tiến độ, chức năng
 
-Đợt sau .63, code .64 chưa đóng gói: C26 giữ đậm/nghiêng/gạch chân khi sửa phông/màu/cỡ, tránh ép size cả vùng; unknown kiểu/paragraph snapshot không cấp sửa. C27–C29/no-greeting anchors không mở rộng. TXT ghi rõ giới hạn này, tổng vẫn29/8/1; các mốc .63 là lịch sử phát hành trước, không lấy số cũ cho CI mới hoặc coi là Word pass.
+Đợt sau .63, code .64 chưa đóng gói: C26 giữ đậm/nghiêng/gạch chân khi sửa phông/màu/cỡ, tránh ép size cả vùng; unknown kiểu/paragraph snapshot không cấp sửa. B02 mở C27–C29 cho đoạn văn thường có từ nhấn mạnh xen chữ thường đứng; giữ kiểu/cỡ từng glyph, chưa sửa bố cục đoạn toàn đậm/nghiêng hoặc không chắc. No-greeting anchors không mở rộng. TXT có ví dụ và giới hạn từng nhóm, tổng vẫn29/8/1; các mốc .63 là lịch sử phát hành trước, không lấy số cũ cho CI mới hoặc coi là Word pass.
 
 Mốc .63 gom đủ5 bước sau .62, tổng29 đề xuất/8 thủ công/1 minh họa. B05 mở C26–C29 cho văn bản có tên loại không Kính gửi bằng hai mốc văn xuôi XML/layout/kiểu chắc; chưa mở toàn thân bài. TXT giữ ví dụ các lỗi hiện có, giới hạn từng phạm vi, lịch sử B01–B05 và việc còn lại. Các dòng chưa đóng gói bên dưới là lịch sử lúc code chưa đủ5 bước; chỉ metadata/pipeline đúng commit chứng minh gói và số kiểm mới. CI không có Word/Office2021.
 
