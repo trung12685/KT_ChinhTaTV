@@ -25,7 +25,7 @@ public static class QuoteSpaceChecks
             "“ x + y ”","“ alpha = beta ”","“ tên_tệp ”","“ host/name ”","“ host\\name ”","“ name@example.com ”",
             "“ nội\tdung ”","“ nội dung\u00a0 ”","“ nội\rdung ”","“ nội\ndung ”","“ nội\vdung ”",
             "“ nội dung ” “ phụ “ thêm ” ”","“ nội dung ” “ còn thiếu","“ nội dung ” ”","nêu“ nội dung ”","“ nội dung ”tiếp",
-            "“ nội dung. ”","“ - nội dung ”","“ nội dung - ”","\" nội dung \"","‘ nội dung ’","« nội dung »",
+            "“ - nội dung ”","“ nội dung - ”","\" nội dung \"","‘ nội dung ’","« nội dung »",
             "Số: “ nội dung ”","Ninh Bình, ngày “ bản nháp ” tháng 10 năm 2026"})
             assert(Find(text).Length==0,"Ambiguous, blank, numeric, technical, single-word, nested/unbalanced and unsupported quote forms cannot grant edge writes: "+text);
         assert(Apply("Ô trống “    ”; nội dung  đã duyệt.")=="Ô trống “    ”; nội dung đã duyệt.",

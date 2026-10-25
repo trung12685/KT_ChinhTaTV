@@ -46,6 +46,14 @@ public static class QuoteSpaceRules
     private static bool Mark(char c)=>char.GetUnicodeCategory(c) is UnicodeCategory.NonSpacingMark or UnicodeCategory.SpacingCombiningMark;
     private static bool Prose(string text,int start,int end)
     {
+        // One attached sentence-ending mark is retained. Validate its words on
+        // the quote interior so a missing left-edge gap cannot change the role.
+        if(end>start && text[end-1] is '.' or '?' or '!')
+        {
+            string sentence=text[start..(end-1)];
+            if(!SentenceSpaceContext.ClearEnding(sentence,sentence.Length))return false;
+            end--;
+        }
         if(start==end || !char.IsLetter(text[start]) || !(char.IsLetter(text[end-1]) || Mark(text[end-1])))return false;
         int words=0,letters=0;bool longWord=false,lower=false;
         for(int i=start;i<end;i++)

@@ -7,10 +7,16 @@ using ChinhTa.Core;
 namespace ChinhTa.Desktop;
 internal static class OfficeQuoteSpaceCheck
 {
-    private const string Text="Nội dung  “  kế hoạch kế hoạch  ” đã duyệt;hoàn thành.";
+    private const string Simple="Nội dung  “  kế hoạch kế hoạch  ” đã duyệt;hoàn thành.";
     public static void Run(WordSession test,string seed,string folder,Action<string> pass)
     {
-        string source=Path.Combine(folder,"quote-space-input.docx");File.Copy(seed,source);
+        RunVariant(test,seed,folder,pass,false);
+        RunVariant(test,seed,folder,pass,true);
+    }
+    private static void RunVariant(WordSession test,string seed,string folder,Action<string> pass,bool sentenceEnd)
+    {
+        string Text=sentenceEnd?"Nội dung  “  kế hoạch kế hoạch đã duyệt.  ” đã duyệt;hoàn thành.":Simple;
+        string source=Path.Combine(folder,sentenceEnd?"quote-sentence-input.docx":"quote-space-input.docx");File.Copy(seed,source);
         using(var zip=ZipFile.Open(source,ZipArchiveMode.Update))
         {
             var entry=zip.GetEntry("word/document.xml")!;XDocument xml;
@@ -21,9 +27,9 @@ internal static class OfficeQuoteSpaceCheck
                 new XElement(w+"sz",new XAttribute(w+"val",kept?28:26)),new XElement(w+"b",new XAttribute(w+"val",kept?1:0)),
                 new XElement(w+"i",new XAttribute(w+"val",kept?1:0)),new XElement(w+"u",new XAttribute(w+"val",kept?"single":"none"))),
                 new XElement(w+"t",new XAttribute(XNamespace.Xml+"space","preserve"),value));
-            var rows=new[]{new XElement(w+"p",Run("Nội dung  “  "),Run("kế hoạch",true),Run(" kế hoạch  ” đã duyệt;hoàn thành.")),
+            var rows=new[]{new XElement(w+"p",Run("Nội dung  “  "),Run("kế hoạch",true),Run(sentenceEnd?" kế hoạch đã duyệt":" kế hoạch"),Run(sentenceEnd?".":"",true),Run("  ” đã duyệt;hoàn thành.")),
                 new XElement(w+"p",Run("Ô trống “    ” giữ chỗ điền nội dung.")),
-                new XElement(w+"p",Run("“ nội dung ” “ phụ “ thêm ” ”")),new XElement(w+"p",Run("Mẫu “ host/name ” giữ nguyên."))};
+                new XElement(w+"p",Run("“ nội dung ” “ phụ “ thêm ” ”")),new XElement(w+"p",Run("Mẫu “ host/name ” giữ nguyên.")),new XElement(w+"p",Run("“ Đã hoàn thành?! ”"))};
             var body=xml.Descendants(w+"body").Single();
             foreach(var row in rows)if(body.Element(w+"sectPr") is { } section)section.AddBeforeSelf(row);else body.Add(row);
             entry.Delete();using(var output=zip.CreateEntry("word/document.xml").Open())xml.Save(output);
@@ -52,14 +58,14 @@ internal static class OfficeQuoteSpaceCheck
             throw new InvalidOperationException("Rollback ngoặc kép/chữ/Line chưa phục hồi cả lượt.");
         selected=Selected();var result=before.Project(selected.Where(i=>i.LineFix is null).ToArray(),i=>Text[..(i.Start-rowStart)]);
         test.FixSelection(selected);test.Check();string expected=original.Replace(Text,result.Text,StringComparison.Ordinal);
-        if(result.Text!="Nội dung “kế hoạch” đã duyệt; hoàn thành." || test.ReadCheckText()!=expected || test.CheckUndoCount!=1 ||
+        if(result.Text!=(sentenceEnd?"Nội dung “kế hoạch đã duyệt.” đã duyệt; hoàn thành.":"Nội dung “kế hoạch” đã duyệt; hoàn thành.") || test.ReadCheckText()!=expected || test.CheckUndoCount!=1 ||
             !result.Matches(test.ReadCheckCurrentStyles(result.Text)) || test.Check().Any(i=>i.CanFix && i.Kind==FixKind.QuoteSpace))
             throw new InvalidOperationException("Sửa chung ngoặc kép/chữ/baLine chưa giữ kiểu/cỡ hoặc còn mục đã sửa.");
-        string saved=Path.Combine(folder,"quote-space-fixed.docx");test.SaveCopy(saved);test.Undo();test.Check();
+        string saved=Path.Combine(folder,sentenceEnd?"quote-sentence-fixed.docx":"quote-space-fixed.docx");test.SaveCopy(saved);test.Undo();test.Check();
         if(test.ReadCheckText()!=original || !before.Matches(test.ReadCheckCurrentStyles(Text)))throw new InvalidOperationException("Một Undo ngoặc kép chưa giữ chữ và định dạng nguồn.");
         test.Open(saved);test.Check();
         if(test.ReadCheckText()!=expected || !result.Matches(test.ReadCheckCurrentStyles(result.Text)) ||
             !hash.SequenceEqual(SHA256.HashData(File.ReadAllBytes(source))))throw new InvalidOperationException("Lưu/mở ngoặc kép chưa đúng hoặc nguồn đã thay đổi.");
-        pass("Ngoặc kép: chọn một phía/chung chữ/baLine, giữ dấu/Unicode/kiểu/cỡ/ô trống, rollback/mộtUndo/lưu-mở/nguồn");
+        pass((sentenceEnd?"Câu trích dẫn có dấu kết câu: ":"Ngoặc kép: ")+"chọn một phía/chung chữ/baLine, giữ dấu/Unicode/kiểu/cỡ/ô trống, rollback/mộtUndo/lưu-mở/nguồn");
     }
 }

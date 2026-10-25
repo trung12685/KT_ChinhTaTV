@@ -1,6 +1,6 @@
 # C26 — sửa phông/cỡ và giữ nhấn mạnh theo từng ký tự
 
-B01 sau .63, code .64 chưa đóng gói. Phạm vi pháp lý C26 không đổi: NĐ30 Phụ lục I.I.4 và II.6.e cho phông/màu/cỡ lời văn. Đậm/nghiêng trong một câu có thể là nhấn mạnh chủ ý; bước này không kết luận kiểu đó sai hoặc xóa nó.
+B01 sau .63 trong đợt .64; trạng thái gói theo release/metadata đúng commit. Phạm vi pháp lý C26 không đổi: NĐ30 Phụ lục I.I.4 và II.6.e cho phông/màu/cỡ lời văn. Đậm/nghiêng trong một câu có thể là nhấn mạnh chủ ý; bước này không kết luận kiểu đó sai hoặc xóa nó.
 
 Chỉ vùng thân bài đã nhận diện và chữ thuần có proof XML, font/kiểu từng glyph và snapshot căn/thụt/spacing chắc. Không mở bảng/field/list/tiêu đề hoặc vùng chưa xác minh. Nhánh không Kính gửi vẫn cần hai mốc mở đầu không nhấn mạnh; đoạn nhấn mạnh ở phía sau có thể được C26 kiểm riêng.
 

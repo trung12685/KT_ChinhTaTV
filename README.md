@@ -2,21 +2,21 @@
 
 Ứng dụng C# / WPF chạy trên Windows với Microsoft Word desktop, làm việc offline trên bản sao DOCX và xem trước bằng XPS. Không gửi nội dung tài liệu tới dịch vụ AI.
 
-**[Danh sách nhóm sửa và bảng kiểm bản thử 0.1.63](docs/SUPPORTED-FIXES-0.1.63.md)** — gồm điều kiện, ví dụ, ngoại lệ ô trống và các mục chỉ cảnh báo.
+**[Danh sách nhóm sửa và bảng kiểm bản thử 0.1.64](docs/SUPPORTED-FIXES-0.1.64.md)** — gồm điều kiện, ví dụ, ngoại lệ ô trống và các mục chỉ cảnh báo.
 
 Ưu tiên đã thống nhất: **thể thức → lỗi chữ và lặp từ/cụm từ → ngữ cảnh và thư viện sau cùng**. Phần chính tả tiếng Việt đầy đủ còn cần xây dựng; không coi quy tắc minh họa hiện tại là bộ kiểm hoàn chỉnh.
 
-## Đợt sau .63 — code .64 đang phát triển
+## Bản thử tích lũy 0.1.64 — năm hạng mục sau .63
 
-B01 mở C26 sửa phông/màu/cỡ thân bài có nhấn mạnh: Arial đỏ12 ở từ đậm xen14 ở từ nghiêng → TNR đen13/14, giữ từng đậm/nghiêng/gạch chân và cỡ đúng. Không mở mốc mở đầu chưa chắc; không coi nhấn mạnh tự nó là lỗi. Snapshot kiểu/cỡ/đoạn được kiểm sau lưu/Line, sửa riêng/chung chữ, một Undo/rollback. Bỏ lượt đọc cỡ riêng trùng với proof kiểu đầy đủ.
+- B01: sửa phông/màu/cỡ thân bài giữ từng đậm/nghiêng/gạch chân và cỡ13/14 đúng, không ép size cả vùng.
+- B02: căn/thụt/khoảng đoạn/giãn dòng cho đoạn thường có từ nhấn mạnh xen chữ thường đứng; chọn riêng giữ lỗi phông/chữ chưa chọn.
+- B03: nhận diện chung thân bài C26–C29 một lần thay ba lượt trùng trong mỗi lần quét, giữ đầy đủ quét mới và hậu kiểm.
+- B04: C30 `“ nội dung báo cáo ”` → `“nội dung báo cáo”`, giữ mẫu trống `“    ”`.
+- B05: C30 `“ Đã hoàn thành. ”` → `“Đã hoàn thành.”`, giữ dấu kết câu và kiểu/cỡ.
 
-B02 mở C27–C29 cho đoạn văn thường có từ nhấn mạnh xen chữ thường đứng: căn/thụt/khoảng đoạn/giãn dòng sai vẫn có đề xuất, giữ từng đậm/nghiêng/gạch chân và cỡ chữ. Chọn riêng không sửa lỗi phông/chữ chưa chọn; chọn chung bốn nhóm và chữ/Line có hậu kiểm riêng. Đoạn toàn đậm/nghiêng hoặc chưa đủ bằng chứng vẫn không sửa bố cục; mốc mở đầu không Kính gửi giữ guard cũ.
+Tổng30 đề xuất/8 thủ công/1 minh họa. Giữ các guard XML/vùng chưa chắc, chọn riêng/chung chữ/phông/Line, nét XPS thực, một Undo và rollback. Đủ5 bước để đóng gói theo chu kỳ5–10 bước; chỉ có bản tải khi pipeline đúng commit đạt. CI không chạy Word/Office2021, chưa khép phản hồi phông cũ hoặc chứng minh tốc độ toàn phiên Word.
 
-B03 gom nhận diện thân bài C26–C29 từ ba lượt còn một lượt trong mỗi lần quét; danh sách lỗi/đề xuất và hậu kiểm giữ nguyên, không tái dùng kết quả qua sửa văn bản. [Thiết kế và kiểm đối chiếu](docs/BODY-RULE-SCAN.md).
-
-B04 thêm C30: `“ nội dung báo cáo ”` → `“nội dung báo cáo”`; chọn từng mép hoặc chung lỗi chữ/phông/Line, giữ dấu/chữ/kiểu/cỡ và mẫu trống `“    ”`. Dấu ngoặc chưa khép/lồng, mã hoặc XML chưa chắc không cấp sửa C30. [Phạm vi và ví dụ](docs/QUOTE-SPACING.md).
-
-Tổng30/8/1; bốn bước. Chưa đóng gói .64, tiếp tục gom5–10 bước. [Phạm vi](docs/BODY-EMPHASIS.md) · [Nhật ký](docs/BATCH-AFTER-0.1.63.md). Bản tải gần nhất vẫn .63; CI không có Word runtime.
+[Trang phát hành .64](https://github.com/trung12685/KT_ChinhTaTV/releases/tag/v0.1.64) · [Thay đổi/cách thử](docs/CHANGES-0.1.64.md) · [Danh sách chức năng](docs/SUPPORTED-FIXES-0.1.64.md) · [Nhật ký](docs/BATCH-AFTER-0.1.63.md). Main/stable .27 và gói .63 giữ nguyên.
 
 ## Bản thử tích lũy 0.1.63 — năm hạng mục thân bài
 

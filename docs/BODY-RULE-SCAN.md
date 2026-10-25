@@ -1,6 +1,6 @@
 # Quét chung các quy tắc thể thức thân bài
 
-B03 sau .63, code .64 chưa đóng gói. C26 phông/màu/cỡ, C27 căn/thụt và C28–C29 khoảng đoạn/giãn dòng có chung phạm vi nhận diện thân bài. Trước đây mỗi lần CheckCore gọi ba bộ kiểm, dẫn đến ba lần phân tích cùng khối tên loại/trích yếu, mốc mở đầu và ranh giới chữ ký/Nơi nhận.
+B03 sau .63 trong đợt .64; trạng thái gói theo release/metadata đúng commit. C26 phông/màu/cỡ, C27 căn/thụt và C28–C29 khoảng đoạn/giãn dòng có chung phạm vi nhận diện thân bài. Trước đây mỗi lần CheckCore gọi ba bộ kiểm, dẫn đến ba lần phân tích cùng khối tên loại/trích yếu, mốc mở đầu và ranh giới chữ ký/Nơi nhận.
 
 BodyRuleScan.Check chụp danh sách đoạn một lần, gọi RepairTargets một lần rồi chạy ba bộ chính sách độc lập trên đúng tập đã chứng minh đó. Các builder nội bộ không tự nhận diện thêm vùng. API kiểm riêng vẫn nhận diện đầy đủ khi gọi độc lập. CheckCore dùng entry chung; không có cache cấp tài liệu/static hoặc quyền sửa được giữ qua lần gọi tiếp theo.
 

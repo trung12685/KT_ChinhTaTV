@@ -1,6 +1,6 @@
 # C27–C29 — bố cục đoạn văn có từ nhấn mạnh
 
-B02 sau .63, code .64 đang phát triển, chưa có gói Windows mới. Căn cứ NĐ30, Phụ lục I, Phần I, mục II.6, điểm e: nội dung căn đều; đầu dòng lùi 1 cm hoặc 1,27 cm; giữa đoạn tối thiểu 6 pt; giãn dòng từ dòng đơn đến 1,5 dòng. Nhấn mạnh trong câu không tự tạo lỗi căn/spacing.
+B02 sau .63 trong đợt .64; trạng thái gói theo release/metadata đúng commit. Căn cứ NĐ30, Phụ lục I, Phần I, mục II.6, điểm e: nội dung căn đều; đầu dòng lùi 1 cm hoặc 1,27 cm; giữa đoạn tối thiểu 6 pt; giãn dòng từ dòng đơn đến 1,5 dòng. Nhấn mạnh trong câu không tự tạo lỗi căn/spacing.
 
 Phạm vi nhận diện thân bài, XML chữ thuần, ranh giới tên loại/trích yếu và chữ ký/Nơi nhận không đổi. Mọi phông/đậm/nghiêng phải đọc chắc theo đúng text, đoạn có ít nhất một phần chữ thường đứng; có thể xen từ đậm/nghiêng. Đoạn toàn đậm/nghiêng hoặc chưa đọc chắc vẫn không cấp sửa bố cục. Không mở mục, bảng, field, thụt cả đoạn/hanging, căn giữa/phải hoặc mốc mở đầu không Kính gửi có nhấn mạnh.
 

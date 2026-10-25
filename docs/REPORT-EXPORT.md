@@ -1,5 +1,7 @@
 # Xem và xuất tiến độ, chức năng
 
+Mốc .64 gom B01–B05 sau .63, tổng30 đề xuất/8 thủ công/1 minh họa. TXT ghi giữ nhấn mạnh/phông/cỡ và căn/spacing, quét chung một lượt nhận diện, C30 mép ngoặc kép và câu có một dấu .?!, đầy đủ ví dụ/ngoại lệ và việc tiếp theo. Metadata gói lấy từ pipeline đúng commit; không dùng tổng kiểm cũ hoặc coi gói thành Word runtime PASS. Các trạng thái chưa đóng gói bên dưới là lịch sử từng bước.
+
 Đợt sau .63, code .64 chưa đóng gói; B04 bổ sung C30 khoảng trắng trong ngoặc kép cong, ví dụ “ nội dung báo cáo ” → “nội dung báo cáo”. Tổng hiện30 đề xuất/8 thủ công/1 minh họa. C30 ghi rõ giữ dấu/chữ/kiểu và phía chưa chọn, ô trống/unknown ngoài phạm vi, không coi là điều khoản riêng của NĐ30. Các tổng29 ở phần lịch sử B01–B03 dưới đây không phải tổng code B04.
 
 B01–B02: C26 giữ đậm/nghiêng/gạch chân khi sửa phông/màu/cỡ, tránh ép size cả vùng; unknown kiểu/paragraph snapshot không cấp sửa. B02 mở C27–C29 cho đoạn văn thường có từ nhấn mạnh xen chữ thường đứng; giữ kiểu/cỡ từng glyph, chưa sửa bố cục đoạn toàn đậm/nghiêng hoặc không chắc. No-greeting anchors không mở rộng. TXT có ví dụ và giới hạn từng nhóm, tổng vẫn29/8/1; các mốc .63 là lịch sử phát hành trước, không lấy số cũ cho CI mới hoặc coi là Word pass.

@@ -1,6 +1,6 @@
 # Đợt phát triển sau 0.1.63
 
-Nền `e693191ff6caf93b0ca28c9532e0df3a7d622f4d`, tag v0.1.63: 3116 Core/OpenXML +232 WPF +1 kiểm metadata gói; chưa Word runtime. Code0.1.64 đang phát triển, chưa có gói Windows .64. Tích lũy khoảng5–10 bước theo yêu cầu người dùng; main/stable .27 và gói .63 giữ nguyên.
+Nền `e693191ff6caf93b0ca28c9532e0df3a7d622f4d`, tag v0.1.63: 3116 Core/OpenXML +232 WPF +1 kiểm metadata gói; chưa Word runtime. Code0.1.64 gom đủ B01–B05, chuẩn bị gói Windows sau các kiểm bắt buộc đúng commit. Chu kỳ5–10 bước theo yêu cầu người dùng; main/stable .27 và gói .63 giữ nguyên.
 
 ## B01 — C26 giữ chữ nhấn mạnh
 
@@ -35,6 +35,14 @@ Ví dụ: `Theo mẫu “ nội dung báo cáo ” đã duyệt.` → `Theo mẫ
 Chỉ nhận cặp ngoặc kép cong cân bằng, không lồng, ít nhất hai từ có chữ thường, ranh giới và ngữ cảnh rõ. Bỏ qua chữ số/mã/allcaps/một từ, thiếu/lồng/mixed quote, tab/NBSP/control/date/header/unknownXML. Cặp rỗng `“    ”` được guard chung giữ độ rộng khi FixAll. C14 nhận ranh giới “…” để lỗi dấu câu bên trong vẫn phát hiện sau xóa mép, không làm mất lỗi chưa chọn. Đây là quy tắc ứng dụng, tooltip không gán điều khoản pháp lý giả.
 
 Enum nối cuối, BatchPlan chỉ nhận payload xóa spaces và cho chọn cùng phông, nhóm quotes/checkbox và tooltip ba dòng; báo cáo TXT thêm C30/ví dụ/ngoại lệ. Core kiểm dương/âm, ba profile/Unicode/CP, riêng/chung/phông/chữ/4 nhóm thân bài, proof glyph/stale/rollback; Desktop kiểm từng mép/nhóm/all/manual/quét mới. Fixture Word kiểm riêng/chung chữ/baLine, kiểu/cỡ, rollback/mộtUndo/lưu-mở/nguồn; CI chỉ biên dịch. Tổng30/8/1; bốn bước code .64 chưa đóng gói. [Chi tiết](QUOTE-SPACING.md).
+
+## B05 — câu trích dẫn có dấu kết câu và chốt đợt
+
+Ví dụ: `“ Đã hoàn thành. ”` → `“Đã hoàn thành.”`, tương tự dấu ? và !. C30 chỉ xóa mép trong, giữ dấu kết và từng kiểu/cỡ/gạch chân; xét lời văn trước dấu trên phần trong cặp để chọn một mép hay hai mép có cùng điều kiện. Giữ guard cho chuỗi .../?!, nhiều câu, khoảng trước dấu, viết tắt/mã, thiếu/lồng/unknown và mẫu trống. C30 vẫn một nhóm, tổng30/8/1.
+
+Core kiểm .?!, Unicode tổ hợp, từng tổ hợp mép đã đúng/sai, giữ từng quote/dấu/glyph/paragraph, âm/unknown ba profile, sửa riêng/chung chữ và stale. Fixture Word C30 chạy hai biến thể cụm và câu, dấu kết có kiểu riêng để kiểm không mất cỡ/nhấn mạnh/gạch chân qua chung chữ/baLine, rollback/mộtUndo/lưu-mở/nguồn; CI chỉ biên dịch.
+
+Đủ5 hạng mục. Chuẩn bị CHANGES/SUPPORTED .64, danh mục lấy từ catalog hiện hành30/8/1 có ví dụ và việc tiếp theo; TXT mốc .64 ghi đủ B01–B05. Workflow gói kèm nhật ký và các tài liệu mới. Chỉ tạo nhánh release/windows-0.1.64 sau Windows checks đúng commit đạt; sau đó kiểm lần nữa metadata/gói/tag/asset/hash trước cung cấp link. Không ghi đè .63/main/stable, không coi CI/gói thành Word Office2021 PASS.
 
 ## Tiếp theo
 
