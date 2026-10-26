@@ -1,5 +1,9 @@
 # Chính tả Việt
 
+## Đợt thể thức04: hậu kiểm cả lượt (.70, chưa đóng gói)
+
+Sửa lỗi PAGE bị từ chối khi footer chỉ có khoảng trắng; kiểm điều kiện khổ/lề từ gói Word hiện tại đầy đủ để không bỏ sót cấu hình đóng sách. Sau mọi bước lưu/mở, kiểm lại chữ/phông/cỡ/gạch chân/căn-khoảng đoạn và các Line đã chọn; tiến độ giữ một tổng cho cả lượt. Có mẫu bảy mục sửa chung và rollback; CI chưa thay thế kiểm thực tế Office2021. [Chi tiết và ví dụ](docs/FORMAT-BATCH-04.md). Tổng vẫn33/8/1, chưa phát hành .70.
+
 
 ## Đợt thể thức03: số trang/PAGE (.70, chưa đóng gói)
 

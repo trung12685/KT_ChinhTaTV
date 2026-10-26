@@ -283,6 +283,15 @@ public sealed partial class WordSession : IDisposable
                     false, FixKind.ShapeLine, CanFix:false, Title:"Chưa kiểm tra đường kẻ dưới " + label));
             }
         }
+        // Page eligibility needs settings and header/footer relationships from
+        // the full current document, not the body range used for CP mapping.
+        string? pageXml=null;PageNumberPackage? pagePackage=null;
+        if(Profile==DocumentProfile.State && bodyXml is not null)
+        {
+            try{pageXml=PageNumberDocumentReader.ReadXml((object)document!);pagePackage=PageNumberPackage.FromFlat(pageXml);}
+            catch(Exception error) when(error is InvalidOperationException or System.Xml.XmlException)
+            {pageXml=null;Diagnostics.Write("Word.Page.ScopeUnavailable",error);}
+        }
         if (Profile != DocumentProfile.Personal)
         {
             dynamic sections = document.Sections;
@@ -302,8 +311,8 @@ public sealed partial class WordSession : IDisposable
                             (double)setup.TopMargin * mmPerPoint, (double)setup.BottomMargin * mmPerPoint,
                             (double)setup.LeftMargin * mmPerPoint, (double)setup.RightMargin * mmPerPoint,
                             (int)setup.MirrorMargins != 0);
-                        if(count==1 && Profile==DocumentProfile.State && bodyXml is not null && !textProofUnavailable && textProofWarning is null &&
-                            PageLayoutGuard.Eligible(System.Xml.Linq.XDocument.Parse(bodyXml),layout))layout=layout with {RepairEligible=true};
+                        if(count==1 && Profile==DocumentProfile.State && pageXml is not null && !textProofUnavailable && textProofWarning is null &&
+                            PageLayoutGuard.Eligible(System.Xml.Linq.XDocument.Parse(pageXml),layout))layout=layout with {RepairEligible=true};
                         issues.AddRange(PageRules.Check(layout, Profile));
                     }
                     finally { Release(range); Release(setup); Release(section); }
@@ -311,12 +320,12 @@ public sealed partial class WordSession : IDisposable
             }
             finally { Release(sections); }
         }
-        if(Profile==DocumentProfile.State && bodyXml is not null)
+        if(Profile==DocumentProfile.State && pagePackage is not null)
         {
             try
             {
                 var anchor=paragraphs.FirstOrDefault(p=>p.Text.Length>0 && !char.IsControl(p.Text[0]) && !char.IsWhiteSpace(p.Text[0]));
-                if(anchor is not null)issues.AddRange(PageNumberRules.Check(PageNumberDocumentReader.ReadCurrent((object)document!),(int)document.ComputeStatistics(2),anchor.Start,anchor.Text[..1],Profile));
+                if(anchor is not null)issues.AddRange(PageNumberRules.Check(pagePackage,(int)document.ComputeStatistics(2),anchor.Start,anchor.Text[..1],Profile));
             }
             catch(Exception error) when(error is InvalidOperationException or System.Xml.XmlException)
             {Diagnostics.Write("Word.PageNumber.ScopeUnavailable",error);}

@@ -1,5 +1,11 @@
 # Chính tả Việt 0.1.70 — tích lũy thể thức văn bản, chưa phát hành
 
+## Đợt thể thức04 — hậu kiểm phối hợp (26/10/2026)
+
+Sửa fingerprint PAGE sai khi footer có run chỉ chứa khoảng trắng; giữ nguyên nội dung này trong Flat OPC và candidate DOCX. Điều kiện sửa khổ/lề đọc settings/quan hệ từ Document.WordOpenXML đầy đủ, không kết luận từ body range thiếu dữ liệu. Các wrapper trang/PAGE cùng chụp kỳ vọng toàn lựa chọn và kiểm lại chữ/phông/cỡ/căn-khoảng đoạn/tâm/nét Line sau bước cuối, trước commit; một Undo/rollback. Tiến độ lồng dùng chung tổng, không đổi mẫu số hay xác nhận lặp nhóm con.
+
+Có kiểm lỗi tái hiện trước-sau, giữ cỡ13/14/gạch chân, đổi CP sau mở lại, mốc thiếu/trùng/lệch, late failure và mẫu bảy mục trang/PAGE/phông/chữ/ba Line; kịch bản Office có fault ba giai đoạn/Undo/lưu-mở nhưng chưa chạy Word thực. Tổng vẫn33/8/1; năm đợt tích lũy, chưa phát hành .70. Xem [FORMAT-BATCH-04.md](FORMAT-BATCH-04.md).
+
 Thay đổi trong mã, chưa tạo gói Windows cho riêng bước này. Tiếp nối 0.1.69 (`7f16a0b599a0e627203941b87af3f790c2c45c73`). Mốc .67 và mọi tag/gói cũ giữ nguyên.
 
 ## Kết quả người dùng cung cấp

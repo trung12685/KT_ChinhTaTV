@@ -7,7 +7,7 @@ namespace ChinhTa.Desktop;
 public sealed partial class WordSession
 {
     private string ReadPageBodyXml()
-    {dynamic content=document!.Content;try{return (string)content.WordOpenXML;}finally{Release(content);}}
+        =>PageNumberDocumentReader.ReadXml((object)document!);
     private SectionLayout ReadCurrentPageLayout()
     {
         dynamic sections=document!.Sections;
@@ -51,17 +51,11 @@ public sealed partial class WordSession
             throw new InvalidOperationException("Gợi ý trang hoặc điều kiện sửa đã thay đổi; hãy quét lại.");
         BatchPlan.Validate(selected,ReadIssueText);
         var references=remaining.Select(i=>new PageSelectionReference(i,ReadPrefix(i))).ToArray();
-        string original=ReadStoryText();
-        var text=remaining.Where(i=>StagedRepairBatch.Stage(i)==RepairStage.Text).ToArray();
-        string expected=AtomicTextBatch.ExpectedStory(text,original,ReadPrefix);
-        var geometry=remaining.Where(i=>i.LineFix is not null || i.CenterFix is not null).Select(i=>new DeferredRepair(i,
-            StagedRepairBatch.ExpectedReference(i,text,original,ReadPrefix))).ToArray();
-        var geometryPrefixes=geometry.ToDictionary(r=>r.Requested,r=>AtomicTextBatch.ExpectedStory(
-            text.Where(t=>(long)t.Start+t.Length<=r.Requested.Start).ToArray(),ReadPrefix(r.Requested),ReadPrefix));
+        string original=ReadStoryText();var postconditions=CaptureSelectionPostconditions(selected,original);
         Checkpoint();string before=Path.Combine(folder,Guid.NewGuid()+".page.undo.docx"),candidate=Path.Combine(folder,Guid.NewGuid()+".page.candidate.docx");
         File.Copy(RecoveryPath,before);string xmlBefore=ReadPageBodyXml();
         int depth=undoCheckpoints.Count;bool previousChanged=Changed,restored=false,committed=false;
-        var oldLines=verifiedLineEdits.ToArray();var previousProgress=repairProgress;repairProgress=new(selected.Count,ProgressReporter);
+        var oldLines=verifiedLineEdits.ToArray();var previousProgress=repairProgress;repairProgress=RepairProgressTracker.ForSelection(repairProgress,selected.Count,ProgressReporter);
         RepairBatchResult otherResult=new(0,0,0);
         try
         {
@@ -102,19 +96,9 @@ public sealed partial class WordSession
                 {
                     Progress(RepairActivity.Verifying,"Kiểm cả lượt: thiết lập trang, chữ/bảng và trang XPS; các Line dùng số đo mới.");
                     Checkpoint();CheckCore();
-                    if(ReadStoryText()!=expected || !PageLayoutFix.Matches(fix.After,ReadCurrentPageLayout()))throw new InvalidOperationException("Hậu kiểm cả lượt sửa trang/chữ chưa đạt.");
+                    if(ReadStoryText()!=postconditions.Expected || !PageLayoutFix.Matches(fix.After,ReadCurrentPageLayout()))throw new InvalidOperationException("Hậu kiểm cả lượt sửa trang/chữ chưa đạt.");
                     if(remaining.Length==0)DocxPageLayoutEditor.VerifyBody(xmlBefore,ReadPageBodyXml(),fix);
-                    if(geometry.Length>0)
-                    {
-                        var final=ReadStagedReview(expected);
-                        foreach(var request in geometry)
-                        {
-                            if(StagedGeometryResolver.Resolve(request,final) is not null)throw new InvalidOperationException("Còn mục hình học đã chọn chưa đạt sau cả lượt sửa trang.");
-                            var probe=request.Requested.LineFix is { } line?final.Lines.Single(t=>t.Role==line.Role).Probe:
-                                final.Centers.Single(e=>e.Target.Role==request.Requested.CenterFix!.Role).Target.Probe;
-                            if(ReadPrefix(probe)!=geometryPrefixes[request.Requested])throw new InvalidOperationException("Mốc hình học sau sửa trang chưa khớp ngữ cảnh đã duyệt.");
-                        }
-                    }
+                    VerifySelectionPostconditions(postconditions);
                     VerifyPagePreview(fix.After);
                 },
                 ()=>

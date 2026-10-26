@@ -15,7 +15,7 @@ public sealed class PageNumberPackage
     public static PageNumberPackage FromFlat(string xml)
     {
         XNamespace pkg="http://schemas.microsoft.com/office/2006/xmlPackage";
-        var doc=XDocument.Parse(xml);if(doc.Root?.Name!=pkg+"package")throw new InvalidOperationException("Không có gói Word hiện tại đầy đủ.");
+        var doc=XDocument.Parse(xml,LoadOptions.PreserveWhitespace);if(doc.Root?.Name!=pkg+"package")throw new InvalidOperationException("Không có gói Word hiện tại đầy đủ.");
         var parts=new Dictionary<string,XDocument>(StringComparer.Ordinal);
         foreach(var p in doc.Root.Elements(pkg+"part"))
         {
