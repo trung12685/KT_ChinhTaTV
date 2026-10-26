@@ -6,6 +6,12 @@
 
 Ưu tiên đã thống nhất: **thể thức → lỗi chữ và lặp từ/cụm từ → ngữ cảnh và thư viện sau cùng**. Phần chính tả tiếng Việt đầy đủ còn cần xây dựng; không coi quy tắc minh họa hiện tại là bộ kiểm hoàn chỉnh.
 
+## Mã .70 — bộ đọc cũ làm mặc định
+
+Phản hồi .69 trên file đang so: bật thử nghiệm quét5,0s/dựng1,8s; tắt quét2,1s/dựng1,2s. Đặt backend và checkbox mặc định tắt, đổi nhãn thành “Thử bộ đọc mới (đang đánh giá)”. Giữ nguyên bảng/Preview và mọi luật/hậu kiểm. Người dùng đang có .69 có thể tiếp tục để bỏ tích, chưa cần tải bản mới. Mã .70 chưa đóng gói cho riêng bước này.
+
+[Kết quả thử](docs/PERFORMANCE-FEEDBACK.md) · [Thay đổi](docs/CHANGES-0.1.70.md).
+
 ## Thử nghiệm đọc 0.1.69 — giảm trao đổi Word/COM
 
 Duyệt đoạn tuần tự có kiểm đủ/thứ tự, dùng chung phông/thuộc tính đoạn khi Word xác nhận đồng nhất, chuẩn bị chữ một lần cho cùng XPS và giữ Word riêng qua các lần mở. Có fallback và bật/tắt; giữ bảng, full Preview, nét XPS, hậu kiểm/Undo/rollback. Hiện thời gian mở ngoài Quét/dựng trang. Phản hồi .68 tăng tốc ít được giữ làm căn cứ đo tiếp, không tuyên bố tốc độ toàn bộ từ số getter giả lập. Mốc .67 và .68 giữ nguyên.

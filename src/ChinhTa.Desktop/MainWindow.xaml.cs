@@ -122,7 +122,7 @@ public partial class MainWindow : Window
         CoverageInfo.Visibility=session.CoverageNotice is null?Visibility.Collapsed:Visibility.Visible;
         Status.Text = $"{Path.GetFileName(session.Source)} — {found.Count} cảnh báo. " +
             $"Quét: {checkSeconds:F1}s; dựng trang: {timer.Elapsed.TotalSeconds - checkSeconds:F1}s. " +
-            (session.UseOptimizedReading?"Đọc tối ưu thử nghiệm. ":"Đọc theo cách cũ. ")+
+            (session.UseOptimizedReading?"Bộ đọc mới đang thử nghiệm. ":"Đọc theo cách cũ. ")+
             "Chọn hoặc rê chuột lên lỗi để đánh dấu riêng, không xuất lại Word." +
             (session.Recovered ? " Đã khôi phục kết nối Word từ bản lưu gần nhất." : "");
     }

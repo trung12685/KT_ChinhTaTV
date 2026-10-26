@@ -1,5 +1,9 @@
 # Tiếp tục phát triển Chính tả Việt
 
+## .70 — dừng bật mặc định thử nghiệm đọc
+
+Phản hồi26/10/2026: .69 bật5,0s+1,8s, tắt2,1s+1,2s; tổng báo cáo12,9s/6,1s, chưa kiểm soát lạnh/ấm. Đặt backend/checkbox cùng false, đổi nhãn trung tính; giữ legacy reader, bảng/Preview, editor/hậu kiểm/rollback. Thêm kiểm cấu hình WPF, chạy CI đúng commit. Chưa tạo gói cho riêng bước này; đang có .69 dùng tùy chọn tắt được ngay. Ghi feedback có phạm vi, không kết luận nguyên nhân riêng hoặc Office2021 PASS. [Kết quả](PERFORMANCE-FEEDBACK.md), [thay đổi](CHANGES-0.1.70.md).
+
 ## Thử nghiệm .69 — sau phản hồi .68 cải thiện ít
 
 Ngày26/10/2026: chuyển trọng tâm sang trao đổi Word/COM và chuẩn bị vị trí Preview. Năm hạng mục: private Word warm-open; enumeration có fallback; batch phông; batch thuộc tính đoạn có chứng cứ; prepared preview text có ràng buộc phiên XPS. Hiện thêm thời gian mở/tổng và counters để xác định phần chậm thực tế. Giữ full bảng/Preview, quyền sửa và toàn bộ editor/hậu kiểm/rollback. Bộ thử so evidence/getters, CP/lỗi/mixed, lookup Unicode/khoảng trắng/mơ hồ và reset XPS. Source .67/.68/main giữ nguyên; không tuyên bố giảm thời gian Office từ mô hình hoặc XML. [Chi tiết và cách đo](CHANGES-0.1.69.md).

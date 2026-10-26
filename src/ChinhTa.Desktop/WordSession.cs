@@ -23,7 +23,7 @@ public sealed partial class WordSession : IDisposable
     public IReadOnlyList<WordLineShape> LineShapes { get; private set; } = [];
     public bool HasGroupedShapes { get; private set; }
     public string? CoverageNotice { get; private set; }
-    public bool UseOptimizedReading { get; set; }=true;
+    public bool UseOptimizedReading { get; set; }=false;
     public DocumentProfile Profile { get; set; } = DocumentProfile.State;
     public bool Recovered { get; private set; }
     public string RecoveryPath => Path.Combine(folder, "working.docx");

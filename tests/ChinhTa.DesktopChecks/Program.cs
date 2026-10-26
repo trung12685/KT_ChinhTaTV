@@ -192,6 +192,18 @@ static class Program
         NativeParagraphTraversalChecks.Run(Assert);
         BatchFormatReadChecks.Run(Assert);
         {
+            using var defaultSession=new WordSession();
+            Assert(!defaultSession.UseOptimizedReading,"New sessions default to the legacy reader after the reported performance regression");
+            var window=new MainWindow();
+            try
+            {
+                Assert(window.FindName("ReadingModeMenu") is MenuItem {IsChecked:false},
+                    "The visible reader checkbox and backend both default to the legacy path on every fresh launch");
+            }
+            finally{window.Close();}
+        }
+
+        {
             var preparedHighlighter=new PreviewHighlighter();var firstDocument=Page(clip);
             var firstBoxes=preparedHighlighter.Measure(firstDocument,anchor);
             preparedHighlighter.Measure(firstDocument,anchor);
