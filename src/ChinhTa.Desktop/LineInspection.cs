@@ -12,6 +12,7 @@ public static class LineInspection
         IReadOnlyDictionary<Issue, PreviewAnchor> anchors, IReadOnlyList<Issue> otherIssues, LinePolicy policy, bool hasGroupedShapes, IReadOnlyList<Issue>? verifiedEdits = null)
     {
         var result = new List<(Issue, PreviewAnchor)>();
+        var strokePages=new Dictionary<int,HorizontalStrokeEvidence>();
         foreach (var target in targets)
         {
             var prerequisites=otherIssues.Where(i=>i.CanFix && StagedRepairBatch.Stage(i)==RepairStage.Text &&
@@ -30,12 +31,19 @@ public static class LineInspection
                 result.Add((Notice("Chưa đo/nhận diện chắc chắn dòng tham chiếu hoặc dòng chưa căn giữa vùng đặt. Kiểm tra thủ công trước khi thêm Shape Line."), anchor));
                 continue;
             }
+            if(!strokePages.TryGetValue(anchor.Page,out var strokeEvidence))
+                strokePages[anchor.Page]=strokeEvidence=preview.ReadHorizontalLines(document,anchor.Page);
+            if(strokeEvidence.HasUnverifiedPaths)
+            {
+                result.Add((Notice("Có nét bị cắt một phần hoặc chưa xác minh được cách hiển thị trên trang. Cần kiểm tra thủ công trước khi tự thêm hoặc đặt lại đường kẻ."),anchor));
+                continue;
+            }
             // Recheck successful edits against the new XPS and the current reference. Never hide by position alone.
             var verified=verifiedEdits?.SingleOrDefault(i=>i.Start==target.Start && i.Original==target.Text && i.LineFix?.Role==target.Role);
             if(verified?.LineFix is ShapeLineFix accepted)
             {
                 var expected=new LineGeometry(accepted.Left,accepted.Top,accepted.Width);
-                var rendered=preview.HorizontalLines(document,anchor.Page);
+                var rendered=strokeEvidence.Lines;
                 if(RenderedLineVerifier.MatchCount(expected,rendered)>1)
                 {
                     result.Add((Notice(AmbiguousStroke),anchor));continue;
@@ -63,7 +71,7 @@ public static class LineInspection
             if (own.Length == 0 && allAssigned)
             {
                 (fix, errors) = ShapeLineRules.Evaluate(target, reference, null, null, policy);
-                if(RenderedLineVerifier.MatchCount(new(fix.Left,fix.Top,fix.Width),preview.HorizontalLines(document,anchor.Page))>0)
+                if(RenderedLineVerifier.MatchCount(new(fix.Left,fix.Top,fix.Width),strokeEvidence.Lines)>0)
                 {
                     result.Add((Notice("Đã có nét tại vị trí đề xuất nhưng chưa ghép được với Shape Line của vùng này. Kiểm tra thủ công; chưa tự thêm đường kẻ để tránh chồng nét."),anchor));
                     continue;
@@ -71,7 +79,7 @@ public static class LineInspection
             }
             else if (own.Length == 1 && own[0].AppOwned && own[0].Geometry is LineGeometry measured)
             {
-                var rendered = preview.HorizontalLines(document, anchor.Page);
+                var rendered = strokeEvidence.Lines;
                 if(RenderedLineVerifier.MatchCount(measured,rendered)>1)
                 {
                     result.Add((Notice(AmbiguousStroke),anchor));
@@ -89,7 +97,7 @@ public static class LineInspection
             }
             else
             {
-                var rendered = preview.HorizontalLines(document, anchor.Page);
+                var rendered = strokeEvidence.Lines;
                 var near = rendered.Where(l => l.Y >= reference.Bottom - 2 && l.Y <= reference.Bottom + 80 &&
                     Math.Abs(l.Left + l.Width / 2 - (reference.Left + reference.Width / 2)) < Math.Max(40, reference.Width / 2)).ToArray();
                 if (hasGroupedShapes || own.Length != 1 || rendered.Count != pageShapes.Length || near.Length != 1)

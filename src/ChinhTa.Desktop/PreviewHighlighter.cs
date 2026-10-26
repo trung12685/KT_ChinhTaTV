@@ -167,23 +167,22 @@ public sealed class PreviewHighlighter
     }
     public IReadOnlyList<LineGeometry> HorizontalLines(FixedDocumentSequence document, int pageNumber)
     {
+        var evidence=ReadHorizontalLines(document,pageNumber);
+        if(evidence.HasUnverifiedPaths)
+            throw new InvalidOperationException("Có nét bị cắt một phần hoặc chưa xác minh được cách hiển thị; chưa đủ bằng chứng để tự sửa đường kẻ.");
+        return evidence.Lines;
+    }
+    public HorizontalStrokeEvidence ReadHorizontalLines(FixedDocumentSequence document,int pageNumber)
+    {
         var index = GetIndex(document, pageNumber);
-        if (index is null) return [];
-        var lines = new List<LineGeometry>();
+        if (index is null) return new([],true);
+        var lines = new List<LineGeometry>();bool unverified=false;
         foreach (var path in Descendants<System.Windows.Shapes.Path>(index.Page))
         {
-            if (path.Data is null || path.Stroke is null && path.Fill is null) continue;
-            var geometry = path.Data.GetFlattenedPathGeometry();
-            foreach (var figure in geometry.Figures)
-            {
-                var piece = new PathGeometry([figure]) { Transform = geometry.Transform };
-                var rect = path.TransformToAncestor(index.Page).TransformBounds(piece.Bounds);
-                // Word may render Line as a stroke or a thin filled rectangle. Ignore ordinary boxes.
-                if (rect.Width >= 6 && rect.Height <= 2)
-                    lines.Add(new(rect.Left * .75, (rect.Top + rect.Height / 2) * .75, rect.Width * .75));
-            }
+            var evidence=VisibleHorizontalStrokeReader.Read(path,index.Page);
+            lines.AddRange(evidence.Lines);unverified|=evidence.HasUnverifiedPaths;
         }
-        return lines;
+        return new(lines,unverified);
     }
     private TextSpan? Locate(PreviewAnchor anchor,PageIndex index)=>UsePreparedText?
         PreviewLocator.Locate(anchor,sources.Get(anchor.PageText),index.Prepared.Value):PreviewLocator.Locate(anchor,index.Text);
