@@ -36,6 +36,7 @@ RepairDependencyChecks.Run(Assert);
 PreviewAnchorBatchChecks.Run(Assert);
 ComponentChecks.Run(Assert);
 SignatureChecks.Run(Assert);
+PageLayoutChecks.Run(Assert);
 FormatAssessmentChecks.Run(Assert);
 FontSizeEvidenceChecks.Run(Assert);
 SelectiveSizeChecks.Run(Assert);

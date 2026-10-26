@@ -79,7 +79,7 @@ public static class QuotedPunctuationChecks
         assert(restored && writes==plan.Count && current==mixed,"Failed final-save verification restores the whole quoted-punctuation batch");
         var tooltip=IssueTooltipCatalog.Describe(chosen);var review=IssueReviewCatalog.Describe(chosen);
         assert(tooltip.Text.Split('\n').Length==3 && tooltip.Basis.Contains("Quy tắc ứng dụng") && review.FamilyKey=="comma" &&
-            review.Section==IssueReviewSection.ReviewSuggestion && DevelopmentReport.Count(CapabilityMode.Reviewable)==31,
+            review.Section==IssueReviewSection.ReviewSuggestion && DevelopmentReport.Count(CapabilityMode.Reviewable)==32,
             "The extension keeps the existing compact punctuation group, reviewed application basis and capability count");
     }
 }

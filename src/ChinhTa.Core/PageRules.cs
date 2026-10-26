@@ -1,7 +1,7 @@
 namespace ChinhTa.Core;
 
 public record SectionLayout(int Number, int Start, string Anchor, double WidthMm, double HeightMm,
-    double TopMm, double BottomMm, double LeftMm, double RightMm, bool MirrorMargins = false);
+    double TopMm, double BottomMm, double LeftMm, double RightMm, bool MirrorMargins = false,bool RepairEligible=false);
 
 public static class PageRules
 {
@@ -15,6 +15,12 @@ public static class PageRules
         Issue Warning(string title, string message) => new(s.Start, s.Anchor.Length, s.Anchor, s.Anchor,
             message, false, FixKind.PageLayout, CanFix: false, Citation: citation,
             Title: $"Thiết lập trang {s.Number} — {title}");
+        if(!party && PageLayoutFix.Propose(s) is { } repair)
+        {
+            yield return new(s.Start,s.Anchor.Length,s.Anchor,s.Anchor,repair.Suggestion,false,FixKind.PageLayout,
+                Citation:citation,Title:"Khổ giấy/lề trang chưa đúng",PageFix:repair);
+            yield break;
+        }
         bool portrait = s.WidthMm <= s.HeightMm;
         bool a4 = In(Math.Min(s.WidthMm, s.HeightMm), 210, 210) && In(Math.Max(s.WidthMm, s.HeightMm), 297, 297);
         if (!a4)
@@ -39,3 +45,4 @@ public static class PageRules
                 : "Chuẩn trang dọc: trên/dưới 20–25, trái 30–35, phải 15–20 mm.") + " Chưa tự sửa thiết lập trang.");
     }
 }
+

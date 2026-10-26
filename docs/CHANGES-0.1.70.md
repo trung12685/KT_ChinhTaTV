@@ -37,3 +37,15 @@ Nhóm **Chữ ký** trong Bắt buộc sửa có chọn riêng/chọn nhóm/ch�
 Bổ sung kiểm nhận diện, từng loại sai thật, kiểu/cỡ trộn hợp lệ, stale payload, giữ cỡ/gạch chân/bố cục, chọn nhiều nhóm và rollback. Luồng Word hiện có vẫn phải quét lại trước ghi, checkpoint, hậu kiểm sau lưu/Line/XPS và một Undo. Bài Word bổ sung mẫu giả có ảnh PNG, sửa riêng/chung ba Line, lỗi giữa lượt, Undo, lưu-mở và hash nguồn/ảnh. CI chỉ biên dịch bài này; không phải bằng chứng Office2021 chạy đạt.
 
 Báo cáo trong ứng dụng/TXT cập nhật31 nhóm đề xuất/8 thủ công/1 minh họa, kèm ví dụ C31 và giới hạn. Đây là một nhóm tính năng có nhiều loại thuộc tính được sửa, không tính mỗi test/tài liệu là một tính năng. Tiếp tục tích lũy trước khi tạo Windows theo nhịp5–10 bước đã thống nhất. Chi tiết: [FORMAT-BATCH-01.md](FORMAT-BATCH-01.md).
+
+## Đợt thể thức02 — sửa khổ giấy/lề (26/10/2026)
+
+Thêm **C32 — Khổ giấy và lề trang** theo NĐ30, PL I, Phần I.I.1–3 (PDF21). Với một section dọc thông thường đã xác minh, đặt giấy sai vềA4; chỉ lề ngoài khoảng trên/dưới20–25, trái30–35, phải15–20mm về biên gần nhất. Giữ nguyên mỗi lề hợp lệ. Ví dụ Letter, lề10/22/20/15 → A4,20/22/30/15mm.
+
+Bản candidate chỉ sửa thuộc tính pgSz/pgMar, đối chiếu toàn bộ chữ/bảng/kiểu và mọi phần ZIP khác trước khi mở vào Word. Bảng phải vừa vùng mới. Ảnh/Shape, header/footer, nhiều section, bảng gộp/lồng/nổi, tab/field/control, trang ngang, cột, lề gáy/đối xứng/đóng sách hoặc dữ liệu chưa biết giữ thủ công; không tự đổi hướng trang.
+
+Sửa thiết lập trang trước, sau đó quét/đo lại các mục đã chọn qua chữ/prefix Word thật. Không dùng lại CP hoặc toạ độ cũ. Chỉ nhóm người dùng đã chọn được áp dụng; mục hình học đã đạt sau đổi trang phải có bằng chứng xác nhận. Hậu kiểm lại chữ, kích thước trang XPS, mọi mục hình học đã chọn; lỗi ở bất kỳ giai đoạn nào phục hồi cả lượt; một Hoàn tác cho cả lượt thành công. Có progress và chọn nhóm/all, không giữ dòng lỗi đã hết.
+
+Báo cáo nguồn cập nhật32 đề xuất/8 thủ công/1 minh họa, thêm ví dụ C32, giữ M01 cho ngoại lệ. Kiểm Core cho policy/guard/candidate/proof/tamper/rebind/transaction; WPF cho chọn nhóm/mẫu thật/thuộc tính section OpenXML. Có kịch bản Word giả sửa riêng/chung chữ và ba Line, lỗi sau trang/sau nhóm, Undo, lưu-mở, kiểu chữ và hash nguồn. CI chỉ biên dịch bài Word, chưa chứng minh Office2021 chạy đạt. Chưa có gói Windows mới.
+
+Số trang: đã đối chiếu PL I.I.7 — sốẢRập từ1,13–14pt, đứng, giữa lề trên, ẩn trang đầu. Chưa triển khai sửa số trang trong đợt này: header/footer có field, liên kết và nhiều section cần một phạm vi riêng để bảo toàn dữ liệu. Xem [FORMAT-BATCH-02.md](FORMAT-BATCH-02.md).

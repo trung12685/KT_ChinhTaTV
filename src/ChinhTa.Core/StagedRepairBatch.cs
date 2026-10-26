@@ -12,6 +12,7 @@ public static class StagedRepairBatch
     public static IReadOnlyList<Issue> Prepare(IEnumerable<Issue> selection)
     {
         var items=selection.Distinct().ToArray();
+        if(items.Any(i=>i.PageFix is not null))throw new InvalidOperationException("Thiết lập trang phải qua bước đối chiếu/đổi trang trước các nhóm chữ và Line.");
         RepairDependencies.Validate(items);
         foreach(var group in items.GroupBy(Stage))BatchPlan.Create(group);
         var lines=items.Where(i=>Stage(i)==RepairStage.Line).ToArray();

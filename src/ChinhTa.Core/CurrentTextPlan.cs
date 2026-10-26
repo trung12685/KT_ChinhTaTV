@@ -8,7 +8,7 @@ public static class CurrentTextPlan
     {
         var available=current.Where(i=>i.CanFix && i.LineFix is null && i.CenterFix is null).ToArray();
         foreach(var requested in plan)
-            if(!requested.CanFix || requested.LineFix is not null || requested.CenterFix is not null ||
+            if(requested.PageFix is not null || !requested.CanFix || requested.LineFix is not null || requested.CenterFix is not null ||
                 available.Count(i=>i.Start==requested.Start && i.Length==requested.Length &&
                     i.Original==requested.Original && i.Replacement==requested.Replacement &&
                     i.Kind==requested.Kind && i.OutlineContext==requested.OutlineContext && i.Format==requested.Format && i.CharacterFormat==requested.CharacterFormat && i.ParagraphFix==requested.ParagraphFix && i.SpacingFix==requested.SpacingFix)!=1)

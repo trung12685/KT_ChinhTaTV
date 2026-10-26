@@ -302,6 +302,8 @@ public sealed partial class WordSession : IDisposable
                             (double)setup.TopMargin * mmPerPoint, (double)setup.BottomMargin * mmPerPoint,
                             (double)setup.LeftMargin * mmPerPoint, (double)setup.RightMargin * mmPerPoint,
                             (int)setup.MirrorMargins != 0);
+                        if(count==1 && Profile==DocumentProfile.State && bodyXml is not null && !textProofUnavailable && textProofWarning is null &&
+                            PageLayoutGuard.Eligible(System.Xml.Linq.XDocument.Parse(bodyXml),layout))layout=layout with {RepairEligible=true};
                         issues.AddRange(PageRules.Check(layout, Profile));
                     }
                     finally { Release(range); Release(setup); Release(section); }

@@ -13,6 +13,13 @@ public static class BatchPlan
                 throw new InvalidOperationException("Có cảnh báo chỉ kiểm tra thủ công, không thể sửa tự động.");
             if (current.Start < 0 || current.Length <= 0 || current.Original.Length != current.Length)
                 throw new InvalidOperationException("Vị trí lỗi không hợp lệ. Hãy quét lại.");
+            if(current.Kind==FixKind.PageLayout && current.PageFix is null)
+                throw new InvalidOperationException("Cảnh báo trang chưa có đề xuất đã xác minh để ghi.");
+            if(current.PageFix is { } page && (!page.Valid || current.Kind!=FixKind.PageLayout ||
+                current.Start!=page.Before.Start || current.Original!=page.Before.Anchor || current.Replacement!=current.Original ||
+                current.CharacterFormat is not null || current.Format is not null || current.ParagraphFix is not null || current.SpacingFix is not null ||
+                current.CenterFix is not null || current.LineFix is not null || current.Prerequisites is not null))
+                throw new InvalidOperationException("Gợi ý thiết lập trang chưa hợp lệ; hãy quét lại.");
             if(current.SpacingFix is { } spacing && (!spacing.Valid ||
                 current.Kind!=(spacing.IsGap?FixKind.BodyGap:FixKind.BodyLineSpacing) || current.Original!=current.Replacement ||
                 current.CharacterFormat is not null || current.ParagraphFix is not null || current.Format is not null || current.CenterFix is not null || current.LineFix is not null || current.Original.Any(char.IsControl) ||
