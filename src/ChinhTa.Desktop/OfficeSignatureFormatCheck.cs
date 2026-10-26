@@ -119,6 +119,19 @@ internal static class OfficeSignatureFormatCheck
         var types=Read("[Content_Types].xml");
         if(!types.Root!.Elements().Any(e=>(string?)e.Attribute("Extension")=="png"))types.Root.Add(new XElement(types.Root.Name.Namespace+"Default",new XAttribute("Extension","png"),new XAttribute("ContentType","image/png")));
         using(var s=zip.CreateEntry(ImagePart).Open())s.Write(Convert.FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGNgYPj/HwADAgH/5ncLrgAAAABJRU5ErkJggg=="));
+        // Earlier synthetic seeds use Word-tolerated property ordering. Put
+        // only this new test package into schema order before strict validation.
+        void Order(string parent,string order)
+        {
+            var names=order.Split(' ');
+            foreach(var properties in doc.Descendants(w+parent))
+            {
+                var children=properties.Elements().OrderBy(e=>{int index=Array.IndexOf(names,e.Name.LocalName);return index<0?int.MaxValue:index;}).ToArray();
+                properties.ReplaceNodes(children);
+            }
+        }
+        Order("rPr","rStyle rFonts b bCs i iCs caps smallCaps strike dstrike outline shadow emboss imprint noProof snapToGrid vanish webHidden color spacing w kern position sz szCs highlight u effect bdr shd fitText vertAlign rtl cs em lang eastAsianLayout specVanish oMath rPrChange");
+        Order("pPr","pStyle keepNext keepLines pageBreakBefore framePr widowControl numPr suppressLineNumbers pBdr shd tabs suppressAutoHyphens kinsoku wordWrap overflowPunct topLinePunct autoSpaceDE autoSpaceDN bidi adjustRightInd snapToGrid spacing ind contextualSpacing mirrorIndents suppressOverlap jc textDirection textAlignment textboxTightWrap outlineLvl divId cnfStyle rPr sectPr pPrChange");
         Write("word/document.xml",doc);Write("word/_rels/document.xml.rels",rels);Write("[Content_Types].xml",types);return path;
     }
 }
