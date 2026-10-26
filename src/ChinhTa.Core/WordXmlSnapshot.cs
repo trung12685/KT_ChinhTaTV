@@ -29,6 +29,14 @@ public sealed class WordXmlSnapshot
     }
     public static WordXmlSnapshot Parse(string currentXml)=>new(currentXml);
     internal string TextAt(int index)=>texts[index];
+    public string? ParagraphKey(int index)
+    {
+        if(index<0 || index>=Paragraphs.Length)return null;
+        var p=Paragraphs[index];var properties=p.Element(W+"pPr");
+        if(p.Ancestors().Any(e=>e.Name==W+"tc" || e.Name==W+"sdt") ||
+            properties?.Elements().Any(e=>e.Name==W+"sectPr" || e.Name==W+"framePr" || e.Name==W+"numPr")==true)return null;
+        return properties?.ToString(SaveOptions.DisableFormatting)??"";
+    }
     public WordFormatRunPlan? FormatRuns(int index,WordParagraphSnapshot live)
     {
         if(index<0 || index>=Paragraphs.Length)return null;

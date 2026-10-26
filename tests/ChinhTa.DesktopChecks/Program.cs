@@ -189,6 +189,23 @@ static class Program
         CaseGeometryDesktopChecks.Run(Assert);
         VisibleFormatChecks.Run(Assert);
         RunFormatReadChecks.Run(Assert);
+        NativeParagraphTraversalChecks.Run(Assert);
+        BatchFormatReadChecks.Run(Assert);
+        {
+            var preparedHighlighter=new PreviewHighlighter();var firstDocument=Page(clip);
+            var firstBoxes=preparedHighlighter.Measure(firstDocument,anchor);
+            preparedHighlighter.Measure(firstDocument,anchor);
+            Assert(preparedHighlighter.PreparedSources==1,"Repeated XPS measurements prepare one shared immutable source string once");
+            var secondDocument=Page(clip,built:root=>root.RenderTransform=new TranslateTransform(50,0));
+            var secondBoxes=preparedHighlighter.Measure(secondDocument,anchor);
+            Assert(secondBoxes.Count>0 && secondBoxes.SequenceEqual(new PreviewHighlighter().Measure(secondDocument,anchor)) && !firstBoxes.SequenceEqual(secondBoxes),
+                "Changing the FixedDocumentSequence invalidates cached pages and prepared text before measuring different geometry");
+            preparedHighlighter.Reset();Assert(preparedHighlighter.PreparedSources==0,"Closing a preview clears source normalization caches");
+            preparedHighlighter.UsePreparedText=false;
+            Assert(preparedHighlighter.Measure(firstDocument,anchor).SequenceEqual(new PreviewHighlighter().Measure(firstDocument,anchor)),
+                "Prepared and legacy text location produce identical XPS glyph boxes");
+        }
+
         FormatObservationChecks.Run(Assert);
         SelectiveSizeWriterChecks.Run(Assert);
         HeadingSelectiveSizeWriterChecks.Run(Assert);

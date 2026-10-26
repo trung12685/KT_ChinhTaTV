@@ -65,6 +65,14 @@ public static class WordXmlSnapshotChecks
         Compare(Xml(P("Đúng"),P("Sai"),P("Sau")),Live("Đúng\r","Khác\r","Sau\r"),assert,"mismatched prefix");
         Compare(Xml(P("A"),P("B")),Live("A\r"),assert,"short live prefix");
         Compare(Xml(P("A")),Live("A\r","Thừa\r"),assert,"extra live content");
+        assert(WordXmlSnapshot.Parse(Xml(P("A"),P("B"))).ParagraphKey(0)==WordXmlSnapshot.Parse(Xml(P("A"),P("B"))).ParagraphKey(1),
+            "Equivalent plain paragraph properties can nominate a native aggregate check without guessing formatting values");
+        assert(WordXmlSnapshot.Parse(tableXml).ParagraphKey(0) is null,"Cell context does not authorize shared body paragraph-format values");
+        foreach(string property in new[]{"framePr","sectPr","numPr"})
+        {
+            var framed=P("Giữ nguyên");framed.AddFirst(new XElement(W+"pPr",new XElement(W+property)));
+            assert(WordXmlSnapshot.Parse(Xml(framed)).ParagraphKey(0) is null,"Complex paragraph context keeps individual native paragraph attributes: "+property);
+        }
         var oldSnapshot=WordXmlSnapshot.Parse(Xml(P("Bản cũ")));
         assert(WordTextProof.Read(oldSnapshot,Live("Bản cũ\r")).Count==1 && WordTextProof.Read(oldSnapshot,Live("Bản mới\r")).Count==0 &&
             WordTextProof.Read(WordXmlSnapshot.Parse(Xml(P("Bản mới"))),Live("Bản mới\r")).Count==1,

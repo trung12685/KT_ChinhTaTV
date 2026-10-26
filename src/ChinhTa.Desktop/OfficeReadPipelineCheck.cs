@@ -49,6 +49,11 @@ internal static class OfficeReadPipelineCheck
                 if(!sourceHash.SequenceEqual(SHA256.HashData(File.ReadAllBytes(source))))
                     throw new InvalidOperationException("Mẫu nguồn so sánh cách đọc đã thay đổi.");
             }
+            test.UseOptimizedReading=true;test.Open(modern);object? owned=test.CheckApplicationIdentity;
+            string before=test.ReadCheckText();test.Open(modern);
+            if(owned is null || !ReferenceEquals(owned,test.CheckApplicationIdentity) || before!=test.ReadCheckText() || test.Changed || test.CheckUndoCount!=0)
+                throw new InvalidOperationException("Mở lại mẫu chưa dùng đúng phiên Word riêng hoặc thay đổi dữ liệu/trạng thái.");
+            pass("Mở liên tiếp: giữ đúng phiên Word riêng, nguồn/chữ/Changed/Undo nguyên vẹn; không dùng Word đang mở của người dùng");
         }
         finally{test.UseOptimizedReading=previous;}
     }

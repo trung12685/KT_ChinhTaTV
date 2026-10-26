@@ -71,7 +71,14 @@ public partial class MainWindow : Window
     {
         var dialog = new OpenFileDialog { Filter = "Word (*.docx)|*.docx" };
         if (dialog.ShowDialog(this) != true || !CanDiscard()) return;
-        Run(() => { pending = displayed = null; anchors.Clear(); ClosePreview(); Review.LoadIssues([]); session.Open(dialog.FileName); Scan(); });
+        Run(() =>
+        {
+            using var timing=new WordOperationTiming("Word.Perf.OpenUI");var total=Stopwatch.StartNew();
+            pending=displayed=null;anchors.Clear();ClosePreview();Review.LoadIssues([]);
+            session.Open(dialog.FileName);double openSeconds=total.Elapsed.TotalSeconds;timing.Mark("OpenWordDocument");
+            Scan();timing.Mark("ScanAndPreview");timing.Count("Completed",1);
+            Status.Text+=$" Mở Word/tệp: {openSeconds:F1}s; tổng mở: {total.Elapsed.TotalSeconds:F1}s.";
+        });
     }
     private void ScanClick(object sender, RoutedEventArgs e) { if (session.IsOpen) Run(Scan); }
     private void ReadingModeClick(object sender,RoutedEventArgs e)
@@ -83,6 +90,7 @@ public partial class MainWindow : Window
     {
         using var timing=new WordOperationTiming("Word.Perf.Scan");
         timing.Count("Optimized",session.UseOptimizedReading?1:0);
+        highlighter.UsePreparedText=session.UseOptimizedReading;
         hover.Stop();pending = displayed = null;
         Review.LoadIssues([]);
         CoverageInfo.Visibility=Visibility.Collapsed;
@@ -107,6 +115,7 @@ public partial class MainWindow : Window
             {found.Add(entry.Issue);anchors[entry.Issue]=entry.Anchor;}
         }
         timing.Mark("InspectGeometry");
+        timing.Count("PreparedPreviewSources",highlighter.PreparedSources);
         Review.LoadIssues(found,anchors);
         timing.Mark("ShowIssues");timing.Count("Completed",1);
         CoverageInfo.Text=session.CoverageNotice??"";

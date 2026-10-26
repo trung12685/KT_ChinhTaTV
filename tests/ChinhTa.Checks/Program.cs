@@ -24,6 +24,8 @@ DocumentHeadingChecks.Run(Assert);
 StructuredTextChecks.Run(Assert);
 WholeBodyTextProofChecks.Run(Assert);
 WordXmlSnapshotChecks.Run(Assert);
+WordOpenSessionChecks.Run(Assert);
+PreparedPreviewChecks.Run(Assert);
 SentenceInnerSpaceChecks.Run(Assert);
 SentenceAfterSpaceChecks.Run(Assert);
 ShortFinalSentenceChecks.Run(Assert);

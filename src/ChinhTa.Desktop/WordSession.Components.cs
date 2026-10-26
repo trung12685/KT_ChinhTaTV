@@ -92,14 +92,22 @@ public sealed partial class WordSession
         finally{Release(range);}
     }
     private Paragraph ObserveComponent(Paragraph row,bool readParagraph=false,int? liveEnd=null,
-        WordFormatRunPlan? runPlan=null,FormatReadMeasurements? measurements=null)
+        WordFormatRunPlan? runPlan=null,FormatReadMeasurements? measurements=null,NativeFormatHint? batch=null)
     {
         if(!row.TextEditable && !row.FormatEditable)return row;
         string text=row.Text.TrimEnd('\r','\a','\n');
         var observations=new List<VisibleFont>();int offset=0;
+        if(batch is not null && liveEnd is int bound && batch.Matches(row.Start,bound,row.Text))
+        {
+            dynamic current=document!.Range(row.Start,bound);
+            try{if(!VisibleFormatReader.MatchesHint((object)current,batch))batch=null;}
+            finally{Release(current);}
+        }
+        else batch=null;
+        if(batch?.Font is {Known:true} shared)observations.Add(shared);
         // A discretionary line break can carry a different run style from its
         // visible words. Observe each nonblank line; never remove the break.
-        foreach(string part in text.Split('\v'))
+        foreach(string part in observations.Count>0?Array.Empty<string>():text.Split('\v'))
         {
             if(!string.IsNullOrWhiteSpace(part))
             {
@@ -117,13 +125,13 @@ public sealed partial class WordSession
             offset+=part.Length+1;
         }
         if(observations.Count==0)return row;
-        ObservedParagraphStyle? paragraphStyle=null;BodyFlow? flow=null;
+        ObservedParagraphStyle? paragraphStyle=batch?.Paragraph;BodyFlow? flow=null;
         if(readParagraph)
         {
             dynamic range=document!.Range(row.Start,row.Start+text.Length);
             try
             {
-                paragraphStyle=VisibleFormatReader.ReadParagraph((object)range);
+                paragraphStyle??=VisibleFormatReader.ReadParagraph((object)range);
                 if(liveEnd is int end && end>row.Start)
                 {
                     dynamic firstPoint=document!.Range(row.Start,row.Start);dynamic lastPoint=document!.Range(end-1,end-1);
