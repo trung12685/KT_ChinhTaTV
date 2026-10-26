@@ -556,3 +556,8 @@ Tái hiện PAGE bị từ chối khi footer có run toàn dấu cách không xm
 SelectionPostconditions chụp kỳ vọng chữ, format/size/case, khoảng đoạn và ngữ cảnh hình học trước ghi. C32/C33 kiểm lại sau giai đoạn cuối: bind CP mới bằng đúng text/prefix, đọc font/cỡ thật, giữ từng cỡ hợp lệ/gạch chân/bố cục, khoảng đoạn và đo lại nét/tâm XPS. Extract SelectedFormatVerification từ staged để dùng chung, không thay phép kiểm cũ bằng số issue/Shape. Late failure đi vào rollback cả lượt; một Undo chỉ sau thành công.
 
 RepairProgressTracker dùng chung giữa wrapper PAGE/trang/nội dung, giữ mẫu số của lựa chọn gốc và không cộng lặp nhóm con. Có kiểm nested progress, post-reopen font drift/CP/context/late rollback và mẫu bảy mục kết hợp khổ/lề, PAGE, phông, khoảng trắng, ba Line. OfficeFormatBatchCheck kiểm fault ba thời điểm, source hash, tiến độ, Undo/lưu-mở và nét thực; mới compile trong CI, chưa chạy Word2021. Nguồn33/8/1, năm đợt tích lũy0.1.70, chưa đóng gói. Chi tiết FORMAT-BATCH-04.
+
+
+## 26/10/2026 — chuẩn bị gói Windows0.1.70
+
+Theo đồng ý của người dùng sau năm đợt, chốt source tính năng bd583da4 để đóng gói. Thêm SUPPORTED-FIXES-0.1.70 lấy từ catalog33/8/1 và P01–P05, hướng dẫn OFFICE-CHECK-0.1.70, nhật ký/README release và metadata báo cáo. Pipeline chạy lại Core/WPF, publish win-x64 tự chứa, kiểm catalog/ví dụ/tài liệu trong gói và metadata TXT, băm SHA256 rồi mới tạo prerelease. Không nhập main, không thay tag/gói0.1.67 hoặc các bản cũ. Kết quả đúng commit ở release/build-checks.json; việc có gói không chứng minh Office2021 PASS.

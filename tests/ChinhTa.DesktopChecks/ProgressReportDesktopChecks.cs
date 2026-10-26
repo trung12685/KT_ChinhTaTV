@@ -72,6 +72,17 @@ public static class ProgressReportDesktopChecks
         assert(evidence is not null && text.Contains($"{evidence.CoreChecks} Core/OpenXML và {evidence.WpfChecks} WPF đạt.") &&
             File.Exists(Path.Combine(folder,"ChinhTa.Desktop.exe")),
             "The actual Windows package includes current-version build evidence that the report parser and renderer accept");
+        string checklist=File.ReadAllText(Path.Combine(folder,$"SUPPORTED-FIXES-{version}.md"));
+        static string MarkdownCell(string value)=>value.Replace("|","\\|").Replace("\r\n","<br>").Replace("\n","<br>");
+        assert(DevelopmentReport.Capabilities.All(c=>checklist.Contains($"| {c.Id} | {c.Name} |",StringComparison.Ordinal) &&
+            checklist.Contains(MarkdownCell(c.Example.Before),StringComparison.Ordinal) &&
+            checklist.Contains(MarkdownCell(c.Example.Outcome),StringComparison.Ordinal)) &&
+            DevelopmentReport.PlannedWork.All(p=>checklist.Contains($"| {p.Id} | {p.Name} |",StringComparison.Ordinal) &&
+                checklist.Contains(MarkdownCell(p.Example.Before),StringComparison.Ordinal) && checklist.Contains(MarkdownCell(p.Example.Outcome),StringComparison.Ordinal)),
+            "The packaged checklist includes every current capability and planned-work ID, name and before/after example");
+        assert(File.Exists(Path.Combine(folder,$"OFFICE-CHECK-{version}.md")) &&
+            Enumerable.Range(1,4).All(n=>File.Exists(Path.Combine(folder,$"FORMAT-BATCH-{n:00}.md"))),
+            "The package includes the Office validation guide and all four formatting-batch notes");
         string exported=Path.Combine(Path.GetDirectoryName(Path.GetFullPath(folder))!,$"ChinhTaViet-{version}-tien-do.txt");
         File.WriteAllText(exported,text,new UTF8Encoding(true));
     }

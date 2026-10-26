@@ -1,23 +1,12 @@
 # Chính tả Việt
 
-## Đợt thể thức04: hậu kiểm cả lượt (.70, chưa đóng gói)
+## 0.1.70 — bản thử tích lũy thể thức văn bản
 
-Sửa lỗi PAGE bị từ chối khi footer chỉ có khoảng trắng; kiểm điều kiện khổ/lề từ gói Word hiện tại đầy đủ để không bỏ sót cấu hình đóng sách. Sau mọi bước lưu/mở, kiểm lại chữ/phông/cỡ/gạch chân/căn-khoảng đoạn và các Line đã chọn; tiến độ giữ một tổng cho cả lượt. Có mẫu bảy mục sửa chung và rollback; CI chưa thay thế kiểm thực tế Office2021. [Chi tiết và ví dụ](docs/FORMAT-BATCH-04.md). Tổng vẫn33/8/1, chưa phát hành .70.
+[Tải Windows x64](https://github.com/trung12685/KT_ChinhTaTV/releases/download/v0.1.70/ChinhTaViet-0.1.70-win-x64.zip) · [Release](https://github.com/trung12685/KT_ChinhTaTV/releases/tag/v0.1.70) · [33 nhóm hỗ trợ và ví dụ](docs/SUPPORTED-FIXES-0.1.70.md) · [Cách kiểm trên Office2021](docs/OFFICE-CHECK-0.1.70.md).
 
+Gom năm đợt sau0.1.69: bộ đọc cũ mặc định, phông/cỡ khối ký C31, khổ giấy/lề C32, số trang PAGE C33 và hậu kiểm phối hợp. Giữ bảng, ảnh, Preview Word/XPS; sửa chung nhiều nhóm có tiến độ một tổng, một Hoàn tác và rollback cả lượt. [Thay đổi, phạm vi và các bước tiếp](docs/CHANGES-0.1.70.md). Chưa có bằng chứng Office2021 chạy đạt các phần mới; kết quả tự động/commit của đúng gói có trong build-checks.json và TXT đi kèm. Main và mốc quay lại0.1.67 giữ nguyên. Không tiếp tục tối ưu tốc độ đọc.
 
-## Đợt thể thức03: số trang/PAGE (.70, chưa đóng gói)
-
-C33 mới: với một section dọc và header trống hoặc chỉ PAGE đủ chứng cứ, tạo/sửa sốẢRập từ1, Times New Roman đen13–14, đứng, giữa lề trên, ẩn trang1. Một trang không bị báo thiếu số. Giữ cỡ đúng, đậm/gạch chân, thân/bảng/ảnh và footer cả trang đầu. Nhiều section/header riêng/field chưa chắc giữ nguyên. Hậu kiểm số thựcXPS và nguyên vị trí nội dung, một Undo/rollback cả lượt; [phạm vi và ví dụ](docs/FORMAT-BATCH-03.md). Nguồn33/8/1, bản tải gần nhất vẫn .69; chưa có gói .70 hoặc runtime Office2021 mới.
-
-
-## Đợt thể thức02: khổ giấy và lề (.70, chưa đóng gói)
-
-C32 mới: sửa giấy sai vềA4 và từng lề sai về khoảng quy định cho một section dọc đơn giản đã xác minh; giữ lề đúng, chữ, kiểu và bảng vừa vùng mới. Sửa trang trước rồi quét/đo lại nhóm đã chọn; một Undo/rollback toàn lượt. Ảnh/Shape, header/footer, nhiều section hoặc bố cục đặc biệt tiếp tục thủ công. [Phạm vi, ví dụ và các bước tiếp](docs/FORMAT-BATCH-02.md). Danh mục ở bước C32 là32/8/1; số trang chưa tự sửa trong bước C32, bản tải gần nhất vẫn .69.
-
-
-## Đợt đang tích lũy: thể thức khối ký (.70, chưa có gói mới)
-
-Dừng tối ưu tốc độ đọc theo yêu cầu người dùng. Đợt này bổ sung C31 kiểm/sửa phông, đen, cỡ13–14, đứng/đậm của chức vụ và họ tên người ký khi nhận diện chắc bảng cuối văn bản. Giữ cỡ đúng, tên/cấp bậc, ảnh/chữ ký/dấu và bố cục; không suy thẩm quyền hay sửa hoa/thường họ tên. Có thể chọn cùng nhóm lỗi khác qua quét/hậu kiểm/một Undo/rollback. Xem [phạm vi, ví dụ và kiểm thử](docs/FORMAT-BATCH-01.md). Danh mục ở bước C31 là31/8/1; bản tải gần nhất vẫn .69, chưa đóng gói cho riêng bước này.
+Các ghi chú từng bước trước đóng gói: [C31 khối ký](docs/FORMAT-BATCH-01.md), [C32 trang](docs/FORMAT-BATCH-02.md), [C33 PAGE](docs/FORMAT-BATCH-03.md), [hậu kiểm phối hợp](docs/FORMAT-BATCH-04.md). Số nhóm33/8/1 là danh mục có điều kiện, không phải kết quả kiểm toàn bộ một tài liệu.
 
 Ứng dụng C# / WPF chạy trên Windows với Microsoft Word desktop, làm việc offline trên bản sao DOCX và xem trước bằng XPS. Không gửi nội dung tài liệu tới dịch vụ AI.
 
