@@ -5,8 +5,8 @@ using System.Xml.Linq;
 namespace ChinhTa.Core;
 
 public sealed record BodyIndent(int Left,int Right,int First,int Hanging);
-public enum OutlineScope { PlainBody, AutomaticList, Complex, Recipient }
-public sealed record OutlineParagraphInfo(OutlineScope Scope,int Indent=0,int? HeadingLevel=null,bool HasReferences=false,bool LabelThroughTabs=false,ComponentRole? RecipientRole=null,bool LastRecipient=false,int? Alignment=null,BodySpacingContext? SpacingContext=null,BodyIndent? BodyIndent=null);
+public enum OutlineScope { PlainBody, AutomaticList, Complex, Recipient, Signature }
+public sealed record OutlineParagraphInfo(OutlineScope Scope,int Indent=0,int? HeadingLevel=null,bool HasReferences=false,bool LabelThroughTabs=false,ComponentRole? RecipientRole=null,bool LastRecipient=false,int? Alignment=null,BodySpacingContext? SpacingContext=null,BodyIndent? BodyIndent=null,ComponentRole? SignatureRole=null);
 
 // Resolve paragraph-list evidence from the same live XML used for text proof.
 // Unknown/cyclic styles or indentation never become ordinary manual list text.
@@ -14,6 +14,7 @@ internal sealed class WordOutlineEvidence(XDocument xml)
 {
     private static readonly XNamespace W="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
     private readonly IReadOnlyDictionary<XElement,(ComponentRole Role,bool Last)> recipients=RecipientContext.Read(xml);
+    private IReadOnlyDictionary<XElement,ComponentRole>? signatures;
     private readonly XElement? styles=xml.Descendants(W+"styles").FirstOrDefault();
     private readonly Dictionary<string,XElement[]> definitions=xml.Descendants(W+"styles").FirstOrDefault()?.Elements(W+"style")
         .GroupBy(s=>(string?)s.Attribute(W+"styleId")??"",StringComparer.Ordinal).ToDictionary(g=>g.Key,g=>g.ToArray(),StringComparer.Ordinal)??new();
@@ -24,6 +25,8 @@ internal sealed class WordOutlineEvidence(XDocument xml)
     public OutlineParagraphInfo Describe(XElement p,bool textEditable)
     {
         if(recipients.TryGetValue(p,out var recipient))return new(OutlineScope.Recipient,RecipientRole:recipient.Role,LastRecipient:recipient.Last);
+        signatures??=SignatureContext.Read(xml,recipients);
+        if(signatures.TryGetValue(p,out var signature))return new(OutlineScope.Signature,SignatureRole:signature);
         OutlineParagraphInfo Complex()=>new(OutlineScope.Complex,HasReferences:references);
         bool labelTabs=!textEditable && p.Descendants(W+"tab").Any(e=>e.Parent?.Name==W+"r") && WordXmlTableMap.IsPlainText(p,allowTabs:true);
         if(!textEditable && !labelTabs || p.Ancestors(W+"tc").Any() || p.Descendants().Any(e=>e.Name==W+"bookmarkStart" || e.Name==W+"bookmarkEnd"))return Complex();

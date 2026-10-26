@@ -1,5 +1,10 @@
 # Chính tả Việt
 
+
+## Đợt đang tích lũy: thể thức khối ký (.70, chưa có gói mới)
+
+Dừng tối ưu tốc độ đọc theo yêu cầu người dùng. Đợt này bổ sung C31 kiểm/sửa phông, đen, cỡ13–14, đứng/đậm của chức vụ và họ tên người ký khi nhận diện chắc bảng cuối văn bản. Giữ cỡ đúng, tên/cấp bậc, ảnh/chữ ký/dấu và bố cục; không suy thẩm quyền hay sửa hoa/thường họ tên. Có thể chọn cùng nhóm lỗi khác qua quét/hậu kiểm/một Undo/rollback. Xem [phạm vi, ví dụ và kiểm thử](docs/FORMAT-BATCH-01.md). Danh mục trong mã hiện31/8/1; bản tải gần nhất vẫn .69, chưa đóng gói cho riêng bước này.
+
 Ứng dụng C# / WPF chạy trên Windows với Microsoft Word desktop, làm việc offline trên bản sao DOCX và xem trước bằng XPS. Không gửi nội dung tài liệu tới dịch vụ AI.
 
 **[Danh sách nhóm sửa và bảng kiểm mốc lưu 0.1.67](docs/SUPPORTED-FIXES-0.1.67.md)** — gồm điều kiện, ví dụ, ngoại lệ ô trống và các mục chỉ cảnh báo.

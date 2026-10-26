@@ -517,3 +517,10 @@ CurrentTextPlan quét lại toàn ngữ cảnh trước checkpoint, nên thêm s
 ## Ghi chú triển khai 0.1.55
 
 Kiểm toàn thân mới của C23 có thể đi qua đoạn 40; hậu kiểm cuối .53 cũ dùng lastLayout (chỉ header geometry) nên không tìm được font recipient dài sau Line mở lại. Thêm lastFormatLayout lấy đúng liveText đã có TextEditable/FormatEditable proof toàn thân. VerifyStagedFormats dùng prefix Word thật và danh sách này; không thêm COM getters/không mở rộng phép đo Line. Mất proof sau mở lại vẫn fail/rollback. Test Core cho recipient sau đoạn 40; OfficeComponentCheck thêm sửa font recipient dài cùng Line và một Undo (mới biên dịch, chưa runtime Word). 23/8/1 giữ nguyên; .54 là mốc nội bộ đã CI đạt, tag/gói không ghi đè, .55 là gói gửi người dùng.
+
+
+## 26/10/2026 — trở lại thể thức: khối ký
+
+Người dùng dừng công việc tối ưu đọc. Bước mới sau policy mặc định bộ đọc cũ của .70 là C31, một đợt thể thức gồm hai vai trò và kiểm/sửa phông/màu/cỡ/kiểu; không đếm các test/docs riêng là bước tính năng. Chỉ nhận bảng cuối một hàng/hai ô, Nơi nhận/Lưu xác nhận bên trái, chức vụ whitelist và họ tên có thể kèm cấp bậc bên phải. Role XML không cấp quyền ghi: vẫn bắt buộc proof CP/chữ hiện tại, quan sát font, CurrentTextPlan và BatchPlan. CasePreservationPlan mở cho SignatureFormat, có soft break; chụp glyph/gạch chân/căn-thụt và spacing trước ghi, hậu kiểm sau lưu/Line. Sai font thật mới có issue; unknown bỏ qua, không cảnh báo giả. Không đổi nội dung/hoa-thường/thẩm quyền, alignment hoặc ảnh.
+
+Có kiểm Core/WPF và kịch bản Word mẫu giả chứa PNG, source hash, giữ13/14/gạch chân/bố cục, sửa riêng/chung Line, rollback/Undo/lưu-mở. Runtime Office2021 vẫn chưa được chứng minh cho nhóm mới; không ghi PASS từ compile/CI. Báo cáo nguồn31/8/1; .70 chưa release. Mốc .67 và gói .69 nguyên vẹn. Các đợt sau theo danh sách trong FORMAT-BATCH-01; phần ngữ cảnh/thư viện giữ cuối.

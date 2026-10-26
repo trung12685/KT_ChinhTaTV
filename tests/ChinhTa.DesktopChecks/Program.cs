@@ -225,6 +225,8 @@ static class Program
         DependencyReviewChecks.Run(Assert);
         HierarchicalReviewChecks.Run(Assert);
         BodyReviewChecks.Run(Assert);
+        SignatureReviewChecks.Run(Assert);
+        SignatureFixtureChecks.Run(Assert);
 QuoteReviewChecks.Run(Assert);
 QuoteAfterReviewChecks.Run(Assert);
 DelimiterClusterReviewChecks.Run(Assert);

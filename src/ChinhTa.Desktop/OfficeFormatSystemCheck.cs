@@ -35,6 +35,7 @@ internal static class OfficeFormatSystemCheck
         OfficeHeadingSizeCheck.Run(test,goodSaved,isolated,pass);
         OfficeCaseStyleCheck.Run(test,modern,isolated,pass);
         OfficeBodyFormatCheck.Run(test,modern,isolated,pass);
+        OfficeSignatureFormatCheck.Run(test,modern,isolated,pass);
     }
     private static void RunBad(WordSession test,string bad,string isolated,(int Bold,int Underline,int Alignment) decoration,Action<string> pass,bool selective)
     {
