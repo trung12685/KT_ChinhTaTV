@@ -99,6 +99,9 @@ static class Program
         var refreshed=LineInspection.Inspect(linePage,highlighter,[target],known,anchors,[],LinePolicy.Decree30,true);
         Assert(refreshed.Count==0,"A verified corrected owned Line disappears after rescan despite unrelated unmapped shapes");
         var confirmed=target.Probe with {CanFix=true,LineFix=proposed};
+        var occupied=LineInspection.Inspect(linePage,new PreviewHighlighter(),[target],[],anchors,[],LinePolicy.Decree30,false).Single().Issue;
+        Assert(!occupied.CanFix && occupied.LineFix is null,
+            "A visible unassigned border at the proposed missing-Line position requires manual review before creating an overlapping Line");
         var duplicateStroke=new System.Windows.Shapes.Path {
             Data=new System.Windows.Media.LineGeometry(new Point(proposed.Left,proposed.Top),new Point(proposed.Left+proposed.Width,proposed.Top)),
             Stroke=Brushes.Black,StrokeThickness=.5};

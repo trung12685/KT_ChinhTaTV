@@ -11,7 +11,7 @@ Trên mã 0.1.73: hai nét XPS trùng nhau vẫn được Find lấy nét đầu
 1. Chỉ một nét khớp tọa độ mới chứng minh được một Line. Hai nét chồng hoặc cùng nằm trong dung sai giữ trạng thái chưa xác minh; không chọn nét đầu tiên/gần nhất.
 2. Hậu kiểm giữ nét ghép từng yêu cầu với một lần xuất hiện riêng. Kiểm cả tập gồm nét phải giữ và Line đã sửa; một border có sẵn không được dùng đồng thời làm bằng chứng cho Line mới. Dùng phép ghép đầy đủ để không phụ thuộc thứ tự đọc XPS khi các khoảng dung sai giao nhau.
 3. Phép bù vị trí từ chối ngay khi mất hoặc không ghép duy nhất một nét nền; không thử bù dựa trên phần còn sót. Lượt bù hợp lệ vẫn giữ một lần và kiểm XPS sau đó.
-4. Quét và lịch sử sửa cùng nhận nét chồng là cảnh báo thủ công, không ẩn cảnh báo đã sửa hoặc cho tạo thêm Line. Hậu kiểm muộn thiếu nét gây phục hồi checkpoint cả lượt.
+4. Quét và lịch sử sửa cùng nhận nét chồng là cảnh báo thủ công, không ẩn cảnh báo đã sửa hoặc cho tạo thêm Line. Nếu vị trí đề xuất đã có nét nhưng chưa ghép được với Shape trong vùng, cũng chưa cho tạo thêm. Hậu kiểm muộn thiếu nét gây phục hồi checkpoint cả lượt.
 
 ## Kiểm chứng
 

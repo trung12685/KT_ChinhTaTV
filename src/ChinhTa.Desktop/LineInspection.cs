@@ -63,6 +63,11 @@ public static class LineInspection
             if (own.Length == 0 && allAssigned)
             {
                 (fix, errors) = ShapeLineRules.Evaluate(target, reference, null, null, policy);
+                if(RenderedLineVerifier.MatchCount(new(fix.Left,fix.Top,fix.Width),preview.HorizontalLines(document,anchor.Page))>0)
+                {
+                    result.Add((Notice("Đã có nét tại vị trí đề xuất nhưng chưa ghép được với Shape Line của vùng này. Kiểm tra thủ công; chưa tự thêm đường kẻ để tránh chồng nét."),anchor));
+                    continue;
+                }
             }
             else if (own.Length == 1 && own[0].AppOwned && own[0].Geometry is LineGeometry measured)
             {
