@@ -1,5 +1,9 @@
 # Chính tả Việt
 
+## Đang phát triển sau 0.1.73 — hậu kiểm đủ nét
+
+[Đợt thể thức 05](docs/FORMAT-BATCH-05.md): không công nhận nét chồng bằng nét đầu tiên; giữ nét theo từng lần xuất hiện, không dùng chung border cũ cho Line mới; dừng bù vị trí nếu mất nét nền; quét/lịch sử sửa báo thủ công khi nét chồng. Mã 0.1.74 chưa đóng gói, danh mục 33/8/1 và bộ đọc cũ giữ nguyên. Gói tải gần nhất vẫn 0.1.73, chưa có xác nhận toàn bài Word thực qua bản đó.
+
 ## 0.1.73 — nhãn Line đã bù vị trí sau lưu Word
 
 [Windows x64](https://github.com/trung12685/KT_ChinhTaTV/releases/download/v0.1.73/ChinhTaViet-0.1.73-win-x64.zip) · [Thay đổi](docs/CHANGES-0.1.73.md) · [Hướng dẫn kiểm](docs/OFFICE-CHECK-0.1.73.md).

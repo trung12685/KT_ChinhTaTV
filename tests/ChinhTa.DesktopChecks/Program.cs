@@ -99,6 +99,25 @@ static class Program
         var refreshed=LineInspection.Inspect(linePage,highlighter,[target],known,anchors,[],LinePolicy.Decree30,true);
         Assert(refreshed.Count==0,"A verified corrected owned Line disappears after rescan despite unrelated unmapped shapes");
         var confirmed=target.Probe with {CanFix=true,LineFix=proposed};
+        var occupied=LineInspection.Inspect(linePage,new PreviewHighlighter(),[target],[],anchors,[],LinePolicy.Decree30,false).Single().Issue;
+        Assert(!occupied.CanFix && occupied.LineFix is null,
+            "A visible unassigned border at the proposed missing-Line position requires manual review before creating an overlapping Line");
+        var duplicateStroke=new System.Windows.Shapes.Path {
+            Data=new System.Windows.Media.LineGeometry(new Point(proposed.Left,proposed.Top),new Point(proposed.Left+proposed.Width,proposed.Top)),
+            Stroke=Brushes.Black,StrokeThickness=.5};
+        lineCanvas.Children.Add(duplicateStroke);lineCanvas.UpdateLayout();
+        var overlap=LineInspection.Inspect(linePage,new PreviewHighlighter(),[target],known,anchors,[],LinePolicy.Decree30,false).Single().Issue;
+        Assert(!overlap.CanFix && overlap.LineFix is null && overlap.Message.Contains("nhiều nét"),
+            "Two actual WPF Paths over an owned Line produce manual review instead of a successful rescan or another Line edit");
+        var overlapHistory=LineInspection.Inspect(linePage,new PreviewHighlighter(),[target],[],anchors,[],LinePolicy.Decree30,true,[confirmed]).Single().Issue;
+        Assert(!overlapHistory.CanFix && overlapHistory.LineFix is null,
+            "Verified edit history cannot hide duplicate rendered strokes or turn them into a missing-Line creation");
+        var overlappingRender=new PreviewHighlighter().HorizontalLines(linePage,1);
+        Assert(RenderedLineVerifier.Find(new(proposed.Left,proposed.Top,proposed.Width),overlappingRender) is null,
+            "Actual transformed WPF overlap cannot satisfy candidate stroke uniqueness");
+        lineCanvas.Children.Remove(duplicateStroke);lineCanvas.UpdateLayout();
+        Assert(LineInspection.Inspect(linePage,new PreviewHighlighter(),[target],known,anchors,[],LinePolicy.Decree30,false).Count==0,
+            "Removing the duplicate restores the ordinary valid single-Line assessment");
         Assert(LineInspection.Inspect(linePage,highlighter,[target],[],anchors,[],LinePolicy.Decree30,true,[confirmed]).Count==0,
             "A successful edit is removed from the fresh list after its current XPS and reference are independently reverified");
         var wrongConfirmed=confirmed with {LineFix=proposed with {Top=proposed.Top+20}};

@@ -24,8 +24,8 @@ public static class LinePlacementFeedback
         foreach (var old in before)
         {
             var matches = remaining.Where(l => RenderedLineVerifier.Find(old, [l]) is not null).ToArray();
-            if (matches.Length > 1) return null;
-            if (matches.Length == 1) remaining.Remove(matches[0]);
+            if (matches.Length != 1) return null;
+            remaining.Remove(matches[0]);
         }
         if (remaining.Count != plan.Count) return null;
         var expected = plan.OrderBy(i => i.LineFix!.Top).ToArray();
