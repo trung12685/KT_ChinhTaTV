@@ -10,6 +10,7 @@ void Assert(bool condition, string name)
 }
 DocxLineMetadataChecks.Run(Assert);
 LineCompatibilityChecks.Run(Assert);
+RenderedLineProofChecks.Run(Assert);
 LinePlacementFeedbackChecks.Run(Assert);
 BatchAndSpacingChecks.Run(Assert);
 GlyphAdvanceChecks.Run(Assert);

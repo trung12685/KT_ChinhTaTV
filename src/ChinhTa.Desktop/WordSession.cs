@@ -428,7 +428,7 @@ public sealed partial class WordSession : IDisposable
             var sequence = xps.GetFixedDocumentSequence();
             var preview=new PreviewHighlighter();
             var rendered = preview.HorizontalLines(sequence, 1);
-            if(preserve is not null && preserve.Any(line=>RenderedLineVerifier.Find(line,rendered) is null))
+            if(preserve is not null && !RenderedLineVerifier.Preserves(preserve,rendered))
                 throw new InvalidOperationException("Nét đã có thay đổi sau khi thêm Line; phải khôi phục bản trước.");
             foreach (var item in plan)
             {
@@ -459,6 +459,9 @@ public sealed partial class WordSession : IDisposable
                         $"; ReferenceUpdatedLeft={updated.Left:F2}; ReferenceUpdatedTop={updated.Top:F2}; ReferenceUpdatedWidth={updated.Width:F2}");
                 throw failure;
             }
+            var required=(preserve??[]).Concat(plan.Select(i=>new LineGeometry(i.LineFix!.Left,i.LineFix.Top,i.LineFix.Width))).ToArray();
+            if(!RenderedLineVerifier.Preserves(required,rendered))
+                throw new InvalidOperationException("Không có đủ nét riêng để chứng minh các Line đã sửa và các nét cần giữ; phải khôi phục bản trước.");
         }
         catch
         {

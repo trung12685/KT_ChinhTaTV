@@ -6,6 +6,7 @@ public record WordLineShape(int Id, int AnchorStart, int Page, LineGeometry? Geo
 
 public static class LineInspection
 {
+    private const string AmbiguousStroke="Có nhiều nét chồng hoặc quá gần vị trí đường kẻ này. Chưa xác định được nét duy nhất; cần kiểm tra thủ công trước khi đặt lại đường kẻ.";
     public static IReadOnlyList<(Issue Issue, PreviewAnchor Anchor)> Inspect(FixedDocumentSequence document,
         PreviewHighlighter preview, IReadOnlyList<LineTarget> targets, IReadOnlyList<WordLineShape> shapes,
         IReadOnlyDictionary<Issue, PreviewAnchor> anchors, IReadOnlyList<Issue> otherIssues, LinePolicy policy, bool hasGroupedShapes, IReadOnlyList<Issue>? verifiedEdits = null)
@@ -33,7 +34,13 @@ public static class LineInspection
             var verified=verifiedEdits?.SingleOrDefault(i=>i.Start==target.Start && i.Original==target.Text && i.LineFix?.Role==target.Role);
             if(verified?.LineFix is ShapeLineFix accepted)
             {
-                var actual=RenderedLineVerifier.Find(new(accepted.Left,accepted.Top,accepted.Width),preview.HorizontalLines(document,anchor.Page));
+                var expected=new LineGeometry(accepted.Left,accepted.Top,accepted.Width);
+                var rendered=preview.HorizontalLines(document,anchor.Page);
+                if(RenderedLineVerifier.MatchCount(expected,rendered)>1)
+                {
+                    result.Add((Notice(AmbiguousStroke),anchor));continue;
+                }
+                var actual=RenderedLineVerifier.Find(expected,rendered);
                 if(actual is not null && ShapeLineRules.Evaluate(target,reference,actual,accepted.ShapeId,policy).Errors.Length==0)
                 {
                     if(prerequisites.Length>0)
@@ -59,7 +66,13 @@ public static class LineInspection
             }
             else if (own.Length == 1 && own[0].AppOwned && own[0].Geometry is LineGeometry measured)
             {
-                var actual = RenderedLineVerifier.Find(measured, preview.HorizontalLines(document, anchor.Page));
+                var rendered = preview.HorizontalLines(document, anchor.Page);
+                if(RenderedLineVerifier.MatchCount(measured,rendered)>1)
+                {
+                    result.Add((Notice(AmbiguousStroke),anchor));
+                    continue;
+                }
+                var actual = RenderedLineVerifier.Find(measured, rendered);
                 if (actual is null)
                 {
                     var correction = ShapeLineRules.Evaluate(target, reference, null, own[0].Id, policy).Fix;
