@@ -6,7 +6,7 @@ public static class ReferenceMeasurement
 {
     public static LineReference? Read(FixedDocumentSequence document,PreviewHighlighter preview,PreviewAnchor anchor)
     {
-        var boxes=preview.Measure(document,anchor);
+        var boxes=preview.MeasureReference(document,anchor);
         if(boxes.Count==0)return null;
         double bottom=boxes.Max(b=>b.Bottom);
         var last=boxes.Where(b=>Math.Abs(b.Bottom-bottom)<=3).ToArray();
