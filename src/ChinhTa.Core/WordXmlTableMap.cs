@@ -17,15 +17,19 @@ public static class WordXmlTableMap
     private static string Clean(string text) => text.TrimEnd('\r', '\a').Replace('\u2011', '\u001e').Replace('\u00ad', '\u001f');
     public static IReadOnlyList<LayoutParagraph> Read(string wordOpenXml, IReadOnlyList<WordParagraphSnapshot> live, Action<WordXmlMappingException>? onMismatch = null, Action<int, int>? onParagraphMatched = null, Action<int,bool>? onTextEditable = null, bool includeLayout = true,Action<int,bool>? onFormatEditable=null)
         => Read(XDocument.Parse(wordOpenXml),live,onMismatch,onParagraphMatched,onTextEditable,includeLayout,onFormatEditable);
+    public static IReadOnlyList<LayoutParagraph> Read(WordXmlSnapshot snapshot,IReadOnlyList<WordParagraphSnapshot> live,
+        Action<WordXmlMappingException>? onMismatch=null,Action<int,int>? onParagraphMatched=null,Action<int,bool>? onTextEditable=null,
+        bool includeLayout=true,Action<int,bool>? onFormatEditable=null)
+        =>Read(snapshot.Document,live,onMismatch,onParagraphMatched,onTextEditable,includeLayout,onFormatEditable,snapshot);
     internal static IReadOnlyList<LayoutParagraph> Read(XDocument xml,IReadOnlyList<WordParagraphSnapshot> live,
-        Action<WordXmlMappingException>? onMismatch,Action<int,int>? onParagraphMatched,Action<int,bool>? onTextEditable,bool includeLayout,Action<int,bool>? onFormatEditable=null)
+        Action<WordXmlMappingException>? onMismatch,Action<int,int>? onParagraphMatched,Action<int,bool>? onTextEditable,bool includeLayout,Action<int,bool>? onFormatEditable=null,WordXmlSnapshot? snapshot=null)
     {
         var body = xml.Descendants(W + "document").Single().Element(W + "body")
             ?? throw new InvalidOperationException("Missing document body");
-        var paragraphs = body.Descendants(W + "p").Where(p => !p.Ancestors(W + "txbxContent").Any()).ToArray();
-        live = AlignBodyBlanks(paragraphs, live);
+        var paragraphs = snapshot?.Paragraphs??body.Descendants(W + "p").Where(p => !p.Ancestors(W + "txbxContent").Any()).ToArray();
+        live = AlignBodyBlanks(paragraphs, live,snapshot);
         int verified = Math.Min(paragraphs.Length, live.Count);
-        var formatLines=onFormatEditable is null?new HashSet<XElement>():OwnedLineFormatProof.Read(xml);
+        IReadOnlySet<XElement> formatLines=onFormatEditable is null?new HashSet<XElement>():snapshot?.OwnedLines??OwnedLineFormatProof.Read(xml);
         var result = new List<LayoutParagraph>();
         // Validate the entire prefix before allowing any cell/shape operation.
         for (int i = 0; i < verified; i++)
@@ -38,7 +42,7 @@ public static class WordXmlTableMap
                 if (onMismatch is null) throw error;
                 onMismatch(error); verified = i; break;
             }
-            string text = TextOf(p);
+            string text = snapshot?.TextAt(i)??TextOf(p);
             if (Clean(text) != Clean(live[i].Text))
             {
                 var error = new WordXmlMappingException("XML-TEXT", i + 1, Clean(text).Length, Clean(live[i].Text).Length);
@@ -63,6 +67,9 @@ public static class WordXmlTableMap
         if (!includeLayout) return result;
         var index = paragraphs.Select((p, i) => (p, i)).ToDictionary(x => x.p, x => x.i);
         var styles = xml.Descendants(W + "styles").FirstOrDefault();
+        var tableComplexity=new Dictionary<XElement,bool>();
+        var cellBounds=new Dictionary<XElement,(int First,int Last,int TableFirst)>();
+        var cellMargins=new Dictionary<XElement,bool>();
         for (int i = 0; i < verified; i++)
         {
             var p = paragraphs[i]; var item = live[i];
@@ -73,11 +80,19 @@ public static class WordXmlTableMap
             {
                 var table = cell.Ancestors(W + "tbl").First();
                 // Nested tables/merged cells require separate geometry handling.
-                bool complex = table.Ancestors(W + "tbl").Any() || table.Descendants(W + "tbl").Any() ||
-                    table.Descendants(W + "vMerge").Any() || table.Descendants(W + "gridSpan").Any();
-                var cellPs = cell.Descendants(W + "p").Where(index.ContainsKey).ToArray();
-                int first = index[cellPs.First()], last = index[cellPs.Last()];
-                int tableFirst = index[table.Descendants(W + "p").First()];
+                if(snapshot is null || !tableComplexity.TryGetValue(table,out bool complex))
+                {
+                    complex=table.Ancestors(W + "tbl").Any() || table.Descendants(W + "tbl").Any() ||
+                        table.Descendants(W + "vMerge").Any() || table.Descendants(W + "gridSpan").Any();
+                    tableComplexity[table]=complex;
+                }
+                if(snapshot is null || !cellBounds.TryGetValue(cell,out var bounds))
+                {
+                    var cellPs=cell.Descendants(W+"p").Where(index.ContainsKey).ToArray();
+                    bounds=(index[cellPs.First()],index[cellPs.Last()],index[table.Descendants(W+"p").First()]);
+                    cellBounds[cell]=bounds;
+                }
+                int first=bounds.First,last=bounds.Last,tableFirst=bounds.TableFirst;
                 if (complex || last >= verified)
                 {
                     // An unrelated later table must not disable the valid header table.
@@ -86,7 +101,8 @@ public static class WordXmlTableMap
                     continue;
                 }
                 cellStart = live[first].Start; cellEnd = live[last].End; tableStart = live[tableFirst].Start;
-                balanced = BalancedMargins(cell, table, styles);
+                if(snapshot is null || !cellMargins.TryGetValue(cell,out balanced))
+                    cellMargins[cell]=balanced=BalancedMargins(cell,table,styles);
             }
             result.Add(new(item.Start, item.Text, item.Page, cell is not null, cellStart, cellEnd,
                 item.Centered && balanced, tableStart, item.ParagraphCentered,item.UnindentedCenter is bool center?center && balanced:null));
@@ -98,7 +114,7 @@ public static class WordXmlTableMap
         !(allowTextBreaks && e.Parent?.Name==W+"r" && (e.Name==W+"cr" || e.Name==W+"br" && ((string?)e.Attribute(W+"type") is null or "textWrapping"))) &&
         (e.Name!=W+"tab" || e.Parent?.Name==W+"r" && !allowTabs) ||
         e.Name.NamespaceName=="http://schemas.openxmlformats.org/officeDocument/2006/math");
-    private static string TextOf(XElement p)
+    internal static string TextOf(XElement p)
     {
         return string.Concat(p.Descendants().Where(e => e.Parent?.Name == W + "r" &&
                 e.Ancestors(W + "p").FirstOrDefault() == p)
@@ -107,7 +123,7 @@ public static class WordXmlTableMap
                     { "page" => "\f", "column" => "\u000e", _ => "\v" } : e.Name == W + "cr" ? "\v" :
                     e.Name == W + "noBreakHyphen" ? "\u2011" : e.Name == W + "softHyphen" ? "\u00ad" : ""));
     }
-    private static IReadOnlyList<WordParagraphSnapshot> AlignBodyBlanks(XElement[] paragraphs, IReadOnlyList<WordParagraphSnapshot> live)
+    private static IReadOnlyList<WordParagraphSnapshot> AlignBodyBlanks(XElement[] paragraphs, IReadOnlyList<WordParagraphSnapshot> live,WordXmlSnapshot? snapshot=null)
     {
         var aligned = new List<WordParagraphSnapshot>();
         bool precedingMatched = true;
@@ -115,7 +131,7 @@ public static class WordXmlTableMap
         while (y < live.Count)
         {
             if (x >= paragraphs.Length) { aligned.AddRange(live.Skip(y)); break; }
-            string expected = Clean(TextOf(paragraphs[x]));
+            string expected = Clean(snapshot?.TextAt(x)??TextOf(paragraphs[x]));
             // Word can enumerate an additional empty body paragraph after a table.
             // Skip only after an already matched body paragraph, never inside a cell,
             // at the start of the story, or past a text mismatch. Real Word CPs stay intact.

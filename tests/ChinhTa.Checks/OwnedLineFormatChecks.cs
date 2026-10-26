@@ -34,7 +34,8 @@ public static class OwnedLineFormatChecks
             }
             foreach(bool soft in new[]{false,true})
             {
-                var sample=ComponentChecks.Sample(softBreak:soft,changeXml:xml=>Attach(xml));
+                WordXmlSnapshot? snapshot=null;
+                var sample=ComponentChecks.Sample(softBreak:soft,changeXml:xml=>{Attach(xml);snapshot=WordXmlSnapshot.Parse(xml.ToString());});
                 assert(ComponentRules.Check(sample.Rows,sample.Layout,DocumentProfile.State).Count==0,
                     "Adding all three owned Lines does not invent an agency/recipient format warning");
                 assert(DocumentHeadingRules.Check(sample.Rows,sample.Layout,DocumentProfile.State).Count==0,
@@ -56,6 +57,11 @@ public static class OwnedLineFormatChecks
                 {
                     var row=sample.Rows.Single(p=>p.Text.TrimEnd('\r','\a')==text);
                     assert(!row.TextEditable && row.FormatEditable,"Owned floating Lines allow character formatting but never ordinary text replacement");
+                    var current=sample.Rows.Select(r=>new WordParagraphSnapshot(r.Start,r.Start+r.Text.Length,r.Text,r.Page,r.InTable,true)).ToArray();
+                    var indices=new Dictionary<int,int>();
+                    WordTextProof.Read(snapshot!,current,onParagraphMatched:(start,index)=>indices[start]=index);
+                    var runPlan=snapshot!.FormatRuns(indices[row.Start],current.Single(r=>r.Start==row.Start));
+                    assert(runPlan is not null && runPlan.Text==text,"A verified text-free owned Line retains the read-only run plan without authorizing text replacement");
                 }
                 var bad=sample.Rows.Select(p=>p.Text.StartsWith("ĐƠN VỊ BAN HÀNH") || p.Text.StartsWith("trong giai đoạn")?
                     p with {Font="Arial",Color=255,Size=10}:p).ToArray();

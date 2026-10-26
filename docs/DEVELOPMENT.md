@@ -1,5 +1,9 @@
 # Tiếp tục phát triển Chính tả Việt
 
+## Thử nghiệm đọc 0.1.68 từ mốc .67
+
+Theo yêu cầu người dùng ngày 26/10/2026: thử snapshot XML chung, tra vùng theo chỉ mục và đọc format theo run Word đã đối chiếu, có fallback toàn vùng. Thêm bật/tắt để đối chiếu và thời gian/counters từng chặng. Giữ bảng, Preview XPS và toàn bộ hậu kiểm/rollback. Không lấy bộ đọc Python bỏ bảng; không suy đoán style hoặc dùng cache qua sửa. Chạy hồi quy/benchmark XML và thêm fixture so hai chế độ trên Word; CI không chứng minh Office2021. Bản thử tách nhánh/version, mốc .67 và main giữ nguyên. [Thiết kế và phép thử](PERFORMANCE-EXPERIMENT-0.1.68.md).
+
 ## Mốc lưu 0.1.67 — trước thử nghiệm hiệu năng
 
 Yêu cầu người dùng ngày 25/10/2026: đóng gói bản hiện tại và giữ lại trước khi thử tối ưu. Nguồn chức năng 0.1.65 tại `56891d501a32f183ba6154e9a5829b2cd65c34e4`; giữ thuật toán, bảng và Preview Word/XPS. Không triển khai tối ưu trong mốc này. Chỉ version/report-history/docs/metadata đóng gói thay đổi; ghi SHA-256 nguồn giữ nguyên trong BASELINE-0.1.67.json. Phiên bản thử tiếp theo phải tách nhánh/version, không di chuyển tag .67 hoặc ghi đè gói. Đánh giá tốc độ phải kèm đủ dữ liệu/Preview, kết quả sửa và rollback. Giới hạn/điểm Office2021 còn mở tiếp tục giữ. [Hướng dẫn mốc và quay lại](CHANGES-0.1.67.md).

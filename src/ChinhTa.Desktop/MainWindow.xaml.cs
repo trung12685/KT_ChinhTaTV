@@ -74,13 +74,21 @@ public partial class MainWindow : Window
         Run(() => { pending = displayed = null; anchors.Clear(); ClosePreview(); Review.LoadIssues([]); session.Open(dialog.FileName); Scan(); });
     }
     private void ScanClick(object sender, RoutedEventArgs e) { if (session.IsOpen) Run(Scan); }
+    private void ReadingModeClick(object sender,RoutedEventArgs e)
+    {
+        session.UseOptimizedReading=((MenuItem)sender).IsChecked;
+        if(session.IsOpen)Run(Scan);
+    }
     private void Scan()
     {
+        using var timing=new WordOperationTiming("Word.Perf.Scan");
+        timing.Count("Optimized",session.UseOptimizedReading?1:0);
         hover.Stop();pending = displayed = null;
         Review.LoadIssues([]);
         CoverageInfo.Visibility=Visibility.Collapsed;
         var timer = Stopwatch.StartNew();
         var found = session.Check().ToList();
+        timing.Mark("Check");
         double checkSeconds = timer.Elapsed.TotalSeconds;
         ClosePreview();
         anchors.Clear();
@@ -88,6 +96,7 @@ public partial class MainWindow : Window
         xpsPath = session.ExportPreview(found.Concat(session.LineTargets.Select(t => t.Probe)).Concat(positionProbes).Distinct().ToArray(), anchors);
         xps = new XpsDocument(xpsPath, FileAccess.Read);
         Preview.Document = xps.GetFixedDocumentSequence();
+        timing.Mark("BuildPreview");
         if (Preview.Document is System.Windows.Documents.FixedDocumentSequence sequence)
         {
             var policy = LinePolicy.Decree30;
@@ -97,11 +106,14 @@ public partial class MainWindow : Window
             foreach(var entry in AdministrativePositionInspection.Inspect(sequence,highlighter,session.AdministrativePositionTargets,anchors))
             {found.Add(entry.Issue);anchors[entry.Issue]=entry.Anchor;}
         }
+        timing.Mark("InspectGeometry");
         Review.LoadIssues(found,anchors);
+        timing.Mark("ShowIssues");timing.Count("Completed",1);
         CoverageInfo.Text=session.CoverageNotice??"";
         CoverageInfo.Visibility=session.CoverageNotice is null?Visibility.Collapsed:Visibility.Visible;
         Status.Text = $"{Path.GetFileName(session.Source)} — {found.Count} cảnh báo. " +
             $"Quét: {checkSeconds:F1}s; dựng trang: {timer.Elapsed.TotalSeconds - checkSeconds:F1}s. " +
+            (session.UseOptimizedReading?"Đọc tối ưu thử nghiệm. ":"Đọc theo cách cũ. ")+
             "Chọn hoặc rê chuột lên lỗi để đánh dấu riêng, không xuất lại Word." +
             (session.Recovered ? " Đã khôi phục kết nối Word từ bản lưu gần nhất." : "");
     }

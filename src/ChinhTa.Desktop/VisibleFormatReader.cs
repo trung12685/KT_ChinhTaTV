@@ -10,6 +10,15 @@ public sealed record VisibleFont(string Name,float Size,int Bold,int Italic,int 
     public bool Known=>!string.IsNullOrWhiteSpace(Name) && float.IsFinite(Size) && Size>0 && Size<9999999 &&
         Bold is 0 or -1 && Italic is 0 or -1 && Color is not (9999999 or -9999999);
 }
+public sealed class FormatReadMeasurements
+{
+    public int AggregateReads { get; internal set; }
+    public int PartitionReads { get; internal set; }
+    public int PartitionSuccesses { get; internal set; }
+    public int PartitionFallbacks { get; internal set; }
+    public int WordReads { get; internal set; }
+    public int CharacterReads { get; internal set; }
+}
 // Read-only fallback for an XML-proven span: uniform aggregate, then real Word
 // word ranges, then characters only inside unresolved words (or the whole span
 // if Words does not cover it exactly). Never infer child ranges from text indices.
@@ -52,26 +61,69 @@ public static partial class VisibleFormatReader
         try{return new((string?)font.Name??"",(float)font.Size,(int)font.Bold,(int)font.Italic,(int)font.Color);}
         finally{Release(font);}
     }
-    public static IReadOnlyList<VisibleFont> Read(object rangeObject,string expected,bool allowCharacterFallback)
+    public static IReadOnlyList<VisibleFont> Read(object rangeObject,string expected,bool allowCharacterFallback,
+        WordFormatRunPlan? runPlan=null,Func<int,int,object>? readRange=null,FormatReadMeasurements? measurements=null)
     {
         dynamic range=rangeObject;
         if((string?)range.Text!=expected)throw new InvalidOperationException("Vùng định dạng đã thay đổi; hãy quét lại.");
+        if(measurements is not null)measurements.AggregateReads++;
         VisibleFont whole=Font(range);
         if(whole.Known || !allowCharacterFallback)return [whole];
+        if(runPlan is not null && readRange is not null)
+        {
+            var partitioned=ReadPartitions(rangeObject,runPlan,expected,readRange,measurements);
+            if(partitioned is not null)
+            {
+                // Recheck the containing live text after reading every run.
+                if((string?)range.Text!=expected)throw new InvalidOperationException("Vùng định dạng đã thay đổi; hãy quét lại.");
+                if(measurements is not null)measurements.PartitionSuccesses++;
+                return partitioned;
+            }
+            if(measurements is not null)measurements.PartitionFallbacks++;
+        }
         try
         {
             dynamic words=range.Words;
-            try{return Children((object)words,expected,whole,allowCharacters:true);}
+            try{return Children((object)words,expected,whole,allowCharacters:true,measurements:measurements);}
             finally{Release(words);}
         }
         catch(Exception error) when(error is RuntimeBinderException or InvalidOperationException ||
             error is COMException && !WordConnectionPolicy.IsDisconnected(error))
         { /* Word may return a last word outside the requested range; verify Characters instead. */ }
         dynamic characters=range.Characters;
-        try{return Children((object)characters,expected,whole,allowCharacters:false);}
+        try{return Children((object)characters,expected,whole,allowCharacters:false,measurements:measurements);}
         finally{Release(characters);}
     }
-    private static IReadOnlyList<VisibleFont> Children(object childrenObject,string expected,VisibleFont whole,bool allowCharacters)
+    private static IReadOnlyList<VisibleFont>? ReadPartitions(object parentObject,WordFormatRunPlan plan,string expected,
+        Func<int,int,object> readRange,FormatReadMeasurements? measurements)
+    {
+        if(plan.Text!=expected)return null;
+        var fonts=new List<VisibleFont>();
+        try
+        {
+            dynamic parent=parentObject;
+            if((int)parent.Start!=plan.Start || (long)(int)parent.End!=(long)plan.Start+expected.Length)return null;
+            foreach(var part in plan.Runs)
+            {
+                dynamic child=readRange(part.Start,part.End);
+                try
+                {
+                    if(measurements is not null)measurements.PartitionReads++;
+                    if((int)child.Start!=part.Start || (int)child.End!=part.End || (string?)child.Text!=part.Text)return null;
+                    if(string.IsNullOrWhiteSpace(part.Text))continue;
+                    var font=Font(child);
+                    if(!font.Known)return null;
+                    fonts.Add(font);
+                }
+                finally{Release(child);}
+            }
+            return fonts.Count>0?fonts:null;
+        }
+        catch(Exception error) when(error is RuntimeBinderException or InvalidOperationException ||
+            error is COMException && !WordConnectionPolicy.IsDisconnected(error))
+        {return null;}
+    }
+    private static IReadOnlyList<VisibleFont> Children(object childrenObject,string expected,VisibleFont whole,bool allowCharacters,FormatReadMeasurements? measurements=null)
     {
         dynamic children=childrenObject;
         var text=new StringBuilder();var fonts=new List<VisibleFont>();
@@ -79,6 +131,8 @@ public static partial class VisibleFormatReader
         if(count<1 || count>expected.Length+2)throw new InvalidOperationException("Chưa đối chiếu được số vùng Word để kiểm phông.");
         for(int i=1;i<=count;i++)
         {
+            if(measurements is not null)
+            {if(allowCharacters)measurements.WordReads++;else measurements.CharacterReads++;}
             dynamic child=children[i];
             try
             {
@@ -90,7 +144,7 @@ public static partial class VisibleFormatReader
                     else
                     {
                         dynamic characters=child.Characters;
-                        try{fonts.AddRange(Children((object)characters,value,observed,allowCharacters:false));}
+                        try{fonts.AddRange(Children((object)characters,value,observed,allowCharacters:false,measurements:measurements));}
                         finally{Release(characters);}
                     }
                 }
