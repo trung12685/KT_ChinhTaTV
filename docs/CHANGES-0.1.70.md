@@ -49,3 +49,13 @@ Sửa thiết lập trang trước, sau đó quét/đo lại các mục đã ch�
 Báo cáo nguồn cập nhật32 đề xuất/8 thủ công/1 minh họa, thêm ví dụ C32, giữ M01 cho ngoại lệ. Kiểm Core cho policy/guard/candidate/proof/tamper/rebind/transaction; WPF cho chọn nhóm/mẫu thật/thuộc tính section OpenXML. Có kịch bản Word giả sửa riêng/chung chữ và ba Line, lỗi sau trang/sau nhóm, Undo, lưu-mở, kiểu chữ và hash nguồn. CI chỉ biên dịch bài Word, chưa chứng minh Office2021 chạy đạt. Chưa có gói Windows mới.
 
 Số trang: đã đối chiếu PL I.I.7 — sốẢRập từ1,13–14pt, đứng, giữa lề trên, ẩn trang đầu. Chưa triển khai sửa số trang trong đợt này: header/footer có field, liên kết và nhiều section cần một phạm vi riêng để bảo toàn dữ liệu. Xem [FORMAT-BATCH-02.md](FORMAT-BATCH-02.md).
+
+## Đợt thể thức03 — số trang/PAGE (26/10/2026)
+
+Thêm **C33 — Số trang và trường PAGE**, theo NĐ30 PL I.I.4 và I.7 (PDF21). Khi tài liệu Nhà nước có từ hai trang, một section dọc, header trống hoặc chỉ PAGE đã nhận diện chắc: đề xuất tạo/sửa PAGE dùng Times New Roman đen,13–14pt, đứng, căn giữa lề trên; sốẢRập từ1, ẩn trang đầu. Một trang không có header không bị báo thiếu. Giữ cỡ13/13,5/14 đúng, đậm/gạch chân; không đổi chữ/bảng/ảnh trong thân.
+
+Khi bật khác trang đầu, tái sử dụng footer trước đây đang hiển thị ở trang1; không làm mất ghi chú footer. Header/logo/nội dung riêng, nhiều section/liên kết, odd-even, field khoá/kiểu chưa chắc hoặc PAGE ở footer chưa tự đổi. Phần chưa nhận diện không bị kết luận sai chỉ vì chưa tìm được PAGE.
+
+Candidate chỉ thay header PAGE, cờ số/ẩn trang đầu/khoảng header và quan hệ/ContentTypes cần thiết; đối chiếu XML và từng byte phần không đổi. Các nhóm chọn kèm được sửa trước rồi đọc lại cấu hình/PAGE theo phân trang hiện tại; một Undo/rollback cả lượt. Hậu kiểm cả số thực trên từng trangXPS: trang1 không có số, trang2 hiện2, tiếp tục3...; đúng phông/màu/cỡ/đứng/vị trí. Đối chiếu vị trí và nội dung các lá hình ảnh/chữ/bảng/footer ngoài lề trên trước-sau. Không báo đạt từ codePAGE hoặc số part/Shape.
+
+Có kiểm Core, WPF/schema, lỗi giữa lượt, footer trang đầu, bảo vệ dữ liệu, danh sách nhóm/tooltip/TXT và ví dụ. Kịch bản Word giả thêm sửa riêng/chung khoảng trắng/ba Line, lỗi sau nhóm/sau PAGE, lưu-mở/Undo/hash nguồn. CI biên dịch bài Word nhưng không chạy Office; chưa có bằng chứng Office2021 đạt C33. Tổng nguồn33 đề xuất/8 thủ công/1 minh họa; .70 chưa đóng gói. Chi tiết [FORMAT-BATCH-03.md](FORMAT-BATCH-03.md).

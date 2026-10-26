@@ -228,6 +228,7 @@ static class Program
         SignatureReviewChecks.Run(Assert);
         SignatureFixtureChecks.Run(Assert);
         PageLayoutDesktopChecks.Run(Assert);
+        PageNumberDesktopChecks.Run(Assert);
 QuoteReviewChecks.Run(Assert);
 QuoteAfterReviewChecks.Run(Assert);
 DelimiterClusterReviewChecks.Run(Assert);

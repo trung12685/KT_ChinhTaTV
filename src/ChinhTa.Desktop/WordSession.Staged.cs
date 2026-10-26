@@ -10,6 +10,7 @@ public sealed partial class WordSession
     public RepairBatchResult FixSelection(IEnumerable<Issue> selection)
     {
         var chosen=selection.Distinct().ToArray();
+        if(chosen.Any(i=>i.NumberFix is not null))return FixNumberSelection(chosen);
         if(chosen.Any(i=>i.PageFix is not null))return FixPageSelection(chosen);
         var plan=StagedRepairBatch.Prepare(chosen);
         repairProgress=new(plan.Count,ProgressReporter);
@@ -28,6 +29,7 @@ public sealed partial class WordSession
         if(LineCheckArtifactFolder is null || afterStage is <1 or >3)
             throw new InvalidOperationException("Chỉ dùng trong phiên kiểm Word riêng.");
         var chosen=selection.Distinct().ToArray();
+        if(chosen.Any(i=>i.NumberFix is not null)){FixNumberSelection(chosen,afterStage);return;}
         if(chosen.Any(i=>i.PageFix is not null)){FixPageSelection(chosen,afterStage);return;}
         var plan=StagedRepairBatch.Prepare(chosen);
         if(plan.Select(StagedRepairBatch.Stage).Distinct().Count()<2)

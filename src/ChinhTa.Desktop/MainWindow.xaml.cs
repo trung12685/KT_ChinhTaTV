@@ -139,7 +139,7 @@ public partial class MainWindow : Window
         if (Preview.Document is not System.Windows.Documents.FixedDocumentSequence document) return;
         var timer = Stopwatch.StartNew();
         Preview.GoToPage(anchor.Page);
-        bool pageWarning = issue.Kind == FixKind.PageLayout;
+        bool pageWarning = issue.Kind is FixKind.PageLayout or FixKind.PageNumber;
         if (pageWarning) highlighter.Clear();
         bool marked = !pageWarning && highlighter.Show(document, anchor);
         if (issue.LineFix is ShapeLineFix lineFix) highlighter.ShowLineSuggestion(document,anchor.Page,lineFix);

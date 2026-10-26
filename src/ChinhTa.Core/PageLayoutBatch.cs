@@ -5,9 +5,12 @@ public static class PageLayoutBatch
 {
     public static IReadOnlyList<Issue> Prepare(IEnumerable<Issue> selection)
     {
-        var items=selection.Distinct().ToArray();var pages=items.Where(i=>i.PageFix is not null).ToArray();
+        var all=selection.Distinct().ToArray();var numbers=all.Where(i=>i.NumberFix is not null).ToArray();
+        if(numbers.Length>1)throw new InvalidOperationException("Chỉ có một đề xuất PAGE trong section đã xác minh.");
+        BatchPlan.Create(numbers);
+        var items=all.Where(i=>i.NumberFix is null).ToArray();var pages=items.Where(i=>i.PageFix is not null).ToArray();
         if(pages.Length>1)throw new InvalidOperationException("Chỉ có một đề xuất cho section dọc đã xác minh.");
-        BatchPlan.Create(pages);StagedRepairBatch.Prepare(items.Where(i=>i.PageFix is null));return items;
+        BatchPlan.Create(pages);StagedRepairBatch.Prepare(items.Where(i=>i.PageFix is null));return all;
     }
     public static IReadOnlyList<Issue> Rebind(IReadOnlyList<PageSelectionReference> selected,IReadOnlyList<Issue> current,Func<Issue,string> prefix)
     {

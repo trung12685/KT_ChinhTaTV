@@ -20,7 +20,7 @@ public static class AtomicTextBatch
     private static IReadOnlyList<Issue> TextPlan(IEnumerable<Issue> selection)
     {
         var plan=BatchPlan.Create(selection);
-        if(plan.Any(i=>i.PageFix is not null || i.LineFix is not null || i.Kind==FixKind.ShapeLine))
+        if(plan.Any(i=>i.NumberFix is not null || i.PageFix is not null || i.LineFix is not null || i.Kind==FixKind.ShapeLine))
             throw new InvalidOperationException("Giao dịch chữ không nhận thao tác Shape Line.");
         return plan;
     }

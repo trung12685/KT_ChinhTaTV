@@ -76,7 +76,7 @@ public static class ParentheticalPunctuationChecks
             review.Section==IssueReviewSection.ReviewSuggestion,"Parenthetical punctuation stays a reviewed application rule in the existing group");
         var report=DevelopmentReport.Build("0.1.61",DateTimeOffset.UnixEpoch);
         assert(report.Contains("Theo mẫu (nội dung) ,báo cáo.") && report.Contains("Theo mẫu (nội dung), báo cáo.") &&
-            report.Contains("ngoặc cân bằng, không lồng") && DevelopmentReport.Count(CapabilityMode.Reviewable)==32,
+            report.Contains("ngoặc cân bằng, không lồng") && DevelopmentReport.Count(CapabilityMode.Reviewable)==33,
             "The report includes an executable before/after example and parenthetical limits without adding a capability group");
         var style=new Issue(0,mixed.Length-2,mixed[..^2],mixed[..^2],"",false,FixKind.DocumentHeadingFormat,CharacterFormat:new(13,false,true));
         var styled=BatchPlan.Create(all.Append(style));

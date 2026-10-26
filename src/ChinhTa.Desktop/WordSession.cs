@@ -311,6 +311,16 @@ public sealed partial class WordSession : IDisposable
             }
             finally { Release(sections); }
         }
+        if(Profile==DocumentProfile.State && bodyXml is not null)
+        {
+            try
+            {
+                var anchor=paragraphs.FirstOrDefault(p=>p.Text.Length>0 && !char.IsControl(p.Text[0]) && !char.IsWhiteSpace(p.Text[0]));
+                if(anchor is not null)issues.AddRange(PageNumberRules.Check(PageNumberDocumentReader.ReadCurrent((object)document!),(int)document.ComputeStatistics(2),anchor.Start,anchor.Text[..1],Profile));
+            }
+            catch(Exception error) when(error is InvalidOperationException or System.Xml.XmlException)
+            {Diagnostics.Write("Word.PageNumber.ScopeUnavailable",error);}
+        }
         timing.Mark("PageRules");timing.Count("Issues",issues.Count);timing.Count("Completed",1);
         return issues.OrderBy(x => x.Start).ToArray();
     }
