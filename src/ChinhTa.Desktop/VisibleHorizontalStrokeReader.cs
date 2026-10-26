@@ -67,6 +67,11 @@ internal static class VisibleHorizontalStrokeReader
                 }
                 var original=InPage(painted,matrix);
                 if(original.GetArea(GeometryTolerance,ToleranceType.Absolute)<=0)continue;
+                double bandHeight=Math.Min(.05,original.Bounds.Height/4);
+                var spine=new RectangleGeometry(new Rect(rect.Left+GeometryTolerance,
+                    (rect.Top+rect.Bottom-bandHeight)/2,rect.Width-2*GeometryTolerance,bandHeight));
+                if(bandHeight<=0 || original.FillContainsWithDetail(spine,GeometryTolerance,ToleranceType.Absolute)!=IntersectionDetail.FullyContains)
+                    uncertain=true;
                 Geometry visible=original;
                 for(DependencyObject? node=path;node is Visual visual;node=VisualTreeHelper.GetParent(node))
                 {
@@ -75,19 +80,19 @@ internal static class VisibleHorizontalStrokeReader
                     {
                         var toPage=ToPage(visual,page);
                         if(toPage is null){uncertain=true;break;}
-                        visible=Combine(visible,InPage(clip,toPage),GeometryCombineMode.Intersect);
+                        visible=Intersect(visible,InPage(clip,toPage));
                     }
                     if(node is UIElement {ClipToBounds:true} element)
                     {
                         var toPage=ToPage(visual,page);
                         if(toPage is null){uncertain=true;break;}
-                        visible=Combine(visible,InPage(new RectangleGeometry(new Rect(element.RenderSize)),toPage),GeometryCombineMode.Intersect);
+                        visible=Intersect(visible,InPage(new RectangleGeometry(new Rect(element.RenderSize)),toPage));
                     }
                     if(ReferenceEquals(node,page))break;
                 }
                 if(!double.IsFinite(page.Width) || !double.IsFinite(page.Height) || page.Width<=0 || page.Height<=0)
                     return new(result,true);
-                visible=Combine(visible,new RectangleGeometry(new Rect(0,0,page.Width,page.Height)),GeometryCombineMode.Intersect);
+                visible=Intersect(visible,new RectangleGeometry(new Rect(0,0,page.Width,page.Height)));
                 if(visible.GetArea(GeometryTolerance,ToleranceType.Absolute)<=0)continue;
                 if(uncertain || Combine(original,visible,GeometryCombineMode.Exclude).GetArea(GeometryTolerance,ToleranceType.Absolute)>AreaTolerance)
                 {unverified=true;continue;}
@@ -142,5 +147,10 @@ internal static class VisibleHorizontalStrokeReader
     }
     private static Geometry Combine(Geometry first,Geometry second,GeometryCombineMode mode)
         =>Geometry.Combine(first,second,mode,Transform.Identity,GeometryTolerance,ToleranceType.Absolute);
+    private static Geometry Intersect(Geometry painted,Geometry clip)
+        // Avoid rounding a fully contained fractional stroke through a Boolean
+        // intersection and then mistaking that rounding for a clipped sliver.
+        =>clip.FillContainsWithDetail(painted,GeometryTolerance,ToleranceType.Absolute)==IntersectionDetail.FullyContains
+            ?painted:Combine(painted,clip,GeometryCombineMode.Intersect);
     private static bool Finite(Rect rect)=>!rect.IsEmpty && new[]{rect.Left,rect.Top,rect.Width,rect.Height}.All(double.IsFinite);
 }

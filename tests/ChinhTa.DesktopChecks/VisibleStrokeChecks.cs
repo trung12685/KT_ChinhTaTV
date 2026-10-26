@@ -87,7 +87,9 @@ static class VisibleStrokeChecks
             ("hole in clip",(c,p)=>p.Clip=Geometry.Parse("F0 M 90,110 L 190,110 190,130 90,130 Z M 135,110 L 145,110 145,130 135,130 Z")),
             ("nonuniform opacity mask",(c,p)=>p.OpacityMask=new LinearGradientBrush(Colors.Transparent,Colors.Black,0)),
             ("unsupported paint brush",(c,p)=>p.Stroke=new LinearGradientBrush(Colors.Black,Colors.Red,0)),
-            ("dashed stroke",(c,p)=>p.StrokeDashArray=new DoubleCollection{2,1})
+            ("dashed stroke",(c,p)=>p.StrokeDashArray=new DoubleCollection{2,1}),
+            ("thin hollow outline",(c,p)=>{p.Fill=null;p.StrokeThickness=.1;p.Data=new RectangleGeometry(new Rect(100,120,80,1.2));}),
+            ("thin V bounds are not a horizontal painted spine",(c,p)=>{p.StrokeThickness=.1;p.Data=Geometry.Parse("M 100,120 L 140,121 180,120");})
         };
         foreach(var (name,set) in uncertain)
         {

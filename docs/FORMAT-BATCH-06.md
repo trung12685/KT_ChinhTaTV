@@ -9,7 +9,7 @@ Commit a8cb7096 chỉ thêm kiểm WPF vào mã đợt05. CI 40384101625 đạt 
 ## Cụm sửa
 
 - Xét Visibility, opacity và opacity mask trên Path lẫn các ancestor; không tính nét chắc chắn không được vẽ. Không dùng IsVisible phụ thuộc cửa sổ vì trang XPS được đo ngoài màn hình.
-- Phân biệt stroke có độ dày/bút thật và fill có diện tích. Giữ biểu diễn hình chữ nhật mảnh của Word; Fill/Stroke hợp thành union, tôn trọng fill rule khi Path có nhiều figure để không lấp nhầm lỗ hoặc tạo nét từ các figure triệt tiêu nhau.
+- Phân biệt stroke có độ dày/bút thật và fill có diện tích. Bounds mảnh còn phải có dải tâm ngang được tô/vẽ liên tục; không lấy khung rỗng hoặc nét chữ V mảnh làm một đường ngang. Giữ biểu diễn hình chữ nhật mảnh của Word; Fill/Stroke hợp thành union, tôn trọng fill rule khi Path có nhiều figure để không lấp nhầm lỗ hoặc tạo nét từ các figure triệt tiêu nhau.
 - Đưa phần vẽ và clip vào cùng tọa độ trang, xét clip của Path/ancestor, layout ClipToBounds và kích thước trang vật lý. Clip hình học dùng giao hình thật, không chỉ hình chữ nhật bounds; nét hoàn toàn ngoài vùng cắt không tính. Transform của Data và ancestor được áp đúng một lần.
 - Nét bị cắt một phần, bút/mask chưa chứng minh được hoặc nét đứt giữ trạng thái chưa xác minh. Quét báo thủ công, kể cả có lịch sử sửa; không bỏ nét chưa rõ rồi suy là thiếu để thêm Line. API hậu kiểm nghiêm ngặt từ chối trạng thái này; lỗi sau mở candidate phục hồi checkpoint.
 
