@@ -1,5 +1,11 @@
 # Chính tả Việt
 
+## 0.1.73 — nhãn Line đã bù vị trí sau lưu Word
+
+[Windows x64](https://github.com/trung12685/KT_ChinhTaTV/releases/download/v0.1.73/ChinhTaViet-0.1.73-win-x64.zip) · [Thay đổi](docs/CHANGES-0.1.73.md) · [Hướng dẫn kiểm](docs/OFFICE-CHECK-0.1.73.md).
+
+Phản hồi 0.1.72 vẫn dừng Subject: checkpoint cho thấy Word ghép Title ý định và Description marker vào alt VML sau bù vị trí; phép nhận cặp trước chỉ chấp nhận Description đơn. Bổ sung đối chiếu toàn bộ nhãn ghép với Title/marker cùng đối tượng; giữ kiểm endpoint, nét XPS, rollback/Undo và bộ đọc cũ. Đã tái hiện và kiểm candidate trên checkpoint đúng bước thất bại, giữ chữ/bảng/định dạng/part khác. Chưa xác nhận toàn bài Office thực đạt 0.1.73; kết quả CI theo đúng commit trong gói. Danh mục 33/8/1 giữ nguyên.
+
 ## 0.1.72 — sửa nhận diện Line sau khi Word lưu
 
 [Windows x64](https://github.com/trung12685/KT_ChinhTaTV/releases/download/v0.1.72/ChinhTaViet-0.1.72-win-x64.zip) · [Thay đổi](docs/CHANGES-0.1.72.md) · [Hướng dẫn kiểm](docs/OFFICE-CHECK-0.1.72.md).

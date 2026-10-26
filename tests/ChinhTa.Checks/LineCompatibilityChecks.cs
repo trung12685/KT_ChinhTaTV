@@ -34,6 +34,8 @@ static class LineCompatibilityChecks
             XElement Pair(XElement drawing)
             {
                 var anchor=drawing.Element(WP+"anchor")!;var property=anchor.Element(WP+"docPr")!;
+                string? title=(string?)property.Attribute("title");
+                string description=property.Attribute("descr")!.Value;
                 double x=double.Parse(anchor.Element(WP+"positionH")!.Element(WP+"posOffset")!.Value,CultureInfo.InvariantCulture)/12700;
                 double y=double.Parse(anchor.Element(WP+"positionV")!.Element(WP+"posOffset")!.Value,CultureInfo.InvariantCulture)/12700;
                 double width=double.Parse(anchor.Element(WP+"extent")!.Attribute("cx")!.Value,CultureInfo.InvariantCulture)/12700;
@@ -41,7 +43,8 @@ static class LineCompatibilityChecks
                 return new XElement(MC+"AlternateContent",new XAttribute(XNamespace.Xmlns+"shapeChoice",WPS.NamespaceName),
                     new XElement(MC+"Choice",new XAttribute("Requires","shapeChoice"),new XElement(drawing)),
                     new XElement(MC+"Fallback",new XElement(W+"pict",new XElement(V+"line",
-                        new XAttribute("id",property.Attribute("name")!.Value),new XAttribute("alt",property.Attribute("descr")!.Value),
+                        new XAttribute("id",property.Attribute("name")!.Value),
+                        new XAttribute("alt",title is null?description:$"Title: {title} - Description: {description}"),
                         new XAttribute("style","position:absolute;mso-position-horizontal-relative:page;mso-position-vertical-relative:page"),
                         new XAttribute("from",Point(x,y)),new XAttribute("to",Point(x+width,y)),
                         new XAttribute("strokeweight",".5pt"),new XElement(W10+"wrap",new XAttribute("anchorx","page"),new XAttribute("anchory","page"))))));
@@ -94,9 +97,59 @@ static class LineCompatibilityChecks
             string shiftedPair=Path.Combine(folder,"shifted-pair.docx"),shiftedUpdate=Path.Combine(folder,"shifted-update.docx");Write(shiftedPair,shiftedXml);
             assert(DocxLineInventory.Read(shiftedPair,live).Lines.Single().Geometry==new LineGeometry(100,110,90),
                 "A saved compatibility pair compares fallback endpoints to encoded coordinates while retaining the separate measured intent");
+            assert(Read(shiftedPair).Descendants(V+"line").Single().Attribute("alt")!.Value==
+                "Title: ChinhTaViet.PageLine.v1;100;110;90 - Description: ChinhTaViet.ShapeLine.Agency",
+                "Measured-correction fixture reproduces Word's observed composite Title/Description VML label");
+            var wrongLabels=new[]{
+                "Title: ChinhTaViet.PageLine.v1;101;110;90 - Description: ChinhTaViet.ShapeLine.Agency",
+                "Title: ChinhTaViet.PageLine.v1;100;110;90 - Description: ChinhTaViet.ShapeLine.Subject",
+                "Prefix Title: ChinhTaViet.PageLine.v1;100;110;90 - Description: ChinhTaViet.ShapeLine.Agency",
+                "Title: ChinhTaViet.PageLine.v1;100;110;90 - Description: ChinhTaViet.ShapeLine.Agency suffix",
+                "Title: Unknown - Description: ChinhTaViet.ShapeLine.Agency"
+            };
+            int labelIndex=0;
+            foreach(var label in wrongLabels)
+            {
+                var badLabel=Read(shiftedPair);badLabel.Descendants(V+"line").Single().SetAttributeValue("alt",label);
+                string labelSource=Path.Combine(folder,$"bad-label-{labelIndex}.docx"),labelCandidate=Path.Combine(folder,$"bad-label-{labelIndex++}-candidate.docx");Write(labelSource,badLabel);
+                assert(DocxLineInventory.Read(labelSource,live).HasUnmappedShapes,"A composite label must match the complete same-object title and role: "+labelIndex);
+                bool rejected=false;try{DocxLineEditor.Write(labelSource,labelCandidate,live,targets,[update]);}catch(InvalidOperationException){rejected=true;}
+                assert(rejected && !File.Exists(labelCandidate),"A similar or stale composite label cannot authorize deleting the pair: "+labelIndex);
+            }
+            var noTitle=new XDocument(xml);noTitle.Descendants(V+"line").Single().SetAttributeValue("alt",
+                "Title: ChinhTaViet.PageLine.v1;100;110;90 - Description: ChinhTaViet.ShapeLine.Agency");
+            assert(DocxLineInventory.ReadXml(noTitle,live).HasUnmappedShapes,"A composite label without the same DrawingML intent title stays unverified");
+            var unknownTitle=Read(shiftedPair);unknownTitle.Descendants(WP+"docPr").Single().SetAttributeValue("title","Unknown");
+            unknownTitle.Descendants(V+"line").Single().SetAttributeValue("alt","Title: Unknown - Description: ChinhTaViet.ShapeLine.Agency");
+            assert(DocxLineInventory.ReadXml(unknownTitle,live).HasUnmappedShapes,"An arbitrary title cannot qualify a composite VML label as measured intent");
+            var staleEndpoints=Read(shiftedPair);staleEndpoints.Descendants(V+"line").Single().SetAttributeValue("from","100pt,110pt");
+            staleEndpoints.Descendants(V+"line").Single().SetAttributeValue("to","190pt,110pt");
+            assert(DocxLineInventory.ReadXml(staleEndpoints,live).HasUnmappedShapes,"A matching composite label never substitutes intended coordinates for encoded fallback endpoints");
             var reencoded=DocxLineEditor.Write(shiftedPair,shiftedUpdate,live,targets,[update]).Single().LineFix!;
             assert(reencoded.Left==74 && reencoded.Top==92 && DocxLineInventory.Read(shiftedUpdate,live).Lines.Single().Geometry==new LineGeometry(104,112,94),
                 "Updating a compatibility pair retains its measured table translation and new intended geometry");
+            var observed=agency with {LineFix=new(null,154.42590553996496,103.00335935074915,51.06885835508994,LineRole.Agency)};
+            var observedEncoding=observed with {LineFix=observed.LineFix! with {Left=881403/12700d,Top=588095/12700d}};
+            string observedPath=Path.Combine(folder,"observed-encoding.docx");
+            DocxLineEditor.Write(sample,observedPath,live,targets,[observedEncoding],[observed]);
+            var observedXml=Read(observedPath);var observedDrawing=observedXml.Descendants(W+"drawing").Single();observedDrawing.ReplaceWith(Pair(observedDrawing));
+            observedXml.Descendants(V+"line").Single().SetAttributeValue("from","69.4pt,46.3pt");
+            observedXml.Descendants(V+"line").Single().SetAttributeValue("to","120.45pt,46.3pt");
+            var observedInventory=DocxLineInventory.ReadXml(observedXml,live);
+            var expectedGeometry=new LineGeometry(observed.LineFix!.Left,observed.LineFix.Top,observed.LineFix.Width);
+            assert(!observedInventory.HasUnmappedShapes && observedInventory.Lines.Single().Geometry==expectedGeometry,
+                "Observed Word save: fractional intent title, composite label and rounded VML endpoints identify one corrected Line");
+            assert(RenderedLineVerifier.Find(expectedGeometry,[new(154.45,103,51.05)]) is not null &&
+                RenderedLineVerifier.Find(expectedGeometry,[new(239.45,159.7,51.05)]) is null,
+                "Observed corrected XPS stroke matches intended geometry; the earlier displaced stroke still fails unchanged verification");
+            string observedSaved=Path.Combine(folder,"observed-word-save.docx"),observedSubject=Path.Combine(folder,"observed-subject.docx"),observedThree=Path.Combine(folder,"observed-three.docx");
+            Write(observedSaved,observedXml);DocxLineEditor.Write(observedSaved,observedSubject,live,targets,[subject]);
+            assert(!DocxLineInventory.Read(observedSubject,live).HasUnmappedShapes && DocxLineInventory.Read(observedSubject,live).Lines.Count==2 &&
+                XNode.DeepEquals(Read(observedSaved).Descendants(MC+"AlternateContent").Single(),Read(observedSubject).Descendants(MC+"AlternateContent").Single()),
+                "A Word-saved corrected Agency composite pair permits missing Subject and is preserved unchanged");
+            DocxLineEditor.Write(observedSubject,observedThree,live,targets,[plan.Single(i=>i.LineFix!.Role==LineRole.Motto)]);
+            assert(!DocxLineInventory.Read(observedThree,live).HasUnmappedShapes && DocxLineInventory.Read(observedThree,live).Lines.Count==3,
+                "The observed composite-label save continues through sequential Subject and Motto without an extra Agency Line");
             using(var z=ZipFile.OpenRead(third))using(var u=ZipFile.OpenRead(updated))
             {
                 bool same=z.Entries.Count==u.Entries.Count;

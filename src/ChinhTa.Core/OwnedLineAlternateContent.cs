@@ -41,7 +41,7 @@ internal static class OwnedLineAlternateContent
                     e.Name.NamespaceName=="http://schemas.openxmlformats.org/officeDocument/2006/math"))continue;
             if(fallback.Elements().Count()!=1 || fallback.Element(W+"pict") is not XElement pict ||
                 pict.Elements().Count()!=1 || pict.Element(V+"line") is not XElement line ||
-                (string?)line.Attribute("alt")!=(string?)properties[0].Attribute("descr") ||
+                !MatchesLabel((string?)line.Attribute("alt"),properties[0]) ||
                 string.IsNullOrEmpty((string?)properties[0].Attribute("name")) ||
                 (string?)line.Attribute("id")!=(string?)properties[0].Attribute("name") ||
                 line.Elements().Any(e=>e.Name!=W10+"wrap" || e.HasElements) ||
@@ -65,6 +65,18 @@ internal static class OwnedLineAlternateContent
             result.Add(drawing,wrapper);
         }
         return result;
+    }
+    private static bool MatchesLabel(string? label,XElement property)
+    {
+        string? description=(string?)property.Attribute("descr");
+        if(label==description)return true;
+        // On save, Word combines accessibility Title and Description in VML
+        // alt when the measured-correction intent occupies DrawingML's title.
+        // Compare the entire observed form against this very object's valid
+        // intent and marker; a substring or another object's title is no proof.
+        string? title=(string?)property.Attribute("title");
+        return LinePageIntent.Read(title) is not null &&
+            string.Equals(label,$"Title: {title} - Description: {description}",StringComparison.Ordinal);
     }
     private static double? Number(string? value)=>double.TryParse(value,NumberStyles.Float,CultureInfo.InvariantCulture,out double d) && double.IsFinite(d)?d:null;
     private static bool Point(string? value,out double x,out double y)
