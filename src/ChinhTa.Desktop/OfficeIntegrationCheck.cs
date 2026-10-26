@@ -62,6 +62,9 @@ public static class OfficeIntegrationCheck
             Pass(stage);
             stage="Đo và sửa Line trên mẫu chế độ Word 2013";
             string modern=CreateModernSample(sample,folder);
+            stage="So sánh hai cách đọc: bảng, định dạng và nét XPS";
+            OfficeReadPipelineCheck.Run(test,modern,folder,Pass);
+            stage="Đo và sửa Line trên mẫu chế độ Word 2013";
             test.Open(modern);
             var modernIssues=test.Check();
             var measured=InspectLines(test,modernIssues);

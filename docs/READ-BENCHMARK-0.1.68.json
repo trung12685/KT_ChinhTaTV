@@ -1,0 +1,42 @@
+{
+  "Scope": "XML parsing, text/format proof, outline and first-40 table map; includes signature serialization equally on both sides",
+  "Excludes": "Word startup/open, COM font observation, pagination, XPS, editing, UI; no end-to-end speed claim",
+  "Samples": 9,
+  "Warmups": 3,
+  "AlternatingOrder": true,
+  "Results": [
+    {
+      "Paragraphs": 100,
+      "Runs": 400,
+      "XmlCharacters": 35282,
+      "IdenticalProofAndLayout": true,
+      "LegacyMedianMs": 3.513,
+      "SharedMedianMs": 2.327,
+      "LegacyAllocatedBytes": 1318488,
+      "SharedAllocatedBytes": 942600
+    },
+    {
+      "Paragraphs": 1000,
+      "Runs": 4000,
+      "XmlCharacters": 353882,
+      "IdenticalProofAndLayout": true,
+      "LegacyMedianMs": 45.033,
+      "SharedMedianMs": 33.385,
+      "LegacyAllocatedBytes": 11734232,
+      "SharedAllocatedBytes": 9010888
+    },
+    {
+      "Paragraphs": 5000,
+      "Runs": 20000,
+      "XmlCharacters": 1785882,
+      "IdenticalProofAndLayout": true,
+      "LegacyMedianMs": 106.015,
+      "SharedMedianMs": 87.87,
+      "LegacyAllocatedBytes": 58146800,
+      "SharedAllocatedBytes": 44908240
+    }
+  ],
+  "Environment": "Linux, .NET SDK 8.0.426 / .NET 8.0.32",
+  "SourceBaseline": "v0.1.67; shared snapshot experiment",
+  "WordRuntimeMeasured": false
+}

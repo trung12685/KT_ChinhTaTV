@@ -8,6 +8,13 @@ public static class WordTextProof
 {
     public static IReadOnlySet<int> Read(string wordOpenXml,IReadOnlyList<WordParagraphSnapshot> live,
         Action<WordXmlMappingException>? onMismatch=null,Action<int,OutlineParagraphInfo>? onOutline=null,Action<int,bool>? onFormatEditable=null)
+        =>ReadCore(wordOpenXml,null,live,onMismatch,onOutline,onFormatEditable,null);
+    public static IReadOnlySet<int> Read(WordXmlSnapshot snapshot,IReadOnlyList<WordParagraphSnapshot> live,
+        Action<WordXmlMappingException>? onMismatch=null,Action<int,OutlineParagraphInfo>? onOutline=null,Action<int,bool>? onFormatEditable=null,
+        Action<int,int>? onParagraphMatched=null)
+        =>ReadCore(null,snapshot,live,onMismatch,onOutline,onFormatEditable,onParagraphMatched);
+    private static IReadOnlySet<int> ReadCore(string? wordOpenXml,WordXmlSnapshot? snapshot,IReadOnlyList<WordParagraphSnapshot> live,
+        Action<WordXmlMappingException>? onMismatch,Action<int,OutlineParagraphInfo>? onOutline,Action<int,bool>? onFormatEditable,Action<int,int>? onParagraphMatched)
     {
         int previousEnd=-1;
         foreach(var row in live)
@@ -17,24 +24,20 @@ public static class WordTextProof
             previousEnd=row.End;
         }
         var editable=new HashSet<int>();
-        if(onOutline is null)
-            WordXmlTableMap.Read(wordOpenXml,live,onMismatch??(_=>{}),
-                onTextEditable:(start,canEdit)=>{if(canEdit)editable.Add(start);},includeLayout:false,onFormatEditable:onFormatEditable);
-        else
         {
-            var xml=XDocument.Parse(wordOpenXml);
+            var xml=snapshot?.Document??XDocument.Parse(wordOpenXml!);
             XNamespace w="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
             var body=xml.Descendants(w+"document").Single().Element(w+"body")??throw new InvalidOperationException("Missing document body");
-            var ps=body.Descendants(w+"p")
+            var ps=snapshot?.Paragraphs??body.Descendants(w+"p")
                 .Where(p=>!p.Ancestors(w+"txbxContent").Any()).ToArray();
-            var evidence=new WordOutlineEvidence(xml);
+            var evidence=onOutline is null?null:snapshot?.Outline??new WordOutlineEvidence(xml);
             var matched=new Dictionary<int,int>();
-            WordXmlTableMap.Read(xml,live,onMismatch??(_=>{}),(start,index)=>matched[start]=index,
+            WordXmlTableMap.Read(xml,live,onMismatch??(_=>{}),(start,index)=>{matched[start]=index;onParagraphMatched?.Invoke(start,index);},
                 (start,canEdit)=>
                 {
                     if(canEdit)editable.Add(start);
-                    onOutline(start,evidence.Describe(ps[matched[start]],canEdit));
-                },includeLayout:false,onFormatEditable:onFormatEditable);
+                    if(onOutline is not null)onOutline(start,evidence!.Describe(ps[matched[start]],canEdit));
+                },includeLayout:false,onFormatEditable:onFormatEditable,snapshot:snapshot);
         }
         return editable;
     }

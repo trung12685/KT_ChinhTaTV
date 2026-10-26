@@ -1,5 +1,7 @@
 using ChinhTa.Core;
 
+if(args.Length==1 && args[0]=="--benchmark-readers"){ReadPipelineBenchmark.Run();return;}
+
 var checks = 0;
 void Assert(bool condition, string name)
 {
@@ -21,6 +23,7 @@ VerifiedSaveCopyChecks.Run(Assert);
 DocumentHeadingChecks.Run(Assert);
 StructuredTextChecks.Run(Assert);
 WholeBodyTextProofChecks.Run(Assert);
+WordXmlSnapshotChecks.Run(Assert);
 SentenceInnerSpaceChecks.Run(Assert);
 SentenceAfterSpaceChecks.Run(Assert);
 ShortFinalSentenceChecks.Run(Assert);

@@ -91,7 +91,8 @@ public sealed partial class WordSession
         }
         finally{Release(range);}
     }
-    private Paragraph ObserveComponent(Paragraph row,bool readParagraph=false,int? liveEnd=null)
+    private Paragraph ObserveComponent(Paragraph row,bool readParagraph=false,int? liveEnd=null,
+        WordFormatRunPlan? runPlan=null,FormatReadMeasurements? measurements=null)
     {
         if(!row.TextEditable && !row.FormatEditable)return row;
         string text=row.Text.TrimEnd('\r','\a','\n');
@@ -105,7 +106,11 @@ public sealed partial class WordSession
                 dynamic range=document!.Range(row.Start+offset,row.Start+offset+part.Length);
                 try
                 {
-                    observations.AddRange(VisibleFormatReader.Read((object)range,part,allowCharacterFallback:true));
+                    // A plan is current-scan-only and only applies to the exact
+                    // whole visible paragraph; soft breaks use the existing path.
+                    observations.AddRange(VisibleFormatReader.Read((object)range,part,allowCharacterFallback:true,
+                        runPlan:offset==0 && part==text?runPlan:null,
+                        readRange:(start,end)=>(object)document!.Range(start,end),measurements:measurements));
                 }
                 finally{Release(range);}
             }

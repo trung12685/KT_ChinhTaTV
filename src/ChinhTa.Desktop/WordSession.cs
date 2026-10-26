@@ -23,6 +23,7 @@ public sealed partial class WordSession : IDisposable
     public IReadOnlyList<WordLineShape> LineShapes { get; private set; } = [];
     public bool HasGroupedShapes { get; private set; }
     public string? CoverageNotice { get; private set; }
+    public bool UseOptimizedReading { get; set; }=true;
     public DocumentProfile Profile { get; set; } = DocumentProfile.State;
     public bool Recovered { get; private set; }
     public string RecoveryPath => Path.Combine(folder, "working.docx");
@@ -48,6 +49,7 @@ public sealed partial class WordSession : IDisposable
     }
     public void Open(string path)
     {
+        using var timing=new WordOperationTiming("Word.Perf.Open");
         // Do not reuse an RCW from a Word process that has already exited.
         CloseConnection();
         undoCheckpoints.Clear();verifiedLineEdits.Clear();
@@ -57,20 +59,25 @@ public sealed partial class WordSession : IDisposable
         Recovered = false;
         File.Copy(path, RecoveryPath, true);
         snapshotCurrent = true;
+        timing.Mark("PrepareCopy");
         ReadWithRecovery("Word.Open", () => { Connect(); return true; });
+        timing.Mark("Connect");timing.Count("Completed",1);
     }
     private void Connect()
     {
+        using var timing=new WordOperationTiming("Word.Perf.Connect");
         app ??= Activator.CreateInstance(Type.GetTypeFromProgID("Word.Application")
             ?? throw new InvalidOperationException("Cần cài Microsoft Word desktop trên Windows."));
         app!.Visible = false;
         app.DisplayAlerts = 0;
         app.ScreenUpdating = false;
         app.AutomationSecurity = 3; // Never enable macros in documents opened by this instance.
+        timing.Mark("StartWord");
         var working = RecoveryPath;
         dynamic docs = app.Documents;
         try { document = docs.Open(working, ReadOnly: false, AddToRecentFiles: false, Visible: false); }
         finally { Release(docs); }
+        timing.Mark("OpenDocument");
         if ((bool)document!.TrackRevisions || (int)document.ProtectionType != -1)
         {
             DisposeDocument();
@@ -95,9 +102,12 @@ public sealed partial class WordSession : IDisposable
     public IReadOnlyList<Issue> Check() => ReadWithRecovery("Word.Check", CheckCore);
     private IReadOnlyList<Issue> CheckCore()
     {
+        using var timing=new WordOperationTiming("Word.Perf.Check");
+        timing.Count("Optimized",UseOptimizedReading?1:0);
         CoverageNotice=null;
         // Page information after reopening may be stale until Word has paginated.
         document!.Repaginate();
+        timing.Mark("Repaginate");
         var paragraphs = new List<Paragraph>();
         IReadOnlyList<LayoutParagraph> headerLayout = [];
         var liveLayout = new List<WordParagraphSnapshot>();
@@ -149,6 +159,7 @@ public sealed partial class WordSession : IDisposable
             }
         }
         finally { Release(ps); }
+        timing.Mark("ReadParagraphs");timing.Count("Paragraphs",liveText.Count);
         string? bodyXml=null;
         if(liveText.Count>0)
         {
@@ -170,31 +181,42 @@ public sealed partial class WordSession : IDisposable
             }
             finally{Release(content);}
         }
+        timing.Mark("ReadXml");
+        WordXmlSnapshot? xmlSnapshot=null;
+        var xmlIndices=new Dictionary<int,int>();
         if(bodyXml is not null)
         {
             try
             {
-                editableStarts=WordTextProof.Read(bodyXml,liveText,warning=>
+                if(UseOptimizedReading)xmlSnapshot=WordXmlSnapshot.Parse(bodyXml);
+                timing.Mark("ParseSnapshot");
+                Action<WordXmlMappingException> warn=warning=>
                 {
                     textProofWarning=warning;
                     Diagnostics.Write("Word.TextProof."+warning.DiagnosticCode,warning);
-                },(start,info)=>outlineEvidence[start]=info,(start,canFormat)=>{if(canFormat)formatEditableStarts.Add(start);});
+                };
+                Action<int,OutlineParagraphInfo> outline=(start,info)=>outlineEvidence[start]=info;
+                Action<int,bool> format=(start,canFormat)=>{if(canFormat)formatEditableStarts.Add(start);};
+                editableStarts=xmlSnapshot is null?WordTextProof.Read(bodyXml,liveText,warn,outline,format):
+                    WordTextProof.Read(xmlSnapshot,liveText,warn,outline,format,(start,index)=>xmlIndices[start]=index);
             }
             catch(Exception ex) when(ex is InvalidOperationException or System.Xml.XmlException)
             {
-                Diagnostics.Write("Word.TextProof.Unavailable",ex);textProofUnavailable=true;outlineEvidence.Clear();formatEditableStarts.Clear();
+                Diagnostics.Write("Word.TextProof.Unavailable",ex);textProofUnavailable=true;outlineEvidence.Clear();formatEditableStarts.Clear();xmlIndices.Clear();
             }
+            timing.Mark("TextProof");
             // Preserve the existing geometry prefix and mismatch handling. The whole-
             // body text proof never broadens table/Line operations to later paragraphs.
             if(liveLayout.Count>0)
             {
                 try
                 {
-                    headerLayout=WordXmlTableMap.Read(bodyXml,liveLayout,warning=>
+                    Action<WordXmlMappingException> warn=warning=>
                     {
                         mappingWarning=warning;
                         Diagnostics.Write("Word.XmlTableMap."+warning.DiagnosticCode,warning);
-                    });
+                    };
+                    headerLayout=xmlSnapshot is null?WordXmlTableMap.Read(bodyXml,liveLayout,warn):WordXmlTableMap.Read(xmlSnapshot,liveLayout,warn);
                     lineLayoutUnavailable=headerLayout.Count==0;
                 }
                 catch(Exception ex) when(ex is InvalidOperationException or System.Xml.XmlException)
@@ -203,6 +225,7 @@ public sealed partial class WordSession : IDisposable
                 }
             }
         }
+        timing.Mark("TableProof");
         lastLayout=liveLayout.ToArray();
         lastFormatLayout=liveText.Where(p=>editableStarts.Contains(p.Start) || formatEditableStarts.Contains(p.Start)).ToArray();
         paragraphs=WordTextProof.Apply(paragraphs,editableStarts,outlineEvidence,formatEditableStarts).ToList();
@@ -212,12 +235,27 @@ public sealed partial class WordSession : IDisposable
             .Concat(DocumentHeadingRules.ObservationTargets(paragraphs,headerLayout,Profile).Select(p=>p.Start))
             .Concat(paragraphs.Where(p=>p.Page==1 && HeadingRules.IsCandidate(p.Text,Profile)).Select(p=>p.Start))
             .Concat(paragraphs.Take(40).Where(p=>Profile==DocumentProfile.State && AdministrativeHeaderRules.IsCandidate(p.Text)).Select(p=>p.Start)).ToHashSet();
-        var liveEnds=liveText.ToDictionary(p=>p.Start,p=>p.End);
+        var liveRows=liveText.ToDictionary(p=>p.Start);
+        timing.Mark("IdentifyRegions");
+        var formatMeasurements=new FormatReadMeasurements();
         for(int index=0;index<paragraphs.Count;index++)
         {
             var row=paragraphs[index];
-            if(observeStarts.Contains(row.Start))paragraphs[index]=ObserveComponent(row,bodyStarts.Contains(row.Start),liveEnds[row.Start]);
+            if(observeStarts.Contains(row.Start))
+            {
+                var live=liveRows[row.Start];
+                var runs=xmlSnapshot is not null && xmlIndices.TryGetValue(row.Start,out int xmlIndex) &&
+                    (row.TextEditable || row.FormatEditable)?xmlSnapshot.FormatRuns(xmlIndex,live):null;
+                paragraphs[index]=ObserveComponent(row,bodyStarts.Contains(row.Start),live.End,runs,formatMeasurements);
+            }
         }
+        timing.Mark("ObserveFormats");
+        timing.Count("FormatAggregates",formatMeasurements.AggregateReads);
+        timing.Count("FormatRuns",formatMeasurements.PartitionReads);
+        timing.Count("RunSuccesses",formatMeasurements.PartitionSuccesses);
+        timing.Count("RunFallbacks",formatMeasurements.PartitionFallbacks);
+        timing.Count("FormatWords",formatMeasurements.WordReads);
+        timing.Count("FormatCharacters",formatMeasurements.CharacterReads);
         lastBodyParagraphs=paragraphs.ToArray();
         LineTargets = lineLayoutUnavailable ? [] : ShapeLineRules.Identify(headerLayout, Profile);
         AdministrativePositionTargets=AdministrativePositionRules.Identify(paragraphs,headerLayout,Profile);
@@ -226,6 +264,7 @@ public sealed partial class WordSession : IDisposable
         issues.AddRange(DocumentHeadingRules.Check(paragraphs,headerLayout,Profile));
         issues.AddRange(ComponentRules.Check(paragraphs,headerLayout,Profile));
         issues.AddRange(BodyRuleScan.Check(paragraphs,headerLayout,Profile));
+        timing.Mark("RulesAndLineInventory");
         foreach(var issue in issues.Where(i=>!i.CanFix && i.Kind is FixKind.AgencyFormat or FixKind.DocumentHeadingFormat))
         {
             var row=paragraphs.FirstOrDefault(p=>p.Start==issue.Start);
@@ -277,6 +316,7 @@ public sealed partial class WordSession : IDisposable
             }
             finally { Release(sections); }
         }
+        timing.Mark("PageRules");timing.Count("Issues",issues.Count);timing.Count("Completed",1);
         return issues.OrderBy(x => x.Start).ToArray();
     }
     private static WordParagraphSnapshot ReadLayout(dynamic range, int start, string text)
@@ -828,6 +868,7 @@ public sealed partial class WordSession : IDisposable
         => ReadWithRecovery("Word.ExportPreview", () => ExportPreviewCore(issues, anchors));
     private string ExportPreviewCore(IReadOnlyList<Issue> issues, IDictionary<Issue, PreviewAnchor> anchors)
     {
+        using var timing=new WordOperationTiming("Word.Perf.Preview");
         anchors.Clear();
         // Export the unmodified document once. Selection highlighting belongs exclusively to WPF.
         // CheckCore has already paginated before collecting page metadata.
@@ -838,6 +879,7 @@ public sealed partial class WordSession : IDisposable
         string text;
         try { contentStart = (int)content.Start; text = (string)content.Text; }
         finally { Release(content); }
+        timing.Mark("ReadStory");timing.Count("Positions",issues.Select(i=>i.Start).Distinct().Count());
         var mapped=PreviewAnchorBatch.Read(issues,text,cp=>
         {
             dynamic point = document.Range(cp,cp);
@@ -853,8 +895,10 @@ public sealed partial class WordSession : IDisposable
             {if(length!=issue.Start-contentStart)Diagnostics.Write("Word.Preview.CpMapping",null,FormattableString.Invariant(
                 $"Kind={issue.Kind}; CP={issue.Start}; StoryStart={contentStart}; StringOffset={length}; Length={issue.Length}"));});
         foreach(var entry in mapped)anchors[entry.Key]=entry.Value;
+        timing.Mark("MapPositions");
         string output = Path.Combine(folder, Guid.NewGuid() + ".xps");
         document.ExportAsFixedFormat(output, 18, OpenAfterExport: false);
+        timing.Mark("ExportXps");timing.Count("Completed",1);
         return output;
     }
     public void SaveCopy(string path) => SaveCopyCore(path);

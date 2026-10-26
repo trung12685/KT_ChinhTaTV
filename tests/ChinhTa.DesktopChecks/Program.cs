@@ -188,6 +188,7 @@ static class Program
         SelectiveSizeGeometryDesktopChecks.Run(Assert);
         CaseGeometryDesktopChecks.Run(Assert);
         VisibleFormatChecks.Run(Assert);
+        RunFormatReadChecks.Run(Assert);
         FormatObservationChecks.Run(Assert);
         SelectiveSizeWriterChecks.Run(Assert);
         HeadingSelectiveSizeWriterChecks.Run(Assert);
