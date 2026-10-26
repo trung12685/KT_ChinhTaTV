@@ -251,6 +251,7 @@ static class Program
         SelectedFormatVerificationChecks.Run(Assert);
         OfficeReaderCheckPolicyChecks.Run(Assert);
         OfficeFileEvidenceChecks.Run(Assert);
+        VisibleStrokeChecks.Run(Assert);
 QuoteReviewChecks.Run(Assert);
 QuoteAfterReviewChecks.Run(Assert);
 DelimiterClusterReviewChecks.Run(Assert);

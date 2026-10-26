@@ -1,5 +1,9 @@
 # Chính tả Việt
 
+## Đợt thể thức06 — không lấy nét ẩn làm bằng chứng
+
+[Chi tiết và phạm vi](docs/FORMAT-BATCH-06.md): loại nét chắc chắn không vẽ do ẩn/trong suốt/vùng cắt/fill rỗng; chỉ dùng phần được vẽ trọn vẹn. Clip một phần hoặc cách tô chưa chứng minh được chuyển thủ công và chặn hậu kiểm, tránh tự thêm nét chồng. Kiểm cả fill/stroke, transform và clip ancestor/layout. Mã 0.1.74 đang tích lũy hai đợt, chưa có ZIP mới; bản tải gần nhất vẫn0.1.73. CI không chạy Word thực.
+
 ## Đang phát triển sau 0.1.73 — hậu kiểm đủ nét
 
 [Đợt thể thức 05](docs/FORMAT-BATCH-05.md): không công nhận nét chồng bằng nét đầu tiên; giữ nét theo từng lần xuất hiện, không dùng chung border cũ cho Line mới; dừng bù vị trí nếu mất nét nền; quét/lịch sử sửa báo thủ công khi nét chồng. Mã 0.1.74 chưa đóng gói, danh mục 33/8/1 và bộ đọc cũ giữ nguyên. Gói tải gần nhất vẫn 0.1.73, chưa có xác nhận toàn bài Word thực qua bản đó.
