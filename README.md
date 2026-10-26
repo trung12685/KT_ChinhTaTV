@@ -1,5 +1,9 @@
 # Chính tả Việt
 
+## Đợt thể thức07 — mốc chữ phải hiển thị đầy đủ
+
+[Phạm vi và kiểm chứng](docs/FORMAT-BATCH-07.md): chữ ẩn, bị cắt, ngoài trang hoặc xoay/skew/mirror không được dùng để tự đặt đường kẻ/căn dòng. Chữ và nét dùng chung proof paint/clip; kiểm thêm phần mực nhô ngoài advance box. Bounding highlight để xem vị trí giữ riêng; nếu một phần mốc không xác minh được thì không dùng phần còn lại làm mốc giả. Mã0.1.74 đã tích lũy ba cụm, chưa phát hành ZIP; bản tải gần nhất vẫn0.1.73 và CI chưa xác nhận Word thực.
+
 ## Đợt thể thức06 — không lấy nét ẩn làm bằng chứng
 
 [Chi tiết và phạm vi](docs/FORMAT-BATCH-06.md): loại nét chắc chắn không vẽ do ẩn/trong suốt/vùng cắt/fill rỗng; chỉ dùng phần được vẽ trọn vẹn. Clip một phần hoặc cách tô chưa chứng minh được chuyển thủ công và chặn hậu kiểm, tránh tự thêm nét chồng. Kiểm cả fill/stroke, transform và clip ancestor/layout. Mã 0.1.74 đang tích lũy hai đợt, chưa có ZIP mới; bản tải gần nhất vẫn0.1.73. CI không chạy Word thực.

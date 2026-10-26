@@ -4,6 +4,7 @@ using System.Windows.Media;
 using ChinhTa.Core;
 using Path=System.Windows.Shapes.Path;
 using LineGeometry=ChinhTa.Core.LineGeometry;
+using static ChinhTa.Desktop.PreviewPaintProof;
 
 namespace ChinhTa.Desktop;
 
@@ -14,9 +15,6 @@ public sealed record HorizontalStrokeEvidence(IReadOnlyList<LineGeometry> Lines,
 // repair rather than disappear from the inventory and authorize another Line.
 internal static class VisibleHorizontalStrokeReader
 {
-    private enum Paint { None, Uniform, Unknown }
-    private const double GeometryTolerance=.001;
-    private const double AreaTolerance=GeometryTolerance*GeometryTolerance;
     internal static HorizontalStrokeEvidence Read(Path path,FixedPage page)
     {
         var result=new List<LineGeometry>();bool unverified=false;
@@ -72,27 +70,8 @@ internal static class VisibleHorizontalStrokeReader
                     (rect.Top+rect.Bottom-bandHeight)/2,rect.Width-2*GeometryTolerance,bandHeight));
                 if(bandHeight<=0 || original.FillContainsWithDetail(spine,GeometryTolerance,ToleranceType.Absolute)!=IntersectionDetail.FullyContains)
                     uncertain=true;
-                Geometry visible=original;
-                for(DependencyObject? node=path;node is Visual visual;node=VisualTreeHelper.GetParent(node))
-                {
-                    var clip=VisualTreeHelper.GetClip(visual) ?? (node as UIElement)?.Clip;
-                    if(clip is not null)
-                    {
-                        var toPage=ToPage(visual,page);
-                        if(toPage is null){uncertain=true;break;}
-                        visible=Intersect(visible,InPage(clip,toPage));
-                    }
-                    if(node is UIElement {ClipToBounds:true} element)
-                    {
-                        var toPage=ToPage(visual,page);
-                        if(toPage is null){uncertain=true;break;}
-                        visible=Intersect(visible,InPage(new RectangleGeometry(new Rect(element.RenderSize)),toPage));
-                    }
-                    if(ReferenceEquals(node,page))break;
-                }
-                if(!double.IsFinite(page.Width) || !double.IsFinite(page.Height) || page.Width<=0 || page.Height<=0)
-                    return new(result,true);
-                visible=Intersect(visible,new RectangleGeometry(new Rect(0,0,page.Width,page.Height)));
+                var exposure=ClipToPage(original,path,page);
+                var visible=exposure.Visible;uncertain|=!exposure.Known;
                 if(visible.GetArea(GeometryTolerance,ToleranceType.Absolute)<=0)continue;
                 if(uncertain || Combine(original,visible,GeometryCombineMode.Exclude).GetArea(GeometryTolerance,ToleranceType.Absolute)>AreaTolerance)
                 {unverified=true;continue;}
@@ -103,54 +82,5 @@ internal static class VisibleHorizontalStrokeReader
         {unverified=true;}
         return new(result,unverified);
     }
-    private static Paint VisibilityOf(Visual path,Visual page)
-    {
-        var result=Paint.Uniform;
-        for(DependencyObject? node=path;node is not null;node=VisualTreeHelper.GetParent(node))
-        {
-            if(node is UIElement element)
-            {
-                if(element.Visibility!=Visibility.Visible || element.Opacity==0)return Paint.None;
-                if(!double.IsFinite(element.Opacity) || element.Opacity<0)result=Paint.Unknown;
-                if(element.OpacityMask is Brush mask)
-                {
-                    var paint=BrushPaint(mask);
-                    if(paint==Paint.None)return Paint.None;
-                    if(paint==Paint.Unknown)result=Paint.Unknown;
-                }
-            }
-            if(ReferenceEquals(node,page))return result;
-        }
-        return Paint.Unknown;
-    }
-    private static Paint BrushPaint(Brush? brush)
-    {
-        if(brush is null || brush.Opacity==0)return Paint.None;
-        if(!double.IsFinite(brush.Opacity) || brush.Opacity<0)return Paint.Unknown;
-        if(brush is SolidColorBrush solid)
-            return solid.Color.ScA==0?Paint.None:float.IsFinite(solid.Color.ScA) && solid.Color.ScA>0?Paint.Uniform:Paint.Unknown;
-        if(brush is GradientBrush gradient && gradient.GradientStops.Count>0 && gradient.GradientStops.All(s=>s.Color.ScA==0))return Paint.None;
-        return Paint.Unknown;
-    }
-    private static Transform? ToPage(Visual visual,FixedPage page)
-    {
-        if(ReferenceEquals(visual,page))return Transform.Identity;
-        if(visual.TransformToAncestor(page) is not Transform transform)return null;
-        var m=transform.Value;
-        return new[]{m.M11,m.M12,m.M21,m.M22,m.OffsetX,m.OffsetY}.All(double.IsFinite)?transform:null;
-    }
-    private static Geometry InPage(Geometry geometry,Transform transform)
-    {
-        var copy=geometry.CloneCurrentValue();
-        copy.Transform=new TransformGroup{Children={copy.Transform??Transform.Identity,transform}};
-        return copy;
-    }
-    private static Geometry Combine(Geometry first,Geometry second,GeometryCombineMode mode)
-        =>Geometry.Combine(first,second,mode,Transform.Identity,GeometryTolerance,ToleranceType.Absolute);
-    private static Geometry Intersect(Geometry painted,Geometry clip)
-        // Avoid rounding a fully contained fractional stroke through a Boolean
-        // intersection and then mistaking that rounding for a clipped sliver.
-        =>clip.FillContainsWithDetail(painted,GeometryTolerance,ToleranceType.Absolute)==IntersectionDetail.FullyContains
-            ?painted:Combine(painted,clip,GeometryCombineMode.Intersect);
     private static bool Finite(Rect rect)=>!rect.IsEmpty && new[]{rect.Left,rect.Top,rect.Width,rect.Height}.All(double.IsFinite);
 }

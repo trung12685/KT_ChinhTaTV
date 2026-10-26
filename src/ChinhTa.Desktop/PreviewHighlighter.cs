@@ -63,11 +63,16 @@ public sealed class PreviewHighlighter
         return index;
     }
     public IReadOnlyList<Rect> Measure(FixedDocumentSequence document, PreviewAnchor anchor)
-        =>MeasureCore(document,anchor,null);
+        =>MeasureCore(document,anchor,null,false);
+    // Reference geometry authorizes edits; it needs stronger evidence than a
+    // bounding highlight. Never return the remaining fragments of a partially
+    // hidden selection as though they were the complete Word reference.
+    public IReadOnlyList<Rect> MeasureReference(FixedDocumentSequence document,PreviewAnchor anchor)
+        =>MeasureCore(document,anchor,null,true);
     public RenderedTextLine? MeasureSingleLine(FixedDocumentSequence document,PreviewAnchor anchor)
     {
         var baselines=new List<double>();
-        var boxes=MeasureCore(document,anchor,baselines);
+        var boxes=MeasureCore(document,anchor,baselines,true);
         // Different glyph runs may share one baseline. Wrapped, superscript or rotated
         // text does not establish one unambiguous administrative row.
         if(boxes.Count==0 || baselines.Count!=boxes.Count || baselines.Max()-baselines.Min()>.5/.75)return null;
@@ -75,7 +80,7 @@ public sealed class PreviewHighlighter
         var line=new RenderedTextLine(left*.75,top*.75,(right-left)*.75,(bottom-top)*.75,baselines.Average()*.75);
         return line.Valid?line:null;
     }
-    private IReadOnlyList<Rect> MeasureCore(FixedDocumentSequence document, PreviewAnchor anchor,List<double>? baselines)
+    private IReadOnlyList<Rect> MeasureCore(FixedDocumentSequence document, PreviewAnchor anchor,List<double>? baselines,bool reference)
     {
         var index = GetIndex(document, anchor.Page);
         if (index is null) return [];
@@ -102,29 +107,38 @@ public sealed class PreviewHighlighter
                 bounds = transform.TransformBounds(bounds);
                 if (!bounds.IsEmpty && double.IsFinite(bounds.X) && double.IsFinite(bounds.Y))
                 {
-                    if(baselines is not null)
+                    if(reference)
                     {
+                        var affine=PreviewPaintProof.ToPage(run.Glyph,index.Page);
+                        if(affine is null)return [];
+                        var matrix=affine.Value;
+                        if(matrix.M11<=0 || matrix.M22<=0 || Math.Abs(matrix.M12)>.001 || Math.Abs(matrix.M21)>.001)return [];
                         var origin=transform.Transform(glyphRun.BaselineOrigin);
                         var next=transform.Transform(new Point(glyphRun.BaselineOrigin.X+1,glyphRun.BaselineOrigin.Y));
                         if(!double.IsFinite(origin.Y) || Math.Abs(origin.Y-next.Y)>.001 || next.X<=origin.X)return [];
-                        if(!new Rect(0,0,index.Page.Width,index.Page.Height).Contains(bounds))return [];
-                        for(DependencyObject? parent=run.Glyph;parent is not null;parent=parent==index.Page?null:VisualTreeHelper.GetParent(parent))
+                        if(!double.IsFinite(bounds.Width) || !double.IsFinite(bounds.Height) ||
+                            PreviewPaintProof.VisibilityOf(run.Glyph,index.Page)!=PreviewPaintProof.Paint.Uniform ||
+                            PreviewPaintProof.BrushPaint(run.Glyph.Fill)!=PreviewPaintProof.Paint.Uniform ||
+                            !PreviewPaintProof.FullyExposed(new RectangleGeometry(bounds),run.Glyph,index.Page))return [];
+                        // Italic/overhanging ink can extend outside the advance
+                        // box. Check the run's actual ink bounds as well. For a
+                        // partial-run selection this deliberately requires the
+                        // whole run to remain exposed instead of guessing ink
+                        // ownership at a cluster boundary.
+                        var ink=glyphRun.ComputeInkBoundingBox();
+                        if(!ink.IsEmpty)
                         {
-                            if(parent is not UIElement element || element.Clip is not Geometry clip)continue;
-                            var difference=Geometry.Combine(clip,new RectangleGeometry(clip.Bounds),GeometryCombineMode.Xor,Transform.Identity);
-                            if(difference.GetArea()>.01)return [];
-                            var clipTransform=element.TransformToAncestor(index.Page);
-                            var corners=new[]{clip.Bounds.TopLeft,clip.Bounds.TopRight,clip.Bounds.BottomLeft}.Select(clipTransform.Transform).ToArray();
-                            if(Math.Abs(corners[0].Y-corners[1].Y)>.001 || Math.Abs(corners[0].X-corners[2].X)>.001)return [];
-                            var clipBounds=clipTransform.TransformBounds(clip.Bounds);
-                            clipBounds.Inflate(.1,.1);
-                            if(!clipBounds.Contains(bounds))return [];
+                            ink.Offset(glyphRun.BaselineOrigin.X,glyphRun.BaselineOrigin.Y);
+                            ink=transform.TransformBounds(ink);
+                            if(!double.IsFinite(ink.X) || !double.IsFinite(ink.Y) ||
+                                !double.IsFinite(ink.Width) || !double.IsFinite(ink.Height) ||
+                                !PreviewPaintProof.FullyExposed(new RectangleGeometry(ink),run.Glyph,index.Page))return [];
                         }
-                        baselines.Add(origin.Y);
+                        baselines?.Add(origin.Y);
                     }
                     boxes.Add(bounds);
                 }
-                else if(baselines is not null)return [];
+                else if(reference)return [];
             }
         }
         catch (ArgumentException) { return []; }
@@ -133,6 +147,7 @@ public sealed class PreviewHighlighter
     }
     public LineAnchorFrame? TableFrame(FixedDocumentSequence document, PreviewAnchor anchor)
     {
+        if(MeasureReference(document,anchor).Count==0)return null;
         var index=GetIndex(document,anchor.Page);
         if(index is null)return null;
         var span=Locate(anchor,index);
