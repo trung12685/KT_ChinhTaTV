@@ -111,7 +111,9 @@ internal static class OfficeSignatureFormatCheck
             new XElement(wp+"docPr",new XAttribute("id",id),new XAttribute("name","Synthetic signature marker")),
             new XElement(a+"graphic",new XElement(a+"graphicData",new XAttribute("uri",pic.NamespaceName),drawing)));
         var picture=new XElement(w+"p",new XElement(w+"r",new XElement(w+"drawing",inline)));
-        cell.Add(P(Authority),new XElement(w+"p"),picture,new XElement(w+"p"),P(Signer));
+        // Keep the inline object after the two text anchors: Word represents
+        // it by an object CP absent from XML text. Never guess past that CP.
+        cell.Add(P(Authority),new XElement(w+"p"),new XElement(w+"p"),P(Signer),picture);
         var rels=zip.GetEntry("word/_rels/document.xml.rels") is null?
             new XDocument(new XElement(XNamespace.Get("http://schemas.openxmlformats.org/package/2006/relationships")+"Relationships")):
             Read("word/_rels/document.xml.rels");

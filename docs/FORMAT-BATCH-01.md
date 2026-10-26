@@ -32,7 +32,7 @@ Nguồn: bản Nghị định30/2020/NĐ-CP do người dùng cung cấp, Phụ 
 
 Ví dụ: `TRƯỞNG PHÒNG` hoặc `Đại tá Nguyễn Văn An` dùng Arial đỏ cỡ12 nghiêng, không đậm → sửa các thuộc tính sai trên. Nội dung/chữ hoa-thường/cấp bậc giữ nguyên. Có thể chỉ sửa chức vụ, chỉ sửa họ tên, chọn cả nhóm Chữ ký hoặc chọn cùng nhóm khác.
 
-Dữ liệu font chưa đọc chắc không thành cảnh báo sai. Cỡ13/14 trộn, hai mã màu đen tương đương đều hợp lệ. Tên mẫu “Người ký”, “Họ và tên”, field/control trong mốc, danh sách tự động/kiểu chưa rõ, bảng gộp/lồng, chức vụ chưa nhận diện hoặc phụ lục/nội dung sau bảng chưa cấp quyền sửa. Không đổi bố cục để ép nhận diện.
+Dữ liệu font chưa đọc chắc không thành cảnh báo sai. Cỡ13/14 trộn, hai mã màu đen tương đương đều hợp lệ. Tên mẫu “Người ký”, “Họ và tên”, field/control trong mốc, danh sách tự động/kiểu chưa rõ, bảng gộp/lồng, chức vụ chưa nhận diện hoặc phụ lục/nội dung sau bảng chưa cấp quyền sửa. Không đổi bố cục để ép nhận diện. Nếu ảnh/đối tượng làm đoạn Word và XML phía sau chưa khớp, khối đó chưa mở sửa; không đoán offset để vượt qua ảnh. Mẫu Word mới đặt ảnh inline riêng sau hai mốc chữ để kiểm bảo toàn ảnh mà không cấp quyền qua CP đối tượng.
 
 ## Giữ dữ liệu và kết quả
 

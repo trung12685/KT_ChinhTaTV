@@ -106,6 +106,19 @@ public static class SignatureChecks
             "A partially mapped signing block cannot use an unproven or absent name as permission to repair the authority");
         var image=Sample(mutate:x=>Cell(x).Elements(W+"p").Skip(1).First().Add(new XElement(W+"r",new XElement(W+"drawing"))));
         assert(Targets(image.Rows).Length==2,"A separate image-only signature paragraph remains outside the editable text targets");
+        var objectLive=new List<WordParagraphSnapshot>();int objectCp=0;
+        foreach(var p in image.Xml.Descendants(W+"body").Single().Descendants(W+"p"))
+        {
+            bool cell=p.Ancestors(W+"tc").Any();
+            string text=string.Concat(p.Descendants(W+"t").Select(t=>t.Value))+(p.Descendants(W+"drawing").Any()?"\u0001":"")+"\r"+
+                (cell && !p.ElementsAfterSelf(W+"p").Any()?"\a":"");
+            objectLive.Add(new(objectCp,objectCp+text.Length,text,1,cell,true));objectCp+=text.Length;
+        }
+        var objectRoles=new Dictionary<int,OutlineParagraphInfo>();
+        var objectEditable=WordTextProof.Read(image.Xml.ToString(),objectLive,onOutline:(start,info)=>objectRoles[start]=info);
+        var objectRows=objectLive.Select(p=>new Paragraph(p.Start,p.Text,InTable:p.InTable,FormatObserved:true)).ToArray();
+        assert(Targets(WordTextProof.Apply(objectRows,objectEditable,objectRoles).ToArray()).Length==0,
+            "An inline image object CP before the signer blocks the incomplete anchor group rather than guessing past lost text proof");
         foreach(var profile in new[]{DocumentProfile.Party,DocumentProfile.Personal})
             assert(SignatureRules.Check(Sample().Rows,profile).Count==0 && SignatureRules.ObservationTargets(Sample().Rows,profile).Count==0,
                 "State signature rules do not spill into Party or personal profiles");
