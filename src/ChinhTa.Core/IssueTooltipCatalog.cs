@@ -59,6 +59,8 @@ public static class IssueTooltipCatalog
                 return Decree+"mục I.4 và II.6, điểm e: Times New Roman, đen, cỡ 13–14; kiểu đứng của phần lời văn xét riêng.";
             if(issue.Kind is FixKind.AgencyFormat or FixKind.AgencyText)
                 return Decree+"mục I.4 và II.2, điểm b: Times New Roman, đen, in hoa, cỡ 12–13, đứng; tên cơ quan ban hành đậm, tên cơ quan chủ quản đứng.";
+            if(issue.Kind==FixKind.SignatureFormat)
+                return Decree+"mục I.4 và II.7, điểm đ: Times New Roman, đen, cỡ 13–14, đứng, đậm cho quyền hạn/chức vụ và họ tên người ký.";
             if(issue.Kind is FixKind.RecipientFormat or FixKind.RecipientText)
                 return Decree+"mục I.4 và II.9, điểm d, ô 9b: Nơi nhận: cỡ 12, nghiêng, đậm; danh sách cỡ 11, đứng, có gạch đầu dòng, cuối dòng ;, dòng Lưu kết thúc bằng dấu chấm.";
             if(issue.Kind==FixKind.ShapeLine && Role(issue) is LineRole role)

@@ -79,7 +79,7 @@ public static class QuoteAfterSpaceChecks
         assert(restored && writes==plan.Count && current==mixed,"A failing final save rolls back the entire inner/after quote/text batch");
         var tooltip=IssueTooltipCatalog.Describe(afterOnly);
         assert(tooltip.Text.Split('\n').Length==3 && tooltip.Basis.StartsWith("Quy tắc ứng dụng") && tooltip.Action.StartsWith("Thêm một dấu cách") &&
-            IssueReviewCatalog.Describe(afterOnly).FamilyKey=="quotes" && DevelopmentReport.Count(CapabilityMode.Reviewable)==30,
+            IssueReviewCatalog.Describe(afterOnly).FamilyKey=="quotes" && DevelopmentReport.Count(CapabilityMode.Reviewable)==31,
             "The new insertion stays in the existing quote group with a concise application-rule tooltip and unchanged capability count");
     }
 }

@@ -73,7 +73,7 @@ public static class ShortFinalSentenceChecks
             review.Section==IssueReviewSection.ReviewSuggestion,"Short-final-sentence spacing remains a reviewed application rule in the existing group");
         var report=DevelopmentReport.Build("0.1.61",DateTimeOffset.UnixEpoch);
         assert(report.Contains("Đã hoàn thành.Xong!") && report.Contains("Đã hoàn thành. Xong!") &&
-            report.Contains("câu cuối chỉ một từ") && DevelopmentReport.Count(CapabilityMode.Reviewable)==30,
+            report.Contains("câu cuối chỉ một từ") && DevelopmentReport.Count(CapabilityMode.Reviewable)==31,
             "The report includes executable one-word final-sentence examples and limits without changing capability totals");
         const string first="Đã hoàn thành .Xong!\r";
         const string second="Kế  hoạch kế hoạch; theo mẫu ( nội dung ) ,báo cáo; ghi chú:nội dung mẫu .   \r\a";

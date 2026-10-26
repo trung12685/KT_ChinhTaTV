@@ -35,7 +35,7 @@ public sealed partial class WordSession
         dynamic range=document!.Range(probe.Start,probe.Start+probe.Length);
         try
         {
-            var source=VisibleFormatReader.ReadStyles((object)range,probe.Original,includeSpacing:plan.Any(i=>(i.ParagraphFix is not null || i.SpacingFix is not null || i.CharacterFormat is {Role:ComponentRole.Body,PreserveEmphasis:true}) && i.Start==probe.Start));
+            var source=VisibleFormatReader.ReadStyles((object)range,probe.Original,includeSpacing:plan.Any(i=>(i.Kind==FixKind.SignatureFormat || i.ParagraphFix is not null || i.SpacingFix is not null || i.CharacterFormat is {Role:ComponentRole.Body,PreserveEmphasis:true}) && i.Start==probe.Start));
             return CasePreservationPlan.Expected(probe,plan,source,item=>
             {
                 dynamic prefix=document!.Range(probe.Start,item.Start);

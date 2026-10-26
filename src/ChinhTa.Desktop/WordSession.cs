@@ -210,6 +210,7 @@ public sealed partial class WordSession : IDisposable
         paragraphs=WordTextProof.Apply(paragraphs,editableStarts,outlineEvidence,formatEditableStarts).ToList();
         var bodyStarts=BodyFormatRules.ObservationTargets(paragraphs,headerLayout,Profile).Select(p=>p.Start).ToHashSet();
         var observeStarts=ComponentRules.Identify(paragraphs,headerLayout,Profile).Select(t=>t.Row.Start)
+            .Concat(SignatureRules.ObservationTargets(paragraphs,Profile).Select(p=>p.Start))
             .Concat(bodyStarts)
             .Concat(DocumentHeadingRules.ObservationTargets(paragraphs,headerLayout,Profile).Select(p=>p.Start))
             .Concat(paragraphs.Where(p=>p.Page==1 && HeadingRules.IsCandidate(p.Text,Profile)).Select(p=>p.Start))
@@ -254,6 +255,7 @@ public sealed partial class WordSession : IDisposable
         var issues = Checker.Check(paragraphs, Profile).ToList();
         issues.AddRange(DocumentHeadingRules.Check(paragraphs,headerLayout,Profile));
         issues.AddRange(ComponentRules.Check(paragraphs,headerLayout,Profile));
+        issues.AddRange(SignatureRules.Check(paragraphs,Profile));
         issues.AddRange(BodyRuleScan.Check(paragraphs,headerLayout,Profile));
         timing.Mark("RulesAndLineInventory");
         foreach(var issue in issues.Where(i=>!i.CanFix && i.Kind is FixKind.AgencyFormat or FixKind.DocumentHeadingFormat))

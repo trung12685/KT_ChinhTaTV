@@ -47,6 +47,7 @@ public static class BatchPlan
                   current.Kind==FixKind.AdministrativeFormat && style.Bold is null && style.Role is null ||
                   current.Kind==FixKind.DocumentHeadingFormat && style.Bold==true && !style.Italic && style.Role is null ||
                   current.Kind==FixKind.AgencyFormat && style.Role is ComponentRole.Agency or ComponentRole.AgencyParent ||
+                  current.Kind==FixKind.SignatureFormat && style.Role is ComponentRole.SignatureAuthority or ComponentRole.SignatureName ||
                   current.Kind==FixKind.RecipientFormat && style.Role is ComponentRole.RecipientItem or ComponentRole.RecipientLabel) ||
                 current.Original!=current.Replacement || current.Format is not null || current.LineFix is not null ||
                 current.Original.IndexOfAny(['\r','\n','\a','\t'])>=0))
@@ -57,7 +58,7 @@ public static class BatchPlan
                 current.CharacterFormat is not null || current.Format is not null || current.LineFix is not null) ||
                 current.Kind==FixKind.AdministrativePosition && current.CenterFix is null)
                 throw new InvalidOperationException("Gợi ý căn giữa không hợp lệ. Hãy quét lại.");
-            if(current.Kind is FixKind.DocumentHeadingFormat or FixKind.AgencyFormat or FixKind.RecipientFormat or FixKind.BodyFormat && current.CharacterFormat is null)
+            if(current.Kind is FixKind.DocumentHeadingFormat or FixKind.AgencyFormat or FixKind.RecipientFormat or FixKind.BodyFormat or FixKind.SignatureFormat && current.CharacterFormat is null)
                 throw new InvalidOperationException("Gợi ý tên loại/trích yếu thiếu định dạng đã xác minh. Hãy quét lại.");
             active.RemoveAll(previous=>(long)previous.Start+previous.Length<=current.Start);
             foreach(var previous in active)

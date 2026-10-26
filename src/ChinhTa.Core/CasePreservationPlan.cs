@@ -3,7 +3,9 @@ namespace ChinhTa.Core;
 public static class CasePreservationPlan
 {
     private static bool IsBody(Issue i)=>i.Kind is FixKind.BodyFormat or FixKind.BodyParagraph or FixKind.BodyGap or FixKind.BodyLineSpacing;
-    private static bool Compatible(Issue probe,Issue patch)=>IsBody(probe)?
+    private static bool Compatible(Issue probe,Issue patch)=>probe.Kind==FixKind.SignatureFormat?
+        patch.Kind==FixKind.SignatureFormat && patch.CharacterFormat?.Role is ComponentRole.SignatureAuthority or ComponentRole.SignatureName:
+        IsBody(probe)?
         patch.Kind==FixKind.BodyFormat && patch.CharacterFormat?.Role==ComponentRole.Body || patch.Kind==FixKind.BodyParagraph && patch.ParagraphFix is not null ||
         patch.Kind is FixKind.BodyGap or FixKind.BodyLineSpacing && patch.SpacingFix is not null:
         patch.Kind==FixKind.DocumentHeadingFormat && patch.CharacterFormat is not null;
@@ -13,7 +15,7 @@ public static class CasePreservationPlan
     // never enter the edit selection or create an extra write/approval item.
     public static IReadOnlyList<Issue> Regions(IReadOnlyList<Issue> selection,IReadOnlyList<WordParagraphSnapshot> proven)
     {
-        var cases=selection.Where(i=>i.Kind is FixKind.DocumentTypeText or FixKind.BodyFormat or FixKind.BodyParagraph or FixKind.BodyGap or FixKind.BodyLineSpacing).ToArray();
+        var cases=selection.Where(i=>i.Kind is FixKind.SignatureFormat or FixKind.DocumentTypeText or FixKind.BodyFormat or FixKind.BodyParagraph or FixKind.BodyGap or FixKind.BodyLineSpacing).ToArray();
         if(cases.Length==0)return [];
         BatchPlan.Create(selection);
         var result=new Dictionary<int,Issue>();
@@ -23,7 +25,7 @@ public static class CasePreservationPlan
             if(rows.Length!=1)throw new InvalidOperationException("Chưa có một đoạn đã đối chiếu XML duy nhất để giữ định dạng vùng chữ.");
             var row=rows[0];string text=row.Text.TrimEnd('\r','\a','\n');
             var probe=new Issue(row.Start,text.Length,text,text,"",false,item.Kind);
-            if(!Inside(item,probe) || text.IndexOfAny(['\r','\n','\a','\t','\v','\f'])>=0)
+            if(!Inside(item,probe) || text.IndexOfAny(['\r','\n','\a','\t','\f'])>=0 || item.Kind!=FixKind.SignatureFormat && text.Contains('\v'))
                 throw new InvalidOperationException("Vùng giữ định dạng chưa khớp đoạn chữ thuần.");
             foreach(var patch in selection.Where(i=>(i.Format is not null || i.IsStyleOnly) && Overlaps(i,probe)))
                 if(!Compatible(item,patch) || patch.Format is not null ||
