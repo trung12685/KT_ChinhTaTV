@@ -72,7 +72,7 @@ internal static class OfficeComponentCheck
             using var xps=new System.Windows.Xps.Packaging.XpsDocument(path,FileAccess.Read);
             // Exercise the same dependency-aware inspection as the production UI;
             // tests no longer remove font/text blockers to manufacture Line intents.
-            var inspected=LineInspection.Inspect(xps.GetFixedDocumentSequence(),new PreviewHighlighter(),test.LineTargets,test.LineShapes,anchors,found,
+            var inspected=LineInspection.Inspect(xps.GetFixedDocumentSequence(),new PreviewHighlighter {UsePreparedText=test.UseOptimizedReading},test.LineTargets,test.LineShapes,anchors,found,
                 LinePolicy.Decree30,test.HasGroupedShapes,test.VerifiedLineEdits).Select(e=>e.Issue).ToArray();
             if(verifyAll && (test.LineTargets.Select(t=>t.Role).Distinct().Count()!=3 || inspected.Length!=0))
                 throw new InvalidOperationException("Mẫu kiểm chưa xác minh đạt đủ ba vùng/nét Line; không bỏ qua cảnh báo thủ công.");

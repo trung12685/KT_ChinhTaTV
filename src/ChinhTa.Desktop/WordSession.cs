@@ -50,8 +50,10 @@ public sealed partial class WordSession : IDisposable
     public void Open(string path)
     {
         using var timing=new WordOperationTiming("Word.Perf.Open");
-        // Do not reuse an RCW from a Word process that has already exited.
-        CloseConnection();
+        // Reuse only this session's own hidden application. A disconnected
+        // document/application is released before the normal reconnect path.
+        WordOpenSessionPolicy.Prepare(UseOptimizedReading,CloseDocumentOnly,CloseConnection);
+        timing.Count("WarmWordAvailable",app is null?0:1);
         undoCheckpoints.Clear();verifiedLineEdits.Clear();
         lastLayout = [];lastFormatLayout=[];AdministrativePositionTargets=[];
         Source = Path.GetFullPath(path);
@@ -119,46 +121,23 @@ public sealed partial class WordSession : IDisposable
         WordXmlMappingException? textProofWarning=null;
         bool lineLayoutUnavailable = false;
         WordXmlMappingException? mappingWarning = null;
-        dynamic ps = document!.Paragraphs;
+        var traversal=new ParagraphTraversalMeasurements();
+        dynamic ps=document!.Paragraphs;
         try
         {
-            int count = (int)ps.Count;
-            for (int i = 1; i <= count; i++)
+            var observed=NativeParagraphTraversal.Read<NativeParagraphObservation>((object)ps,(int)ps.Count,i=>(object)ps[i],ReadNativeParagraph,Release,
+                UseOptimizedReading,rows=>rows.Select(r=>r.Native).Select((r,i)=>r.Start>=0 && r.End>r.Start &&
+                    (i==0 || r.Start>=rows[i-1].Native.End)).All(v=>v),traversal);
+            foreach(var row in observed)
             {
-                dynamic p = ps[i]; dynamic r = p.Range;
-                try
-                {
-                    string text = (string)r.Text;
-                    int start = (int)r.Start;
-                    WordParagraphSnapshot? snapshot=null;
-                    if (Profile == DocumentProfile.State && i <= 40)
-                    {
-                        snapshot=ReadLayout(r,start,text);
-                        liveLayout.Add(snapshot);
-                    }
-                    // Only the existing header prefix needs COM geometry. Every body
-                    // paragraph supplies its actual End for the independent XML text proof.
-                    liveText.Add(snapshot??new WordParagraphSnapshot(start,(int)r.End,text,0,false,false));
-                    if (HeadingRules.IsCandidate(text, Profile) ||
-                        Profile == DocumentProfile.State && i<=40 && AdministrativeHeaderRules.IsCandidate(text) ||
-                        Profile == DocumentProfile.Personal && System.Text.RegularExpressions.Regex.IsMatch(text, @"^[ \t]+\S"))
-                    {
-                        // Read location/alignment first. Font reads happen once, after
-                        // XML permission and component roles have been established.
-                        dynamic? format=null;
-                        try
-                        {
-                            format=r.ParagraphFormat;
-                            paragraphs.Add(new(start,text,Alignment:(int)format.Alignment,
-                                InTable:snapshot?.InTable??(bool)r.Information[12],Page:snapshot?.Page??(int)r.Information[3])); }
-                        finally { Release(format); }
-                    }
-                    else paragraphs.Add(new(start, text,Page:snapshot?.Page??0,InTable:snapshot?.InTable??false));
-                }
-                finally { Release(r); Release(p); }
+                paragraphs.Add(row.Value);liveText.Add(row.Native);
+                if(row.Header)liveLayout.Add(row.Native);
             }
         }
-        finally { Release(ps); }
+        finally{Release(ps);}
+        timing.Count("SequentialParagraphs",traversal.Sequential?1:0);
+        timing.Count("ParagraphTraversalFallback",traversal.FellBack?1:0);
+        timing.Count("IndexedParagraphReads",traversal.IndexedReads);
         timing.Mark("ReadParagraphs");timing.Count("Paragraphs",liveText.Count);
         string? bodyXml=null;
         if(liveText.Count>0)
@@ -238,6 +217,18 @@ public sealed partial class WordSession : IDisposable
         var liveRows=liveText.ToDictionary(p=>p.Start);
         timing.Mark("IdentifyRegions");
         var formatMeasurements=new FormatReadMeasurements();
+        var batchMeasurements=new FormatBatchMeasurements();
+        var batchTargets=paragraphs.Where(row=>observeStarts.Contains(row.Start) && (row.TextEditable || row.FormatEditable))
+            .Select(row=>new NativeFormatTarget(liveRows[row.Start],bodyStarts.Contains(row.Start),
+                xmlSnapshot is not null && xmlIndices.TryGetValue(row.Start,out int i)?xmlSnapshot.ParagraphKey(i):null)).ToArray();
+        IReadOnlyDictionary<int,NativeFormatHint> hints=UseOptimizedReading?VisibleFormatReader.ReadBatches(batchTargets,
+            (start,end)=>(object)document!.Range(start,end),batchMeasurements):new Dictionary<int,NativeFormatHint>();
+        timing.Mark("BatchFormats");
+        timing.Count("BatchRanges",batchMeasurements.Ranges);
+        timing.Count("BatchFontParagraphs",batchMeasurements.FontParagraphs);
+        timing.Count("BatchStyleParagraphs",batchMeasurements.StyleParagraphs);
+        timing.Count("BatchSplits",batchMeasurements.Splits);
+        timing.Count("BatchFallbacks",batchMeasurements.Fallbacks);
         for(int index=0;index<paragraphs.Count;index++)
         {
             var row=paragraphs[index];
@@ -246,7 +237,7 @@ public sealed partial class WordSession : IDisposable
                 var live=liveRows[row.Start];
                 var runs=xmlSnapshot is not null && xmlIndices.TryGetValue(row.Start,out int xmlIndex) &&
                     (row.TextEditable || row.FormatEditable)?xmlSnapshot.FormatRuns(xmlIndex,live):null;
-                paragraphs[index]=ObserveComponent(row,bodyStarts.Contains(row.Start),live.End,runs,formatMeasurements);
+                paragraphs[index]=ObserveComponent(row,bodyStarts.Contains(row.Start),live.End,runs,formatMeasurements,hints.GetValueOrDefault(row.Start));
             }
         }
         timing.Mark("ObserveFormats");
@@ -319,6 +310,29 @@ public sealed partial class WordSession : IDisposable
         timing.Mark("PageRules");timing.Count("Issues",issues.Count);timing.Count("Completed",1);
         return issues.OrderBy(x => x.Start).ToArray();
     }
+    private sealed record NativeParagraphObservation(Paragraph Value,WordParagraphSnapshot Native,bool Header);
+    private NativeParagraphObservation ReadNativeParagraph(object paragraph,int ordinal)
+    {
+        dynamic p=paragraph;dynamic r=p.Range;
+        try
+        {
+            string text=(string)r.Text;int start=(int)r.Start;
+            bool header=Profile==DocumentProfile.State && ordinal<=40;
+            var native=header?ReadLayout(r,start,text):new WordParagraphSnapshot(start,(int)r.End,text,0,false,false);
+            Paragraph row;
+            if(HeadingRules.IsCandidate(text,Profile) ||
+                header && AdministrativeHeaderRules.IsCandidate(text) ||
+                Profile==DocumentProfile.Personal && System.Text.RegularExpressions.Regex.IsMatch(text,@"^[ \t]+\S"))
+            {
+                dynamic format=r.ParagraphFormat;
+                try{row=new(start,text,Alignment:(int)format.Alignment,InTable:header?native.InTable:(bool)r.Information[12],Page:header?native.Page:(int)r.Information[3]);}
+                finally{Release(format);}
+            }
+            else row=new(start,text,Page:native.Page,InTable:native.InTable);
+            return new(row,native,header);
+        }
+        finally{Release(r);}
+    }
     private static WordParagraphSnapshot ReadLayout(dynamic range, int start, string text)
     {
         int page = (int)range.Information[3];
@@ -347,6 +361,7 @@ public sealed partial class WordSession : IDisposable
         Release(document);
         document = null;
     }
+    internal object? CheckApplicationIdentity=>LineCheckArtifactFolder is not null?(object?)app:throw new InvalidOperationException("Chỉ dùng trong phiên kiểm Word riêng.");
     internal string ReadCheckText() => ReadStoryText(); // Isolated Office check; never logged.
     internal (int Bold,int Underline,int Alignment) ReadCheckDecorations(Issue issue)
     {

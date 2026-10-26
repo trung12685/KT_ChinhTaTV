@@ -1,5 +1,9 @@
 # Tiếp tục phát triển Chính tả Việt
 
+## Thử nghiệm .69 — sau phản hồi .68 cải thiện ít
+
+Ngày26/10/2026: chuyển trọng tâm sang trao đổi Word/COM và chuẩn bị vị trí Preview. Năm hạng mục: private Word warm-open; enumeration có fallback; batch phông; batch thuộc tính đoạn có chứng cứ; prepared preview text có ràng buộc phiên XPS. Hiện thêm thời gian mở/tổng và counters để xác định phần chậm thực tế. Giữ full bảng/Preview, quyền sửa và toàn bộ editor/hậu kiểm/rollback. Bộ thử so evidence/getters, CP/lỗi/mixed, lookup Unicode/khoảng trắng/mơ hồ và reset XPS. Source .67/.68/main giữ nguyên; không tuyên bố giảm thời gian Office từ mô hình hoặc XML. [Chi tiết và cách đo](CHANGES-0.1.69.md).
+
 ## Thử nghiệm đọc 0.1.68 từ mốc .67
 
 Theo yêu cầu người dùng ngày 26/10/2026: thử snapshot XML chung, tra vùng theo chỉ mục và đọc format theo run Word đã đối chiếu, có fallback toàn vùng. Thêm bật/tắt để đối chiếu và thời gian/counters từng chặng. Giữ bảng, Preview XPS và toàn bộ hậu kiểm/rollback. Không lấy bộ đọc Python bỏ bảng; không suy đoán style hoặc dùng cache qua sửa. Chạy hồi quy/benchmark XML và thêm fixture so hai chế độ trên Word; CI không chứng minh Office2021. Bản thử tách nhánh/version, mốc .67 và main giữ nguyên. [Thiết kế và phép thử](PERFORMANCE-EXPERIMENT-0.1.68.md).

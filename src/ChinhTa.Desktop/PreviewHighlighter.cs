@@ -12,16 +12,20 @@ namespace ChinhTa.Desktop;
 public sealed class PreviewHighlighter
 {
     private record Run(Glyphs Glyph, int Start, int Length);
-    private record PageIndex(FixedPage Page, string Text, List<Run> Runs);
+    private record PageIndex(FixedPage Page, string Text, List<Run> Runs,Lazy<PreviewTextIndex> Prepared);
     private readonly Dictionary<int, PageIndex> pages = new();
     private readonly List<(FixedPage Page, Rectangle Shape)> marks = new();
+    private readonly PreviewTextCache sources=new();
+    private FixedDocumentSequence? owner;
+    public bool UsePreparedText { get; set; }=true;
+    public int PreparedSources=>sources.Preparations;
 
     public void Clear()
     {
         foreach (var (page, shape) in marks) page.Children.Remove(shape);
         marks.Clear();
     }
-    public void Reset() { Clear(); pages.Clear(); }
+    public void Reset() { Clear(); pages.Clear();sources.Clear();owner=null; }
     private static IEnumerable<T> Descendants<T>(DependencyObject root) where T : DependencyObject
     {
         if (root is T value) yield return value;
@@ -30,6 +34,7 @@ public sealed class PreviewHighlighter
     }
     private PageIndex? GetIndex(FixedDocumentSequence document, int pageNumber)
     {
+        if(!ReferenceEquals(owner,document)){Reset();owner=document;}
         if (!pages.TryGetValue(pageNumber, out var index))
         {
             var paginator = document.DocumentPaginator;
@@ -51,7 +56,8 @@ public sealed class PreviewHighlighter
                 runs.Add(new(glyph, text.Length, value.Length));
                 text.Append(value);
             }
-            index = new(page, text.ToString(), runs);
+            string pageText=text.ToString();
+            index = new(page,pageText,runs,new(()=>PreviewLocator.Prepare(pageText)));
             pages[pageNumber] = index;
         }
         return index;
@@ -73,7 +79,7 @@ public sealed class PreviewHighlighter
     {
         var index = GetIndex(document, anchor.Page);
         if (index is null) return [];
-        var span = PreviewLocator.Locate(anchor, index.Text);
+        var span = Locate(anchor,index);
         if (span is null) return [];
         var boxes = new List<Rect>();
         try
@@ -129,7 +135,7 @@ public sealed class PreviewHighlighter
     {
         var index=GetIndex(document,anchor.Page);
         if(index is null)return null;
-        var span=PreviewLocator.Locate(anchor,index.Text);
+        var span=Locate(anchor,index);
         if(span is null)return null;
         var selected=index.Runs.Where(run=>run.Start<span.Start+span.Length && run.Start+run.Length>span.Start).ToArray();
         if(selected.Length==0)return null;
@@ -179,6 +185,8 @@ public sealed class PreviewHighlighter
         }
         return lines;
     }
+    private TextSpan? Locate(PreviewAnchor anchor,PageIndex index)=>UsePreparedText?
+        PreviewLocator.Locate(anchor,sources.Get(anchor.PageText),index.Prepared.Value):PreviewLocator.Locate(anchor,index.Text);
     public void ShowLineSuggestion(FixedDocumentSequence document, int pageNumber, ShapeLineFix fix)
     {
         var index = GetIndex(document, pageNumber);

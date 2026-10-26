@@ -6,6 +6,12 @@
 
 Ưu tiên đã thống nhất: **thể thức → lỗi chữ và lặp từ/cụm từ → ngữ cảnh và thư viện sau cùng**. Phần chính tả tiếng Việt đầy đủ còn cần xây dựng; không coi quy tắc minh họa hiện tại là bộ kiểm hoàn chỉnh.
 
+## Thử nghiệm đọc 0.1.69 — giảm trao đổi Word/COM
+
+Duyệt đoạn tuần tự có kiểm đủ/thứ tự, dùng chung phông/thuộc tính đoạn khi Word xác nhận đồng nhất, chuẩn bị chữ một lần cho cùng XPS và giữ Word riêng qua các lần mở. Có fallback và bật/tắt; giữ bảng, full Preview, nét XPS, hậu kiểm/Undo/rollback. Hiện thời gian mở ngoài Quét/dựng trang. Phản hồi .68 tăng tốc ít được giữ làm căn cứ đo tiếp, không tuyên bố tốc độ toàn bộ từ số getter giả lập. Mốc .67 và .68 giữ nguyên.
+
+[Trang phát hành .69](https://github.com/trung12685/KT_ChinhTaTV/releases/tag/v0.1.69) · [Thay đổi và cách so](docs/CHANGES-0.1.69.md) · [Danh mục giữ nguyên](docs/SUPPORTED-FIXES-0.1.69.md).
+
 ## Thử nghiệm đọc 0.1.68 — dùng chung XML và đọc định dạng theo run
 
 Giữ bảng, Preview Word/XPS và luật/hậu kiểm từ .67. Thử snapshot XML hiện tại dùng chung; vùng định dạng trộn đọc theo run khi mọi CP/chữ/phông Word khớp, còn lại dùng Words/Characters. Có tùy chọn bật/tắt trong menu Kiểm tra và log thời gian từng chặng. Không suy ra tốc độ toàn bộ từ số đo XML. Mốc tải/source/tag .67 giữ riêng để quay lại. Chưa có xác nhận Office2021 mới.

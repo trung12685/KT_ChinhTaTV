@@ -3,15 +3,48 @@ namespace ChinhTa.Core;
 public record PreviewAnchor(int Page, string PageText, int Offset, int Length);
 public record TextSpan(int Start, int Length);
 
+public sealed class PreviewTextIndex
+{
+    public string Original { get; }
+    internal string Text { get; }
+    internal int[] Offsets { get; }
+    internal PreviewTextIndex(string original)
+    {
+        Original=original;
+        Offsets=Enumerable.Range(0,original.Length).Where(i=>!char.IsWhiteSpace(original[i]) &&
+            !char.IsControl(original[i]) && original[i]!='\u00ad').ToArray();
+        Text=new string(Offsets.Select(i=>original[i]).ToArray());
+    }
+    internal int LowerBound(int offset)
+    {
+        int left=0,right=Offsets.Length;
+        while(left<right){int mid=left+(right-left)/2;if(Offsets[mid]<offset)left=mid+1;else right=mid;}
+        return left;
+    }
+}
+
+// Owned by one immutable XPS view; reference keys avoid hashing the entire story
+// for every highlight. Different string instances never accidentally share data.
+public sealed class PreviewTextCache
+{
+    private readonly Dictionary<string,PreviewTextIndex> values=new(ReferenceEqualityComparer.Instance);
+    public int Preparations { get; private set; }
+    public PreviewTextIndex Get(string text)
+    {
+        if(!values.TryGetValue(text,out var value))
+        {
+            if(values.Count>=4)values.Clear();
+            value=PreviewLocator.Prepare(text);values.Add(text,value);Preparations++;
+        }
+        return value;
+    }
+    public void Clear(){values.Clear();Preparations=0;}
+}
+
 /// <summary>Aligns text with source offsets. Ambiguous anchors never pick a first occurrence.</summary>
 public static class PreviewLocator
 {
-    private static (string Text, int[] Offsets) Compact(string text)
-    {
-        var offsets = Enumerable.Range(0, text.Length)
-            .Where(i => !char.IsWhiteSpace(text[i]) && !char.IsControl(text[i]) && text[i] != '\u00ad').ToArray();
-        return (new string(offsets.Select(i => text[i]).ToArray()), offsets);
-    }
+    public static PreviewTextIndex Prepare(string text)=>new(text);
     private static int Unique(string text, string pattern)
     {
         if (pattern.Length == 0) return -1;
@@ -20,13 +53,18 @@ public static class PreviewLocator
     }
     public static TextSpan? Locate(PreviewAnchor anchor, string rendered)
     {
+        if(anchor.Offset<0 || anchor.Length<=0 || anchor.Offset>anchor.PageText.Length-anchor.Length)return null;
+        return LocateCore(anchor,Prepare(anchor.PageText),Prepare(rendered),false);
+    }
+    public static TextSpan? Locate(PreviewAnchor anchor,PreviewTextIndex source,PreviewTextIndex rendered)
+        =>source.Original==anchor.PageText?LocateCore(anchor,source,rendered,true):null;
+    private static TextSpan? LocateCore(PreviewAnchor anchor,PreviewTextIndex source,PreviewTextIndex target,bool indexed)
+    {
         if (anchor.Offset < 0 || anchor.Length <= 0 || anchor.Offset > anchor.PageText.Length - anchor.Length) return null;
-        var source = Compact(anchor.PageText);
-        var target = Compact(rendered);
-        int begin = Array.FindIndex(source.Offsets, x => x >= anchor.Offset);
-        if (begin < 0) return null;
-        int finish = begin;
-        while (finish < source.Offsets.Length && source.Offsets[finish] < anchor.Offset + anchor.Length) finish++;
+        int begin=indexed?source.LowerBound(anchor.Offset):Array.FindIndex(source.Offsets,x=>x>=anchor.Offset);
+        if(begin<0 || begin>=source.Offsets.Length)return null;
+        int finish=indexed?source.LowerBound(anchor.Offset+anchor.Length):begin;
+        if(!indexed)while(finish<source.Offsets.Length && source.Offsets[finish]<anchor.Offset+anchor.Length)finish++;
         int sourceBase = 0;
         int match = Unique(target.Text, source.Text);
         if (match < 0)
@@ -57,3 +95,4 @@ public static class PreviewLocator
         return new(target.Offsets[first], target.Offsets[last - 1] - target.Offsets[first] + 1);
     }
 }
+
