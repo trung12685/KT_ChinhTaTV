@@ -11,6 +11,13 @@ using ChinhTa.Desktop;
 
 public static class PageNumberDesktopChecks
 {
+    public sealed class DocumentProbe(string xml)
+    {
+        public int Reads {get;private set;}
+        public int RangeReads {get;private set;}
+        public string WordOpenXML {get{Reads++;return xml;}}
+        public object Content {get{RangeReads++;throw new InvalidOperationException("A partial range cannot establish header/footer absence.");}}
+    }
     private static FixedDocumentSequence Pages(bool first=false,string number="2",bool shifted=false,bool missingDrawing=false,bool scaled=false)
     {
         var document=new FixedDocument();double width=210*96/25.4,height=297*96/25.4;
@@ -71,6 +78,18 @@ public static class PageNumberDesktopChecks
         try
         {
             string source=OfficePageNumberCheck.Create(Path.Combine("samples","BaDuongKeThieu.docx"),folder),candidate=Path.Combine(folder,"candidate.docx");
+            XNamespace pkg="http://schemas.microsoft.com/office/2006/xmlPackage";
+            var parts=new List<XElement>();
+            using(var zip=ZipFile.OpenRead(source))
+            foreach(var entry in zip.Entries.Where(e=>e.FullName.EndsWith(".xml",StringComparison.Ordinal) || e.FullName.EndsWith(".rels",StringComparison.Ordinal)))
+            {
+                using var stream=entry.Open();var root=XDocument.Load(stream).Root!;
+                parts.Add(new XElement(pkg+"part",new XAttribute(pkg+"name","/"+entry.FullName),new XElement(pkg+"xmlData",root)));
+            }
+            var probe=new DocumentProbe(new XDocument(new XElement(pkg+"package",parts)).ToString());
+            var packageSnapshot=PageNumberDocumentReader.ReadCurrent(probe);
+            assert(probe.Reads==1 && probe.RangeReads==0 && PageNumberRules.Check(packageSnapshot,2,0,"C",DocumentProfile.State).Single().CanFix,
+                "PAGE reads the current full document package once, retaining footer relationships instead of relying on partial-range XML");
             var choice=PageNumberRules.Check(PageNumberPackage.FromFile(source),2,0,"C",DocumentProfile.State).Single();
             DocxPageNumberEditor.Write(source,candidate,choice.NumberFix!,2);DocxPageNumberEditor.Verify(source,candidate,choice.NumberFix!,2);
             DocxPageNumberEditor.VerifyLive(PageNumberPackage.FromFile(source),PageNumberPackage.FromFile(candidate));

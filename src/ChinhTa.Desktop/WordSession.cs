@@ -316,7 +316,7 @@ public sealed partial class WordSession : IDisposable
             try
             {
                 var anchor=paragraphs.FirstOrDefault(p=>p.Text.Length>0 && !char.IsControl(p.Text[0]) && !char.IsWhiteSpace(p.Text[0]));
-                if(anchor is not null)issues.AddRange(PageNumberRules.Check(PageNumberPackage.FromFlat(bodyXml),(int)document.ComputeStatistics(2),anchor.Start,anchor.Text[..1],Profile));
+                if(anchor is not null)issues.AddRange(PageNumberRules.Check(PageNumberDocumentReader.ReadCurrent((object)document!),(int)document.ComputeStatistics(2),anchor.Start,anchor.Text[..1],Profile));
             }
             catch(Exception error) when(error is InvalidOperationException or System.Xml.XmlException)
             {Diagnostics.Write("Word.PageNumber.ScopeUnavailable",error);}

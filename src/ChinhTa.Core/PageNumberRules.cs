@@ -189,7 +189,8 @@ public static class PageNumberRules
         var firstFooter=resolved.GetValueOrDefault("footerReference:first").Root;
         bool footerSafe=firstDifferent || firstFooter is null || (defaultFooter is null?Empty(firstFooter):Canonical(firstFooter,ignoreParagraphIds:true)==Canonical(defaultFooter,ignoreParagraphIds:true));
         bool copyFooter=!firstDifferent && firstFooter is null && defaultFooter is not null;
-        bool otherSafe=(string?)section.Element(W+"pgMar")?.Attribute(W+"gutter") is null or "0" &&
+        bool otherSafe=(string?)package.Parts["word/document.xml"].Root?.Element(W+"background")?.Attribute(W+"color") is null or "FFFFFF" &&
+            (string?)section.Element(W+"pgMar")?.Attribute(W+"gutter") is null or "0" &&
             (string?)section.Element(W+"pgSz")?.Attribute(W+"orient") is null or "portrait" &&
             (string?)section.Element(W+"cols")?.Attribute(W+"num") is null or "1" &&
             section.Element(W+"textDirection") is null &&

@@ -7,7 +7,7 @@ namespace ChinhTa.Desktop;
 public sealed partial class WordSession
 {
     private (PageNumberPackage Package,int Pages) CurrentNumberPackage()=>
-        (PageNumberPackage.FromFlat(ReadPageBodyXml()),(int)document!.ComputeStatistics(2));
+        (PageNumberDocumentReader.ReadCurrent((object)document!),(int)document!.ComputeStatistics(2));
     private PageNumberVisualSnapshot NumberPreview(SectionLayout layout,bool verify)
     {
         string path=ExportPreviewCore([],new Dictionary<Issue,PreviewAnchor>());
