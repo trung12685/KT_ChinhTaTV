@@ -112,7 +112,9 @@ internal static class OfficeSignatureFormatCheck
             new XElement(a+"graphic",new XElement(a+"graphicData",new XAttribute("uri",pic.NamespaceName),drawing)));
         var picture=new XElement(w+"p",new XElement(w+"r",new XElement(w+"drawing",inline)));
         cell.Add(P(Authority),new XElement(w+"p"),picture,new XElement(w+"p"),P(Signer));
-        var rels=Read("word/_rels/document.xml.rels");
+        var rels=zip.GetEntry("word/_rels/document.xml.rels") is null?
+            new XDocument(new XElement(XNamespace.Get("http://schemas.openxmlformats.org/package/2006/relationships")+"Relationships")):
+            Read("word/_rels/document.xml.rels");
         rels.Root!.Add(new XElement(rels.Root.Name.Namespace+"Relationship",new XAttribute("Id",relId),new XAttribute("Type",r.NamespaceName+"/image"),new XAttribute("Target","media/signature-format-fixture.png")));
         var types=Read("[Content_Types].xml");
         if(!types.Root!.Elements().Any(e=>(string?)e.Attribute("Extension")=="png"))types.Root.Add(new XElement(types.Root.Name.Namespace+"Default",new XAttribute("Extension","png"),new XAttribute("ContentType","image/png")));
