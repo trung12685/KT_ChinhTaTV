@@ -9,6 +9,7 @@ void Assert(bool condition, string name)
     Console.WriteLine("PASS: " + name); checks++;
 }
 DocxLineMetadataChecks.Run(Assert);
+LineCompatibilityChecks.Run(Assert);
 LinePlacementFeedbackChecks.Run(Assert);
 BatchAndSpacingChecks.Run(Assert);
 GlyphAdvanceChecks.Run(Assert);

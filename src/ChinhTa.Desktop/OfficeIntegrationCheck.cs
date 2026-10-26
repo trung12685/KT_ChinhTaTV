@@ -82,8 +82,17 @@ public static class OfficeIntegrationCheck
             foreach(var role in new[]{LineRole.Agency,LineRole.Subject,LineRole.Motto})
             {
                 stage="Đo và sửa mẫu Word 2013: " + role;
-                var current=InspectLines(test,test.Check()).Single(i=>i.LineFix?.Role==role);
-                test.FixMany([current]);
+                var assessment=InspectLines(test,test.Check(),Path.Combine(folder,"modern-before-"+role));
+                var target=test.LineTargets.Where(t=>t.Role==role).ToArray();
+                var current=assessment.Where(i=>i.CanFix && i.LineFix?.Role==role &&
+                    target.Length==1 && i.Start==target[0].Start && i.Original==target[0].Text).ToArray();
+                if(current.Length!=1)
+                {
+                    string findings=string.Join(" | ",assessment.Where(i=>target.Any(t=>i.Start==t.Start)).Select(i=>i.Message));
+                    throw new InvalidOperationException($"Mẫu Word 2013: {role}; số mốc={target.Length}; đề xuất sửa hợp lệ={current.Length}; đối tượng chưa ghép={test.HasGroupedShapes}. "+
+                        (findings.Length>0?findings:"Không có đề xuất sửa; chưa xác nhận nét đã đạt.")+" Xem modern-before-"+role+".json/.docx/.xps trong thư mục kết quả.");
+                }
+                test.FixMany(current);
                 test.Check();
                 Pass(stage);
             }
@@ -1513,14 +1522,30 @@ public static class OfficeIntegrationCheck
         entry.Delete();using(var stream=zip.CreateEntry("word/document.xml").Open())xml.Save(stream);
         return path;
     }
-    private static Issue[] InspectLines(WordSession test,IReadOnlyList<Issue> otherIssues)
+    private static Issue[] InspectLines(WordSession test,IReadOnlyList<Issue> otherIssues,string? evidencePath=null)
     {
+        if(evidencePath is not null)OfficeFileEvidence.CopyCheckpoint(test.RecoveryPath,evidencePath+".docx");
         var anchors=new Dictionary<Issue,PreviewAnchor>();
         string path=test.ExportPreview(test.LineTargets.Select(t=>t.Probe).ToArray(),anchors);
         using var input=new XpsDocument(path,FileAccess.Read);
-        return LineInspection.Inspect(input.GetFixedDocumentSequence(),new PreviewHighlighter(),
+        var sequence=input.GetFixedDocumentSequence();var preview=new PreviewHighlighter();
+        var result=LineInspection.Inspect(sequence,preview,
             test.LineTargets,test.LineShapes,anchors,otherIssues,LinePolicy.Decree30,test.HasGroupedShapes,test.VerifiedLineEdits)
             .Select(pair=>pair.Issue).ToArray();
+        if(evidencePath is not null)
+        {
+            File.Copy(path,evidencePath+".xps");
+            var evidence=new
+            {
+                test.HasGroupedShapes,test.LineShapes,
+                Targets=test.LineTargets.Select(t=>new {t.Role,t.Start,t.RegionStart,t.RegionEnd,t.Centered,
+                    Anchored=anchors.ContainsKey(t.Probe),
+                    Reference=anchors.TryGetValue(t.Probe,out var anchor)?ReferenceMeasurement.Read(sequence,preview,anchor):null}),
+                Findings=result.Select(i=>new {i.Start,i.Title,i.Message,i.CanFix,i.LineFix})
+            };
+            File.WriteAllText(evidencePath+".json",System.Text.Json.JsonSerializer.Serialize(evidence,new System.Text.Json.JsonSerializerOptions{WriteIndented=true}));
+        }
+        return result;
     }
     private static string CreateModernSample(string sample,string folder)
     {

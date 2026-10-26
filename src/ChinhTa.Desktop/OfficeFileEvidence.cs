@@ -13,4 +13,12 @@ internal static class OfficeFileEvidence
         using var input=new FileStream(path,FileMode.Open,FileAccess.Read,FileShare.ReadWrite|FileShare.Delete);
         return SHA256.HashData(input);
     }
+    // Snapshot the already saved checkpoint without SaveCopy/Save/close, so
+    // evidence collection cannot change the operation being diagnosed.
+    public static void CopyCheckpoint(string source,string destination)
+    {
+        using var input=new FileStream(source,FileMode.Open,FileAccess.Read,FileShare.ReadWrite|FileShare.Delete);
+        using var output=new FileStream(destination,FileMode.CreateNew,FileAccess.Write,FileShare.None);
+        input.CopyTo(output);
+    }
 }

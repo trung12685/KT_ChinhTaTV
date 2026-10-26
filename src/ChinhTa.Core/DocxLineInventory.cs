@@ -25,8 +25,12 @@ public static class DocxLineInventory
         XNamespace v = "urn:schemas-microsoft-com:vml";
         XNamespace wpg = "http://schemas.microsoft.com/office/word/2010/wordprocessingGroup";
         var markers = DocxLineMetadata.ReadXml(xml);
+        var alternateLines = OwnedLineAlternateContent.Read(xml);
+        var compatibilityBranches = alternateLines.Values.SelectMany(c=>c.Elements(OwnedLineAlternateContent.MC+"Fallback")).ToHashSet();
+        bool UnknownVml(XElement e) => !e.Ancestors().Any(compatibilityBranches.Contains);
         var mapped = new Dictionary<int, WordParagraphSnapshot>();
-        bool uncertain = markers.Any(m => !m.IsLine) || xml.Descendants(v + "shape").Any() || xml.Descendants(a + "custGeom").Any() || xml.Descendants(v + "line").Any() || xml.Descendants(v + "group").Any() || xml.Descendants(wpg + "wgp").Any();
+        bool uncertain = markers.Any(m => !m.IsLine) || xml.Descendants().Any(e=>e.Name.Namespace==v && UnknownVml(e)) || xml.Descendants(a + "custGeom").Any() || xml.Descendants(wpg + "wgp").Any() ||
+            xml.Descendants(OwnedLineAlternateContent.MC+"AlternateContent").Any(c=>!alternateLines.ContainsValue(c));
         WordXmlTableMap.Read(xml.ToString(), live, _ => uncertain = true,
             (start,index) => mapped.Add(index, live.Single(p => p.Start == start)));
         var paragraphs = xml.Descendants(w + "body").Single().Descendants(w + "p")
@@ -43,7 +47,8 @@ public static class DocxLineInventory
             var paragraph = drawing.Ancestors(w + "p").FirstOrDefault();
             int index = Array.IndexOf(paragraphs, paragraph);
             if (!mapped.TryGetValue(index, out var snapshot)) { uncertain = true; continue; }
-            bool owned = markers.Any(m => m.Id == id && m.IsLine);
+            bool owned = markers.Any(m => m.Id == id && m.IsLine) &&
+                (!drawing.Ancestors(OwnedLineAlternateContent.MC+"AlternateContent").Any() || alternateLines.ContainsKey(drawing));
             var anchor = properties[0].Parent;
             LineGeometry? geometry = null;
             double? Number(string? text) => double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out double value) && double.IsFinite(value) ? value : null;

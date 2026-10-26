@@ -1,5 +1,11 @@
 # Chính tả Việt
 
+## 0.1.72 — sửa nhận diện Line sau khi Word lưu
+
+[Windows x64](https://github.com/trung12685/KT_ChinhTaTV/releases/download/v0.1.72/ChinhTaViet-0.1.72-win-x64.zip) · [Thay đổi](docs/CHANGES-0.1.72.md) · [Hướng dẫn kiểm](docs/OFFICE-CHECK-0.1.72.md).
+
+Phản hồi 0.1.71 xác nhận khóa checkpoint và Agency đạt, nhưng dừng trước Subject. DOCX kèm có cặp DrawingML/VML do Word lưu; mã cũ coi VML là đối tượng chưa ghép. Bản vá nhận một cặp hợp lệ là một Line, cập nhật cả cặp một lần và giữ nhánh/chữ/ảnh không rõ ở chế độ thủ công. Kiểm nét XPS/rollback/Undo giữ nguyên. Bài kiểm lưu DOCX/XPS/JSON trước từng role và báo nguyên nhân thiếu đề xuất. Chưa xác nhận Office thực chạy đạt toàn bộ 0.1.72; CI chỉ kiểm mã/gói. Giữ danh mục 33/8/1, bộ đọc cũ mặc định và các bản cũ.
+
 ## 0.1.71 — sửa khóa file trong Kiểm tra Word
 
 [Windows x64](https://github.com/trung12685/KT_ChinhTaTV/releases/download/v0.1.71/ChinhTaViet-0.1.71-win-x64.zip) · [Hướng dẫn kiểm](docs/OFFICE-CHECK-0.1.71.md) · [Thay đổi](docs/CHANGES-0.1.71.md).

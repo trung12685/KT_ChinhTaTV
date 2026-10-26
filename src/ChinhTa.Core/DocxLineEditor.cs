@@ -32,6 +32,7 @@ public static class DocxLineEditor
         WordXmlTableMap.Read(wrapper.ToString(), live, _ => { }, (start, index) => verified.Add(start, index));
         var drawingIds = document.Descendants(WP + "docPr").Select(p => (uint?)p.Attribute("id") ?? 0).ToHashSet();
         var roles = new HashSet<LineRole>();
+        var alternateLines = OwnedLineAlternateContent.Read(document);
         var encoded=new List<Issue>();
         foreach (var issue in issues)
         {
@@ -45,8 +46,15 @@ public static class DocxLineEditor
                 throw new InvalidOperationException("Reference paragraph changed; rescan required");
             var target = targets.Single(t => t.Role == fix.Role && t.Start == issue.Start);
             string marker = "ChinhTaViet.ShapeLine." + fix.Role;
-            var marked = body.Descendants().Where(e => e.Name == V + "line" && (string?)e.Attribute("alt") == marker ||
+            var rawMarked = body.Descendants().Where(e => e.Name == V + "line" && (string?)e.Attribute("alt") == marker ||
                 e.Name == W + "drawing" && e.Descendants(WP + "docPr").Any(p => (string?)p.Attribute("descr") == marker)).ToArray();
+            var marked = rawMarked.Select(e=>
+            {
+                var wrapper=e.Ancestors(OwnedLineAlternateContent.MC+"AlternateContent").FirstOrDefault();
+                if(wrapper is null)return e;
+                if(!alternateLines.ContainsValue(wrapper))throw new InvalidOperationException("Unverified Line compatibility branch; manual inspection required");
+                return wrapper;
+            }).Distinct().ToArray();
             if (marked.Length > 1) throw new InvalidOperationException("Multiple marked Lines; manual inspection required");
             if (fix.ShapeId is not null && marked.Length == 0)
                 throw new InvalidOperationException("Only application-created Lines can be updated by this editor");
@@ -56,9 +64,10 @@ public static class DocxLineEditor
                 int ownerIndex = Array.IndexOf(paragraphs, owner);
                 if (!verified.Any(pair => pair.Value == ownerIndex && pair.Key >= target.RegionStart && pair.Key < target.RegionEnd))
                     throw new InvalidOperationException("Marked Line anchor outside verified region");
-                if(intendedPlan is null && marked[0].Name==W+"drawing")
+                var oldDrawing=marked[0].Name==W+"drawing"?marked[0]:marked[0].Descendants(W+"drawing").SingleOrDefault();
+                if(intendedPlan is null && oldDrawing is not null)
                 {
-                    var anchor=marked[0].Element(WP+"anchor");
+                    var anchor=oldDrawing.Element(WP+"anchor");
                     var oldIntent=LinePageIntent.Read((string?)anchor?.Element(WP+"docPr")?.Attribute("title"));
                     var h=anchor?.Element(WP+"positionH");var v=anchor?.Element(WP+"positionV");
                     if(oldIntent is not null && (string?)h?.Attribute("relativeFrom")=="page" &&
