@@ -101,6 +101,6 @@ public static class FormatAssessmentChecks
         assert(stale,"A stale preserve-size patch loses permission when the current proposed size behavior changes");
         var report=DevelopmentReport.Build("0.1.61",DateTimeOffset.UnixEpoch);
         assert(report.Contains("B04") && report.Contains("từng cỡ 13/14") && report.Contains("aggregate → từ → ký tự") &&
-            DevelopmentReport.Count(CapabilityMode.Reviewable)==32,"The report records the system-level formatting work and a preserve-size example without inflating the capability count");
+            DevelopmentReport.Count(CapabilityMode.Reviewable)==33,"The report records the system-level formatting work and a preserve-size example without inflating the capability count");
     }
 }

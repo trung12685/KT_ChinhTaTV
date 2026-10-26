@@ -6,8 +6,8 @@ public static class RepairDependencies
 {
     public static bool Same(Issue a,Issue b)=>a.Start==b.Start && a.Length==b.Length && a.Original==b.Original &&
         a.Replacement==b.Replacement && a.Kind==b.Kind && a.OutlineContext==b.OutlineContext && a.Format==b.Format && a.CharacterFormat==b.CharacterFormat && a.ParagraphFix==b.ParagraphFix && a.SpacingFix==b.SpacingFix &&
-        a.LineFix==b.LineFix && a.CenterFix==b.CenterFix && a.PageFix==b.PageFix;
-    private static bool Leaf(Issue issue)=>issue.CanFix && issue.PageFix is null && StagedRepairBatch.Stage(issue)==RepairStage.Text &&
+        a.LineFix==b.LineFix && a.CenterFix==b.CenterFix && a.PageFix==b.PageFix && a.NumberFix==b.NumberFix;
+    private static bool Leaf(Issue issue)=>issue.CanFix && issue.NumberFix is null && issue.PageFix is null && StagedRepairBatch.Stage(issue)==RepairStage.Text &&
         issue.Prerequisites is not {Count:>0};
     public static IReadOnlyList<Issue> Expand(IEnumerable<Issue> selected,IReadOnlyList<Issue> available)
     {

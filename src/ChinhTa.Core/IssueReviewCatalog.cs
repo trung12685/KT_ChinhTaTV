@@ -56,13 +56,14 @@ public static class IssueReviewCatalog
             FixKind.SentenceInnerSpace=>("sentence-before","Khoảng trước dấu kết câu",64,"Thừa khoảng trước dấu kết câu"),
             FixKind.SentenceAfterSpace=>("sentence-after","Khoảng sau dấu kết câu",65,"Thiếu khoảng sau dấu kết câu"),
             FixKind.QuoteSpace=>("quotes","Ngoặc kép",66,issue.Title??"Khoảng trắng quanh ngoặc kép"),
+            FixKind.PageNumber=>("page-number","Số trang",71,issue.Title??"Số trang chưa đúng thể thức"),
             FixKind.PageLayout=>("page","Khổ giấy và lề",70,issue.Title??"Kiểm tra khổ giấy/lề"),
             _=>("notice:"+(issue.Title??"other"),Brief(issue.Title??"Kiểm tra thủ công",60),80,issue.Title??"Kiểm tra thủ công")
         };
         bool cited=!string.IsNullOrWhiteSpace(issue.Citation);
         // Geometry/centering based on user tolerances remains reviewable. Only a
         // verified missing Line joins the required-format section here.
-        bool required=issue.Kind is FixKind.OutlineOrder or FixKind.OutlineMarker || cited && (issue.Kind==FixKind.PageLayout && issue.PageFix is not null ||
+        bool required=issue.Kind is FixKind.OutlineOrder or FixKind.OutlineMarker || cited && (issue.Kind==FixKind.PageNumber && issue.NumberFix is not null || issue.Kind==FixKind.PageLayout && issue.PageFix is not null ||
             issue.Kind is FixKind.AdministrativeNumber or FixKind.AdministrativeDate or FixKind.AdministrativeFormat or FixKind.SignatureFormat or FixKind.BodyFormat or FixKind.BodyParagraph or FixKind.BodyGap or FixKind.BodyLineSpacing or FixKind.DocumentHeadingFormat or FixKind.DocumentTypeText or FixKind.AgencyFormat or FixKind.AgencyText or FixKind.RecipientFormat or FixKind.RecipientText ||
             issue.Kind is FixKind.NationalHeading or FixKind.StateMotto or FixKind.PartyHeading &&
                 (issue.Format is {Alignment:null} || issue.Original!=issue.Replacement) ||

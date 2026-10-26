@@ -98,6 +98,8 @@ public static class IssueTooltipCatalog
                 return Decree+"mục I.4 và II.5, điểm b: Times New Roman, đen, cỡ 13–14, đứng, đậm; tên loại in hoa, trích yếu ngay dưới, căn giữa.";
             if(issue.Kind==FixKind.AdministrativePosition)
                 return Decree+"mục II.3.c và II.4.c: số/ký hiệu căn giữa dưới tên cơ quan; địa danh/ngày tháng cùng dòng số, căn giữa dưới quốc hiệu/tiêu ngữ.";
+            if(issue.Kind==FixKind.PageNumber)
+                return Decree+"mục I.4 và I.7: Times New Roman đen, số Ả Rập từ 1, cỡ 13–14, đứng, giữa lề trên; ẩn trang đầu.";
             if(issue.Kind==FixKind.PageLayout)
                 return Decree+"mục I.1–3: A4 210 × 297 mm; lề trên/dưới 20–25, trái 30–35, phải 15–20 mm; trang ngang có ngoại lệ bảng, biểu.";
             if(citation.Contains("chú thích 1",StringComparison.Ordinal))
@@ -107,6 +109,8 @@ public static class IssueTooltipCatalog
         }
         if(party)
         {
+            if(issue.Kind==FixKind.PageNumber)
+                return Decree+"mục I.4 và I.7: Times New Roman đen, số Ả Rập từ 1, cỡ 13–14, đứng, giữa lề trên; ẩn trang đầu.";
             if(issue.Kind==FixKind.PageLayout)
                 return "Hướng dẫn 05-HD/VPTW, Phần II.IV.3–4: thường dùng A4; lề trên/dưới/trái/phải 20/20/30/15 mm; có ngoại lệ giấy, trang ngang, hai mặt.";
             if(issue.Kind==FixKind.PartyHeading || citation.Contains("II.I.1",StringComparison.Ordinal))
@@ -128,6 +132,7 @@ public static class IssueTooltipCatalog
             return (line.ShapeId is null?"Kẻ":"Đặt lại")+" đường ngang dài "+Number(line.Width)+" pt, căn theo dòng chữ; "+
                 (line.Role==LineRole.Motto?"dài bằng tiêu ngữ.":"mức tự sửa theo cấu hình (mặc định 3/7).");
         }
+        if(issue.NumberFix is not null)return PageNumberFix.Action;
         if(issue.PageFix is not null)return issue.PageFix.Suggestion;
         if(issue.CenterFix is not null)return "Căn giữa trong ô đã xác minh, bỏ thụt lề ngang; giữ chữ và khoảng cách dọc.";
         if(issue.IsStyleOnly)return issue.Suggestion;

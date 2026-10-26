@@ -1,9 +1,14 @@
 # Chính tả Việt
 
 
+## Đợt thể thức03: số trang/PAGE (.70, chưa đóng gói)
+
+C33 mới: với một section dọc và header trống hoặc chỉ PAGE đủ chứng cứ, tạo/sửa sốẢRập từ1, Times New Roman đen13–14, đứng, giữa lề trên, ẩn trang1. Một trang không bị báo thiếu số. Giữ cỡ đúng, đậm/gạch chân, thân/bảng/ảnh và footer cả trang đầu. Nhiều section/header riêng/field chưa chắc giữ nguyên. Hậu kiểm số thựcXPS và nguyên vị trí nội dung, một Undo/rollback cả lượt; [phạm vi và ví dụ](docs/FORMAT-BATCH-03.md). Nguồn33/8/1, bản tải gần nhất vẫn .69; chưa có gói .70 hoặc runtime Office2021 mới.
+
+
 ## Đợt thể thức02: khổ giấy và lề (.70, chưa đóng gói)
 
-C32 mới: sửa giấy sai vềA4 và từng lề sai về khoảng quy định cho một section dọc đơn giản đã xác minh; giữ lề đúng, chữ, kiểu và bảng vừa vùng mới. Sửa trang trước rồi quét/đo lại nhóm đã chọn; một Undo/rollback toàn lượt. Ảnh/Shape, header/footer, nhiều section hoặc bố cục đặc biệt tiếp tục thủ công. [Phạm vi, ví dụ và các bước tiếp](docs/FORMAT-BATCH-02.md). Danh mục nguồn32/8/1; số trang chưa tự sửa, bản tải gần nhất vẫn .69.
+C32 mới: sửa giấy sai vềA4 và từng lề sai về khoảng quy định cho một section dọc đơn giản đã xác minh; giữ lề đúng, chữ, kiểu và bảng vừa vùng mới. Sửa trang trước rồi quét/đo lại nhóm đã chọn; một Undo/rollback toàn lượt. Ảnh/Shape, header/footer, nhiều section hoặc bố cục đặc biệt tiếp tục thủ công. [Phạm vi, ví dụ và các bước tiếp](docs/FORMAT-BATCH-02.md). Danh mục ở bước C32 là32/8/1; số trang chưa tự sửa trong bước C32, bản tải gần nhất vẫn .69.
 
 
 ## Đợt đang tích lũy: thể thức khối ký (.70, chưa có gói mới)

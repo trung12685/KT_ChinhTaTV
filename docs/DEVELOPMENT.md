@@ -533,3 +533,14 @@ Tiếp nối C31 .70. C32 sửaA4/lề trong một section dọc thông thườn
 PageLayoutBatch/FixPageSelection bao lượt cũ: trang trước, quét/XPS và rebind phần đã chọn qua chữ/prefix native; các mục chưa đủ chứng cứ gây rollback, không áp thêm lỗi chưa chọn. Cho nhiều nhóm chọn chung mà không chia Undo. Mục hình học tự đạt sau đổi trang được xác minh và vẫn hậu kiểm cuối. Generic writer/old staged route từ chối PageFix; dependency/model đi qua Prepare riêng, Same so cả payload trang. Giữ checkpoints nếu phục hồi thất bại; progress/Changed/Undo nhất quán.
 
 Có Core/WPF/Office fixtures, kiểm payload/stale/ngoại lệ/byte parts/tamper/case/bảng/late failure/rebind và một Undo. CI không có Word; bài Office mới chỉ compile đến khi người dùng chạy. C32 thêm một nhóm tính năng có ích, không đếm test/docs riêng. Tổng nguồn32/8/1, ba bước tích lũy .70 gồm defaultpolicy/C31/C32; chưa đóng gói. NĐ30 I.I.7 về số trang đã đọc, để đợt header/footer riêng, chưa hỗ trợ tự sửa hoặc tuyên bố đầy đủ thể thức. Tối ưu đọc vẫn dừng, giữ .67/.69.
+
+
+## 26/10/2026 — đợt thể thức03, C33 số trang/PAGE
+
+Đã đọc NĐ30 PL I.I.4/I.7 PDF21. C33 đọc đúng gói WordOpenXML hiện tại (không fallback file cũ), giải quan hệ header/footer, PAGE đơn hoặc phức chỉ một kết quả, font/kiểu trực tiếp và kế thừa chắc. Header tuỳ biến, first-footer tiềm ẩn khác nội dung, nhiều section/odd-even, field khoá hoặc dữ liệu không đủ đóng quyền sửa. Không coi literal số hoặc header cơ quan là thiếu PAGE; một trang không header không bị báo thiếu. Namespace và các dạng ghi số nguyên tương đương không thành lỗi.
+
+PageNumberFix mang fingerprint cấu hình, không chứa CP của story header. Candidate riêng chỉ sửa PAGE/header và cờ section/quan hệ/ContentTypes; giữ phông đúng13–14, đậm/gạch chân, main body/bảng/hình và parts khác. Bật titlePg phải giữ footer cũ trang1 qua first-reference; không ghi đè header/logo/content lạ. VerifyLive đối chiếu thân và footer, không coi saved cache là số đang hiển thị.
+
+FixNumberSelection bao giao dịch đang có: nhóm cũ trước, quét lại cấu hình theo số trang mới, PAGE sau; nếu tài liệu còn một trang thì chỉ công nhận đã đạt khi đúng fingerprint và phạm vi. Kiểm XML/header/field, số thực/kiểu/vị trí trên mọi trangXPS và body/footer/drawing leaf geometry trước-sau; lưu rồi kiểm lại. Bất kỳ lỗi nào rollback cả lượt, kiểm lại cấu hình header/footer nguồn và main story, không để Undo trung gian; thành công chỉ một Undo. Old text/staged writer từ chối NumberFix, dependencies/Same/Prepare so payload đúng.
+
+Core/WPF kiểm policy, metadata/namespace, font kế thừa, integer01=1, parts/tamper/source hash, schemaPAGE và synthetic rendered sequence/hidden first/lost drawings/shifted text. Có Office fixture hai trang với footer ghi chú, sửa riêng/chung chữ/Line và fault/Undo/lưu-mở; CI chỉ compile, không ghi nhận Office2021 PASS. Nguồn33/8/1; bốn bước .70 đang tích lũy, chưa đóng gói. Tối ưu đọc tiếp tục dừng, .67/.69 giữ nguyên; ngữ cảnh/thư viện vẫn cuối.
