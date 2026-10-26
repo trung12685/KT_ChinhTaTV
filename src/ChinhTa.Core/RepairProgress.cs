@@ -11,6 +11,9 @@ public sealed record RepairProgressUpdate(RepairActivity Activity,int Verified,i
 // verification or rollback. Intermediate counts remain provisional for the batch.
 public sealed class RepairProgressTracker(int total,Action<RepairProgressUpdate>? report)
 {
+    // Nested page/PAGE stages belong to the same user selection. Share its
+    // denominator and provisional confirmations instead of restarting the UI.
+    public static RepairProgressTracker ForSelection(RepairProgressTracker? current,int total,Action<RepairProgressUpdate>? report)=>current??new(total,report);
     public int Verified{get;private set;}
     public void Show(RepairActivity activity,string message)
     {

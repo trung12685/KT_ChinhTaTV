@@ -25,11 +25,12 @@ public sealed partial class WordSession
         var remaining=selected.Where(i=>i.NumberFix is null).ToArray();var current=CheckCore();
         if(current.Count(i=>i.CanFix && i.Kind==FixKind.PageNumber && i.NumberFix==fix && i.Start==item.Start && i.Original==item.Original)!=1)
             throw new InvalidOperationException("Gợi ý PAGE đã đổi; hãy quét lại.");
-        BatchPlan.Validate(selected,ReadIssueText);Checkpoint();
+        BatchPlan.Validate(selected,ReadIssueText);string original=ReadStoryText();
+        var postconditions=CaptureSelectionPostconditions(selected,original);Checkpoint();
         string before=Path.Combine(folder,Guid.NewGuid()+".number.undo.docx"),candidate=Path.Combine(folder,Guid.NewGuid()+".number.candidate.docx");File.Copy(RecoveryPath,before);
         var rollbackNumbers=CurrentNumberPackage();string rollbackKey=PageNumberRules.ConfigurationKey(rollbackNumbers.Package,rollbackNumbers.Pages);
-        string original=ReadStoryText();int depth=undoCheckpoints.Count;bool previousChanged=Changed,restored=false,committed=false,numberSatisfied=false;
-        var previousLines=verifiedLineEdits.ToArray();var previousProgress=repairProgress;repairProgress=new(selected.Count,ProgressReporter);
+        int depth=undoCheckpoints.Count;bool previousChanged=Changed,restored=false,committed=false,numberSatisfied=false;
+        var previousLines=verifiedLineEdits.ToArray();var previousProgress=repairProgress;repairProgress=RepairProgressTracker.ForSelection(repairProgress,selected.Count,ProgressReporter);
         RepairBatchResult otherResult=new(0,0,0);
         try
         {
@@ -39,7 +40,7 @@ public sealed partial class WordSession
                     if(remaining.Length==0)return;
                     Progress(RepairActivity.Editing,"Đang sửa các nhóm đã chọn trước khi đối chiếu PAGE theo phân trang mới.");
                     if(remaining.Any(i=>i.PageFix is not null))
-                    {otherResult=FixPageSelection(remaining);repairProgress?.Confirm(otherResult.Selected);}
+                    otherResult=FixPageSelection(remaining);
                     else if(remaining.Select(StagedRepairBatch.Stage).Distinct().Count()>1)otherResult=FixStaged(remaining);
                     else{FixManyCore(remaining,true);repairProgress?.Confirm(remaining.Length);otherResult=new(remaining.Length,remaining.Length,0);}
                     if(failAfterStage==1)throw new OfficeStagedProbeException();
@@ -69,14 +70,16 @@ public sealed partial class WordSession
                         PageNumberPreviewVerifier.Preserve(visualBefore,NumberPreview(layout,true));repairProgress?.Confirm(1);
                     }
                     finally{if(File.Exists(source))File.Delete(source);}
-                    if(failAfterStage is 2 or 3)throw new OfficeStagedProbeException();
+                    if(failAfterStage==2)throw new OfficeStagedProbeException();
                 },
                 ()=>
                 {
                     Progress(RepairActivity.Verifying,"Kiểm lại cả lượt: PAGE thực trên XPS, nội dung và kết quả các nhóm đã chọn.");
+                    VerifySelectionPostconditions(postconditions);
                     var live=CurrentNumberPackage();
                     if(numberSatisfied?!PageNumberRules.Satisfied(live.Package,live.Pages,fix):!PageNumberRules.ProvenStandard(live.Package,live.Pages))
                         throw new InvalidOperationException("PAGE chưa đạt ở bước hoàn tất.");
+                    if(failAfterStage==3)throw new OfficeStagedProbeException();
                 },
                 ()=>
                 {

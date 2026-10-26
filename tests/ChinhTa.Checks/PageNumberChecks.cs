@@ -101,6 +101,18 @@ public static class PageNumberChecks
         string folder=Path.Combine(Path.GetTempPath(),"ChinhTa-number-"+Guid.NewGuid());Directory.CreateDirectory(folder);
         try
         {
+            // Word can emit a whitespace-only text run without xml:space. It is
+            // still footer content: Flat OPC and saved DOCX must hash it alike.
+            var spaces=Parts();spaces["word/footer1.xml"].Descendants(W+"t").Single().Value="   ";
+            string spacedSource=Path.Combine(folder,"footer-spaces.docx"),spacedCandidate=Path.Combine(folder,"footer-spaces-fixed.docx");
+            Write(spacedSource,spaces);var spacedLive=Package(spaces);var spacedFile=PageNumberPackage.FromFile(spacedSource);
+            assert(PageNumberRules.ConfigurationKey(spacedLive,2)==PageNumberRules.ConfigurationKey(spacedFile,2),
+                "Whitespace-only footer runs have the same current Flat OPC and saved DOCX approval key");
+            var spacedChoice=PageNumberRules.Check(spacedLive,2,0,"N",DocumentProfile.State).Single();
+            DocxPageNumberEditor.Write(spacedSource,spacedCandidate,spacedChoice.NumberFix!,2);
+            DocxPageNumberEditor.VerifyLive(spacedLive,PageNumberPackage.FromFile(spacedCandidate));
+            assert(PageNumberRules.ProvenStandard(PageNumberPackage.FromFile(spacedCandidate),2),
+                "PAGE can be repaired with a whitespace-only footer while preserving its exact content and first-page visibility");
             foreach(bool existing in new[]{false,true})
             foreach(float size in new[]{10f,13f,14f,16f})
             {

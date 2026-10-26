@@ -9,6 +9,15 @@ public static class RepairProgressChecks
         assert(events.Last().Verified==5 && events.All(p=>p.Fraction<1),"All provisional stage counts still leave room for whole-batch verification and rescan");
         progress.Show(RepairActivity.Restoring,"restore");
         assert(events.Last().Verified==0 && events.Last().Activity==RepairActivity.Restoring,"Rollback resets provisional verified counts instead of leaving a successful green result");
+        var nestedEvents=new List<RepairProgressUpdate>();
+        var outer=RepairProgressTracker.ForSelection(null,7,nestedEvents.Add);
+        var page=RepairProgressTracker.ForSelection(outer,6,_=>throw new Exception("Nested progress must retain the outer reporter"));
+        page.Confirm(1);var body=RepairProgressTracker.ForSelection(page,5,null);body.Confirm(5);outer.Confirm(1);
+        assert(ReferenceEquals(outer,page) && ReferenceEquals(page,body) && nestedEvents.All(e=>e.Total==7) &&
+            nestedEvents.Select(e=>e.Verified).SequenceEqual(new[]{1,6,7}) && nestedEvents.All(e=>e.Fraction<1),
+            "PAGE, page setup and body stages share one seven-item progress total and each item is confirmed once");
+        body.Show(RepairActivity.Restoring,"restore whole selection");
+        assert(outer.Verified==0 && nestedEvents.Last().Total==7,"A nested-stage failure clears the whole selection progress without shrinking its total");
         var text=new Issue(0,1,"5","3","",false,FixKind.OutlineOrder);
         var line=new Issue(10,3,"ABC","ABC","",false,FixKind.ShapeLine,LineFix:new(null,100,100,90,LineRole.Agency));
         string document="5";bool committed=false;

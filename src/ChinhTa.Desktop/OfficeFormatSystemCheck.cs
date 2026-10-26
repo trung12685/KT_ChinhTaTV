@@ -38,6 +38,7 @@ internal static class OfficeFormatSystemCheck
         OfficeSignatureFormatCheck.Run(test,modern,isolated,pass);
         OfficePageLayoutCheck.Run(test,modern,isolated,pass);
         OfficePageNumberCheck.Run(test,modern,isolated,pass);
+        OfficeFormatBatchCheck.Run(test,modern,isolated,pass);
     }
     private static void RunBad(WordSession test,string bad,string isolated,(int Bold,int Underline,int Alignment) decoration,Action<string> pass,bool selective)
     {

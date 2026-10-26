@@ -547,3 +547,12 @@ Core/WPF kiểm policy, metadata/namespace, font kế thừa, integer01=1, parts
 
 
 C33 chốt API đọc full Document.WordOpenXML theo MicrosoftDocs/VBA-Docs; Range.WordOpenXML là gói chỉ đủ vùng range nên không dùng để kết luận header/footer trống. PageNumberDocumentReader dùng một getter Document, không fallback saved file hoặc Range; WPF probe có footer/quan hệ thật kiểm full getter và cấm partial Content. Không thay bộ đọc body đang mặc định.
+
+
+## 26/10/2026 — đợt thể thức04, hậu kiểm phối hợp
+
+Tái hiện PAGE bị từ chối khi footer có run toàn dấu cách không xml:space: FromFlat mặc định bỏ whitespace, khác key FromFile. Bật PreserveWhitespace và kiểm key/candidate/footer trang đầu. Điều kiện C32 chuyển sang full Document.WordOpenXML để thấy settings đóng sách; cùng snapshot page rules/PAGE, không thay bộ đọc body hay tiếp tục tối ưu tốc độ.
+
+SelectionPostconditions chụp kỳ vọng chữ, format/size/case, khoảng đoạn và ngữ cảnh hình học trước ghi. C32/C33 kiểm lại sau giai đoạn cuối: bind CP mới bằng đúng text/prefix, đọc font/cỡ thật, giữ từng cỡ hợp lệ/gạch chân/bố cục, khoảng đoạn và đo lại nét/tâm XPS. Extract SelectedFormatVerification từ staged để dùng chung, không thay phép kiểm cũ bằng số issue/Shape. Late failure đi vào rollback cả lượt; một Undo chỉ sau thành công.
+
+RepairProgressTracker dùng chung giữa wrapper PAGE/trang/nội dung, giữ mẫu số của lựa chọn gốc và không cộng lặp nhóm con. Có kiểm nested progress, post-reopen font drift/CP/context/late rollback và mẫu bảy mục kết hợp khổ/lề, PAGE, phông, khoảng trắng, ba Line. OfficeFormatBatchCheck kiểm fault ba thời điểm, source hash, tiến độ, Undo/lưu-mở và nét thực; mới compile trong CI, chưa chạy Word2021. Nguồn33/8/1, năm đợt tích lũy0.1.70, chưa đóng gói. Chi tiết FORMAT-BATCH-04.
