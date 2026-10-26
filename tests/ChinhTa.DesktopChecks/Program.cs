@@ -230,6 +230,8 @@ static class Program
         PageLayoutDesktopChecks.Run(Assert);
         PageNumberDesktopChecks.Run(Assert);
         SelectedFormatVerificationChecks.Run(Assert);
+        OfficeReaderCheckPolicyChecks.Run(Assert);
+        OfficeFileEvidenceChecks.Run(Assert);
 QuoteReviewChecks.Run(Assert);
 QuoteAfterReviewChecks.Run(Assert);
 DelimiterClusterReviewChecks.Run(Assert);

@@ -5,24 +5,25 @@ using System.Windows.Xps.Packaging;
 using ChinhTa.Core;
 
 namespace ChinhTa.Desktop;
-public record OfficeCheckResult(bool Passed, string Stage, string Folder);
 
 // Runs on the WPF STA thread using a separate Word session and a synthetic document only.
 public static class OfficeIntegrationCheck
 {
-    public static OfficeCheckResult Run()
+    public static OfficeCheckResult Run(bool experimentalReading=false)
     {
         string folder = Path.Combine(Path.GetDirectoryName(Diagnostics.LogPath)!, "OfficeCheck-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(folder);
         string report = Path.Combine(folder,"office-check.txt");
         string stage = "Tìm mẫu", office = "";
         void Pass(string message) => File.AppendAllText(report,"PASS " + message + Environment.NewLine);
+        void Note(string message)=>File.AppendAllText(report,message+Environment.NewLine);
         File.WriteAllText(report,$"ChinhTaViet {typeof(OfficeIntegrationCheck).Assembly.GetName().Version}\n{DateTimeOffset.Now:O}\n");
         try
         {
             string sample = Path.Combine(AppContext.BaseDirectory,"samples","BaDuongKeThieu.docx");
             if (!File.Exists(sample)) throw new FileNotFoundException("Thiếu mẫu đi kèm bản giải nén");
-            using var test = new WordSession {Profile=DocumentProfile.State, LineCheckArtifactFolder=folder};
+            Note(experimentalReading?"MODE Experimental; đã chọn thử nghiệm; so sánh hai cách đọc là bắt buộc sau các bài chức năng.":"MODE Legacy; bộ đọc thử nghiệm đang tắt.");
+            using var test = new WordSession {Profile=DocumentProfile.State, LineCheckArtifactFolder=folder,UseOptimizedReading=experimentalReading};
             stage="Mở Word và mẫu";
             test.Open(sample);
             office=test.OfficeDescription;
@@ -33,6 +34,15 @@ public static class OfficeIntegrationCheck
             File.AppendAllText(report,$"Targets={test.LineTargets.Count}; Shapes={test.LineShapes.Count}\n");
             if(test.LineTargets.Count!=3 || test.LineShapes.Count!=0)throw new InvalidOperationException("Không nhận diện được đúng mẫu ba mốc chưa có Line");
             Pass(stage);
+            // Exercise the reported open-file read in EVERY selected mode, so
+            // disabling the optional comparison cannot hide a remaining lock.
+            stage="Đọc mã băm checkpoint khi Word đang mở";
+            string readOnlyStory=test.ReadCheckText();bool readOnlyChanged=test.Changed;int readOnlyUndo=test.CheckUndoCount;
+            byte[] readOnlyDigest=OfficeFileEvidence.Digest(test.RecoveryPath);test.Check();
+            if(!readOnlyDigest.SequenceEqual(OfficeFileEvidence.Digest(test.RecoveryPath)) || test.ReadCheckText()!=readOnlyStory ||
+                test.Changed!=readOnlyChanged || test.CheckUndoCount!=readOnlyUndo)
+                throw new InvalidOperationException("Quét đọc thử đã thay đổi checkpoint/chữ/Changed/Undo.");
+            Pass(stage+": đọc được file Word giữ, giữ đúng mã băm/chữ/Changed/Undo trước-sau quét");
             // Fixed coordinates exercise the write/open/save pipeline, not legal layout measurement.
             var plan=test.LineTargets.Select(t=>t.Probe with {CanFix=true,
                 LineFix=ShapeLineRules.Evaluate(t,new(100,100+(int)t.Role*45,210),null,null,LinePolicy.Decree30).Fix}).ToArray();
@@ -62,8 +72,6 @@ public static class OfficeIntegrationCheck
             Pass(stage);
             stage="Đo và sửa Line trên mẫu chế độ Word 2013";
             string modern=CreateModernSample(sample,folder);
-            stage="So sánh hai cách đọc: bảng, định dạng và nét XPS";
-            OfficeReadPipelineCheck.Run(test,modern,folder,Pass);
             stage="Đo và sửa Line trên mẫu chế độ Word 2013";
             test.Open(modern);
             var modernIssues=test.Check();
@@ -1077,8 +1085,14 @@ public static class OfficeIntegrationCheck
             OfficeShortFinalSentenceCheck.Run(test,modern,folder,Pass);
             stage="Định dạng hệ thống và cảnh báo giả sau sửa nhóm";
             OfficeFormatSystemCheck.Run(test,modern,folder,Pass);
+            OfficeReaderCheckPolicy.CompareIfSelected(experimentalReading,()=>
+            {
+                stage="So sánh hai cách đọc: bảng, định dạng và nét XPS";
+                OfficeReadPipelineCheck.Run(test,modern,folder,Pass,Note);
+            },Note);
             File.AppendAllText(report,"RESULT PASS\nKiểm thao tác Word/Line, vị trí nét XPS, sửa riêng/nhóm số-ngày, lưu/mở và Hoàn tác trên mẫu giả; không xác nhận mọi tài liệu.\n");
-            return new(true,stage,folder);
+            Note(experimentalReading?"SCOPE Experimental; gồm so sánh hai cách đọc.":"SCOPE Legacy only; bộ đọc thử nghiệm chưa được xác nhận bởi lượt này.");
+            return new(true,stage,folder,experimentalReading);
         }
         catch(Exception error)
         {
@@ -1087,12 +1101,13 @@ public static class OfficeIntegrationCheck
             Exception? cause = error;
             for (int depth=0; cause is not null && depth<8; depth++,cause=cause.InnerException)
             {
-                File.AppendAllText(report,$"Cause{depth}: {cause.GetType().Name} HRESULT=0x{cause.HResult:X8}\n{cause.StackTrace}\n");
+                File.AppendAllText(report,$"Cause{depth}: {cause.GetType().Name} HRESULT=0x{cause.HResult:X8}\nMessage: {cause.Message}\n{cause.StackTrace}\n");
                 if (cause.Data["ChinhTa.LineVerification"] is string details)
                     File.AppendAllText(report, details + Environment.NewLine);
+                if(cause.Data["ChinhTa.ReadComparison"] is string comparison)Note(comparison);
             }
             File.AppendAllText(report,"RESULT FAIL\n");
-            return new(false,stage,folder);
+            return new(false,stage,folder,experimentalReading);
         }
     }
     private static string CreateDocumentHeadingSample(string source,string folder,bool mixed)
@@ -1411,10 +1426,7 @@ public static class OfficeIntegrationCheck
             throw new InvalidOperationException("Bản lưu chưa giữ nguyên chữ/định danh cấu trúc mẫu");
     }
     private static byte[] SaveDigest(string path)
-    {
-        using var input=new FileStream(path,FileMode.Open,FileAccess.Read,FileShare.ReadWrite|FileShare.Delete);
-        return System.Security.Cryptography.SHA256.HashData(input);
-    }
+        =>OfficeFileEvidence.Digest(path);
     private static Issue[] InspectPositions(WordSession test,string folder,string artifact)
     {
         var probes=test.AdministrativePositionTargets.SelectMany(t=>t.References.Select(r=>r.Probe).Append(t.Probe)).Distinct().ToArray();

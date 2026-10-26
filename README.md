@@ -1,5 +1,11 @@
 # Chính tả Việt
 
+## 0.1.71 — sửa khóa file trong Kiểm tra Word
+
+[Windows x64](https://github.com/trung12685/KT_ChinhTaTV/releases/download/v0.1.71/ChinhTaViet-0.1.71-win-x64.zip) · [Hướng dẫn kiểm](docs/OFFICE-CHECK-0.1.71.md) · [Thay đổi](docs/CHANGES-0.1.71.md).
+
+Log phản hồi ghi0.1.69: File.ReadAllBytes bị Word giữ file, lỗi0x80070020 trước so sánh; cùng mã còn ở0.1.70. Bản sửa dùng handle chỉ đọc chia sẻ tương thích Word, giữ kiểm mã băm trước/sau và lỗi thật. Đồng thời bài Kiểm tra Word không còn tự ép bật thử nghiệm đang tắt. Mặc định kiểm các chức năng bằng bộ đọc cũ, ghi rõ thử nghiệm chưa chạy; bật thử nghiệm thì so sánh vẫn bắt buộc và sai khác vẫn FAIL. Log thêm thông báo ngoại lệ, pha lỗi, hai snapshot và trường JSON khác nhau. Chưa xác nhận Office2021 chạy đạt bản sửa; giữ nguyên luật33/8/1, kiểm nét/bảng/Preview/Undo/rollback và bộ đọc. Bản0.1.70 và0.1.67 giữ nguyên.
+
 ## 0.1.70 — bản thử tích lũy thể thức văn bản
 
 [Tải Windows x64](https://github.com/trung12685/KT_ChinhTaTV/releases/download/v0.1.70/ChinhTaViet-0.1.70-win-x64.zip) · [Release](https://github.com/trung12685/KT_ChinhTaTV/releases/tag/v0.1.70) · [33 nhóm hỗ trợ và ví dụ](docs/SUPPORTED-FIXES-0.1.70.md) · [Cách kiểm trên Office2021](docs/OFFICE-CHECK-0.1.70.md).

@@ -9,28 +9,40 @@ namespace ChinhTa.Desktop;
 // check. Compiling this fixture in CI is not evidence that Office has passed it.
 internal static class OfficeReadPipelineCheck
 {
-    public static void Run(WordSession test,string modern,string folder,Action<string> pass)
+    public static void Run(WordSession test,string modern,string folder,Action<string> pass,Action<string> note)
     {
         bool previous=test.UseOptimizedReading;
         string isolated=Path.Combine(folder,"read-pipeline");Directory.CreateDirectory(isolated);
         try
         {
+            int comparison=0;
             void Compare(string label)
             {
+                int number=++comparison;note($"READ_COMPARISON_BEGIN {number}: {label}");
                 string story=test.ReadCheckText();bool changed=test.Changed;int undo=test.CheckUndoCount;
-                byte[] checkpoint=SHA256.HashData(File.ReadAllBytes(test.RecoveryPath));
-                string Read(bool optimized)
+                byte[] checkpoint=OfficeFileEvidence.Digest(test.RecoveryPath);
+                (string Json,string Path) Read(bool optimized)
                 {
+                    string reader=optimized?"experimental":"legacy",phase="Check";
                     test.UseOptimizedReading=optimized;
-                    var issues=test.Check();var targets=test.LineTargets.ToArray();var shapes=test.LineShapes.ToArray();
-                    var lines=OfficeComponentCheck.ReadLines(test);
-                    if(story!=test.ReadCheckText() || test.Changed!=changed || test.CheckUndoCount!=undo ||
-                        !checkpoint.SequenceEqual(SHA256.HashData(File.ReadAllBytes(test.RecoveryPath))))
-                        throw new InvalidOperationException("Đọc/quét so sánh đã thay đổi tài liệu hoặc trạng thái hoàn tác.");
-                    return JsonSerializer.Serialize(new {Issues=issues,Targets=targets,Shapes=shapes,MeasuredLineIssues=lines});
+                    try
+                    {
+                        note($"READ_COMPARISON_READ {number}: {reader}; {label}");
+                        var issues=test.Check();var targets=test.LineTargets.ToArray();var shapes=test.LineShapes.ToArray();
+                        phase="MeasureLinesXps";var lines=OfficeComponentCheck.ReadLines(test);
+                        string json=JsonSerializer.Serialize(new {Issues=issues,Targets=targets,Shapes=shapes,MeasuredLineIssues=lines});
+                        string path=Path.Combine(isolated,$"comparison-{number:00}-{reader}.json");File.WriteAllText(path,json);
+                        phase="VerifyReadOnly";
+                        if(story!=test.ReadCheckText() || test.Changed!=changed || test.CheckUndoCount!=undo ||
+                            !checkpoint.SequenceEqual(OfficeFileEvidence.Digest(test.RecoveryPath)))
+                            throw new InvalidOperationException("Đọc/quét so sánh đã thay đổi tài liệu hoặc trạng thái hoàn tác.");
+                        note("READ_COMPARISON_SNAPSHOT "+path);return (json,path);
+                    }
+                    catch(Exception error)
+                    {error.Data["ChinhTa.ReadComparison"]=$"READ_COMPARISON_FAILURE {number}: Reader={reader}; Phase={phase}; Label={label}";throw;}
                 }
-                string legacy=Read(false),optimized=Read(true);
-                if(legacy!=optimized)throw new InvalidOperationException("Hai cách đọc khác kết quả kiểm tra, quyền sửa hoặc số đo nét XPS: "+label);
+                var legacy=Read(false);var optimized=Read(true);
+                OfficeReadComparisonEvidence.RequireEqual(legacy.Json,optimized.Json,label,legacy.Path,optimized.Path);
                 pass("Đọc cũ/mới: cùng danh sách lỗi, payload, mốc bảng và số đo XPS; giữ chữ, checkpoint, Changed/Undo — "+label);
             }
             foreach(bool bad in new[]{false,true})

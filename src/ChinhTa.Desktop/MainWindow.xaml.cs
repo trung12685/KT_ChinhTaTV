@@ -215,11 +215,11 @@ public partial class MainWindow : Window
     private void OfficeCheckClick(object sender, RoutedEventArgs e) => Run(() =>
     {
         Status.Text = "Đang kiểm tra Word bằng tài liệu mẫu riêng: mở, ghi Line, xuất trang, lưu và hoàn tác…";
-        var result = OfficeIntegrationCheck.Run();
-        Status.Text = result.Passed ? "Kiểm tra Word tự động: ĐẠT." : "Kiểm tra Word tự động: CHƯA ĐẠT; xem office-check.txt.";
+        var result = OfficeIntegrationCheck.Run(session.UseOptimizedReading);
+        Status.Text = result.Passed ? "Kiểm tra Word tự động: ĐẠT trên mẫu; "+result.ReaderScope : "Kiểm tra Word tự động: CHƯA ĐẠT; xem office-check.txt.";
         MessageBox.Show(this, (result.Passed ? "Đã đạt các bước kiểm tra Word trên mẫu riêng." :
             "Kiểm tra Word chưa đạt ở bước: " + result.Stage) +
-            "\n\nKết quả và file mẫu đã sửa lưu tại:\n" + result.Folder +
+            "\n\n"+result.ReaderScope+"\n\nKết quả và file mẫu đã sửa lưu tại:\n" + result.Folder +
             "\n\nBài kiểm tra đo và kiểm nét XPS trên mẫu; không xác nhận mọi tài liệu.",
             "Kiểm tra Word", MessageBoxButton.OK, result.Passed ? MessageBoxImage.Information : MessageBoxImage.Warning);
         Process.Start(new ProcessStartInfo { FileName = result.Folder, UseShellExecute = true });

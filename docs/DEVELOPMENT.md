@@ -561,3 +561,16 @@ RepairProgressTracker dùng chung giữa wrapper PAGE/trang/nội dung, giữ m�
 ## 26/10/2026 — chuẩn bị gói Windows0.1.70
 
 Theo đồng ý của người dùng sau năm đợt, chốt source tính năng bd583da4 để đóng gói. Thêm SUPPORTED-FIXES-0.1.70 lấy từ catalog33/8/1 và P01–P05, hướng dẫn OFFICE-CHECK-0.1.70, nhật ký/README release và metadata báo cáo. Pipeline chạy lại Core/WPF, publish win-x64 tự chứa, kiểm catalog/ví dụ/tài liệu trong gói và metadata TXT, băm SHA256 rồi mới tạo prerelease. Không nhập main, không thay tag/gói0.1.67 hoặc các bản cũ. Kết quả đúng commit ở release/build-checks.json; việc có gói không chứng minh Office2021 PASS.
+
+
+## 26/10/2026 — phản hồi Office2021, bản0.1.71
+
+Ảnh phản hồi sau khi phát hành0.1.70 báo CHƯA ĐẠT ở bước so sánh hai cách đọc; chưa có log nguyên nhân. Rà mã thấy OfficeReadPipelineCheck luôn được chạy và ép UseOptimizedReading=true dù mặc định thử nghiệm tắt, khiến kiểm thể thức bị chặn bởi phần thử nghiệm đã dừng nghiên cứu. Sửa OfficeIntegrationCheck nhận mode đang chọn từ MainWindow, toàn bộ bài chức năng chạy mode đó; mặc định cũ, ghi NOT_RUN/SCOPE cho thử nghiệm và kết quả chỉ áp dụng mode cũ. Nếu bật thử nghiệm thì so sánh vẫn bắt buộc sau bài chức năng, không bắt lỗi rồi coi PASS.
+
+Không nới so sánh JSON, số đo XPS hoặc sửa thuật toán đọc để làm bài vượt qua. Thêm snapshot cũ/mới và JSON path khác đầu tiên, nhãn mẫu/reader/pha lỗi. Office log trước đây chỉ ghi type/HRESULT/stack; thêm cause.Message và evidence. Giữ nguyên nét thật, checkpoint/rollback/Undo và danh mục33/8/1. Có kiểm gate/mode/scope, sai quyền sửa/count/CP/toạ độ rất nhỏ/kiểu và representation vẫn FAIL; CI không chạy Word. Chưa có căn cứ khẳng định lỗi thực của hai bộ đọc đã được sửa; cần log0.1.70 hoặc bản chạy mới. Bản tải0.1.70 và mốc0.1.67 không thay.
+
+
+Log nhận sau ảnh xác định phiên bản0.1.69, Word16.0 Build16.0.20326, IOException0x80070020 tại OfficeReadPipelineCheck.Compare dòng21 khi File.ReadAllBytes RecoveryPath đang được Word mở ghi. Chưa đến hai bộ đọc, không gán là mismatch thuật toán và không coi đó là kết quả chạy0.1.70. Cùng code vẫn có trong0.1.70 nên sửa0.1.71 từ nguồn70. OfficeFileEvidence.Digest mở Read/ReadWrite|Delete, dùng chung với SaveDigest hiện có; thay hai chỗ hash checkpoint của comparator. Băm vẫn chính xác, không đóng/lưu hoặc sửa tài liệu. Kiểm Windows giữ một writable handle Share.Read: cách cũ phải lỗi0x80070020, cách mới đúng SHA256, giữ position/save time; byte đổi vẫn khác, exclusive/missing vẫn lỗi và handle được giải phóng. Không dùng các COM/shape log lịch sử phiên bản trước làm nguyên nhân của lượt này.
+
+
+Bước “Đọc mã băm checkpoint khi Word đang mở” là bắt buộc ở cả bộ đọc cũ và thử nghiệm: đọc băm trước/sau quét, so chữ/Changed/Undo. Tắt phép so sánh tùy chọn không được làm mất phép tái kiểm lỗi khóa file; khóa còn tồn tại hoặc bằng chứng thay đổi vẫn RESULT FAIL.
