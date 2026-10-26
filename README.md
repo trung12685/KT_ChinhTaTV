@@ -1,9 +1,14 @@
 # Chính tả Việt
 
 
+## Đợt thể thức02: khổ giấy và lề (.70, chưa đóng gói)
+
+C32 mới: sửa giấy sai vềA4 và từng lề sai về khoảng quy định cho một section dọc đơn giản đã xác minh; giữ lề đúng, chữ, kiểu và bảng vừa vùng mới. Sửa trang trước rồi quét/đo lại nhóm đã chọn; một Undo/rollback toàn lượt. Ảnh/Shape, header/footer, nhiều section hoặc bố cục đặc biệt tiếp tục thủ công. [Phạm vi, ví dụ và các bước tiếp](docs/FORMAT-BATCH-02.md). Danh mục nguồn32/8/1; số trang chưa tự sửa, bản tải gần nhất vẫn .69.
+
+
 ## Đợt đang tích lũy: thể thức khối ký (.70, chưa có gói mới)
 
-Dừng tối ưu tốc độ đọc theo yêu cầu người dùng. Đợt này bổ sung C31 kiểm/sửa phông, đen, cỡ13–14, đứng/đậm của chức vụ và họ tên người ký khi nhận diện chắc bảng cuối văn bản. Giữ cỡ đúng, tên/cấp bậc, ảnh/chữ ký/dấu và bố cục; không suy thẩm quyền hay sửa hoa/thường họ tên. Có thể chọn cùng nhóm lỗi khác qua quét/hậu kiểm/một Undo/rollback. Xem [phạm vi, ví dụ và kiểm thử](docs/FORMAT-BATCH-01.md). Danh mục trong mã hiện31/8/1; bản tải gần nhất vẫn .69, chưa đóng gói cho riêng bước này.
+Dừng tối ưu tốc độ đọc theo yêu cầu người dùng. Đợt này bổ sung C31 kiểm/sửa phông, đen, cỡ13–14, đứng/đậm của chức vụ và họ tên người ký khi nhận diện chắc bảng cuối văn bản. Giữ cỡ đúng, tên/cấp bậc, ảnh/chữ ký/dấu và bố cục; không suy thẩm quyền hay sửa hoa/thường họ tên. Có thể chọn cùng nhóm lỗi khác qua quét/hậu kiểm/một Undo/rollback. Xem [phạm vi, ví dụ và kiểm thử](docs/FORMAT-BATCH-01.md). Danh mục ở bước C31 là31/8/1; bản tải gần nhất vẫn .69, chưa đóng gói cho riêng bước này.
 
 Ứng dụng C# / WPF chạy trên Windows với Microsoft Word desktop, làm việc offline trên bản sao DOCX và xem trước bằng XPS. Không gửi nội dung tài liệu tới dịch vụ AI.
 

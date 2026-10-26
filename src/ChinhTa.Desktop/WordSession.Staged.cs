@@ -9,7 +9,9 @@ public sealed partial class WordSession
     private sealed record StagedFormat(Issue Issue,string Text,string Prefix,FontSizeEvidence? Sizes,CharacterStyleEvidence? Styles=null);
     public RepairBatchResult FixSelection(IEnumerable<Issue> selection)
     {
-        var plan=StagedRepairBatch.Prepare(selection);
+        var chosen=selection.Distinct().ToArray();
+        if(chosen.Any(i=>i.PageFix is not null))return FixPageSelection(chosen);
+        var plan=StagedRepairBatch.Prepare(chosen);
         repairProgress=new(plan.Count,ProgressReporter);
         try
         {
@@ -25,7 +27,9 @@ public sealed partial class WordSession
     {
         if(LineCheckArtifactFolder is null || afterStage is <1 or >3)
             throw new InvalidOperationException("Chỉ dùng trong phiên kiểm Word riêng.");
-        var plan=StagedRepairBatch.Prepare(selection);
+        var chosen=selection.Distinct().ToArray();
+        if(chosen.Any(i=>i.PageFix is not null)){FixPageSelection(chosen,afterStage);return;}
+        var plan=StagedRepairBatch.Prepare(chosen);
         if(plan.Select(StagedRepairBatch.Stage).Distinct().Count()<2)
             throw new InvalidOperationException("Mẫu kiểm cần nhiều nhóm sửa.");
         FixStaged(plan,afterStage);

@@ -145,7 +145,7 @@ public partial class MainWindow : Window
         if (issue.LineFix is ShapeLineFix lineFix) highlighter.ShowLineSuggestion(document,anchor.Page,lineFix);
         displayed = issue;
         Status.Text = $"Trang {anchor.Page} — {IssueReviewCatalog.Describe(issue).Label}. " +
-            (pageWarning ? "Cảnh báo thiết lập trang, không đánh dấu ký tự. " : marked ? $"Đánh dấu: {timer.Elapsed.TotalMilliseconds:F0} ms." :
+            (pageWarning ? "Thiết lập trang; xem thông số trong Chi tiết lỗi. " : marked ? $"Đánh dấu: {timer.Elapsed.TotalMilliseconds:F0} ms." :
             "Chưa ánh xạ chắc chắn được vị trí trên trang này; không đánh dấu để tránh nhầm.") + (issue.LineFix is not null ? " Vạch cam là vị trí đề xuất, chưa ghi vào Word." : "");
     }
     private void Queue(Issue issue) { pending = issue; hover.Stop(); hover.Start(); }

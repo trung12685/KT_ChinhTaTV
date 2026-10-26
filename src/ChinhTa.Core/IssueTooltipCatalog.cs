@@ -128,6 +128,7 @@ public static class IssueTooltipCatalog
             return (line.ShapeId is null?"Kẻ":"Đặt lại")+" đường ngang dài "+Number(line.Width)+" pt, căn theo dòng chữ; "+
                 (line.Role==LineRole.Motto?"dài bằng tiêu ngữ.":"mức tự sửa theo cấu hình (mặc định 3/7).");
         }
+        if(issue.PageFix is not null)return issue.PageFix.Suggestion;
         if(issue.CenterFix is not null)return "Căn giữa trong ô đã xác minh, bỏ thụt lề ngang; giữ chữ và khoảng cách dọc.";
         if(issue.IsStyleOnly)return issue.Suggestion;
         if(issue.Format?.RepairInvalidSizes==true)return issue.Suggestion;

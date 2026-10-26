@@ -50,7 +50,7 @@ public static class InitialRepeatChecks
             review.Section==IssueReviewSection.ReviewSuggestion,"The initial-capital variant remains a reviewed application rule without an invented legal requirement");
         var report=DevelopmentReport.Build("0.1.61",DateTimeOffset.UnixEpoch);
         assert(report.Contains("Kế hoạch kế hoạch đã duyệt.") && report.Contains("Kế hoạch đã duyệt.") &&
-            report.Contains("Không gộp hoa/thường giữa câu") && DevelopmentReport.Count(CapabilityMode.Reviewable)==31,
+            report.Contains("Không gộp hoa/thường giữa câu") && DevelopmentReport.Count(CapabilityMode.Reviewable)==32,
             "The report records the initial-capital example and limits without inventing a new capability group or a completed release");
         const string mixed="Kế  hoạch kế hoạch; ghi chú:nội dung mẫu .   \r\a";
         const string expected="Kế hoạch; ghi chú: nội dung mẫu.\r\a";

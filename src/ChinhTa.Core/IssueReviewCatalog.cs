@@ -62,8 +62,8 @@ public static class IssueReviewCatalog
         bool cited=!string.IsNullOrWhiteSpace(issue.Citation);
         // Geometry/centering based on user tolerances remains reviewable. Only a
         // verified missing Line joins the required-format section here.
-        bool required=issue.Kind is FixKind.OutlineOrder or FixKind.OutlineMarker || cited && (issue.Kind is FixKind.AdministrativeNumber or FixKind.AdministrativeDate or
-            FixKind.AdministrativeFormat or FixKind.SignatureFormat or FixKind.BodyFormat or FixKind.BodyParagraph or FixKind.BodyGap or FixKind.BodyLineSpacing or FixKind.DocumentHeadingFormat or FixKind.DocumentTypeText or FixKind.AgencyFormat or FixKind.AgencyText or FixKind.RecipientFormat or FixKind.RecipientText ||
+        bool required=issue.Kind is FixKind.OutlineOrder or FixKind.OutlineMarker || cited && (issue.Kind==FixKind.PageLayout && issue.PageFix is not null ||
+            issue.Kind is FixKind.AdministrativeNumber or FixKind.AdministrativeDate or FixKind.AdministrativeFormat or FixKind.SignatureFormat or FixKind.BodyFormat or FixKind.BodyParagraph or FixKind.BodyGap or FixKind.BodyLineSpacing or FixKind.DocumentHeadingFormat or FixKind.DocumentTypeText or FixKind.AgencyFormat or FixKind.AgencyText or FixKind.RecipientFormat or FixKind.RecipientText ||
             issue.Kind is FixKind.NationalHeading or FixKind.StateMotto or FixKind.PartyHeading &&
                 (issue.Format is {Alignment:null} || issue.Original!=issue.Replacement) ||
             issue.Kind==FixKind.ShapeLine && issue.LineFix is {ShapeId:null});
