@@ -19,10 +19,10 @@ internal static class OfficeSignatureFormatCheck
         foreach(int padding in new[]{0,60})
         foreach(bool beforeName in new[]{false,true})RunCase(test,modern,folder,pass,padding,beforeName);
     }
-    private static void RunCase(WordSession test,string modern,string folder,Action<string> pass,int padding,bool beforeName)
+    private static void RunCase(WordSession test,string modern,string folder,Action<string> pass,int padding,bool imageBeforeName)
     {
-        string isolated=Path.Combine(folder,"signature-format",padding==0?"short":"after-40",beforeName?"image-before-name":"image-after-name");Directory.CreateDirectory(isolated);
-        string source=Create(modern,isolated,padding,beforeName);var digest=SHA256.HashData(File.ReadAllBytes(source));
+        string isolated=Path.Combine(folder,"signature-format",padding==0?"short":"after-40",imageBeforeName?"image-before-name":"image-after-name");Directory.CreateDirectory(isolated);
+        string source=Create(modern,isolated,padding,imageBeforeName);var digest=SHA256.HashData(File.ReadAllBytes(source));
         test.Profile=DocumentProfile.State;test.Open(source);string original=test.ReadCheckText();
         var found=test.Check();var formats=found.Where(i=>i.CanFix && Owned(i)).ToArray();
         if(formats.Length!=2 || formats.Any(i=>i.CharacterFormat is not {PreserveSize:true,RepairInvalidSizes:true}))
@@ -58,7 +58,7 @@ internal static class OfficeSignatureFormatCheck
         if(test.Check().Any(Owned) || test.ReadCheckText()!=original || !expectedName.Matches(test.ReadCheckCurrentStyles(Signer)) ||
             !digest.SequenceEqual(SHA256.HashData(File.ReadAllBytes(source))))
             throw new InvalidOperationException("Lưu/mở chữ ký chưa đạt hoặc nguồn đã đổi.");
-        pass("Chữ ký "+(padding==0?"mẫu ngắn":"sau60 đoạn nội dung")+", ảnh "+(beforeName?"trước":"sau")+" họ tên: hai vai trò, giữ tên/cấp bậc/cỡ13-14/gạch chân/bố cục/ảnh; sửa riêng/chung ba Line, rollback, một Undo và lưu-mở");
+        pass("Chữ ký "+(padding==0?"mẫu ngắn":"sau60 đoạn nội dung")+", ảnh "+(imageBeforeName?"trước":"sau")+" họ tên: hai vai trò, giữ tên/cấp bậc/cỡ13-14/gạch chân/bố cục/ảnh; sửa riêng/chung ba Line, rollback, một Undo và lưu-mở");
     }
     internal static void VerifyImage(string source,string saved)
     {
