@@ -1,5 +1,9 @@
 # Chính tả Việt
 
+## Đợt thể thức08 — đo đủ dòng cuối khi nhiều cỡ chữ
+
+[Phạm vi và kiểm chứng](docs/FORMAT-BATCH-08.md): gom theo đường chân chữ, giữ toàn bộ các phần cùng dòng dù khác cỡ chữ và chọn đúng hàng cuối khi xuống dòng rõ. Hàng chồng, chữ nâng/hạ hoặc thứ tự không rõ chuyển thủ công; dòng số/ngày vẫn cần đúng một hàng. Mã0.1.74 đã tích lũy bốn cụm, chưa phát hành ZIP; gói gần nhất vẫn0.1.73. CI không chạy Word thực.
+
 ## Đợt thể thức07 — mốc chữ phải hiển thị đầy đủ
 
 [Phạm vi và kiểm chứng](docs/FORMAT-BATCH-07.md): chữ ẩn, bị cắt, ngoài trang hoặc xoay/skew/mirror không được dùng để tự đặt đường kẻ/căn dòng. Chữ và nét dùng chung proof paint/clip; kiểm thêm phần mực nhô ngoài advance box. Bounding highlight để xem vị trí giữ riêng; nếu một phần mốc không xác minh được thì không dùng phần còn lại làm mốc giả. Mã0.1.74 đã tích lũy ba cụm, chưa phát hành ZIP; bản tải gần nhất vẫn0.1.73 và CI chưa xác nhận Word thực.

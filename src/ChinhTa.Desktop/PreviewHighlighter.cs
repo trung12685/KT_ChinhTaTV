@@ -71,14 +71,46 @@ public sealed class PreviewHighlighter
         =>MeasureCore(document,anchor,null,true);
     public RenderedTextLine? MeasureSingleLine(FixedDocumentSequence document,PreviewAnchor anchor)
     {
+        var rows=MeasureRows(document,anchor);
+        return rows.Count==1?rows[0]:null;
+    }
+    public RenderedTextLine? MeasureLastLine(FixedDocumentSequence document,PreviewAnchor anchor)
+    {
+        var rows=MeasureRows(document,anchor);
+        return rows.Count==0?null:rows[^1];
+    }
+    private IReadOnlyList<RenderedTextLine> MeasureRows(FixedDocumentSequence document,PreviewAnchor anchor)
+    {
         var baselines=new List<double>();
         var boxes=MeasureCore(document,anchor,baselines,true);
-        // Different glyph runs may share one baseline. Wrapped, superscript or rotated
-        // text does not establish one unambiguous administrative row.
-        if(boxes.Count==0 || baselines.Count!=boxes.Count || baselines.Max()-baselines.Min()>.5/.75)return null;
-        double left=boxes.Min(b=>b.Left),right=boxes.Max(b=>b.Right),top=boxes.Min(b=>b.Top),bottom=boxes.Max(b=>b.Bottom);
-        var line=new RenderedTextLine(left*.75,top*.75,(right-left)*.75,(bottom-top)*.75,baselines.Average()*.75);
-        return line.Valid?line:null;
+        if(boxes.Count==0 || baselines.Count!=boxes.Count)return [];
+        // Use the same half-point baseline tolerance as administrative rows.
+        // Font size changes the alignment-box bottom without changing the row.
+        const double tolerance=.5/.75;
+        var rows=new List<RenderedTextLine>();
+        int start=0;
+        while(start<boxes.Count)
+        {
+            int end=start+1;double low=baselines[start],high=low;
+            while(end<boxes.Count)
+            {
+                double nextLow=Math.Min(low,baselines[end]),nextHigh=Math.Max(high,baselines[end]);
+                if(nextHigh-nextLow>tolerance)break;
+                low=nextLow;high=nextHigh;end++;
+            }
+            var rowBoxes=boxes.Skip(start).Take(end-start).ToArray();
+            double left=rowBoxes.Min(b=>b.Left),right=rowBoxes.Max(b=>b.Right),
+                top=rowBoxes.Min(b=>b.Top),bottom=rowBoxes.Max(b=>b.Bottom);
+            var row=new RenderedTextLine(left*.75,top*.75,(right-left)*.75,(bottom-top)*.75,
+                baselines.Skip(start).Take(end-start).Average()*.75);
+            if(!row.Valid)return [];
+            // Selected text must progress down the page in disjoint rows.
+            // Raised/lowered text, tight overlaps or a return to an earlier row
+            // are ambiguous; never turn their visible fragments into a final row.
+            if(rows.Count>0 && (row.Baseline<=rows[^1].Baseline+.5 || row.Top<rows[^1].Bottom-.5))return [];
+            rows.Add(row);start=end;
+        }
+        return rows;
     }
     private IReadOnlyList<Rect> MeasureCore(FixedDocumentSequence document, PreviewAnchor anchor,List<double>? baselines,bool reference)
     {

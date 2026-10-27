@@ -53,6 +53,24 @@ static class ReferenceRowChecks
             "A genuinely wrapped reference uses every run on the final baseline, including smaller text");
         assert(wrappedPreview.MeasureSingleLine(wrapped.Page,wrapped.Anchor) is null,
             "A valid multiline Line reference still cannot authorize a single administrative row");
+        foreach(double shift in new[]{0d,.2,.49})
+        {
+            var fixture=Page(new("CÙNG ",100,100),new("DÒNG",200,100+shift));
+            var preview=new PreviewHighlighter();var result=ReferenceMeasurement.Read(fixture.Page,preview,fixture.Anchor);
+            assert(result is not null && Math.Abs(result.Left-100)<.001 && preview.MeasureSingleLine(fixture.Page,fixture.Anchor) is not null,
+                $"Sub-half-point baseline drift retains the entire single row: {shift}");
+        }
+        foreach(double gap in new[]{30d,45d,80d})
+        {
+            var fixture=Page(new("DÒNG MỘT ",100,100),new("DÒNG HAI ",150,100+gap),new("DÒNG BA",220,100+gap*2));
+            var preview=new PreviewHighlighter();var result=ReferenceMeasurement.Read(fixture.Page,preview,fixture.Anchor);
+            var boxes=preview.MeasureReference(fixture.Page,fixture.Anchor);
+            assert(result is not null && Math.Abs(result.Left-220)<.001 && Math.Abs(result.Width-boxes[^1].Width*.75)<.001,
+                "Three separated rows select only the final row regardless of spacing");
+            int offset="DÒNG MỘT ".Length;var partial=fixture.Anchor with{Offset=offset,Length=fixture.Anchor.Length-offset};
+            var selected=ReferenceMeasurement.Read(fixture.Page,preview,partial);
+            assert(selected is not null && selected==result,"A selection beginning on a later row retains its own final row");
+        }
         foreach(var fixture in new[]{
             close,
             Page(new("DÒNG TRÊN ",100,100,40),new("DÒNG DƯỚI",210,106,8)),
@@ -74,5 +92,24 @@ static class ReferenceRowChecks
         var anchors=new Dictionary<Issue,PreviewAnchor>{{target.Probe,close.Anchor}};
         var notice=LineInspection.Inspect(close.Page,new PreviewHighlighter(),[target],[],anchors,[],LinePolicy.Decree30,false).Single().Issue;
         assert(!notice.CanFix && notice.LineFix is null,"An ambiguous final row offers manual review instead of a guessed Line");
+        var history=target.Probe with{CanFix=true,LineFix=new(1,100,130,80,LineRole.Agency)};
+        var after=LineInspection.Inspect(close.Page,new PreviewHighlighter(),[target],[],anchors,[],LinePolicy.Decree30,false,[history]).Single().Issue;
+        assert(!after.CanFix && after.LineFix is null,"Prior Line history cannot hide a newly ambiguous row layout");
+        var validTarget=new LineTarget(LineRole.Motto,0,wrapped.Anchor.PageText,0,wrapped.Anchor.PageText.Length+1,true);
+        var validAnchors=new Dictionary<Issue,PreviewAnchor>{{validTarget.Probe,wrapped.Anchor}};
+        var proposal=LineInspection.Inspect(wrapped.Page,new PreviewHighlighter(),[validTarget],[],validAnchors,[],LinePolicy.Decree30,false).Single().Issue;
+        assert(proposal.CanFix && proposal.LineFix is not null && wrappedResult is not null &&
+            Math.Abs(proposal.LineFix.Width-wrappedResult.Width)<.001,
+            "A Line proposal uses the complete final mixed-size row width");
+        string folder=Path.Combine(Path.GetTempPath(),"ChinhTaReferenceRows-"+Guid.NewGuid());Directory.CreateDirectory(folder);
+        try
+        {
+            string current=Path.Combine(folder,"working"),candidate=Path.Combine(folder,"candidate");
+            File.WriteAllText(current,"before");File.WriteAllText(candidate,"overlapping rows");int opens=0;bool failed=false;
+            try{CheckpointSwap.Apply(current,candidate,()=>{},()=>{if(++opens==1 && ReferenceMeasurement.Read(close.Page,new PreviewHighlighter(),close.Anchor) is null)
+                throw new InvalidOperationException("Ambiguous final row after reopening");});}catch(InvalidOperationException){failed=true;}
+            assert(failed && opens==2 && File.ReadAllText(current)=="before","Late loss of an unambiguous final row restores the whole checkpoint");
+        }
+        finally{Directory.Delete(folder,true);}
     }
 }
