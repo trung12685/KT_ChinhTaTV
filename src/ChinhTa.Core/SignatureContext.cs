@@ -40,7 +40,8 @@ internal static class SignatureContext
             !recipients.TryGetValue(left[^1],out var last) || !last.Last || left.Skip(1).Any(p=>!recipients.ContainsKey(p)))return result;
         var paragraphs=cells[1].Elements(W+"p").ToArray();
         if(paragraphs.Length>40)return result;
-        var rows=paragraphs.Where(p=>Text(p).Length>0).ToArray();
+        var images=paragraphs.Where(WordInlineImageText.IsOnlyImageParagraph).ToArray();
+        var rows=paragraphs.Where(p=>Text(p).Length>0 && !images.Contains(p)).ToArray();
         if(rows.Length is <2 or >5 || !Name(Text(rows[^1])))return result;
         var authority=rows.Take(rows.Length-1).ToArray();
         if(authority.Length is <1 or >3 || authority.Any(p=>!Authority(Text(p))))return result;
@@ -60,7 +61,7 @@ internal static class SignatureContext
             }
             return false;
         }
-        if(rows.Any(p=>!WordXmlTableMap.IsPlainText(p,allowTextBreaks:true) || NumberedOrUnknown(p) ||
+        if(images.Any(NumberedOrUnknown) || rows.Any(p=>!WordXmlTableMap.IsPlainText(p,allowTextBreaks:true) || NumberedOrUnknown(p) ||
             p.Descendants().Any(e=>e.Name==W+"fldChar" || e.Name==W+"instrText" || e.Name==W+"ins" || e.Name==W+"del" ||
                 e.Name==W+"footnoteReference" || e.Name==W+"endnoteReference")))return result;
         foreach(var p in authority)result[p]=ComponentRole.SignatureAuthority;

@@ -39,6 +39,7 @@ PreviewAnchorBatchChecks.Run(Assert);
 ComponentChecks.Run(Assert);
 SignatureChecks.Run(Assert);
 SignatureNativeBoundaryChecks.Run(Assert);
+InlineSignatureImageChecks.Run(Assert);
 PageLayoutChecks.Run(Assert);
 PageNumberChecks.Run(Assert);
 FormatAssessmentChecks.Run(Assert);

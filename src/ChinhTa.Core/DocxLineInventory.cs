@@ -38,6 +38,9 @@ public static class DocxLineInventory
         var result = new List<PackageLine>();
         foreach (var drawing in xml.Descendants(w + "drawing"))
         {
+            // Picture geometry can itself use the preset "line". A verified
+            // inline pic remains an image, never a Word Line candidate.
+            if(WordInlineImageText.IsImage(drawing))continue;
             var properties = drawing.Descendants(wp + "docPr").ToArray();
             bool hasLine = drawing.Descendants(a + "prstGeom").Any(g => (string?)g.Attribute("prst") == "line");
             if (!hasLine) continue;

@@ -41,9 +41,10 @@ public static class SignatureObservationChecks
         {
             XNamespace w="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
             foreach(int padding in new[]{0,60})
+            foreach(bool beforeName in new[]{false,true})
             {
-                string target=Path.Combine(folder,padding.ToString());Directory.CreateDirectory(target);
-                string source=OfficeSignatureFormatCheck.Create(Path.Combine("samples","BaDuongKeThieu.docx"),target,padding);
+                string target=Path.Combine(folder,padding+"-"+beforeName);Directory.CreateDirectory(target);
+                string source=OfficeSignatureFormatCheck.Create(Path.Combine("samples","BaDuongKeThieu.docx"),target,padding,beforeName);
                 using(var package=DocumentFormat.OpenXml.Packaging.WordprocessingDocument.Open(source,false))
                     assert(!new DocumentFormat.OpenXml.Validation.OpenXmlValidator().Validate(package).Any(),
                         "Short and long Office signature fixtures remain schema-valid, including the image relationship");
@@ -71,15 +72,21 @@ public static class SignatureObservationChecks
                     }
                     var observed=NativeParagraphTraversal.Read(collection,native.Length,collection.At,Observe,_=>{},optimized,
                         entries=>entries.Select((p,i)=>i==0 || p.Native.Start>=entries[i-1].Native.End).All(v=>v),measures);
-                    var outline=new Dictionary<int,OutlineParagraphInfo>();var formats=new HashSet<int>();
+                    var outline=new Dictionary<int,OutlineParagraphInfo>();var formats=new HashSet<int>();var warnings=new List<string>();
                     void Describe(int start,OutlineParagraphInfo info)=>outline[start]=info;
                     void Format(int start,bool can){if(can)formats.Add(start);}
                     var live=observed.Select(x=>x.Native).ToArray();
-                    var editable=optimized?WordTextProof.Read(WordXmlSnapshot.Parse(xml.ToString()),live,_=>{},Describe,Format):
-                        WordTextProof.Read(xml.ToString(),live,_=>{},Describe,Format);
+                    var editable=optimized?WordTextProof.Read(WordXmlSnapshot.Parse(xml.ToString()),live,e=>warnings.Add(e.DiagnosticCode),Describe,Format):
+                        WordTextProof.Read(xml.ToString(),live,e=>warnings.Add(e.DiagnosticCode),Describe,Format);
                     var rows=WordTextProof.Apply(observed.Select(x=>x.Value),editable,outline,formats);
                     var signatures=SignatureRules.ObservationTargets(rows,DocumentProfile.State);
                     assert(signatures.Count==2,"The actual desktop native observer + current XML proof recognizes both signing roles in either reader mode");
+                    var objectRow=live.Single(p=>p.Text.Contains('\u0001'));
+                    assert(warnings.Count==0 && !editable.Contains(objectRow.Start) && !formats.Contains(objectRow.Start),
+                        "A schema-valid inline image before or after the name matches actual object CPs without granting any image-paragraph edits");
+                    var inventory=DocxLineInventory.ReadXml(xml,live.Take(40).ToArray());
+                    assert(!inventory.HasUnmappedShapes && inventory.Lines.Count==0,
+                        "A mapped embedded image does not become a Line or an unrelated mapping failure that disables the header's three Line proposals");
                     if(padding>0)
                     {
                         assert(signatures.All(p=>!p.InTable && p.Page==0 && Array.FindIndex(native,n=>n.Range.Start==p.Start)>=40),
