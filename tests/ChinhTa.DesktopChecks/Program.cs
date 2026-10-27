@@ -246,6 +246,7 @@ static class Program
         BodyReviewChecks.Run(Assert);
         SignatureReviewChecks.Run(Assert);
         SignatureFixtureChecks.Run(Assert);
+        SignatureObservationChecks.Run(Assert);
         PageLayoutDesktopChecks.Run(Assert);
         PageNumberDesktopChecks.Run(Assert);
         SelectedFormatVerificationChecks.Run(Assert);

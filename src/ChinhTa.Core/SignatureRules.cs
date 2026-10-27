@@ -6,7 +6,11 @@ public static class SignatureRules
     public static IReadOnlyList<Paragraph> ObservationTargets(IReadOnlyList<Paragraph> paragraphs,DocumentProfile profile)
     {
         if(profile!=DocumentProfile.State || paragraphs.Select(p=>p.Start).Distinct().Count()!=paragraphs.Count)return [];
-        var rows=paragraphs.Where(p=>p.InTable && p.Outline is {Scope:OutlineScope.Signature,SignatureRole:ComponentRole.SignatureAuthority or ComponentRole.SignatureName}).ToArray();
+        // Signature scope comes from the terminal-table XML proof, matched to
+        // current Word ranges. Native InTable is only observed in the bounded
+        // front-page scan; its false placeholder after ordinal40 cannot veto
+        // this independently proven role. Do not infer table/page geometry.
+        var rows=paragraphs.Where(p=>p.Outline is {Scope:OutlineScope.Signature,SignatureRole:ComponentRole.SignatureAuthority or ComponentRole.SignatureName}).ToArray();
         // All semantic anchors must also have current live text/format proof. A
         // prefix that mapped only the title must not grant writes on its own.
         return rows.Count(p=>p.Outline!.SignatureRole==ComponentRole.SignatureName)==1 &&

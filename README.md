@@ -1,5 +1,9 @@
 # Chính tả Việt
 
+## Đang phát triển0.1.75 — khối ký ở cuối tài liệu dài
+
+[Đợt thể thức10](docs/FORMAT-BATCH-10.md): khối ký đã được XML hiện tại/range Word chứng minh tiếp tục được quan sát phông sau đoạn40. Không dùng cờ bảng chưa quan sát để loại cả nhóm; giữ điều kiện đủ chức vụ/họ tên/quyền sửa và mọi kiểm bảo toàn. Thêm hồi quy từ quan sát native và mẫu Office sau60 đoạn. Chưa đóng ZIP0.1.75; bản tải gần nhất vẫn0.1.74. CI không chạy Word thực.
+
 ## Bản thử tích lũy0.1.74 — năm cụm kiểm thể thức
 
 [Thay đổi0.1.74](docs/CHANGES-0.1.74.md): nét duy nhất và đủ số lần; paint/clip thực; mốc chữ hiển thị đầy đủ; dòng cuối nhiều cỡ chữ theo baseline; bằng chứng Word/XML cùng lần đọc trong bài kiểm mẫu. Xem [cách kiểm Office](docs/OFFICE-CHECK-0.1.74.md). Số kiểm/commit/run đúng gói nằm trong build-checks.json/TXT; CI không chạy Word. Bộ đọc cũ mặc định, dừng tối ưu tốc độ; danh mục33/8/1, main và gói cũ giữ nguyên. Các mục bên dưới là nhật ký từng cụm trước đóng gói.

@@ -16,8 +16,12 @@ internal static class OfficeSignatureFormatCheck
     private static bool Owned(Issue i)=>i.Kind==FixKind.SignatureFormat;
     public static void Run(WordSession test,string modern,string folder,Action<string> pass)
     {
-        string isolated=Path.Combine(folder,"signature-format");Directory.CreateDirectory(isolated);
-        string source=Create(modern,isolated);var digest=SHA256.HashData(File.ReadAllBytes(source));
+        foreach(int padding in new[]{0,60})RunCase(test,modern,folder,pass,padding);
+    }
+    private static void RunCase(WordSession test,string modern,string folder,Action<string> pass,int padding)
+    {
+        string isolated=Path.Combine(folder,"signature-format",padding==0?"short":"after-40");Directory.CreateDirectory(isolated);
+        string source=Create(modern,isolated,padding);var digest=SHA256.HashData(File.ReadAllBytes(source));
         test.Profile=DocumentProfile.State;test.Open(source);string original=test.ReadCheckText();
         var found=test.Check();var formats=found.Where(i=>i.CanFix && Owned(i)).ToArray();
         if(formats.Length!=2 || formats.Any(i=>i.CharacterFormat is not {PreserveSize:true,RepairInvalidSizes:true}))
@@ -53,7 +57,7 @@ internal static class OfficeSignatureFormatCheck
         if(test.Check().Any(Owned) || test.ReadCheckText()!=original || !expectedName.Matches(test.ReadCheckCurrentStyles(Signer)) ||
             !digest.SequenceEqual(SHA256.HashData(File.ReadAllBytes(source))))
             throw new InvalidOperationException("Lưu/mở chữ ký chưa đạt hoặc nguồn đã đổi.");
-        pass("Chữ ký: hai vai trò, giữ tên/cấp bậc/cỡ13-14/gạch chân/bố cục/ảnh; sửa riêng/chung ba Line, rollback, một Undo và lưu-mở");
+        pass("Chữ ký "+(padding==0?"mẫu ngắn":"sau60 đoạn nội dung")+": hai vai trò, giữ tên/cấp bậc/cỡ13-14/gạch chân/bố cục/ảnh; sửa riêng/chung ba Line, rollback, một Undo và lưu-mở");
     }
     internal static void VerifyImage(string source,string saved)
     {
@@ -80,7 +84,7 @@ internal static class OfficeSignatureFormatCheck
         if(blips.Length!=1 || (long?)extent?.Attribute("cx")!=635000 || (long?)extent?.Attribute("cy")!=254000)
             throw new InvalidOperationException("Ảnh mẫu chữ ký mất dữ liệu/liên kết hiển thị hoặc đổi kích thước sau lưu.");
     }
-    internal static string Create(string modern,string folder)
+    internal static string Create(string modern,string folder,int padding=0)
     {
         string seed=OfficeComponentCheck.Create(modern,folder,false),path=Path.Combine(folder,"signature-input.docx");File.Copy(seed,path);
         using var zip=ZipFile.Open(path,ZipArchiveMode.Update);
@@ -95,6 +99,10 @@ internal static class OfficeSignatureFormatCheck
         XElement P(string text)=>new(w+"p",new XElement(w+"pPr",new XElement(w+"spacing",new XAttribute(w+"before",0),new XAttribute(w+"after",120)),
             new XElement(w+"jc",new XAttribute(w+"val","center"))),Run(text[..3],12),Run(text[3..6],13),Run(text[6..],14));
         var cell=doc.Descendants(w+"body").Single().Elements(w+"tbl").Last().Elements(w+"tr").Single().Elements(w+"tc").Last();
+        if(padding<0 || padding>150)throw new ArgumentOutOfRangeException(nameof(padding));
+        cell.Parent!.Parent!.AddBeforeSelf(Enumerable.Range(1,padding).Select(i=>new XElement(w+"p",new XElement(w+"r",
+            new XElement(w+"rPr",new XElement(w+"rFonts",new XAttribute(w+"ascii","Times New Roman"),new XAttribute(w+"hAnsi","Times New Roman")),
+                new XElement(w+"sz",new XAttribute(w+"val",28))),new XElement(w+"t","Đoạn nội dung kiểm chứng chữ ký thứ "+i+".")))));
         cell.Elements(w+"p").Remove();
         const string relId="rIdSignatureFormatFixture";
         XNamespace wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing",a="http://schemas.openxmlformats.org/drawingml/2006/main",
