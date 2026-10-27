@@ -1,5 +1,9 @@
 # Chính tả Việt
 
+## Đang phát triển0.1.75 — ảnh inline trong khối ký
+
+[Đợt thể thức11](docs/FORMAT-BATCH-11.md): đối chiếu ký tự đối tượng của ảnh nhúng rõ cấu trúc với range Word hiện tại, giữ đoạn ảnh không sửa; khối ký có ảnh nằm giữa chức vụ/họ tên tiếp tục được nhận diện khi đủ chứng minh. Kiểm mẫu ngắn/dài, hai đường XML, schema/ảnh, quyền, inventory Line và Undo/lưu-mở. Đã tích lũy hai cụm sau0.1.74; chưa ZIP mới, CI không chạy Word thực.
+
 ## Đang phát triển0.1.75 — khối ký ở cuối tài liệu dài
 
 [Đợt thể thức10](docs/FORMAT-BATCH-10.md): khối ký đã được XML hiện tại/range Word chứng minh tiếp tục được quan sát phông sau đoạn40. Không dùng cờ bảng chưa quan sát để loại cả nhóm; giữ điều kiện đủ chức vụ/họ tên/quyền sửa và mọi kiểm bảo toàn. Thêm hồi quy từ quan sát native và mẫu Office sau60 đoạn. Chưa đóng ZIP0.1.75; bản tải gần nhất vẫn0.1.74. CI không chạy Word thực.

@@ -118,7 +118,7 @@ public static class SignatureChecks
         var objectEditable=WordTextProof.Read(image.Xml.ToString(),objectLive,onOutline:(start,info)=>objectRoles[start]=info);
         var objectRows=objectLive.Select(p=>new Paragraph(p.Start,p.Text,InTable:p.InTable,FormatObserved:true)).ToArray();
         assert(Targets(WordTextProof.Apply(objectRows,objectEditable,objectRoles).ToArray()).Length==0,
-            "An inline image object CP before the signer blocks the incomplete anchor group rather than guessing past lost text proof");
+            "An unverified drawing object CP before the signer blocks the incomplete anchor group rather than guessing past lost text proof");
         foreach(var profile in new[]{DocumentProfile.Party,DocumentProfile.Personal})
             assert(SignatureRules.Check(Sample().Rows,profile).Count==0 && SignatureRules.ObservationTargets(Sample().Rows,profile).Count==0,
                 "State signature rules do not spill into Party or personal profiles");

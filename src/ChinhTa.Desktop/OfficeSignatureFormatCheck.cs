@@ -16,12 +16,13 @@ internal static class OfficeSignatureFormatCheck
     private static bool Owned(Issue i)=>i.Kind==FixKind.SignatureFormat;
     public static void Run(WordSession test,string modern,string folder,Action<string> pass)
     {
-        foreach(int padding in new[]{0,60})RunCase(test,modern,folder,pass,padding);
+        foreach(int padding in new[]{0,60})
+        foreach(bool beforeName in new[]{false,true})RunCase(test,modern,folder,pass,padding,beforeName);
     }
-    private static void RunCase(WordSession test,string modern,string folder,Action<string> pass,int padding)
+    private static void RunCase(WordSession test,string modern,string folder,Action<string> pass,int padding,bool beforeName)
     {
-        string isolated=Path.Combine(folder,"signature-format",padding==0?"short":"after-40");Directory.CreateDirectory(isolated);
-        string source=Create(modern,isolated,padding);var digest=SHA256.HashData(File.ReadAllBytes(source));
+        string isolated=Path.Combine(folder,"signature-format",padding==0?"short":"after-40",beforeName?"image-before-name":"image-after-name");Directory.CreateDirectory(isolated);
+        string source=Create(modern,isolated,padding,beforeName);var digest=SHA256.HashData(File.ReadAllBytes(source));
         test.Profile=DocumentProfile.State;test.Open(source);string original=test.ReadCheckText();
         var found=test.Check();var formats=found.Where(i=>i.CanFix && Owned(i)).ToArray();
         if(formats.Length!=2 || formats.Any(i=>i.CharacterFormat is not {PreserveSize:true,RepairInvalidSizes:true}))
@@ -57,7 +58,7 @@ internal static class OfficeSignatureFormatCheck
         if(test.Check().Any(Owned) || test.ReadCheckText()!=original || !expectedName.Matches(test.ReadCheckCurrentStyles(Signer)) ||
             !digest.SequenceEqual(SHA256.HashData(File.ReadAllBytes(source))))
             throw new InvalidOperationException("Lưu/mở chữ ký chưa đạt hoặc nguồn đã đổi.");
-        pass("Chữ ký "+(padding==0?"mẫu ngắn":"sau60 đoạn nội dung")+": hai vai trò, giữ tên/cấp bậc/cỡ13-14/gạch chân/bố cục/ảnh; sửa riêng/chung ba Line, rollback, một Undo và lưu-mở");
+        pass("Chữ ký "+(padding==0?"mẫu ngắn":"sau60 đoạn nội dung")+", ảnh "+(beforeName?"trước":"sau")+" họ tên: hai vai trò, giữ tên/cấp bậc/cỡ13-14/gạch chân/bố cục/ảnh; sửa riêng/chung ba Line, rollback, một Undo và lưu-mở");
     }
     internal static void VerifyImage(string source,string saved)
     {
@@ -84,7 +85,7 @@ internal static class OfficeSignatureFormatCheck
         if(blips.Length!=1 || (long?)extent?.Attribute("cx")!=635000 || (long?)extent?.Attribute("cy")!=254000)
             throw new InvalidOperationException("Ảnh mẫu chữ ký mất dữ liệu/liên kết hiển thị hoặc đổi kích thước sau lưu.");
     }
-    internal static string Create(string modern,string folder,int padding=0)
+    internal static string Create(string modern,string folder,int padding=0,bool imageBeforeName=false)
     {
         string seed=OfficeComponentCheck.Create(modern,folder,false),path=Path.Combine(folder,"signature-input.docx");File.Copy(seed,path);
         using var zip=ZipFile.Open(path,ZipArchiveMode.Update);
@@ -119,9 +120,10 @@ internal static class OfficeSignatureFormatCheck
             new XElement(wp+"docPr",new XAttribute("id",id),new XAttribute("name","Synthetic signature marker")),
             new XElement(a+"graphic",new XElement(a+"graphicData",new XAttribute("uri",pic.NamespaceName),drawing)));
         var picture=new XElement(w+"p",new XElement(w+"r",new XElement(w+"drawing",inline)));
-        // Keep the inline object after the two text anchors: Word represents
-        // it by an object CP absent from XML text. Never guess past that CP.
-        cell.Add(P(Authority),new XElement(w+"p"),new XElement(w+"p"),P(Signer),picture);
+        cell.Add(P(Authority),new XElement(w+"p"),new XElement(w+"p"));
+        if(imageBeforeName)cell.Add(picture);
+        cell.Add(P(Signer));
+        if(!imageBeforeName)cell.Add(picture);
         var rels=zip.GetEntry("word/_rels/document.xml.rels") is null?
             new XDocument(new XElement(XNamespace.Get("http://schemas.openxmlformats.org/package/2006/relationships")+"Relationships")):
             Read("word/_rels/document.xml.rels");

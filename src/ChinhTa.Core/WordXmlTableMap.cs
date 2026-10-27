@@ -121,7 +121,8 @@ public static class WordXmlTableMap
                 .Select(e => e.Name == W + "t" ? e.Value : e.Name == W + "tab" ? "\t" :
                     e.Name == W + "br" ? (string?)e.Attribute(W + "type") switch
                     { "page" => "\f", "column" => "\u000e", _ => "\v" } : e.Name == W + "cr" ? "\v" :
-                    e.Name == W + "noBreakHyphen" ? "\u2011" : e.Name == W + "softHyphen" ? "\u00ad" : ""));
+                    e.Name == W + "noBreakHyphen" ? "\u2011" : e.Name == W + "softHyphen" ? "\u00ad" :
+                    e.Name == W + "drawing" && WordInlineImageText.IsImage(e) ? "\u0001" : ""));
     }
     private static IReadOnlyList<WordParagraphSnapshot> AlignBodyBlanks(XElement[] paragraphs, IReadOnlyList<WordParagraphSnapshot> live,WordXmlSnapshot? snapshot=null)
     {
