@@ -205,6 +205,8 @@ public sealed partial class WordSession : IDisposable
             }
         }
         timing.Mark("TableProof");
+        CaptureMappingEvidence(bodyXml,liveText,liveLayout,editableStarts,formatEditableStarts,
+            textProofWarning,mappingWarning,textProofUnavailable,lineLayoutUnavailable);
         lastLayout=liveLayout.ToArray();
         lastFormatLayout=liveText.Where(p=>editableStarts.Contains(p.Start) || formatEditableStarts.Contains(p.Start)).ToArray();
         paragraphs=WordTextProof.Apply(paragraphs,editableStarts,outlineEvidence,formatEditableStarts).ToList();

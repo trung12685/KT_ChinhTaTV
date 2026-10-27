@@ -1,5 +1,9 @@
 # Chính tả Việt
 
+## Bản thử tích lũy0.1.74 — năm cụm kiểm thể thức
+
+[Thay đổi0.1.74](docs/CHANGES-0.1.74.md): nét duy nhất và đủ số lần; paint/clip thực; mốc chữ hiển thị đầy đủ; dòng cuối nhiều cỡ chữ theo baseline; bằng chứng Word/XML cùng lần đọc trong bài kiểm mẫu. Xem [cách kiểm Office](docs/OFFICE-CHECK-0.1.74.md). Số kiểm/commit/run đúng gói nằm trong build-checks.json/TXT; CI không chạy Word. Bộ đọc cũ mặc định, dừng tối ưu tốc độ; danh mục33/8/1, main và gói cũ giữ nguyên. Các mục bên dưới là nhật ký từng cụm trước đóng gói.
+
 ## Đợt thể thức08 — đo đủ dòng cuối khi nhiều cỡ chữ
 
 [Phạm vi và kiểm chứng](docs/FORMAT-BATCH-08.md): gom theo đường chân chữ, giữ toàn bộ các phần cùng dòng dù khác cỡ chữ và chọn đúng hàng cuối khi xuống dòng rõ. Hàng chồng, chữ nâng/hạ hoặc thứ tự không rõ chuyển thủ công; dòng số/ngày vẫn cần đúng một hàng. Mã0.1.74 đã tích lũy bốn cụm, chưa phát hành ZIP; gói gần nhất vẫn0.1.73. CI không chạy Word thực.
