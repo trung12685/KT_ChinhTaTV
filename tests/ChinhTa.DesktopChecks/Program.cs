@@ -253,6 +253,7 @@ static class Program
         OfficeFileEvidenceChecks.Run(Assert);
         VisibleStrokeChecks.Run(Assert);
         VisibleReferenceChecks.Run(Assert);
+        ReferenceRowChecks.Run(Assert);
 QuoteReviewChecks.Run(Assert);
 QuoteAfterReviewChecks.Run(Assert);
 DelimiterClusterReviewChecks.Run(Assert);
