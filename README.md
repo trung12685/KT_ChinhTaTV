@@ -1,5 +1,11 @@
 # Chính tả Việt
 
+## Bản thử tích lũy 0.1.75 — thể thức và kiểm Word theo nhóm
+
+Năm cụm đợt 10–14: khối ký cuối tài liệu dài, bảo toàn ảnh inline đã có, **chừa chỗ ký tay 80 pt**, chứng minh nguồn khoảng đoạn/giãn dòng và thông báo phần chưa kiểm; thêm **Kiểm tra → Kiểm tra từng nhóm Word…** để lỗi nhóm trước không che kết quả nhóm sau. [Thay đổi](docs/CHANGES-0.1.75.md) · [Cách kiểm Word](docs/OFFICE-CHECK-0.1.75.md) · [Phân tích các phần còn thiếu](docs/REMAINING-WORK.md).
+
+[Tải bản Windows thử 0.1.75](https://github.com/trung12685/KT_ChinhTaTV/releases/download/v0.1.75/ChinhTaViet-0.1.75-win-x64.zip). Số kiểm và commit của gói nằm trong build-checks.json/TXT; CI không chạy Word thực. Chỉ dùng kết quả release khi gói đã xuất hiện ở đường dẫn trên. Bộ đọc thử nghiệm tắt mặc định, dừng tối ưu tốc độ; danh mục 33/8/1. Các mục phát triển bên dưới là nhật ký trước khi đóng gói.
+
 ## Đang phát triển0.1.75 — chừa chỗ ký tay80pt
 
 Theo yêu cầu người dùng, ưu tiên chừa chỗ để in rồi ký tay; dừng mở rộng ảnh chữ ký. Lệnh **Kiểm tra → Chừa chỗ ký tay (80 pt)** đo khoảng hiện có trên XPS, bổ sung phần thiếu khi bố cục đủ chỗ; giữ vùng đã đủ, Enter/chữ/phông và có một Hoàn tác. [Phạm vi và kiểm chứng](docs/FORMAT-BATCH-12.md). Đây là thiết lập người dùng, không phải quy định80pt của NĐ30.0.1.75 đang tích lũy ba cụm, chưa ZIP mới; bản tải gần nhất0.1.74, CI không chạy Word thực.

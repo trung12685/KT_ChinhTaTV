@@ -68,6 +68,8 @@ jobs:
           Copy-Item $env:RELEASE_NOTES artifacts/win-x64/
           Copy-Item docs/BASELINE-0.1.67.json artifacts/win-x64/
           Copy-Item docs/FORMAT-BATCH-*.md artifacts/win-x64/
+          Copy-Item docs/REMAINING-WORK.md artifacts/win-x64/
+          Copy-Item docs/USER-PREFERENCES.md artifacts/win-x64/
           Copy-Item "docs/OFFICE-CHECK-$env:RELEASE_VERSION.md" artifacts/win-x64/
           Copy-Item docs/CHANGES-0.1.65.md artifacts/win-x64/
           Copy-Item docs/RELEASE-CADENCE.md artifacts/win-x64/

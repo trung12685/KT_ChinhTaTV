@@ -69,6 +69,8 @@ SemicolonEndSpaceChecks.Run(Assert);
 BodyFormatChecks.Run(Assert);
 BodyParagraphChecks.Run(Assert);
 BodySpacingChecks.Run(Assert);
+BodySpacingScopeChecks.Run(Assert);
+OfficeSuiteRunnerChecks.Run(Assert);
 BodyOpeningChecks.Run(Assert);
 BodyEmphasisChecks.Run(Assert);
 BodyEmphasisLayoutChecks.Run(Assert);

@@ -260,7 +260,8 @@ public sealed partial class WordSession : IDisposable
         issues.AddRange(DocumentHeadingRules.Check(paragraphs,headerLayout,Profile));
         issues.AddRange(ComponentRules.Check(paragraphs,headerLayout,Profile));
         issues.AddRange(SignatureRules.Check(paragraphs,Profile));
-        issues.AddRange(BodyRuleScan.Check(paragraphs,headerLayout,Profile));
+        string? bodySpacingCoverage=null;
+        issues.AddRange(BodyRuleScan.Check(paragraphs,headerLayout,Profile,notice=>bodySpacingCoverage=notice));
         timing.Mark("RulesAndLineInventory");
         foreach(var issue in issues.Where(i=>!i.CanFix && i.Kind is FixKind.AgencyFormat or FixKind.DocumentHeadingFormat))
         {
@@ -271,6 +272,8 @@ public sealed partial class WordSession : IDisposable
         if(textProofUnavailable || textProofWarning is not null)
             CoverageNotice="Chưa đối chiếu đầy đủ một phần tài liệu để sửa chữ. Đây là phạm vi kiểm tra, không phải lỗi của dòng đầu. "+
                 (textProofWarning is null?"Không đọc/đối chiếu được XML hiện tại.":"Mã kiểm tra: "+textProofWarning.DiagnosticCode+".");
+        if(bodySpacingCoverage is not null)
+            CoverageNotice=CoverageNotice is null?bodySpacingCoverage:CoverageNotice+" "+bodySpacingCoverage;
         if ((lineLayoutUnavailable || mappingWarning is not null && LineTargets.Count < 3) && paragraphs.FirstOrDefault(p => p.Text.Length > 0) is Paragraph first)
             issues.Add(new(first.Start, first.Text.Length, first.Text, first.Text,
                 "Chưa đối chiếu đủ các mốc đường kẻ. " +
