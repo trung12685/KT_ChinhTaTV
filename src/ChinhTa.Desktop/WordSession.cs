@@ -24,6 +24,8 @@ public sealed partial class WordSession : IDisposable
     public IReadOnlyList<WordLineShape> LineShapes { get; private set; } = [];
     public bool HasGroupedShapes { get; private set; }
     public string? CoverageNotice { get; private set; }
+    public DocumentCoverageSnapshot? Coverage { get; private set; }
+    internal SectionLayout? NumberCoveragePreviewLayout { get; private set; }
     public bool UseOptimizedReading { get; set; }=false;
     public DocumentProfile Profile { get; set; } = DocumentProfile.State;
     public bool Recovered { get; private set; }
@@ -50,6 +52,7 @@ public sealed partial class WordSession : IDisposable
     }
     public void Open(string path)
     {
+        Coverage=null;CoverageNotice=null;NumberCoveragePreviewLayout=null;
         using var timing=new WordOperationTiming("Word.Perf.Open");
         // Reuse only this session's own hidden application. A disconnected
         // document/application is released before the normal reconnect path.
@@ -108,6 +111,7 @@ public sealed partial class WordSession : IDisposable
         using var timing=new WordOperationTiming("Word.Perf.Check");
         timing.Count("Optimized",UseOptimizedReading?1:0);
         CoverageNotice=null;
+        Coverage=null;NumberCoveragePreviewLayout=null;
         // Page information after reopening may be stale until Word has paginated.
         document!.Repaginate();
         timing.Mark("Repaginate");
@@ -293,6 +297,7 @@ public sealed partial class WordSession : IDisposable
         // Page eligibility needs settings and header/footer relationships from
         // the full current document, not the body range used for CP mapping.
         string? pageXml=null;PageNumberPackage? pagePackage=null;
+        var sectionCoverage=new List<SectionLayout>();int? numberPages=null;
         if(Profile==DocumentProfile.State && bodyXml is not null)
         {
             try{pageXml=PageNumberDocumentReader.ReadXml((object)document!);pagePackage=PageNumberPackage.FromFlat(pageXml);}
@@ -320,6 +325,7 @@ public sealed partial class WordSession : IDisposable
                             (int)setup.MirrorMargins != 0);
                         if(count==1 && Profile==DocumentProfile.State && pageXml is not null && !textProofUnavailable && textProofWarning is null &&
                             PageLayoutGuard.Eligible(System.Xml.Linq.XDocument.Parse(pageXml),layout))layout=layout with {RepairEligible=true};
+                        sectionCoverage.Add(layout);
                         issues.AddRange(PageRules.Check(layout, Profile));
                     }
                     finally { Release(range); Release(setup); Release(section); }
@@ -332,12 +338,18 @@ public sealed partial class WordSession : IDisposable
             try
             {
                 var anchor=paragraphs.FirstOrDefault(p=>p.Text.Length>0 && !char.IsControl(p.Text[0]) && !char.IsWhiteSpace(p.Text[0]));
-                if(anchor is not null)issues.AddRange(PageNumberRules.Check(pagePackage,(int)document.ComputeStatistics(2),anchor.Start,anchor.Text[..1],Profile));
+                numberPages=(int)document.ComputeStatistics(2);
+                if(anchor is not null)issues.AddRange(PageNumberRules.Check(pagePackage,numberPages.Value,anchor.Start,anchor.Text[..1],Profile));
             }
             catch(Exception error) when(error is InvalidOperationException or System.Xml.XmlException)
             {Diagnostics.Write("Word.PageNumber.ScopeUnavailable",error);}
         }
         timing.Mark("PageRules");timing.Count("Issues",issues.Count);timing.Count("Completed",1);
+        bool completeProof=!textProofUnavailable && textProofWarning is null;
+        var pageCoverage=PageCoverageEvidence.Read(Profile,sectionCoverage,pagePackage,completeProof,numberPages);
+        Coverage=DocumentCoverageBuilder.Build(new(Profile,paragraphs,headerLayout,bodyXml is not null && !textProofUnavailable,
+            completeProof,issues,pageCoverage.Observations));
+        NumberCoveragePreviewLayout=pageCoverage.NumberPreviewLayout;
         return issues.OrderBy(x => x.Start).ToArray();
     }
     private sealed record NativeParagraphObservation(Paragraph Value,WordParagraphSnapshot Native,bool Header);

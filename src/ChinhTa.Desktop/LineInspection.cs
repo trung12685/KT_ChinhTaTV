@@ -9,12 +9,16 @@ public static class LineInspection
     private const string AmbiguousStroke="Có nhiều nét chồng hoặc quá gần vị trí đường kẻ này. Chưa xác định được nét duy nhất; cần kiểm tra thủ công trước khi đặt lại đường kẻ.";
     public static IReadOnlyList<(Issue Issue, PreviewAnchor Anchor)> Inspect(FixedDocumentSequence document,
         PreviewHighlighter preview, IReadOnlyList<LineTarget> targets, IReadOnlyList<WordLineShape> shapes,
-        IReadOnlyDictionary<Issue, PreviewAnchor> anchors, IReadOnlyList<Issue> otherIssues, LinePolicy policy, bool hasGroupedShapes, IReadOnlyList<Issue>? verifiedEdits = null)
+        IReadOnlyDictionary<Issue, PreviewAnchor> anchors, IReadOnlyList<Issue> otherIssues, LinePolicy policy, bool hasGroupedShapes, IReadOnlyList<Issue>? verifiedEdits = null,
+        Action<LineTarget,bool>? coverage=null)
     {
         var result = new List<(Issue, PreviewAnchor)>();
         var strokePages=new Dictionary<int,HorizontalStrokeEvidence>();
         foreach (var target in targets)
         {
+            bool observed=false;
+            try
+            {
             var prerequisites=otherIssues.Where(i=>i.CanFix && StagedRepairBatch.Stage(i)==RepairStage.Text &&
                 i.Start<(long)target.Start+target.Text.Length && (long)i.Start+i.Length>target.RegionStart).Distinct().ToArray();
             bool hasAnchor = anchors.TryGetValue(target.Probe, out var anchor);
@@ -51,6 +55,7 @@ public static class LineInspection
                 var actual=RenderedLineVerifier.Find(expected,rendered);
                 if(actual is not null && ShapeLineRules.Evaluate(target,reference,actual,accepted.ShapeId,policy).Errors.Length==0)
                 {
+                    observed=true;
                     if(prerequisites.Length>0)
                     {
                         var current=shapes.Where(s=>s.Page==anchor.Page && s.AnchorStart>=target.RegionStart && s.AnchorStart<target.RegionEnd).ToArray();
@@ -88,6 +93,7 @@ public static class LineInspection
                 var actual = RenderedLineVerifier.Find(measured, rendered);
                 if (actual is null)
                 {
+                    observed=true;
                     var correction = ShapeLineRules.Evaluate(target, reference, null, own[0].Id, policy).Fix;
                     result.Add((Notice("Shape đã tồn tại nhưng nét trên trang chưa khớp tọa độ khai báo hoặc chưa hiển thị. Cần đặt lại vị trí theo dòng mốc; chưa coi là đúng thể thức. "+
                         (prerequisites.Length>0?"Chọn kèm các lỗi liên quan; sẽ đo lại sau khi sửa chữ/phông.":""),correction) with {Title="Đường kẻ dưới "+target.Label+" chưa hiển thị đúng"}, anchor));
@@ -107,6 +113,7 @@ public static class LineInspection
                 }
                 (fix, errors) = ShapeLineRules.Evaluate(target, reference, near[0], own[0].Id, policy);
             }
+            observed=true;
             if (errors.Length == 0)
             {
                 if(prerequisites.Length>0 && own.Length==1 && own[0].AppOwned)
@@ -121,6 +128,8 @@ public static class LineInspection
                     prerequisites.Length>0 ? "Chọn kèm các lỗi liên quan; sẽ sửa chữ/phông, đo lại rồi kẻ trong cùng lượt." : "Có thể tạo/đặt lại Line mà không thay nội dung chữ.");
             result.Add((Notice(message, foreign ? null : fix) with
                 {Title=(missing?"Thiếu đường kẻ dưới ":"Đường kẻ dưới ")+target.Label+(missing?"":" chưa đúng")}, anchor));
+            }
+            finally{coverage?.Invoke(target,observed);}
         }
         return result;
     }

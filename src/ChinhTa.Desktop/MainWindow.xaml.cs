@@ -18,6 +18,7 @@ public partial class MainWindow : Window
     private string? xpsPath;
     private Issue? pending;
     private Issue? displayed;
+    private DocumentCoverageSnapshot? lastCoverage;
     private readonly Dictionary<Issue, PreviewAnchor> anchors = new();
     private readonly PreviewHighlighter highlighter = new();
     private IReadOnlyList<IssueChoice> choices=>Review.Choices;
@@ -52,6 +53,7 @@ public partial class MainWindow : Window
             anchors.Clear();
             highlighter.Clear();
             Review.LoadIssues([]);
+            lastCoverage=null;
             CoverageInfo.Visibility=Visibility.Collapsed;
             Status.Text=ex is ScanAfterEditException?ex.Message:
                 "Thao tác chưa hoàn tất. Danh sách lỗi cũ đã được xóa; hãy Quét lại trước khi sửa tiếp.";
@@ -74,13 +76,20 @@ public partial class MainWindow : Window
         Run(() =>
         {
             using var timing=new WordOperationTiming("Word.Perf.OpenUI");var total=Stopwatch.StartNew();
-            pending=displayed=null;anchors.Clear();ClosePreview();Review.LoadIssues([]);
+            pending=displayed=null;anchors.Clear();ClosePreview();Review.LoadIssues([]);lastCoverage=null;
             session.Open(dialog.FileName);double openSeconds=total.Elapsed.TotalSeconds;timing.Mark("OpenWordDocument");
             Scan();timing.Mark("ScanAndPreview");timing.Count("Completed",1);
             Status.Text+=$" Mở Word/tệp: {openSeconds:F1}s; tổng mở: {total.Elapsed.TotalSeconds:F1}s.";
         });
     }
     private void ScanClick(object sender, RoutedEventArgs e) { if (session.IsOpen) Run(Scan); }
+    private void CoverageClick(object sender,RoutedEventArgs e)
+    {
+        hover.Stop();
+        if(!session.IsOpen || lastCoverage is null)
+        {MessageBox.Show(this,"Mở tài liệu và quét thành công để xem phạm vi của lần kiểm hiện tại.","Phạm vi kiểm tra");return;}
+        new DocumentCoverageWindow(lastCoverage){Owner=this}.ShowDialog();
+    }
     private void ReadingModeClick(object sender,RoutedEventArgs e)
     {
         session.UseOptimizedReading=((MenuItem)sender).IsChecked;
@@ -93,6 +102,7 @@ public partial class MainWindow : Window
         highlighter.UsePreparedText=session.UseOptimizedReading;
         hover.Stop();pending = displayed = null;
         Review.LoadIssues([]);
+        lastCoverage=null;
         CoverageInfo.Visibility=Visibility.Collapsed;
         var timer = Stopwatch.StartNew();
         var found = session.Check().ToList();
@@ -107,19 +117,47 @@ public partial class MainWindow : Window
         timing.Mark("BuildPreview");
         if (Preview.Document is System.Windows.Documents.FixedDocumentSequence sequence)
         {
+            int lineObserved=0,positionObserved=0;
             var policy = LinePolicy.Decree30;
             foreach (var entry in LineInspection.Inspect(sequence, highlighter, session.LineTargets, session.LineShapes,
-                anchors, found, policy, session.HasGroupedShapes, session.VerifiedLineEdits))
+                anchors, found, policy, session.HasGroupedShapes, session.VerifiedLineEdits,(_,known)=>{if(known)lineObserved++;}))
             { found.Add(entry.Issue); anchors[entry.Issue] = entry.Anchor; }
-            foreach(var entry in AdministrativePositionInspection.Inspect(sequence,highlighter,session.AdministrativePositionTargets,anchors))
+            foreach(var entry in AdministrativePositionInspection.Inspect(sequence,highlighter,session.AdministrativePositionTargets,anchors,
+                (_,known)=>{if(known)positionObserved++;}))
             {found.Add(entry.Issue);anchors[entry.Issue]=entry.Anchor;}
+            var coverage=session.Coverage;
+            if(coverage is not null)
+            {
+                CoverageObservation Geometry(int total,int known,string reason)=>new(known==total?CoverageState.Observed:CoverageState.Partial,total,known,reason);
+                if(session.LineTargets.Count>0)coverage=coverage.WithExternalEvidence("C12",Geometry(session.LineTargets.Count,lineObserved,
+                    "Chỉ các mốc và nét đã đo/ghép chắc trên bản xem trước; vùng thiếu mốc hoặc nét chưa rõ vẫn cần kiểm thủ công."));
+                if(session.AdministrativePositionTargets.Count>0)coverage=coverage.WithExternalEvidence("C11",Geometry(session.AdministrativePositionTargets.Count,positionObserved,
+                    "Chỉ các dòng số/ngày và khung đặt đã xác minh; chưa tự sửa vị trí dọc."));
+                if(session.NumberCoveragePreviewLayout is { } layout)
+                {
+                    try
+                    {
+                        PageNumberPreviewVerifier.VerifyNumbers(sequence,layout.LeftMm,layout.RightMm,layout.TopMm);
+                        coverage=coverage.WithExternalEvidence("C33",new(CoverageState.Observed,1,1,
+                            "Đã đối chiếu thiết lập và số hiển thị trên bản xem trước trong cấu trúc số trang được hỗ trợ."));
+                    }
+                    catch(Exception error) when(error is InvalidOperationException or ArgumentException or NotSupportedException)
+                    {
+                        Diagnostics.Write("Word.Coverage.PageNumberPreview",error);
+                        coverage=coverage.WithExternalEvidence("C33",new(CoverageState.Partial,1,0,
+                            "Đã đọc thiết lập nhưng chưa xác minh đủ số thực sự hiển thị trên bản xem trước; cần kiểm tra thủ công."));
+                    }
+                }
+                lastCoverage=coverage.WithFindings(found);
+            }
         }
+        lastCoverage??=session.Coverage?.WithFindings(found);
         timing.Mark("InspectGeometry");
         timing.Count("PreparedPreviewSources",highlighter.PreparedSources);
         Review.LoadIssues(found,anchors);
         timing.Mark("ShowIssues");timing.Count("Completed",1);
-        CoverageInfo.Text=session.CoverageNotice??"";
-        CoverageInfo.Visibility=session.CoverageNotice is null?Visibility.Collapsed:Visibility.Visible;
+        CoverageInfo.Text=(lastCoverage?.Summary??"")+(session.CoverageNotice is { } notice?"\n"+notice:"");
+        CoverageInfo.Visibility=CoverageInfo.Text.Length==0?Visibility.Collapsed:Visibility.Visible;
         Status.Text = $"{Path.GetFileName(session.Source)} — {found.Count} cảnh báo. " +
             $"Quét: {checkSeconds:F1}s; dựng trang: {timer.Elapsed.TotalSeconds - checkSeconds:F1}s. " +
             (session.UseOptimizedReading?"Bộ đọc mới đang thử nghiệm. ":"Đọc theo cách cũ. ")+

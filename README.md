@@ -1,5 +1,9 @@
 # Chính tả Việt
 
+## Đang phát triển 0.1.76 — phạm vi kiểm và số trang hiển thị thật
+
+[Đợt 15](docs/FORMAT-BATCH-15.md) thêm bảng phạm vi của lần quét cho 33 nhóm, tách trạng thái quan sát khỏi số cảnh báo. [Đợt 16](docs/FORMAT-BATCH-16.md) yêu cầu số trang thực sự hiện đủ và bảo toàn paint của nội dung/footer. [Phần đã làm và còn thiếu](docs/REMAINING-WORK.md). Hai cụm sau 0.1.75, chưa ZIP 0.1.76; bản tải hiện tại vẫn 0.1.75. CI không chạy Word thực.
+
 ## Bản thử tích lũy 0.1.75 — thể thức và kiểm Word theo nhóm
 
 Năm cụm đợt 10–14: khối ký cuối tài liệu dài, bảo toàn ảnh inline đã có, **chừa chỗ ký tay 80 pt**, chứng minh nguồn khoảng đoạn/giãn dòng và thông báo phần chưa kiểm; thêm **Kiểm tra → Kiểm tra từng nhóm Word…** để lỗi nhóm trước không che kết quả nhóm sau. [Thay đổi](docs/CHANGES-0.1.75.md) · [Cách kiểm Word](docs/OFFICE-CHECK-0.1.75.md) · [Phân tích các phần còn thiếu](docs/REMAINING-WORK.md).
