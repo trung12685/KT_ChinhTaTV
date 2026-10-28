@@ -63,6 +63,34 @@ internal static class PreviewPaintProof
         }
         return Paint.Unknown;
     }
+    // Uniform paint is not necessarily opaque. PAGE must remain black after
+    // every ancestor opacity/mask, while body preservation records the exact
+    // effective alpha rather than accepting a faded replacement.
+    internal static double? EffectiveOpacity(Visual leaf,Visual page)
+    {
+        double opacity=1;
+        for(DependencyObject? node=leaf;node is not null;node=VisualTreeHelper.GetParent(node))
+        {
+            if(node is UIElement element && (element.Visibility!=Visibility.Visible || element.Effect is not null))
+                return element.Visibility!=Visibility.Visible?0:null;
+            if(node is Visual visual)
+            {
+                double alpha=VisualTreeHelper.GetOpacity(visual);
+                if(!double.IsFinite(alpha) || alpha<0 || alpha>1)return null;
+                opacity*=alpha;
+                if(VisualTreeHelper.GetOpacityMask(visual) is Brush mask)
+                {
+                    var paint=BrushPaint(mask);
+                    if(paint==Paint.None)return 0;
+                    if(paint!=Paint.Uniform || mask is not SolidColorBrush solid ||
+                        !double.IsFinite(mask.Opacity) || mask.Opacity<0 || mask.Opacity>1)return null;
+                    opacity*=mask.Opacity*solid.Color.ScA;
+                }
+            }
+            if(ReferenceEquals(node,page))return double.IsFinite(opacity)?opacity:null;
+        }
+        return null;
+    }
     internal static Paint BrushPaint(Brush? brush)
     {
         if(brush is null || brush.Opacity==0)return Paint.None;
