@@ -249,6 +249,8 @@ static class Program
         SignatureObservationChecks.Run(Assert);
         SignatureSpaceDesktopChecks.Run(Assert);
         OfficeFocusedChecks.Run(Assert);
+        CoverageDesktopChecks.Run(Assert);
+        PageNumberPaintChecks.Run(Assert);
         PageLayoutDesktopChecks.Run(Assert);
         PageNumberDesktopChecks.Run(Assert);
         SelectedFormatVerificationChecks.Run(Assert);

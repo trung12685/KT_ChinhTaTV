@@ -21,10 +21,12 @@ public static class AdministrativePositionInspection
         return new(target,row,refs,frame,frames);
     }
     public static IReadOnlyList<(Issue Issue,PreviewAnchor Anchor)> Inspect(FixedDocumentSequence document,PreviewHighlighter preview,
-        IReadOnlyList<AdministrativePositionTarget> targets,IReadOnlyDictionary<Issue,PreviewAnchor> anchors)
-        =>InspectMeasured(targets.Select(t=>MeasureCentering(document,preview,t,anchors)).ToArray(),anchors);
+        IReadOnlyList<AdministrativePositionTarget> targets,IReadOnlyDictionary<Issue,PreviewAnchor> anchors,
+        Action<AdministrativePositionTarget,bool>? coverage=null)
+        =>InspectMeasured(targets.Select(t=>MeasureCentering(document,preview,t,anchors)).ToArray(),anchors,coverage);
     public static IReadOnlyList<(Issue Issue,PreviewAnchor Anchor)> InspectMeasured(
-        IReadOnlyList<AdministrativeCenterEvidence> evidence,IReadOnlyDictionary<Issue,PreviewAnchor> anchors)
+        IReadOnlyList<AdministrativeCenterEvidence> evidence,IReadOnlyDictionary<Issue,PreviewAnchor> anchors,
+        Action<AdministrativePositionTarget,bool>? coverage=null)
     {
         var result=new List<(Issue,PreviewAnchor)>();
         var measured=new Dictionary<AdministrativePositionRole,(AdministrativePositionTarget Target,RenderedTextLine Line)>();
@@ -37,6 +39,7 @@ public static class AdministrativePositionInspection
             var row=mapped && anchor.Page==1?observation.Row:null;
             var refs=mapped && anchor.Page==1?observation.References:observation.References.Select(_=>(RenderedTextLine?)null).ToArray();
             var assessment=AdministrativePositionRules.Assess(target,row,refs);
+            coverage?.Invoke(target,assessment.Measured && AdministrativeCentering.Proven(observation));
             if(assessment.Measured && row is not null)measured[target.Role]=(target,row);
             if(assessment.Warnings.Count>0)
             {

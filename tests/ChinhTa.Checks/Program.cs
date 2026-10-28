@@ -71,6 +71,8 @@ BodyParagraphChecks.Run(Assert);
 BodySpacingChecks.Run(Assert);
 BodySpacingScopeChecks.Run(Assert);
 OfficeSuiteRunnerChecks.Run(Assert);
+DocumentCoverageChecks.Run(Assert);
+PageCoverageChecks.Run(Assert);
 BodyOpeningChecks.Run(Assert);
 BodyEmphasisChecks.Run(Assert);
 BodyEmphasisLayoutChecks.Run(Assert);
