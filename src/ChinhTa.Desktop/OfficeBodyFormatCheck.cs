@@ -11,10 +11,10 @@ internal static class OfficeBodyFormatCheck
     private const string Second="Công tác tổng hợp đã được thực hiện đầy đủ.";
     private const string Correct="Nội dung đã đạt yêu cầu cần được giữ nguyên.";
     private static bool Owned(Issue issue)=>issue.Kind==FixKind.BodyFormat && issue.Original is First or Second;
-    public static void Run(WordSession test,string modern,string folder,Action<string> pass)
+    internal static string CreateSource(string modern,string folder)
     {
-        string isolated=Path.Combine(folder,"body-format");Directory.CreateDirectory(isolated);
-        string seed=OfficeComponentCheck.Create(modern,isolated,false),source=Path.Combine(isolated,"body-input.docx");File.Copy(seed,source);
+        Directory.CreateDirectory(folder);
+        string seed=OfficeComponentCheck.Create(modern,folder,false),source=Path.Combine(folder,"body-input.docx");File.Copy(seed,source);
         using(var zip=ZipFile.Open(source,ZipArchiveMode.Update))
         {
             var entry=zip.GetEntry("word/document.xml")!;XDocument xml;
@@ -32,6 +32,12 @@ internal static class OfficeBodyFormatCheck
             greeting.AddAfterSelf(Row(First,12,true),Row(Second,12,true),Row(Correct,13,false),Row("1. Nội dung đánh số cần được giữ nguyên.",12,true));
             entry.Delete();using(var output=zip.CreateEntry("word/document.xml").Open())xml.Save(output);
         }
+        return source;
+    }
+    public static void Run(WordSession test,string modern,string folder,Action<string> pass)
+    {
+        string isolated=Path.Combine(folder,"body-format");Directory.CreateDirectory(isolated);
+        string source=CreateSource(modern,isolated);
         byte[] hash=SHA256.HashData(File.ReadAllBytes(source));test.Profile=DocumentProfile.State;test.Open(source);
         string original=test.ReadCheckText();var found=test.Check();var body=found.Where(i=>i.CanFix && Owned(i)).OrderBy(i=>i.Start).ToArray();
         if(body.Length!=2 || found.Any(i=>i.Kind==FixKind.BodyFormat && i.Original==Correct))

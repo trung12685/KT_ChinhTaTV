@@ -74,9 +74,41 @@ internal sealed class WordOutlineEvidence(XDocument xml)
         }
 
         var contextual=Flag("contextualSpacing");var pageBreak=Flag("pageBreakBefore");var keep=Flag("keepNext");
-        BodySpacingContext? spacingContext=contextual is bool c && pageBreak is bool b && keep is bool k?new(c,grid,b,k):null;
+        // COM exposes point values, not their inherited line-unit source. A
+        // non-zero beforeLines/afterLines can override later point spacing in
+        // Word, so a direct zero/point value must not erase that evidence.
+        bool lineUnits=sources.SelectMany(s=>s?.Elements(W+"spacing")??[]).Any(s=>
+            new[]{"beforeLines","afterLines"}.Any(name=>s.Attribute(W+name) is { } a &&
+                (!int.TryParse(a.Value,NumberStyles.None,CultureInfo.InvariantCulture,out int value) || value!=0)));
+        bool special=p.Elements(W+"pPr").Skip(1).Any() || sources.Any(s=>s is not null &&
+            (new[]{"framePr","sectPr","pBdr"}.Any(name=>s.Element(W+name) is not null) ||
+             new[]{"spacing","bidi","contextualSpacing","keepNext","pageBreakBefore","textDirection","textAlignment"}
+                .Any(name=>s.Elements(W+name).Skip(1).Any()) ||
+             new[]{"textDirection","textAlignment"}.Any(name=>s.Element(W+name) is { } node && node.Attribute(W+"val") is null) ||
+             s.Elements(W+"spacing").Any(UnknownSpacing))) ||
+            Flag("bidi")!=false ||
+            sources.Select(s=>(string?)s?.Element(W+"textDirection")?.Attribute(W+"val")).FirstOrDefault(v=>v is not null) is not (null or "lrTb") ||
+            sources.Select(s=>(string?)s?.Element(W+"textAlignment")?.Attribute(W+"val")).FirstOrDefault(v=>v is not null) is not (null or "auto" or "baseline");
+        BodySpacingContext? spacingContext=contextual is bool c && pageBreak is bool b && keep is bool k?new(c,grid,b,k,lineUnits,special):null;
         int? right=ReadIndent("right","end");
         BodyIndent? bodyIndent=right is int r && Flag("bidi")==false?new(left.Value,r,first.Value,hanging.Value):null;
         return new(OutlineScope.PlainBody,left.Value+first.Value-hanging.Value,level,references,labelTabs,Alignment:alignment,SpacingContext:spacingContext,BodyIndent:bodyIndent);
+    }
+    private static bool UnknownSpacing(XElement spacing)
+    {
+        if(spacing.HasElements || !string.IsNullOrWhiteSpace(spacing.Value))return true;
+        foreach(var attribute in spacing.Attributes().Where(a=>!a.IsNamespaceDeclaration))
+        {
+            if(attribute.Name.Namespace!=W)return true;
+            string name=attribute.Name.LocalName,value=attribute.Value;
+            if(name is "beforeAutospacing" or "afterAutospacing")
+            {if(value is not ("0" or "1" or "false" or "true" or "off" or "on"))return true;}
+            else if(name=="lineRule")
+            {if(value is not ("auto" or "exact" or "atLeast"))return true;}
+            else if(name is "before" or "after" or "line" or "beforeLines" or "afterLines")
+            {if(!int.TryParse(value,NumberStyles.None,CultureInfo.InvariantCulture,out _))return true;}
+            else return true;
+        }
+        return false;
     }
 }

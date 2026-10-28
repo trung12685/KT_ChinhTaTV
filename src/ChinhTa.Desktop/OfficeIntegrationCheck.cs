@@ -1547,7 +1547,7 @@ public static class OfficeIntegrationCheck
         }
         return result;
     }
-    private static string CreateModernSample(string sample,string folder)
+    internal static string CreateModernSample(string sample,string folder)
     {
         string path=Path.Combine(folder,"modern-input.docx");File.Copy(sample,path);
         using var zip=ZipFile.Open(path,ZipArchiveMode.Update);

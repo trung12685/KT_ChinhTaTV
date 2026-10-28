@@ -239,6 +239,19 @@ public partial class MainWindow : Window
             "Kiểm tra Word", MessageBoxButton.OK, result.Passed ? MessageBoxImage.Information : MessageBoxImage.Warning);
         Process.Start(new ProcessStartInfo { FileName = result.Folder, UseShellExecute = true });
     });
+    private void OfficeGroupsClick(object sender,RoutedEventArgs e)
+    {
+        hover.Stop();var selected=OfficeFocusedCheck.Select(this);if(selected is null)return;
+        Run(()=>
+        {
+            Status.Text="Đang kiểm các nhóm Word trên mẫu riêng bằng bộ đọc cũ…";
+            var result=OfficeFocusedCheck.Run(selected);
+            Status.Text=$"Kiểm các nhóm Word đã chọn: {result.Report.PassedCount} đạt, {result.Report.FailedCount} lỗi, {result.Report.NotRunCount} chưa chạy.";
+            MessageBox.Show(this,result.Summary+"\n\nKết quả và mẫu từng nhóm:\n"+result.Folder,
+                "Kiểm tra từng nhóm Word",MessageBoxButton.OK,result.Report.Passed?MessageBoxImage.Information:MessageBoxImage.Warning);
+            Process.Start(new ProcessStartInfo{FileName=result.Folder,UseShellExecute=true});
+        });
+    }
     private void ProgressReportClick(object sender,RoutedEventArgs e)
     {
         hover.Stop();

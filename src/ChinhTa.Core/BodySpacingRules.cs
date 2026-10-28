@@ -1,6 +1,10 @@
 namespace ChinhTa.Core;
 
-public sealed record BodySpacingContext(bool Contextual=false,bool Grid=false,bool PageBreakBefore=false,bool KeepNext=false);
+public sealed record BodySpacingContext(bool Contextual=false,bool Grid=false,bool PageBreakBefore=false,bool KeepNext=false,
+    bool LineUnits=false,bool SpecialLayout=false)
+{
+    public bool Supported=>!LineUnits && !SpecialLayout;
+}
 public sealed record BodyFlow(int StartPage,int EndPage)
 {
     public bool Known=>StartPage>0 && EndPage>=StartPage;
@@ -10,10 +14,10 @@ public sealed record BodySpacingFix(ObservedParagraphStyle Before,BodySpacingCon
     float? After=null,int? Rule=null,float? Line=null)
 {
     public bool IsGap=>After is not null;
-    public bool Valid=>BodySpacingRules.Ordinary(Before) && Flow.Known && !Context.Grid && !Context.PageBreakBefore && !Context.KeepNext &&
+    public bool Valid=>BodySpacingRules.Ordinary(Before) && Flow.Known && Context.Supported && !Context.Grid && !Context.PageBreakBefore && !Context.KeepNext &&
         (IsGap?After==6 && Rule is null && Line is null && !Context.Contextual && Next is { } next &&
             next.Start>=0 && next.Text.Length>0 && !next.Text.Any(char.IsControl) && next.Flow.Known && Flow.EndPage==next.Flow.StartPage &&
-            !next.Context.Grid && !next.Context.Contextual && !next.Context.PageBreakBefore && !next.Context.KeepNext &&
+            next.Context.Supported && !next.Context.Grid && !next.Context.Contextual && !next.Context.PageBreakBefore && !next.Context.KeepNext &&
             BodySpacingRules.Ordinary(next.Style) && Before.Spacing!.BeforeAuto==0 && Before.Spacing.AfterAuto==0 &&
             next.Style.Spacing!.BeforeAuto==0 && next.Style.Spacing.AfterAuto==0 && Before.Spacing.After+next.Style.Spacing.Before<5.99f:
             After is null && Next is null && Rule==0 && Line is null && BodySpacingRules.LineTooFar(Before.Spacing!));
