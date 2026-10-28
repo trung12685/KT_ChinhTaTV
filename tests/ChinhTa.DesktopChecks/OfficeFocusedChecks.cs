@@ -35,12 +35,20 @@ public static class OfficeFocusedChecks
                 assert(!session.UseOptimizedReading && session.Profile==DocumentProfile.State && session.LineCheckArtifactFolder==folder && !session.IsOpen,
                     "Each focused-family session starts isolated and always uses the legacy reader regardless of the main window mode");
             string sample=Path.Combine("samples","BaDuongKeThieu.docx");byte[] digest=SHA256.HashData(File.ReadAllBytes(sample));
-            string modern=OfficeIntegrationCheck.CreateModernSample(sample,folder);
+            string modern=OfficeFocusedCheck.CreateSeed(sample,folder);
             using(var package=WordprocessingDocument.Open(modern,false))
-                assert(!new OpenXmlValidator().Validate(package).Any(),"The shared focused Word seed remains a schema-valid modern-compatibility DOCX without starting Word");
-            string seed=OfficeBodyFormatCheck.CreateSource(modern,folder);
+            {
+                var errors=new OpenXmlValidator().Validate(package).ToArray();
+                assert(errors.Length==0,"The shared focused Word seed remains a schema-valid modern-compatibility DOCX without starting Word: "+
+                    string.Join(" | ",errors.Take(8).Select(e=>e.Id+": "+e.Description)));
+            }
+            string seed=OfficeFocusedCheck.CreateBodySpacingSource(modern,folder);
             using(var package=WordprocessingDocument.Open(seed,false))
-                assert(!new OpenXmlValidator().Validate(package).Any(),"Constructing the independent spacing source does not require any font, Line or Word runtime test to pass");
+            {
+                var errors=new OpenXmlValidator().Validate(package).ToArray();
+                assert(errors.Length==0,"Constructing the independent spacing source does not require any font, Line or Word runtime test to pass: "+
+                    string.Join(" | ",errors.Take(8).Select(e=>e.Id+": "+e.Description)));
+            }
             using(var zip=ZipFile.OpenRead(seed))
             using(var input=zip.GetEntry("word/document.xml")!.Open())
             {

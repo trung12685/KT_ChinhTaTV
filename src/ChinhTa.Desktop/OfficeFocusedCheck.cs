@@ -1,6 +1,8 @@
 using System.IO;
+using System.IO.Compression;
 using System.Windows;
 using System.Windows.Controls;
+using System.Xml.Linq;
 using ChinhTa.Core;
 
 namespace ChinhTa.Desktop;
@@ -31,6 +33,39 @@ internal static class OfficeFocusedCheck
     private static string Token(OfficeSuiteStatus status)=>status switch
     {OfficeSuiteStatus.Pass=>"PASS",OfficeSuiteStatus.Fail=>"FAIL",_=>"NOT_RUN"};
     internal static WordSession NewSession(string folder)=>new(){Profile=DocumentProfile.State,UseOptimizedReading=false,LineCheckArtifactFolder=folder};
+    internal static string CreateSeed(string sample,string folder)
+    {
+        string seed=OfficeIntegrationCheck.CreateModernSample(sample,folder);OrderFixtureProperties(seed);return seed;
+    }
+    internal static string CreateBodySpacingSource(string modern,string folder)
+    {
+        string seed=OfficeBodyFormatCheck.CreateSource(modern,folder);OrderFixtureProperties(seed);return seed;
+    }
+    // Only the newly generated focused-check copies pass here. The historical
+    // sample and full integration check retain their Word-tolerated ordering.
+    // These are the same explicit schema sequences used by the signature fixture.
+    private static void OrderFixtureProperties(string path)
+    {
+        using var zip=ZipFile.Open(path,ZipArchiveMode.Update);var entry=zip.GetEntry("word/document.xml")!;
+        XDocument xml;using(var input=entry.Open())xml=XDocument.Load(input,LoadOptions.PreserveWhitespace);
+        XNamespace w="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+        void Order(string parent,string order)
+        {
+            var names=order.Split(' ');
+            foreach(var properties in xml.Descendants(w+parent))
+            {
+                var children=properties.Elements().OrderBy(e=>
+                {
+                    int index=e.Name.Namespace==w?Array.IndexOf(names,e.Name.LocalName):-1;
+                    return index<0?int.MaxValue:index;
+                }).ToArray();
+                properties.ReplaceNodes(children);
+            }
+        }
+        Order("rPr","rStyle rFonts b bCs i iCs caps smallCaps strike dstrike outline shadow emboss imprint noProof snapToGrid vanish webHidden color spacing w kern position sz szCs highlight u effect bdr shd fitText vertAlign rtl cs em lang eastAsianLayout specVanish oMath rPrChange");
+        Order("pPr","pStyle keepNext keepLines pageBreakBefore framePr widowControl numPr suppressLineNumbers pBdr shd tabs suppressAutoHyphens kinsoku wordWrap overflowPunct topLinePunct autoSpaceDE autoSpaceDN bidi adjustRightInd snapToGrid spacing ind contextualSpacing mirrorIndents suppressOverlap jc textDirection textAlignment textboxTightWrap outlineLvl divId cnfStyle rPr sectPr pPrChange");
+        entry.Delete();using(var output=zip.CreateEntry("word/document.xml").Open())xml.Save(output);
+    }
     internal static OfficeFocusedCheckResult Run(IReadOnlyList<OfficeSuiteCase> selected)
     {
         if(selected.Count==0 || selected.Any(s=>!Cases.Contains(s)) || selected.Select(s=>s.Id).Distinct().Count()!=selected.Count)
@@ -46,7 +81,7 @@ internal static class OfficeFocusedCheck
                 Note($"BEGIN {suite.Id}: {suite.Name}");
                 string sample=Path.Combine(AppContext.BaseDirectory,"samples","BaDuongKeThieu.docx");
                 if(!File.Exists(sample))throw new FileNotFoundException("Thiếu mẫu giả đi kèm bản giải nén.",sample);
-                string modern=OfficeIntegrationCheck.CreateModernSample(sample,isolated);
+                string modern=CreateSeed(sample,isolated);
                 var test=NewSession(isolated);
                 try{test.Open(modern);Note(suite.Id+" "+test.OfficeDescription);return new FocusedSession(test,modern,isolated);}
                 catch(Exception failure)
@@ -69,7 +104,7 @@ internal static class OfficeFocusedCheck
                     case "body-spacing":
                         // Build only the body fixture. An earlier font/Line test
                         // must not stop the spacing assertions from starting.
-                        string seed=OfficeBodyFormatCheck.CreateSource(current.Seed,current.Folder);
+                        string seed=CreateBodySpacingSource(current.Seed,current.Folder);
                         OfficeBodySpacingCheck.Run(current.Test,seed,current.Folder,Pass);break;
                     case "body-format":OfficeBodyFormatCheck.Run(current.Test,current.Seed,current.Folder,Pass);break;
                     default:throw new InvalidOperationException("Nhóm kiểm chưa được nối với bài kiểm thực.");
