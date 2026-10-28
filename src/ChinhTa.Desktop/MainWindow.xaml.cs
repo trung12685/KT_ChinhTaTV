@@ -212,6 +212,21 @@ public partial class MainWindow : Window
             finally{session.ProgressReporter=previous;IsEnabled=enabled;}
         });
     }
+    private void SigningSpaceClick(object sender,RoutedEventArgs e)=>Run(()=>
+    {
+        using var progress=new RepairProgressDialog(new System.Windows.Interop.WindowInteropHelper(this).Handle,
+            typeof(MainWindow).Assembly.GetName().Version?.ToString(3)??"chưa rõ",1);
+        var previous=session.ProgressReporter;bool enabled=IsEnabled;IsEnabled=false;
+        try
+        {
+            session.ProgressReporter=progress.Report;SignatureSpaceResult? result=null;
+            EditThenScan.Run(()=>result=session.ReserveHandSigningSpace(),Scan);
+            progress.Report(new(RepairActivity.Completed,1,1,"Đã kiểm xong khoảng trống ký tay và quét lại."));
+            Status.Text=result!.Changed?$"Đã chừa chỗ ký tay, đo được {result.Gap:0.#} pt. Hoàn tác một lần để trở lại.":
+                $"Vùng ký đã có khoảng trống {result.Gap:0.#} pt; giữ nguyên.";
+        }
+        finally{session.ProgressReporter=previous;IsEnabled=enabled;}
+    });
     private void OfficeCheckClick(object sender, RoutedEventArgs e) => Run(() =>
     {
         Status.Text = "Đang kiểm tra Word bằng tài liệu mẫu riêng: mở, ghi Line, xuất trang, lưu và hoàn tác…";

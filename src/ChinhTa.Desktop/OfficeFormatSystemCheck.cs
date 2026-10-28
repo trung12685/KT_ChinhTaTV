@@ -35,6 +35,7 @@ internal static class OfficeFormatSystemCheck
         OfficeHeadingSizeCheck.Run(test,goodSaved,isolated,pass);
         OfficeCaseStyleCheck.Run(test,modern,isolated,pass);
         OfficeBodyFormatCheck.Run(test,modern,isolated,pass);
+        OfficeSignatureWritingSpaceCheck.Run(test,modern,isolated,pass);
         OfficeSignatureFormatCheck.Run(test,modern,isolated,pass);
         OfficePageLayoutCheck.Run(test,modern,isolated,pass);
         OfficePageNumberCheck.Run(test,modern,isolated,pass);

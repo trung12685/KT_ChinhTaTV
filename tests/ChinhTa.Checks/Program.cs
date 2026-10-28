@@ -40,6 +40,7 @@ ComponentChecks.Run(Assert);
 SignatureChecks.Run(Assert);
 SignatureNativeBoundaryChecks.Run(Assert);
 InlineSignatureImageChecks.Run(Assert);
+SignatureWritingSpaceChecks.Run(Assert);
 PageLayoutChecks.Run(Assert);
 PageNumberChecks.Run(Assert);
 FormatAssessmentChecks.Run(Assert);

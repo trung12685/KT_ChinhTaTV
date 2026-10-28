@@ -15,6 +15,7 @@ public sealed partial class WordSession : IDisposable
     private readonly Stack<string> undoCheckpoints = new();
     private IReadOnlyList<WordParagraphSnapshot> lastLayout = [];
     private IReadOnlyList<WordParagraphSnapshot> lastFormatLayout = [];
+    private IReadOnlyList<WordParagraphSnapshot> lastWordParagraphs = [];
     private IReadOnlyList<Paragraph> lastBodyParagraphs = [];
     private readonly Dictionary<LineRole,Issue> verifiedLineEdits = new();
     public IReadOnlyList<Issue> VerifiedLineEdits => verifiedLineEdits.Values.ToArray();
@@ -55,7 +56,7 @@ public sealed partial class WordSession : IDisposable
         WordOpenSessionPolicy.Prepare(UseOptimizedReading,CloseDocumentOnly,CloseConnection);
         timing.Count("WarmWordAvailable",app is null?0:1);
         undoCheckpoints.Clear();verifiedLineEdits.Clear();
-        lastLayout = [];lastFormatLayout=[];AdministrativePositionTargets=[];
+        lastLayout = [];lastFormatLayout=[];lastWordParagraphs=[];AdministrativePositionTargets=[];
         Source = Path.GetFullPath(path);
         Changed = false;
         Recovered = false;
@@ -139,6 +140,7 @@ public sealed partial class WordSession : IDisposable
         timing.Count("ParagraphTraversalFallback",traversal.FellBack?1:0);
         timing.Count("IndexedParagraphReads",traversal.IndexedReads);
         timing.Mark("ReadParagraphs");timing.Count("Paragraphs",liveText.Count);
+        lastWordParagraphs=liveText.ToArray();
         string? bodyXml=null;
         if(liveText.Count>0)
         {

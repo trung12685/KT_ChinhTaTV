@@ -1,5 +1,9 @@
 # Chính tả Việt
 
+## Đang phát triển0.1.75 — chừa chỗ ký tay80pt
+
+Theo yêu cầu người dùng, ưu tiên chừa chỗ để in rồi ký tay; dừng mở rộng ảnh chữ ký. Lệnh **Kiểm tra → Chừa chỗ ký tay (80 pt)** đo khoảng hiện có trên XPS, bổ sung phần thiếu khi bố cục đủ chỗ; giữ vùng đã đủ, Enter/chữ/phông và có một Hoàn tác. [Phạm vi và kiểm chứng](docs/FORMAT-BATCH-12.md). Đây là thiết lập người dùng, không phải quy định80pt của NĐ30.0.1.75 đang tích lũy ba cụm, chưa ZIP mới; bản tải gần nhất0.1.74, CI không chạy Word thực.
+
 ## Đang phát triển0.1.75 — ảnh inline trong khối ký
 
 [Đợt thể thức11](docs/FORMAT-BATCH-11.md): đối chiếu ký tự đối tượng của ảnh nhúng rõ cấu trúc với range Word hiện tại, giữ đoạn ảnh không sửa; khối ký có ảnh nằm giữa chức vụ/họ tên tiếp tục được nhận diện khi đủ chứng minh. Kiểm mẫu ngắn/dài, hai đường XML, schema/ảnh, quyền, inventory Line và Undo/lưu-mở. Đã tích lũy hai cụm sau0.1.74; chưa ZIP mới, CI không chạy Word thực.
