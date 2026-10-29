@@ -14,12 +14,12 @@ public static class PageLayoutBodyChecks
     private static readonly SectionLayout Layout=new(1,0,"N",210,297,20,20,30,15);
     private static readonly Rect Body=new(30*Units,20*Units,165*Units,257*Units);
     private static FixedDocumentSequence Pages(Rect? rectangle=null,Action<Path,Canvas>? change=null,
-        double width=210*Units,double height=297*Units,bool blankLast=false)
+        double width=210*Units,double height=297*Units,bool blankLast=false,Action<FixedPage>? pageChange=null)
     {
         var document=new FixedDocument();
         for(int n=0;n<(blankLast?2:1);n++)
         {
-            var page=new FixedPage{Width=width,Height=height};
+            var page=new FixedPage{Width=width,Height=height};pageChange?.Invoke(page);
             if(n==0)
             {
                 var path=new Path{Fill=Brushes.Black,Data=new RectangleGeometry(rectangle??new Rect(Body.Left+10,Body.Top+10,80,25))};
@@ -38,6 +38,10 @@ public static class PageLayoutBodyChecks
         PageLayoutBodyPreviewVerifier.Verify(Pages(blankLast:true),Layout);
         PageLayoutBodyPreviewVerifier.Verify(Pages(new Rect(Body.Left-1,Body.Top-1,Body.Width+2,Body.Height+2)),Layout);
         assert(true,"Empty header/footer C32 scope accepts contained paint, a genuine blank page, and one-point rendering tolerance");
+        foreach(var change in new Action<FixedPage>[] {p=>p.Background=Brushes.Red,p=>p.Background=new LinearGradientBrush(Colors.White,Colors.Black,0),
+            p=>p.Effect=new DropShadowEffect(),p=>p.OpacityMask=new LinearGradientBrush(Colors.White,Colors.Black,0)})
+            assert(Reject(()=>PageLayoutBodyPreviewVerifier.Verify(Pages(blankLast:true,pageChange:change),Layout)),
+                "Blank-page acceptance cannot hide colored or unknown page paper, masks or effects");
         foreach(var rectangle in new[]{
             new Rect(Body.Left-2,Body.Top+10,30,20),new Rect(Body.Left+10,Body.Top-2,30,20),
             new Rect(Body.Right-28,Body.Top+10,30,20),new Rect(Body.Left+10,Body.Bottom-18,30,20),

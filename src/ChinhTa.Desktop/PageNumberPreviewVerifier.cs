@@ -179,9 +179,16 @@ public static class PageNumberPreviewVerifier
         for(int n=0;n<paginator.PageCount;n++)
         {
             using var rendered=paginator.GetPage(n);var page=Page(rendered);
+            // A bare FixedPage still reports its paper background as visual
+            // bounds. It is an intentional blank page, not an unknown body leaf.
+            // Colored/unknown paper or page effects remain outside this proof.
+            if(page.Background is not null && (page.Background is not SolidColorBrush paper || paper.Color!=Colors.White || paper.Opacity!=1) ||
+                PreviewPaintProof.VisibilityOf(page,page)!=PreviewPaintProof.Paint.Uniform || PreviewPaintProof.EffectiveOpacity(page,page)!=1)
+                throw new InvalidOperationException("Nền/độ hiển thị trang XPS chưa được chứng minh để bảo toàn nội dung.");
             var removed=footerMigration is null?new HashSet<Glyphs>():FooterGlyphs(page,n+1,footerMigration,bottomMm);
             foreach(var visual in Walk(page).OfType<Visual>().Where(v=>VisualTreeHelper.GetChildrenCount(v)==0))
             {
+                if(ReferenceEquals(visual,page))continue;
                 if(visual is Glyphs removedGlyph && removed.Contains(removedGlyph))continue;
                 var bounds=Bounds(visual,page);
                 if(bounds.IsEmpty || !all && !BitmapPageVisualProof.IsBitmapLeaf(visual) && bounds.Bottom<=topMm*96/25.4+.25)continue;
