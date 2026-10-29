@@ -20,7 +20,11 @@ internal static class OfficeTechnicalTextCheck
         "Console.WriteLine(@\"Báo  cáo\")",
         "print(r\"Báo  cáo\")",
         "print(f\"kế hoạch kế hoạch\")",
-        "logger.Log(2, \"Báo  cáo\")"
+        "logger.Log(2, \"Báo  cáo\")",
+        "echo \"Báo  cáo kế hoạch kế hoạch\"",
+        "printf '%s' 'kế hoạch kế hoạch'",
+        "tool --label \"Báo  cáo kế hoạch kế hoạch\"",
+        "cmd /c echo \"Báo  cáo\""
     });
     internal static IReadOnlyList<string> FormRows {get;}=Array.AsReadOnly(new[]
     {

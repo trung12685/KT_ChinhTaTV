@@ -34,9 +34,19 @@ public static class TechnicalTextContext
     private static readonly Regex QuotedFunctionArgument=new(
         @"(?:^|[^\p{L}\p{M}\p{N}_])"+QualifiedIdentifier+@"\([ \t]*(?:(?:"+QualifiedIdentifier+
         @"|[+-]?[0-9]+(?:\.[0-9]+)?)[ \t]*,[ \t]*)*"+LiteralPrefix+"[\"']",Options);
+    // Explicit long-option syntax owns its quoted value even when the command
+    // itself is unfamiliar. A spaced prose dash or an unquoted option does not.
+    private static readonly Regex QuotedLongOption=new(
+        """(?:^|[ \t])--[a-z][a-z0-9_-]*(?:[ \t]+|=)["']""",Options);
+    // These known output commands use quoted data without call parentheses.
+    // Keep the recognition anchored; arbitrary prose followed by a quotation
+    // or a single-dash word does not establish a shell command.
+    private static readonly Regex QuotedOutputCommand=new(
+        """^[ \t]*(?:cmd(?:\.exe)?[ \t]+/c[ \t]+)?(?:echo|printf|Write-Output|Write-Host)[ \t]+["']""",Options);
     private static readonly Regex FilenameOrDomain=new(
         @"[\p{L}\p{M}\p{N}_.-]\.(?:docx?|docm|dotx?|dotm|rtf|odt|ott|xlsx?|xlsm|xlsb|xltx?|xltm|ods|ots|pptx?|pptm|potx?|potm|ppsx?|ppsm|odp|otp|pdf|txt|csv|json|xml|ya?ml|ini|cfg|log|zip|rar|7z|exe|dll|png|jpe?g)(?:$|[^\p{L}\p{M}\p{N}_])|[a-z0-9][a-z0-9.-]*\.(?:vn|com|net|org|io|dev|gov|edu)/",Options);
 
     public static bool IsTechnical(string text)=>text.Contains('`') || text.Contains('\\') || Paths.IsMatch(text) || RootFilename.IsMatch(text) || Schemes.IsMatch(text) ||
-        Email.IsMatch(text) || Assignment.IsMatch(text) || MarkupOrObject.IsMatch(text) || QuotedFunctionArgument.IsMatch(text) || FilenameOrDomain.IsMatch(text);
+        Email.IsMatch(text) || Assignment.IsMatch(text) || MarkupOrObject.IsMatch(text) || QuotedFunctionArgument.IsMatch(text) ||
+        QuotedLongOption.IsMatch(text) || QuotedOutputCommand.IsMatch(text) || FilenameOrDomain.IsMatch(text);
 }

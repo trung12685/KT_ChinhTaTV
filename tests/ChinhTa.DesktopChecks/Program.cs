@@ -294,6 +294,8 @@ DelimiterClusterReviewChecks.Run(Assert);
         WordSessionOpenChecks.Run(Assert);
         DocumentCloseOwnershipChecks.Run(Assert);
         CheckpointSaveStateChecks.Run(Assert);
+        UndoCheckpointTrustChecks.Run(Assert);
+        RecoveryFeedbackChecks.Run(Assert);
         UnmappedPreviewSelectionChecks.Run(Assert);
         UndoRecoveryStateChecks.Run(Assert);
         PreviewLifecycleChecks.Run(Assert);

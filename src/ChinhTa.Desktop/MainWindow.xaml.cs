@@ -51,19 +51,35 @@ public partial class MainWindow : Window
                 Diagnostics.Write("UI.ScanAfterEdit.Cause",cause);
             var cleanupFailure=InvalidateReview();
             if(cleanupFailure is not null)Diagnostics.Write("UI.Operation.PreviewCleanup",cleanupFailure);
-            Status.Text=ex is ScanAfterEditException?ex.Message:
-                "Thao tác chưa hoàn tất. Danh sách lỗi cũ đã được xóa; hãy Quét lại trước khi sửa tiếp.";
-            string message = ex is ScanAfterEditException?ex.Message:WordConnectionPolicy.IsDisconnected(ex)
-                ? "Ứng dụng mất kết nối với Microsoft Word. Hãy chọn Kiểm tra → Quét lại để thử khôi phục bản lưu gần nhất. " +
-                  "Không cần đóng các cửa sổ Word khác. Nếu lỗi xảy ra ngay khi mở, hãy mở lại file."
-                : ex.Message;
-            if(ex.Data["ChinhTa.RecoveryInstruction"] is string recoveryInstruction)
-                message+="\n\n"+recoveryInstruction;
+            var feedback=DescribeOperationFailure(session,ex);
+            Status.Text=feedback.Status;
             string cleanupNotice=cleanupFailure is null?"":"\n\nChưa dọn hết bản xem trước. Các lỗi dọn dẹp và lỗi thao tác ban đầu đều đã được giữ trong nhật ký.";
-            MessageBox.Show(this, message + cleanupNotice + "\n\nBản làm việc: " + session.RecoveryPath +
+            MessageBox.Show(this, feedback.Message + cleanupNotice + "\n\nBản làm việc: " + session.RecoveryPath +
                 "\nNhật ký: " + Diagnostics.LogPath, "Không thể thực hiện", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
         finally { Mouse.OverrideCursor = null; }
+    }
+    internal const string UnavailableRecoveryNotice="Phiên tài liệu đã đóng và chưa có bản làm việc đủ điều kiện mở lại tự động. " +
+        "Quét lại hiện chưa thể chạy. Hãy giữ các tệp trong thư mục bản làm việc và nhật ký để phục hồi thủ công.";
+    internal sealed record OperationFailureFeedback(string Status,string Message);
+    internal static OperationFailureFeedback DescribeOperationFailure(WordSession current,Exception error)
+    {
+        ArgumentNullException.ThrowIfNull(current);ArgumentNullException.ThrowIfNull(error);
+        if(!current.IsOpen && !current.CanRecover && current.Source.Length>0)
+        {
+            string completed=error is ScanAfterEditException reviewed?reviewed.CompletedActionNotice:
+                "Thao tác chưa hoàn tất. Danh sách lỗi cũ đã được xóa.";
+            string primary=error is ScanAfterEditException afterReview?afterReview.InnerException?.Message??afterReview.Message:error.Message;
+            return new(completed+" "+UnavailableRecoveryNotice,
+                (error is ScanAfterEditException?completed+"\n\nNguyên nhân quét lại: ":"")+primary+"\n\n"+UnavailableRecoveryNotice);
+        }
+        string status=error is ScanAfterEditException?error.Message:
+            "Thao tác chưa hoàn tất. Danh sách lỗi cũ đã được xóa; hãy Quét lại trước khi sửa tiếp.";
+        string message=error is ScanAfterEditException?error.Message:WordConnectionPolicy.IsDisconnected(error)?
+            "Ứng dụng mất kết nối với Microsoft Word. Hãy chọn Kiểm tra → Quét lại để thử khôi phục bản lưu gần nhất. " +
+            "Không cần đóng các cửa sổ Word khác. Nếu lỗi xảy ra ngay khi mở, hãy mở lại file.":error.Message;
+        if(error.Data["ChinhTa.RecoveryInstruction"] is string recoveryInstruction)message+="\n\n"+recoveryInstruction;
+        return new(status,message);
     }
     private bool CanDiscard() => !session.Changed || MessageBox.Show(this,
         "Có thay đổi chưa lưu bản sao. Bạn muốn bỏ các thay đổi này?", "Xác nhận",
@@ -83,7 +99,16 @@ public partial class MainWindow : Window
     }
     private void ScanClick(object sender, RoutedEventArgs e)
     {
-        if(!session.IsOpen && !session.CanRecover)return;
+        if(!session.IsOpen && !session.CanRecover)
+        {
+            if(session.Source.Length>0)
+            {
+                hover.Stop();var failure=InvalidateReview();
+                if(failure is not null)Diagnostics.Write("UI.ScanUnavailable.PreviewCleanup",failure);
+                Status.Text=UnavailableRecoveryNotice+"\nBản làm việc: "+session.RecoveryPath+"\nNhật ký: "+Diagnostics.LogPath;
+            }
+            return;
+        }
         Run(()=>{if(!session.IsOpen)session.ReopenPreservedDocument();Scan();});
     }
     private void CoverageClick(object sender,RoutedEventArgs e)

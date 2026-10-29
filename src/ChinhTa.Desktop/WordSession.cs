@@ -911,6 +911,7 @@ public sealed partial class WordSession : IDisposable
         if (undoCheckpoints.Count == 0) return null;
         string before = undoCheckpoints.Peek();
         verifiedLineEdits.Clear();
+        bool currentWasVerified = snapshotCurrent;
         snapshotCurrent = false;
         try
         {
@@ -923,7 +924,7 @@ public sealed partial class WordSession : IDisposable
         catch (Exception error)
         {
             Diagnostics.Write("Word.UndoCheckpoint", error);
-            snapshotCurrent = CheckpointSwap.CurrentIsVerified(error);
+            snapshotCurrent = currentWasVerified && CheckpointSwap.CurrentIsVerified(error);
             if(!snapshotCurrent)Changed=true;
             throw;
         }

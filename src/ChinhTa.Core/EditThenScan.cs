@@ -2,12 +2,16 @@ namespace ChinhTa.Core;
 
 public sealed class ScanAfterEditException:InvalidOperationException
 {
+    private const string RepairNotice="Lượt sửa đã được áp dụng trên bản làm việc, nhưng chưa quét lại được danh sách lỗi.";
+    private const string UndoNotice="Lệnh Hoàn tác đã hoàn tất, nhưng chưa quét lại được danh sách lỗi.";
+    public string CompletedActionNotice {get;}
     public ScanAfterEditException(Exception cause):this(cause,false){}
     internal ScanAfterEditException(Exception cause,bool afterUndo):base(afterUndo?
-        "Lệnh Hoàn tác đã hoàn tất, nhưng chưa quét lại được danh sách lỗi. " +
+        UndoNotice+" "+
         "Hãy Quét lại để cập nhật; chỉ Hoàn tác thêm nếu bạn muốn bỏ lượt sửa trước đó.":
-        "Lượt sửa đã được áp dụng trên bản làm việc, nhưng chưa quét lại được danh sách lỗi. " +
-        "Hãy Quét lại trước khi sửa tiếp, hoặc Hoàn tác để bỏ lượt vừa sửa.",cause){}
+        RepairNotice+" "+
+        "Hãy Quét lại trước khi sửa tiếp, hoặc Hoàn tác để bỏ lượt vừa sửa.",cause)
+    {CompletedActionNotice=afterUndo?UndoNotice:RepairNotice;}
 }
 
 public static class EditThenScan

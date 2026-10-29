@@ -14,6 +14,14 @@ public static class WordXmlTableMap
 {
     private static readonly XNamespace W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
     private static readonly HashSet<XName> UnsafeTextNames=new(){W+"sdt",W+"fldSimple",W+"hyperlink",W+"drawing",W+"pict",W+"object",W+"smartTag",W+"tab",W+"br",W+"cr"};
+    // Tracked moves can retain history even with TrackRevisions now disabled.
+    // Their range markers may also sit outside the run wrapper. As with ins/del,
+    // matching visible text cannot prove correspondence through that boundary.
+    private static readonly HashSet<XName> UnmappedContentNames=new()
+    {
+        W+"fldChar",W+"instrText",W+"ins",W+"del",W+"footnoteReference",
+        W+"moveFrom",W+"moveTo",W+"moveFromRangeStart",W+"moveFromRangeEnd",W+"moveToRangeStart",W+"moveToRangeEnd"
+    };
     private static string Clean(string text) => text.TrimEnd('\r', '\a').Replace('\u2011', '\u001e').Replace('\u00ad', '\u001f');
     public static IReadOnlyList<LayoutParagraph> Read(string wordOpenXml, IReadOnlyList<WordParagraphSnapshot> live, Action<WordXmlMappingException>? onMismatch = null, Action<int, int>? onParagraphMatched = null, Action<int,bool>? onTextEditable = null, bool includeLayout = true,Action<int,bool>? onFormatEditable=null)
         => Read(XDocument.Parse(wordOpenXml),live,onMismatch,onParagraphMatched,onTextEditable,includeLayout,onFormatEditable);
@@ -27,6 +35,7 @@ public static class WordXmlTableMap
         var body = xml.Descendants(W + "document").Single().Element(W + "body")
             ?? throw new InvalidOperationException("Missing document body");
         var paragraphs = snapshot?.Paragraphs??body.Descendants(W + "p").Where(p => !p.Ancestors(W + "txbxContent").Any()).ToArray();
+        var externalBoundary=ExternalContentBoundary(body);
         live = AlignBodyBlanks(paragraphs, live,snapshot);
         int verified = Math.Min(paragraphs.Length, live.Count);
         IReadOnlySet<XElement> formatLines=onFormatEditable is null?new HashSet<XElement>():snapshot?.OwnedLines??OwnedLineFormatProof.Read(xml);
@@ -35,8 +44,9 @@ public static class WordXmlTableMap
         for (int i = 0; i < verified; i++)
         {
             var p = paragraphs[i];
-            if (p.Descendants().Any(e => e.Name == W + "fldChar" || e.Name == W + "instrText" ||
-                e.Name == W + "ins" || e.Name == W + "del" || e.Name == W + "footnoteReference"))
+            if (externalBoundary.UnmatchedEnd ||
+                externalBoundary.Node is { } boundary && XNode.DocumentOrderComparer.Compare(boundary,p)<=0 ||
+                p.Descendants().Any(e => UnmappedContentNames.Contains(e.Name)))
             {
                 var error = new WordXmlMappingException("XML-CONTENT", i + 1, 0, live[i].Text.Length);
                 if (onMismatch is null) throw error;
@@ -108,6 +118,32 @@ public static class WordXmlTableMap
                 item.Centered && balanced, tableStart, item.ParagraphCentered,item.UnindentedCenter is bool center?center && balanced:null));
         }
         return result;
+    }
+    private static (XElement? Node,bool UnmatchedEnd) ExternalContentBoundary(XElement body)
+    {
+        XElement? boundary=null;bool unmatchedEnd=false;
+        var starts=new Dictionary<(string Family,string Id),int>();
+        foreach(var node in body.Descendants().Where(e=>UnmappedContentNames.Contains(e.Name)))
+        {
+            if(node.Ancestors(W+"txbxContent").Any())continue;
+            bool external=!node.Ancestors(W+"p").Any();
+            if(external)boundary??=node;
+            string name=node.Name.LocalName;
+            bool start=name is "moveToRangeStart" or "moveFromRangeStart";
+            bool end=name is "moveToRangeEnd" or "moveFromRangeEnd";
+            if(!start && !end)continue;
+            string? id=(string?)node.Attribute(W+"id");
+            string family=name[..^(start?"RangeStart".Length:"RangeEnd".Length)];
+            if(string.IsNullOrEmpty(id))
+            {if(external && end)unmatchedEnd=true;continue;}
+            var key=(family,id);starts.TryGetValue(key,out int count);
+            if(start)starts[key]=count+1;
+            else if(count>0)starts[key]=count-1;
+            else if(external)unmatchedEnd=true;
+        }
+        // An external orphan end can follow the final paragraph. There is then
+        // no next row at which to stop, and no proven start for a safe prefix.
+        return (boundary,unmatchedEnd);
     }
     internal static bool IsPlainText(XElement p,bool allowTabs=false,bool allowTextBreaks=false)=>!p.Ancestors(W+"sdt").Any() && !p.Descendants().Any(e=>
         UnsafeTextNames.Contains(e.Name) &&
