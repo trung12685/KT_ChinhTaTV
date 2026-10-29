@@ -124,7 +124,17 @@ public static class Checker
             textIssues.AddRange(repetitions);
             textIssues.RemoveAll(candidate=>outlineOwners[p.Start].Any(f=>
                 candidate.Start<(long)f.Issue.Start+f.Issue.Length && (long)candidate.Start+candidate.Length>f.Issue.Start));
-            if(p.TextEditable && !protectedAdministrative.Contains(p.Start)) result.AddRange(textIssues);
+            if(p.TextEditable && !protectedAdministrative.Contains(p.Start) && TechnicalTextContext.IsTechnical(p.Text) && textIssues.Count>0)
+            {
+                // XML text permission does not make filename spaces or literal
+                // repetitions disposable. A mixed technical/prose paragraph is
+                // conservatively review-only until token ownership is proven.
+                string text=p.Text.TrimEnd('\r','\a','\n');
+                result.Add(new(p.Start,text.Length,text,text,
+                    "Có gợi ý chữ/khoảng trắng trong dòng có đường dẫn, địa chỉ hoặc mã. Những ký tự này có thể thuộc tên tệp hay chuỗi dữ liệu; kiểm tra thủ công và giữ nguyên dòng.",
+                    false,FixKind.Advisory,CanFix:false,Title:"Kiểm tra chữ trong dòng có đường dẫn hoặc mã"));
+            }
+            else if(p.TextEditable && !protectedAdministrative.Contains(p.Start)) result.AddRange(textIssues);
             else if(textIssues.Count>0)
             {
                 // A Word field/object may occupy CPs absent from visible text. Anchor a

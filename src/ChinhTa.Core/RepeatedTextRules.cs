@@ -12,6 +12,7 @@ public static class RepeatedTextRules
     public static IReadOnlyList<Issue> Check(Paragraph paragraph)
     {
         string text=paragraph.Text;
+        bool technical=TechnicalTextContext.IsTechnical(text);
         var tokens=Words.Matches(text).Select(m=>new Token(m.Index,m.Index+m.Length,m.Value.Normalize(NormalizationForm.FormC))).ToArray();
         bool paragraphInitial=tokens.Length>0 && text.AsSpan(0,tokens[0].Start).IndexOfAnyExcept(' ')<0;
         bool SameUnit(int first,int next,int size)
@@ -35,12 +36,14 @@ public static class RepeatedTextRules
                 if(unit==0){i++;continue;}
                 int end=i+2*unit;
                 while(end+unit<=runEnd && SameUnit(i,end,unit))end+=unit;
-                if(!paragraph.TextEditable)
+                if(!paragraph.TextEditable || technical)
                 {
                     string whole=text.TrimEnd('\r','\a','\n');
                     return [new(paragraph.Start,whole.Length,whole,whole,
-                        "Có từ/cụm từ lặp nhưng vùng chưa được phép sửa chữ; kiểm tra thủ công để giữ cấu trúc.",false,
-                        FixKind.RepeatedText,CanFix:false,Title:"Kiểm tra lặp trong vùng có cấu trúc")];
+                        technical && paragraph.TextEditable?
+                            "Có từ/cụm từ lặp trong đoạn có đường dẫn, địa chỉ hoặc biểu thức kỹ thuật. Giữ nguyên dữ liệu, kiểm tra thủ công; không tự xóa phần lặp.":
+                            "Có từ/cụm từ lặp nhưng vùng chưa được phép sửa chữ; kiểm tra thủ công để giữ cấu trúc.",false,
+                        FixKind.RepeatedText,CanFix:false,Title:technical && paragraph.TextEditable?"Kiểm tra lặp trong đoạn kỹ thuật":"Kiểm tra lặp trong vùng có cấu trúc")];
                 }
                 int firstEnd=tokens[i+unit-1].End,lastEnd=tokens[end-1].End;
                 string phrase=text[tokens[i].Start..firstEnd];

@@ -4,6 +4,8 @@
 
 Đợt 23–26 bổ sung mã hiệu chuẩn Single/1,5 và các trial khoảng đoạn 0/6pt, so vector baseline cùng paint/ảnh/nét, phiên Word chỉ đọc và cửa sổ đo thử theo yêu cầu. Xem [FORMAT-BATCH-23-26.md](FORMAT-BATCH-23-26.md). Các đoạn lịch sử bên dưới mô tả giới hạn trước đợt này; quyền sửa tự động C28/C29 vẫn giữ nguyên. Cần Word thật xác minh toàn luồng mới trước khi thiết kế writer/hậu kiểm sửa Exactly/AtLeast.
 
+Đợt 27–29 xử lý các việc độc lập trong lúc chưa có Word-runtime: bảo toàn khoảng/lặp thuộc đường dẫn và tên tệp; phân loại lỗi đo để lỗi toàn vẹn/COM/cleanup không biến thành thiếu bằng chứng; thêm nhóm kiểm Word riêng cho sửa chữ, tổng12nhóm. Xem [FORMAT-BATCH-27-29.md](FORMAT-BATCH-27-29.md). Cần tiếp tục giảm báo nhầm theo dữ liệu và mẫu, không dừng toàn bộ phát triển để chờ riêng Exactly/AtLeast.
+
 # Các phần còn thiếu và thứ tự hoàn thiện
 
 Cập nhật ngày 29/10/2026 (UTC+7), mã 0.1.76 tích lũy năm cụm đợt 15–19 sau gói 0.1.75. Đối chiếu danh mục 33 nhóm có đề xuất có điều kiện, 8 nhóm thủ công, 1 quy tắc minh họa với đường quét, writer, hậu kiểm và bài Office. Đây là bản phân tích phạm vi mã và bằng chứng hiện có, không xác nhận ứng dụng đã kiểm mọi tài liệu hoặc mọi phiên bản Word.

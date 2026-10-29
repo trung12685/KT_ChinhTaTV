@@ -12,7 +12,7 @@ public static class OfficeFocusedChecks
     public static void Run(Action<bool,string> assert)
     {
         var cases=OfficeFocusedCheck.Cases;
-        assert(cases.Count==11 && cases.Select(c=>c.Id).Distinct().Count()==cases.Count && cases.Any(c=>c.Id=="isolated-spacing") && cases.Any(c=>c.Id=="spacing-calibration") &&
+        assert(cases.Count==12 && cases.Select(c=>c.Id).Distinct().Count()==cases.Count && cases.Any(c=>c.Id=="isolated-spacing") && cases.Any(c=>c.Id=="spacing-calibration") && cases.Any(c=>c.Id=="technical-text") &&
             cases.Any(c=>c.Id=="body-spacing") && cases.Any(c=>c.Id=="handwriting") && cases.Any(c=>c.Id=="footer-page-number") && cases.Any(c=>c.Id=="empty-page-layout"),
             "Focused Word checks expose independent spacing and handwriting families rather than require an earlier Subject PASS");
         var success=new OfficeSuiteReport(cases.Select(c=>new OfficeSuiteResult(c,OfficeSuiteStatus.Pass)).ToArray());

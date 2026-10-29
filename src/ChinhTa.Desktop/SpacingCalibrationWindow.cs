@@ -21,7 +21,7 @@ internal sealed class SpacingCalibrationWindow:Window
     internal bool IsMeasuring {get;private set;}
     internal string ReportText=>ResultBox.Text;
     internal const string Scope="Chỉ đo thử trên bản sao; chưa tự sửa hoặc xác nhận toàn bộ thể thức tài liệu.";
-    internal const string Failed="Chưa hoàn tất phép đo. Kết quả cũ đã được xóa; hãy quét lại tài liệu trước khi thử tiếp. Tài liệu chưa được xác nhận đạt.";
+    internal static readonly string Failed="Kết quả cũ đã được xóa. "+new SpacingDiagnosticException(SpacingDiagnosticFailureCode.OperationFailed).Message;
 
     internal SpacingCalibrationWindow(IReadOnlyList<SpacingDiagnosticTarget> targets,Func<SpacingDiagnosticTarget,IsolatedSpacingCalibrationReport> measure)
     {
@@ -71,18 +71,39 @@ internal sealed class SpacingCalibrationWindow:Window
             var report=measure(row.Target);
             ResultBox.Text=ReferenceEquals(TargetPicker.SelectedItem,row)?BuildReport(report):"Lựa chọn đã đổi trong lúc đo; kết quả chưa được dùng. Hãy bắt đầu phép đo mới.";
         }
-        catch(Exception){ResultBox.Text=Failed;} // Never log or display raw document-bearing exceptions.
+        catch(Exception error){ResultBox.Text=BuildFailure(error);} // Never log/display raw document-bearing exceptions.
         finally
         {
             Mouse.OverrideCursor=previousCursor;IsMeasuring=false;TargetPicker.IsEnabled=true;close.IsEnabled=true;
             MeasureButton.IsEnabled=TargetPicker.SelectedItem is TargetRow;
         }
     }
+    internal static string BuildFailure(Exception error)
+    {
+        if(error is not SpacingDiagnosticException failure)return Failed;
+        string text="Kết quả cũ đã được xóa. "+failure.Message;
+        if(failure.RecoveryPath is { } path)text+="\nBản phục hồi phiên đo: "+path;
+        return text;
+    }
     private static string Number(double value)=>value.ToString("0.###",CultureInfo.GetCultureInfo("vi-VN"));
     private static bool KnownVectors(SpacingCalibrationResult result)=>result.SourceStepsPt.Count>=2 &&
         result.SingleStepsPt.Count==result.SourceStepsPt.Count && result.OneAndHalfStepsPt.Count==result.SourceStepsPt.Count &&
         result.SourceStepsPt.Concat(result.SingleStepsPt).Concat(result.OneAndHalfStepsPt).All(v=>double.IsFinite(v) && v>0) &&
-        result.SingleStepsPt.Select((v,i)=>result.OneAndHalfStepsPt[i]>v).All(v=>v);
+        result.SingleStepsPt.All(v=>v>.05) &&
+        result.SingleStepsPt.Select((v,i)=>result.OneAndHalfStepsPt[i]-v>.1).All(v=>v);
+    private static SpacingCalibrationStatus CoherentLineStatus(SpacingCalibrationResult result,bool scope)
+    {
+        if(!scope || !KnownVectors(result))return SpacingCalibrationStatus.Unproven;
+        const double tolerance=.05;
+        bool matches=result.Status switch
+        {
+            SpacingCalibrationStatus.BelowSingle=>result.SourceStepsPt.Select((v,i)=>v<result.SingleStepsPt[i]-tolerance).All(v=>v),
+            SpacingCalibrationStatus.WithinRange=>result.SourceStepsPt.Select((v,i)=>v>=result.SingleStepsPt[i]-tolerance && v<=result.OneAndHalfStepsPt[i]+tolerance).All(v=>v),
+            SpacingCalibrationStatus.AboveOneAndHalf=>result.SourceStepsPt.Select((v,i)=>v>result.OneAndHalfStepsPt[i]+tolerance).All(v=>v),
+            _=>false
+        };
+        return matches?result.Status:SpacingCalibrationStatus.Unproven;
+    }
     internal static string BuildReport(IsolatedSpacingCalibrationReport report)
     {
         ArgumentNullException.ThrowIfNull(report);
@@ -91,8 +112,9 @@ internal sealed class SpacingCalibrationWindow:Window
             text.AppendLine($"Phạm vi bản sao: {report.Pages} trang; {report.GlyphRuns} cụm chữ; {report.Parts} phần dữ liệu.");
         else text.AppendLine("Chưa có phạm vi bản sao đủ rõ để xác nhận phép đo.");
         var result=report.Line;
-        bool vectors=report.Parts>0 && report.Pages>0 && report.GlyphRuns>0 && KnownVectors(result);
-        var status=vectors?result.Status:SpacingCalibrationStatus.Unproven;
+        bool scope=report.Parts>0 && report.Pages>0 && report.GlyphRuns>0;
+        var status=CoherentLineStatus(result,scope);
+        bool vectors=status!=SpacingCalibrationStatus.Unproven;
         text.AppendLine("Giãn dòng: "+(status switch
         {
             SpacingCalibrationStatus.BelowSingle=>"thấp hơn mức dòng đơn đã đo.",
@@ -113,7 +135,8 @@ internal sealed class SpacingCalibrationWindow:Window
         else if(report.Parts>0 && report.Pages>0 && report.GlyphRuns>0 &&
             gap.Status is SpacingGapCalibrationStatus.BelowSixPoints or SpacingGapCalibrationStatus.AtLeastSixPoints &&
             gap.SourceEffectPt is double value && double.IsFinite(value) && value>=0 &&
-            gap.SixPointReferenceEffectPt is double reference && double.IsFinite(reference) && reference>0)
+            gap.SixPointReferenceEffectPt is double reference && double.IsFinite(reference) && reference>.1 &&
+            (gap.Status==SpacingGapCalibrationStatus.AtLeastSixPoints?value>=reference-.05:value<reference-.05))
         {
             text.AppendLine("Tác động khoảng đoạn so với bản sao bỏ khoảng: "+Number(value)+" pt.");
             text.AppendLine("Tác động mốc đặt khoảng sau 6 pt trong cùng ngữ cảnh: "+Number(reference)+" pt.");

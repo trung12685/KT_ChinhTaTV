@@ -273,6 +273,7 @@ DelimiterClusterReviewChecks.Run(Assert);
         IsolatedSpacingPreviewChecks.Run(Assert);
         SpacingTrialPreviewChecks.Run(Assert);
         SpacingCalibrationReportChecks.Run(Assert);
+        TechnicalTextDesktopChecks.Run(Assert);
         BodyEmphasisWriterChecks.Run(Assert);
         RepairProgressDesktopChecks.Run(Assert);
         DocumentTypeCatalogDesktopChecks.Run(Assert);

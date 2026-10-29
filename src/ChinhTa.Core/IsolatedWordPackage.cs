@@ -174,6 +174,13 @@ public sealed class IsolatedWordPackage
     }
     public void VerifyFile(string path)
     {
+        try{VerifyFileCore(path);}
+        catch(InvalidOperationException error) when(error is not SpacingDiagnosticException)
+        {throw new SpacingDiagnosticException(SpacingDiagnosticFailureCode.IntegrityFailed,error);}
+        catch(InvalidDataException error){throw new SpacingDiagnosticException(SpacingDiagnosticFailureCode.IntegrityFailed,error);}
+    }
+    private void VerifyFileCore(string path)
+    {
         using var zip=ZipFile.OpenRead(path);
         if(zip.Entries.Count!=parts.Length+1 || zip.Entries.Select(e=>e.FullName).Distinct(StringComparer.OrdinalIgnoreCase).Count()!=zip.Entries.Count)throw Unknown();
         foreach(var part in parts)

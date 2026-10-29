@@ -33,6 +33,25 @@ public static class IsolatedSpacingTrialChecks
         var fixture=Fixture();string flat=Xml(fixture);var first=IsolatedSpacingTrial.Find(flat,First);var next=IsolatedSpacingTrial.Find(flat,Second);
         assert(first.BodyIndex==0 && first.Text==First && next.BodyIndex==1 && first.SourceHash==next.SourceHash,
             "Trial anchors bind direct body positions and full soft-break text to one complete current package");
+        void UnsupportedCategory(XElement source,string reason)
+        {
+            bool correct=false;
+            try{IsolatedSpacingTrial.Find(Xml(source),First);}
+            catch(SpacingDiagnosticException error) when(error.Code==SpacingDiagnosticFailureCode.UnsupportedEvidence){correct=true;}
+            assert(correct,reason);
+        }
+        var passive=Fixture();passive.Elements(P+"part").Single(p=>(string?)p.Attribute(P+"name")=="/word/media/preserved.bin")
+            .SetAttributeValue(P+"contentType","application/vnd.ms-office.vbaProject");
+        UnsupportedCategory(passive,"A source passive-content restriction is unsupported scope, not a Word operation fault");
+        var duplicateDefault=Fixture();duplicateDefault.Descendants(W+"styles").Single().Add(
+            new XElement(W+"style",new XAttribute(W+"type","paragraph"),new XAttribute(W+"default",1),new XAttribute(W+"styleId","DefaultA")),
+            new XElement(W+"style",new XAttribute(W+"type","paragraph"),new XAttribute(W+"default",1),new XAttribute(W+"styleId","DefaultB")));
+        UnsupportedCategory(duplicateDefault,"Ambiguous default paragraph styles report unsupported scope without suggesting that Word needs repair");
+        var verifiedTrial=IsolatedSpacingTrial.Create(flat,first,IsolatedSpacingTrialKind.Single);
+        bool integrityFailure=false;
+        try{IsolatedSpacingTrial.Verify(flat,verifiedTrial with {FlatXml=verifiedTrial.FlatXml.Replace("Nội dung","Đổi nội dung",StringComparison.Ordinal)});}
+        catch(SpacingDiagnosticException error) when(error.Code==SpacingDiagnosticFailureCode.IntegrityFailed){integrityFailure=true;}
+        assert(integrityFailure,"A tampered trial audit reports an integrity failure that optional evidence fallback cannot swallow");
         string folder=Path.Combine(Path.GetTempPath(),"ChinhTa-spacing-trials-"+Guid.NewGuid().ToString("N"));Directory.CreateDirectory(folder);
         try
         {

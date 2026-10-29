@@ -37,9 +37,9 @@ public sealed partial class WordSession
     private T WithSpacingReference<T>(Func<string,IsolatedSpacingPreview,T> read)
     {
         if(document is null || spacingReferencePath is null || spacingReferenceFlat is null || !File.Exists(spacingReferencePath))
-            throw new InvalidOperationException("Cần mở và quét tài liệu để có bản xem trước hiện tại trước khi đo.");
+            throw new SpacingDiagnosticException(SpacingDiagnosticFailureCode.ReferenceMissing);
         string flat=ReadPageBodyXml();
-        if(flat!=spacingReferenceFlat)throw new InvalidOperationException("Tài liệu đã đổi sau bản xem trước; hãy quét lại trước khi đo.");
+        if(flat!=spacingReferenceFlat)throw new SpacingDiagnosticException(SpacingDiagnosticFailureCode.ReferenceStale);
         string reference=Path.Combine(Path.GetTempPath(),"ChinhTa-SpacingReference-"+Guid.NewGuid().ToString("N")+".xps");
         Exception? failure=null;T result=default!;bool completed=false;
         try
@@ -47,23 +47,45 @@ public sealed partial class WordSession
             // Use a private XPS copy: the UI may already own an open PackageStore
             // entry for the displayed preview. Never close or overwrite it.
             File.Copy(spacingReferencePath,reference,false);IsolatedSpacingPreview source;
-            using(var xps=new XpsDocument(reference,FileAccess.Read))source=IsolatedSpacingPreview.Capture(xps.GetFixedDocumentSequence());
+            using(var xps=new XpsDocument(reference,FileAccess.Read))
+            {
+                try{source=IsolatedSpacingPreview.Capture(xps.GetFixedDocumentSequence());}
+                catch(InvalidOperationException error) when(error is not SpacingDiagnosticException)
+                {throw new SpacingDiagnosticException(SpacingDiagnosticFailureCode.UnsupportedEvidence,error);}
+            }
             result=read(flat,source);completed=true;
         }
         catch(Exception error){failure=error;}
         finally
         {
+            SpacingDiagnosticException? sourceFailure=null;
             try
             {
                 if(flat!=ReadPageBodyXml())
-                {spacingReferencePath=spacingReferenceFlat=null;throw new InvalidOperationException("Nguồn Word đã đổi khi đo; kết quả cũ không còn được dùng.");}
+                {spacingReferencePath=spacingReferenceFlat=null;sourceFailure=new(SpacingDiagnosticFailureCode.SourceChanged);}
             }
-            catch(Exception error){failure=failure is null?error:new AggregateException(failure,error);}
+            catch(Exception error)
+            {spacingReferencePath=spacingReferenceFlat=null;sourceFailure=new(SpacingDiagnosticFailureCode.OperationFailed,error);}
+            if(sourceFailure is not null)
+            {
+                var code=sourceFailure.Code==SpacingDiagnosticFailureCode.OperationFailed &&
+                    failure is SpacingDiagnosticException {Code:SpacingDiagnosticFailureCode.CleanupFailed}?
+                    SpacingDiagnosticFailureCode.CleanupFailed:sourceFailure.Code;
+                failure=new SpacingDiagnosticException(code,failure is null?sourceFailure:new AggregateException(failure,sourceFailure),
+                    (failure as SpacingDiagnosticException)?.RecoveryPath);
+            }
             try{if(File.Exists(reference))File.Delete(reference);}
-            catch(Exception error){failure=failure is null?error:new AggregateException(failure,error);}
+            catch(Exception error)
+            {
+                var code=failure is SpacingDiagnosticException {Code:SpacingDiagnosticFailureCode.SourceChanged}?
+                    SpacingDiagnosticFailureCode.SourceChanged:SpacingDiagnosticFailureCode.CleanupFailed;
+                failure=new SpacingDiagnosticException(code,failure is null?error:new AggregateException(failure,error),
+                    (failure as SpacingDiagnosticException)?.RecoveryPath);
+            }
         }
-        if(failure is not null)throw new InvalidOperationException("Chưa đủ bằng chứng đo giãn dòng/khoảng đoạn; tài liệu không được tự sửa.",failure);
-        if(!completed)throw new InvalidOperationException("Chưa có kết quả đo.");
+        if(failure is SpacingDiagnosticException diagnostic)throw diagnostic;
+        if(failure is not null)throw new SpacingDiagnosticException(SpacingDiagnosticFailureCode.OperationFailed,failure);
+        if(!completed)throw new SpacingDiagnosticException(SpacingDiagnosticFailureCode.OperationFailed);
         return result;
     }
 }

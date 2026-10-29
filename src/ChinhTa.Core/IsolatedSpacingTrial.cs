@@ -17,14 +17,17 @@ public static class IsolatedSpacingTrial
 {
     private static readonly XNamespace Pkg="http://schemas.microsoft.com/office/2006/xmlPackage";
     private static readonly XNamespace W="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
-    private static InvalidOperationException Unknown()=>new("Chưa có vùng spacing đơn giản gắn đúng nguồn để tạo bản hiệu chuẩn cô lập.");
+    private static SpacingDiagnosticException Unknown()=>new(SpacingDiagnosticFailureCode.UnsupportedEvidence);
     private static string Hash(string xml)=>Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(xml)));
     private static bool IsGap(IsolatedSpacingTrialKind kind)=>kind is IsolatedSpacingTrialKind.ZeroParagraphGap or IsolatedSpacingTrialKind.SixPointParagraphGap;
     private static XDocument Parse(string xml)
     {
         // The package parser supplies bounds, DTD protection, relationships,
         // binary retention and passive-opening checks before editable XML exists.
-        IsolatedWordPackage.FromFlat(xml).RequirePassiveCalibration();
+        try{IsolatedWordPackage.FromFlat(xml).RequirePassiveCalibration();}
+        catch(InvalidOperationException error) when(error is not SpacingDiagnosticException)
+        {throw new SpacingDiagnosticException(SpacingDiagnosticFailureCode.UnsupportedEvidence,error);}
+        catch(XmlException error){throw new SpacingDiagnosticException(SpacingDiagnosticFailureCode.UnsupportedEvidence,error);}
         using var reader=XmlReader.Create(new StringReader(xml.TrimStart('\uFEFF')),new XmlReaderSettings
         {DtdProcessing=DtdProcessing.Prohibit,XmlResolver=null,MaxCharactersInDocument=64*1024*1024});
         return XDocument.Load(reader,LoadOptions.PreserveWhitespace);
@@ -45,7 +48,10 @@ public static class IsolatedSpacingTrial
         if(row.Element(W+"pPr") is { } properties)yield return properties;
         var styles=Part(xml,"/word/styles.xml")?.Element(Pkg+"xmlData")?.Element(W+"styles");
         string? id=(string?)row.Element(W+"pPr")?.Element(W+"pStyle")?.Attribute(W+"val");
-        id??=(string?)styles?.Elements(W+"style").SingleOrDefault(s=>(string?)s.Attribute(W+"type")=="paragraph" && (string?)s.Attribute(W+"default") is "1" or "true")?.Attribute(W+"styleId");
+        var defaultsForParagraph=styles?.Elements(W+"style").Where(s=>(string?)s.Attribute(W+"type")=="paragraph" &&
+            (string?)s.Attribute(W+"default") is "1" or "true").ToArray()??[];
+        if(defaultsForParagraph.Length>1)throw Unknown();
+        id??=(string?)defaultsForParagraph.SingleOrDefault()?.Attribute(W+"styleId");
         var seen=new HashSet<string>(StringComparer.Ordinal);
         while(id is not null)
         {
@@ -174,11 +180,19 @@ public static class IsolatedSpacingTrial
             spacing.SetAttributeValue(W+"lineRule","auto");
         }
         var result=new IsolatedSpacingTrialResult(xml.ToString(SaveOptions.DisableFormatting),kind,anchor,next);
-        Verify(fullFlatXml,result);return result;
+        try{Verify(fullFlatXml,result);}
+        catch(InvalidOperationException error){throw new SpacingDiagnosticException(SpacingDiagnosticFailureCode.IntegrityFailed,error);}
+        return result;
     }
     public static void Verify(string sourceFlatXml,IsolatedSpacingTrialResult trial)
     {
-        var source=Parse(sourceFlatXml);var actual=Parse(trial.FlatXml);
+        var source=Parse(sourceFlatXml);
+        try{VerifyAudit(sourceFlatXml,source,trial);}
+        catch(InvalidOperationException error){throw new SpacingDiagnosticException(SpacingDiagnosticFailureCode.IntegrityFailed,error);}
+    }
+    private static void VerifyAudit(string sourceFlatXml,XDocument source,IsolatedSpacingTrialResult trial)
+    {
+        var actual=Parse(trial.FlatXml);
         RequireAnchor(sourceFlatXml,source,trial.Anchor);
         if(!Enum.IsDefined(trial.Kind) || IsGap(trial.Kind) != (trial.Next is not null))throw Unknown();
         void Strip(int index,params string[] attributes)

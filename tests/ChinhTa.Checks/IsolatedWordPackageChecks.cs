@@ -62,7 +62,7 @@ public static class IsolatedWordPackageChecks
             {
                 var image=zip.GetEntry("word/media/image.png")!;image.Delete();using var input=zip.CreateEntry("word/media/image.png").Open();input.Write([0,1,2,127,128,254,254]);
             }
-            bool tamper=false;try{package.VerifyFile(second);}catch(InvalidOperationException){tamper=true;}
+            bool tamper=false;try{package.VerifyFile(second);}catch(SpacingDiagnosticException error) when(error.Code==SpacingDiagnosticFailureCode.IntegrityFailed){tamper=true;}
             assert(tamper,"A one-byte binary drift in a Word copy is rejected even if its part size and XML still match");
             void Rejected(Action<XElement> change,string description,bool passive=false)
             {

@@ -32,7 +32,7 @@ public static class DevelopmentReport
     public static IReadOnlyList<ReportCapability> Capabilities { get; }=Array.AsReadOnly(new ReportCapability[]
     {
         new("C01","Khoảng trắng thừa",CapabilityMode.Reviewable,"Cả ba chế độ",
-            "Gộp dấu cách thường liên tiếp giữa chữ; giữ ô số/ngày trống theo mẫu nhận diện và ngoặc tròn chỉ chứa dấu cách. Không tự xóa tab hoặc thụt đầu dòng.",
+            "Gộp dấu cách thường liên tiếp giữa chữ; giữ ô số/ngày trống theo mẫu nhận diện và ngoặc tròn chỉ chứa dấu cách. Dòng có đường dẫn, địa chỉ, tên tệp hoặc mã nhận diện được giữ kiểm tra thủ công vì dấu cách có thể thuộc dữ liệu. Không tự xóa tab hoặc thụt đầu dòng.",
             new ReportExample("hôm       nay là thứ 2","hôm nay là thứ 2")),
         new("C02","Quốc hiệu",CapabilityMode.Reviewable,"Nhà nước, trang đầu",
             "Chuẩn hóa chữ/khoảng trắng của dòng nhận diện; Times New Roman, đen, đậm, đứng, cỡ 12–13. Khi chữ đã đúng, sửa riêng cỡ sai và giữ mỗi cỡ đúng, kể cả qua Line đã xác minh; cỡ trộn kèm thay chữ vẫn có giới hạn. Không tự thêm dòng bị thiếu hoặc đoán dòng sai chữ chưa nhận ra.",
@@ -223,7 +223,10 @@ public static class DevelopmentReport
         new("Đợt thể thức 23 — các gói thử spacing gắn nguồn", "Tạo bốn bản thử Single, 1,5, bỏ khoảng và mốc khoảng sau6pt; chỉ đổi thuộc tính đã định của đoạn/cặp liền nhau. Kiểm nguồn/hash, style/context/section, mọi part/ảnh/quan hệ và schema; nguồn không đổi. Chưa cấp quyền sửa C28/C29. Chi tiết FORMAT-BATCH-23-26.md."),
         new("Đợt thể thức 24 — vector baseline và mốc khoảng đoạn", "So toàn vector Single/1,5; chặn reflow, đổi phông/glyph/trang hoặc dịch phần chưa chọn. Khoảng đoạn so với trial6pt cùng bối cảnh, không lấy chênh lệch với0 so trực tiếp6pt. Giữ paint/ảnh/nét và chặn che chữ chưa rõ. Đây là bằng chứng tổng hợp và mã đo, chưa Word thực PASS."),
         new("Đợt thể thức 25 — nguồn xem trước và tài nguyên Word", "Dùng lại XPS hiện tại gắn full XML trước/sau, không xuất lại tài liệu người dùng khi đo. Các bản thử chỉ đọc trong phiên Word riêng; thử mọi Close/Release/Quit và khôi phục từng tùy chọn độc lập, giữ bản phục hồi nếu cleanup lỗi. Khoảng đoạn chưa đủ bằng chứng không che phép đo dòng độc lập."),
-        new("Đợt thể thức 26 — đo thử theo yêu cầu", "Thêm menu Đo thử giãn dòng và khoảng đoạn, chọn đoạn và xem số đo/giới hạn; không tự chạy lúc mở cửa sổ hoặc sửa tài liệu. Xóa kết quả cũ khi đổi đoạn/lỗi, không đưa chữ tài liệu vào báo cáo. Thêm nhóm kiểm Word độc lập, tổng11nhóm; chưa chạy Word thực. Giữ33/8/1, bộ đọc cũ, khoảng ký tay80pt và chưa xuất ZIP mới.")
+        new("Đợt thể thức 26 — đo thử theo yêu cầu", "Thêm menu Đo thử giãn dòng và khoảng đoạn, chọn đoạn và xem số đo/giới hạn; không tự chạy lúc mở cửa sổ hoặc sửa tài liệu. Xóa kết quả cũ khi đổi đoạn/lỗi, không đưa chữ tài liệu vào báo cáo. Thêm nhóm kiểm Word độc lập, tổng11nhóm; chưa chạy Word thực. Giữ33/8/1, bộ đọc cũ, khoảng ký tay80pt và chưa xuất ZIP mới."),
+        new("Đợt 27 — bảo toàn chữ trong đường dẫn và mã", "Khắc phục nguy cơ gộp dấu cách hoặc xóa cụm lặp thuộc tên tệp/đường dẫn/literal. Nhận diện dạng kỹ thuật rõ, chuyển gợi ý chữ trong cả dòng sang thủ công; không coi mọi dấu / là mã, văn xuôi thông thường giữ luật cũ. Không thêm từ điển hoặc suy ngữ cảnh. Chi tiết FORMAT-BATCH-27-29.md."),
+        new("Đợt 28 — lỗi đo có nguyên nhân và hướng xử lý", "Phân biệt preview thiếu/cũ, phạm vi chưa hỗ trợ, lỗi thao tác, toàn vẹn, cleanup và nguồn đổi. Chỉ thiếu bằng chứng được khai báo mới trở thành kết quả khoảng đoạn chưa đo; lỗi bản thử/COM/I/O/cleanup không bị nuốt. Giao diện không hiện nội dung từ exception và bác trạng thái trái số đo."),
+        new("Đợt 29 — kiểm Word độc lập cho sửa chữ", "Nhóm kiểm thứ12 dùng mẫu văn xuôi xen đường dẫn/tên tệp/URL, sửa riêng/chung, lỗi muộn, một Undo, lưu/mở lại, giữ nguồn và đậm/gạch chân. Có kiểm schema/giữ part và quyền chọn trước CI; kịch bản Word chưa chạy thật. Giữ quyền tự sửa Exactly/AtLeast, main, tag và gói cũ.")
     });
     public static IReadOnlyList<string> NextSteps { get; }=Array.AsReadOnly(new[]
     {
