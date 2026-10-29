@@ -140,9 +140,12 @@ public sealed partial class WordSession
                 paragraphStyle??=VisibleFormatReader.ReadParagraph((object)range);
                 if(liveEnd is int end && end>row.Start)
                 {
-                    dynamic firstPoint=document!.Range(row.Start,row.Start);dynamic lastPoint=document!.Range(end-1,end-1);
-                    try{var observed=new BodyFlow((int)firstPoint.Information[3],(int)lastPoint.Information[3]);if(observed.Known)flow=observed;}
-                    finally{Release(firstPoint);Release(lastPoint);}
+                    var observed=WordOwnedObjects.Read(own=>
+                    {
+                        dynamic firstPoint=own((object)document!.Range(row.Start,row.Start));dynamic lastPoint=own((object)document!.Range(end-1,end-1));
+                        return new BodyFlow((int)firstPoint.Information[3],(int)lastPoint.Information[3]);
+                    },Release);
+                    if(observed.Known)flow=observed;
                 }
             }
             catch(Exception error) when(error is InvalidOperationException || error is System.Runtime.InteropServices.COMException && !WordConnectionPolicy.IsDisconnected(error))

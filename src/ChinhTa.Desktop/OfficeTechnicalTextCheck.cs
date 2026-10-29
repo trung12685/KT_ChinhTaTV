@@ -36,6 +36,8 @@ internal static class OfficeTechnicalTextCheck
         "Ngày sinh:    /    /…",
         "Ngày sinh:\u00a0    /    /____",
         "Ngày, tháng, năm sinh:    /    /____",
+        "Sinh ngày    tháng    năm    (chưa điền)",
+        "Sinh ngày 03 tháng    năm 2026",
         "Số:    ...    /BC-ABC",
         "Số:\u202f    ...    /BC-ABC",
         "Ngày 03 tháng        năm 2026",
@@ -147,5 +149,6 @@ internal static class OfficeTechnicalTextCheck
             throw new InvalidOperationException("Lưu/mở chưa giữ dòng kỹ thuật, phông/chữ hoặc nguồn mẫu bất biến.");
         VerifyKept();pass("Văn xuôi và khoảng cuối sau ngoặc cùng tài liệu có tên tệp/địa chỉ/ô trống: sửa nhóm, lỗi cuối lượt/rollback, một Undo, lưu-mở; nguồn, chuỗi kỹ thuật và ô chọn/ngày chưa điền giữ nguyên");
         OfficeRetainedMarkCheck.Run(test,seed,folder,pass);
+        OfficeAnnotatedTextCheck.Run(test,seed,folder,pass);
     }
 }

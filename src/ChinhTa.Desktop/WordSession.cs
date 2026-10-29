@@ -69,11 +69,10 @@ public sealed partial class WordSession : IDisposable
         timing.Mark("OpenDocument");
         EnsureEditableOpenedDocument((object)document!,CloseApplicationForOpen);
     }
-    private void Reconnect()
+    private void Reconnect(Exception cause)
     {
         if (!snapshotCurrent)
-            throw new InvalidOperationException("Word mất kết nối trước khi lưu được thay đổi cuối. " +
-                "Không tự mở lại để tránh bỏ thay đổi âm thầm. Bản lưu gần nhất: " + RecoveryPath);
+            throw new WordRecoveryUnavailableException(RecoveryPath,cause);
         Diagnostics.Write("Word.Reconnect", null);
         CloseConnection();
         Connect();
@@ -285,32 +284,21 @@ public sealed partial class WordSession : IDisposable
         }
         if (Profile != DocumentProfile.Personal)
         {
-            dynamic sections = document.Sections;
-            try
+            WordOwnedObjects.Read(own=>
             {
+                dynamic sections=own((object)document.Sections);
                 int count = (int)sections.Count;
                 for (int i = 1; i <= count; i++)
                 {
-                    dynamic section = sections[i]; dynamic setup = section.PageSetup; dynamic range = section.Range;
-                    try
-                    {
-                        string text = (string)range.Text;
-                        if (text.Length == 0) continue;
-                        const double mmPerPoint = 25.4 / 72;
-                        var layout = new SectionLayout(i, (int)range.Start, text[..1],
-                            (double)setup.PageWidth * mmPerPoint, (double)setup.PageHeight * mmPerPoint,
-                            (double)setup.TopMargin * mmPerPoint, (double)setup.BottomMargin * mmPerPoint,
-                            (double)setup.LeftMargin * mmPerPoint, (double)setup.RightMargin * mmPerPoint,
-                            (int)setup.MirrorMargins != 0);
-                        if(count==1 && Profile==DocumentProfile.State && pageXml is not null && !textProofUnavailable && textProofWarning is null &&
-                            PageLayoutGuard.Eligible(System.Xml.Linq.XDocument.Parse(pageXml,System.Xml.Linq.LoadOptions.PreserveWhitespace),layout,pagePackage))layout=layout with {RepairEligible=true};
-                        sectionCoverage.Add(layout);
-                        issues.AddRange(PageRules.Check(layout, Profile));
-                    }
-                    finally { Release(range); Release(setup); Release(section); }
+                    var layout=ReadOwnedSectionLayout((object)sections[i],i,Release);
+                    if(layout is null)continue;
+                    if(count==1 && Profile==DocumentProfile.State && pageXml is not null && !textProofUnavailable && textProofWarning is null &&
+                        PageLayoutGuard.Eligible(System.Xml.Linq.XDocument.Parse(pageXml,System.Xml.Linq.LoadOptions.PreserveWhitespace),layout,pagePackage))layout=layout with {RepairEligible=true};
+                    sectionCoverage.Add(layout);
+                    issues.AddRange(PageRules.Check(layout, Profile));
                 }
-            }
-            finally { Release(sections); }
+                return true;
+            },Release);
         }
         if(Profile==DocumentProfile.State && pagePackage is not null)
         {
@@ -384,9 +372,11 @@ public sealed partial class WordSession : IDisposable
         dynamic range=document!.Range(issue.Start,issue.Start+issue.Length);
         try
         {
-            dynamic font=range.Font;dynamic format=range.ParagraphFormat;
-            try{return ((int)font.Bold,(int)font.Underline,(int)format.Alignment);}
-            finally{Release(format);Release(font);}
+            return WordOwnedObjects.Read(own=>
+            {
+                dynamic font=own((object)range.Font);dynamic format=own((object)range.ParagraphFormat);
+                return ((int)font.Bold,(int)font.Underline,(int)format.Alignment);
+            },Release);
         }
         finally{Release(range);}
     }
@@ -795,14 +785,14 @@ public sealed partial class WordSession : IDisposable
                         if(item.CharacterFormat is CharacterFormat character)VisibleFormatReader.ApplyCharacters((object)range,item.Original,character);
                         if(item.Format is HeadingFormat heading)
                         {
-                            dynamic font=range.Font;dynamic format=range.ParagraphFormat;
-                            try
+                            WordOwnedObjects.Read(own=>
                             {
+                                dynamic font=own((object)range.Font);dynamic format=own((object)range.ParagraphFormat);
                                 font.Bold=-1;font.Italic=0;font.Color=0;
                                 if(heading.MaximumSize is null)font.Size=heading.Size;font.Name="Times New Roman";
                                 if(heading.Alignment is int alignment)format.Alignment=alignment;
-                            }
-                            finally{Release(format);Release(font);}
+                                return true;
+                            },Release);
                             if(heading.RepairInvalidSizes)VisibleFormatReader.RepairSizes((object)range,item.Original,heading);
                         }
                         if(item.Format is not null)

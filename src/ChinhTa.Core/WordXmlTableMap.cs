@@ -15,11 +15,14 @@ public static class WordXmlTableMap
     private static readonly XNamespace W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
     private static readonly HashSet<XName> UnsafeTextNames=new(){W+"sdt",W+"fldSimple",W+"hyperlink",W+"drawing",W+"pict",W+"object",W+"smartTag",W+"tab",W+"br",W+"cr"};
     // Tracked moves can retain history even with TrackRevisions now disabled.
-    // Their range markers may also sit outside the run wrapper. As with ins/del,
-    // matching visible text cannot prove correspondence through that boundary.
+    // Their range markers may also sit outside the run wrapper. Formatting-change
+    // history likewise survives when tracking is disabled; matching current text
+    // and fonts does not prove that an edit preserves its old property tree.
+    // Keep these unsupported revisions under the existing ins/del boundary.
     private static readonly HashSet<XName> UnmappedContentNames=new()
     {
-        W+"fldChar",W+"instrText",W+"ins",W+"del",W+"footnoteReference",
+        W+"fldChar",W+"instrText",W+"ins",W+"del",W+"footnoteReference",W+"rPrChange",W+"pPrChange",
+        W+"tblPrChange",W+"trPrChange",W+"tcPrChange",W+"tblPrExChange",W+"tblGridChange",
         W+"moveFrom",W+"moveTo",W+"moveFromRangeStart",W+"moveFromRangeEnd",W+"moveToRangeStart",W+"moveToRangeEnd"
     };
     private static string Clean(string text) => text.TrimEnd('\r', '\a').Replace('\u2011', '\u001e').Replace('\u00ad', '\u001f');

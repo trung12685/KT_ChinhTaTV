@@ -7,11 +7,14 @@ public static class WordConnectionPolicy
 
     // Only read operations may be replayed. Never use this around text replacement or Undo.
     public static T ReadWithRecovery<T>(Func<T> read, Action recover)
+        =>ReadWithRecovery(read,_=>recover());
+
+    public static T ReadWithRecovery<T>(Func<T> read, Action<Exception> recover)
     {
         try { return read(); }
         catch (Exception error) when (IsDisconnected(error))
         {
-            recover();
+            recover(error);
             return read(); // One retry, then preserve the actual error for diagnosis.
         }
     }

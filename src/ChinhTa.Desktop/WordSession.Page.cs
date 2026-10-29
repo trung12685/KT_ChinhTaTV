@@ -10,23 +10,13 @@ public sealed partial class WordSession
     private string ReadPageBodyXml()
         =>PageNumberDocumentReader.ReadXml((object)document!);
     private SectionLayout ReadCurrentPageLayout()
-    {
-        dynamic sections=document!.Sections;
-        try
+        =>WordOwnedObjects.Read(own=>
         {
+            dynamic sections=own((object)document!.Sections);
             if((int)sections.Count!=1)throw new InvalidOperationException("Số section thay đổi; chưa cho sửa trang.");
-            dynamic section=sections[1];dynamic setup=section.PageSetup;dynamic range=section.Range;
-            try
-            {
-                string text=(string)range.Text;if(text.Length==0)throw new InvalidOperationException("Section không có mốc chữ.");
-                const double mm=25.4/72;
-                return new(1,(int)range.Start,text[..1],(double)setup.PageWidth*mm,(double)setup.PageHeight*mm,
-                    (double)setup.TopMargin*mm,(double)setup.BottomMargin*mm,(double)setup.LeftMargin*mm,(double)setup.RightMargin*mm,(int)setup.MirrorMargins!=0);
-            }
-            finally{Release(range);Release(setup);Release(section);}
-        }
-        finally{Release(sections);}
-    }
+            return ReadOwnedSectionLayout((object)sections[1],1,Release)
+                ??throw new InvalidOperationException("Section không có mốc chữ.");
+        },Release);
     private void VerifyPagePreview(SectionLayout expected,bool checkBody=false)
     {
         if(checkBody)

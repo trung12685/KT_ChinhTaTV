@@ -61,17 +61,22 @@ public partial class MainWindow : Window
     }
     internal const string UnavailableRecoveryNotice="Phiên tài liệu đã đóng và chưa có bản làm việc đủ điều kiện mở lại tự động. " +
         "Quét lại hiện chưa thể chạy. Hãy giữ các tệp trong thư mục bản làm việc và nhật ký để phục hồi thủ công.";
+    internal const string DisconnectedRecoveryNotice="Không còn xác nhận được kết nối với Word và chưa có bản làm việc đủ điều kiện mở lại tự động. " +
+        "Hãy giữ các tệp trong thư mục bản làm việc và nhật ký để phục hồi thủ công.";
     internal sealed record OperationFailureFeedback(string Status,string Message);
     internal static OperationFailureFeedback DescribeOperationFailure(WordSession current,Exception error)
     {
         ArgumentNullException.ThrowIfNull(current);ArgumentNullException.ThrowIfNull(error);
-        if(!current.IsOpen && !current.CanRecover && current.Source.Length>0)
+        bool blockedDisconnect=error is WordRecoveryUnavailableException ||
+            error is ScanAfterEditException {InnerException:WordRecoveryUnavailableException};
+        if(blockedDisconnect || !current.IsOpen && !current.CanRecover && current.Source.Length>0)
         {
+            string notice=blockedDisconnect && current.IsOpen?DisconnectedRecoveryNotice:UnavailableRecoveryNotice;
             string completed=error is ScanAfterEditException reviewed?reviewed.CompletedActionNotice:
                 "Thao tác chưa hoàn tất. Danh sách lỗi cũ đã được xóa.";
             string primary=error is ScanAfterEditException afterReview?afterReview.InnerException?.Message??afterReview.Message:error.Message;
-            return new(completed+" "+UnavailableRecoveryNotice,
-                (error is ScanAfterEditException?completed+"\n\nNguyên nhân quét lại: ":"")+primary+"\n\n"+UnavailableRecoveryNotice);
+            return new(completed+" "+notice,
+                (error is ScanAfterEditException?completed+"\n\nNguyên nhân quét lại: ":"")+primary+"\n\n"+notice);
         }
         string status=error is ScanAfterEditException?error.Message:
             "Thao tác chưa hoàn tất. Danh sách lỗi cũ đã được xóa; hãy Quét lại trước khi sửa tiếp.";

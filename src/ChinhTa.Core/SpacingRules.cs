@@ -25,9 +25,15 @@ public static class SpacingRules
     // Date words establish the field shape, including a partially filled form
     // outside an identified administrative header. Only blank/placeholder slots
     // keep their padding; annotations and filled slots retain ordinary review.
-    private static readonly Regex WordDateFields=new(@"^[ \t\u00A0\u202F]*(?:(?<place>[\p{L}\p{M}][\p{L}\p{M} .’'\-]*),[ \t\u00A0\u202F]*)?"+
-        DayLabel+@":?(?<day>[0-9._… \t\u00A0\u202F]*)"+MonthLabel+@"(?<month>[0-9._… \t\u00A0\u202F]*)"+YearLabel+
-        @"(?<year>[0-9._… \t\u00A0\u202F]*)(?=$|[\r\n\a(,;.])",RegexOptions.IgnoreCase|RegexOptions.CultureInvariant);
+    // The standalone birth-date label "Sinh ngày" also appears with word
+    // separators. Keep it anchored and separate from the optional place/date
+    // branch; this does not turn arbitrary prose before "ngày" into a form.
+    // A terminal period needs a real following boundary; do not backtrack into
+    // a placeholder such as '...x' and call its first dot an end-of-date mark.
+    private static readonly Regex WordDateFields=new(@"^[ \t\u00A0\u202F]*(?:(?:(?<place>[\p{L}\p{M}][\p{L}\p{M} .’'\-]*),[ \t\u00A0\u202F]*)?"+
+        DayLabel+@"|sinh[ \t\u00A0\u202F]+"+DayLabel+@"):?(?<day>[0-9._… \t\u00A0\u202F]*)"+MonthLabel+
+        @"(?<month>[0-9._… \t\u00A0\u202F]*)"+YearLabel+
+        @"(?<year>[0-9._… \t\u00A0\u202F]*)(?=$|[\r\n\a(,;]|\.(?=$|[ \t\u00A0\u202F\r\n\a]))",RegexOptions.IgnoreCase|RegexOptions.CultureInvariant);
     // A labelled date form, not an arbitrary slash in prose. Capture actual
     // placeholder characters too: a period cannot stand in as a successful
     // boundary before an unparsed year. Filled slots retain ordinary review.

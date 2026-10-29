@@ -1,4 +1,4 @@
-> Đang phát triển 0.1.80: [đợt 57–60](FORMAT-BATCH-57-60.md) và [61–64](FORMAT-BATCH-61-64.md), chưa ZIP mới. Gói gần nhất vẫn [Windows 0.1.79](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40960198832/artifacts/12935094001), nguồn `3e8f268ad935a9cfb24a12427ec36224a7848e02`, gom [đợt 45–47](FORMAT-BATCH-45-47.md), [48–51](FORMAT-BATCH-48-51.md) và [52–56](FORMAT-BATCH-52-56.md). Xem [hướng dẫn](PREVIEW-0.1.79.md) và [bằng chứng](PREVIEW-0.1.79-EVIDENCE.md). Core/WPF, EXE, metadata và ZIP đã qua; Word thực vẫn NOT_RUN. Main/tag/gói cũ giữ nguyên. Release gần nhất vẫn 0.1.76.
+> Đang chuẩn bị bản thử 0.1.80, gom [đợt 57–60](FORMAT-BATCH-57-60.md), [61–64](FORMAT-BATCH-61-64.md) và [65–68](FORMAT-BATCH-65-68.md). Xem [hướng dẫn mới](PREVIEW-0.1.80.md); chỉ có bản tải khi workflow đóng gói thành công. Gói trước vẫn [Windows 0.1.79](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40960198832/artifacts/12935094001), nguồn `3e8f268ad935a9cfb24a12427ec36224a7848e02`, [hướng dẫn](PREVIEW-0.1.79.md) và [bằng chứng](PREVIEW-0.1.79-EVIDENCE.md). Word thực vẫn NOT_RUN. Main/tag/gói cũ giữ nguyên. Release gần nhất vẫn 0.1.76.
 
 Đợt 22 bổ sung nền tảng bản sao toàn gói và đối chiếu XPS trước hiệu chuẩn, cùng nhóm kiểm Word độc lập cho Exactly/AtLeast. Xem [FORMAT-BATCH-22.md](FORMAT-BATCH-22.md). Chưa đo Single/1,5 hoặc bỏ Before/After trên clone; C28/C29 vẫn giữ quyền sửa cũ. Nhóm Word mới chưa được thực thi trên môi trường Linux.
 
@@ -23,6 +23,8 @@
 Đợt 57–60 xử lý chuỗi Save ghi dở rồi Undo lỗi: kết quả byte không đổi/được trả lại không còn nâng đầu vào chưa chắc thành đã xác minh. XML có lịch sử moveTo/moveFrom hoặc mốc move range không còn chỉ cần chữ khớp để cấp quyền sửa. Đối số lệnh có nháy được giữ dữ liệu trong grammar hẹp; UI không hướng dẫn mở lại tự động khi phiên/bản tạm chưa đủ điều kiện. Không chấp nhận/từ chối revision, không mở quyền Track Changes hoặc Exactly/AtLeast. Gói 0.1.79 giữ nguyên.
 
 Đợt 61–64 giữ vùng chữ có bookmark/comment/permission trong phạm vi đã ghép, nhận ô chọn tròn và nhãn ngày sinh đầy đủ; chờ queue/Saved của Word trước xác nhận checkpoint, dọn cửa sổ tiến độ nếu tạo muộn sau lỗi khởi động. Không thay Options, tự lặp Save, đoán CP hoặc tuyên bố bảo toàn mọi annotation. Chờ có giới hạn không cắt được COM call đang treo; còn cần kết quả Word thực. Danh mục 33/8/1 và 13 nhóm Word giữ nguyên.
+
+Đợt 65–68 chặn thêm lịch sử thuộc tính chữ/đoạn/bảng chưa hỗ trợ; giữ ô “Sinh ngày … tháng … năm …”; giải phóng từng acquisition đã lấy ở các đường section/cặp child khi getter lỗi và giữ nguyên lỗi thao tác. UI nhận đúng mất kết nối sau bản lưu chưa chắc dù còn document reference. Nhóm Word sửa chữ thêm mẫu bookmark cùng/qua đoạn và các bước giữ phần chưa chọn qua sửa/Undo/lưu-mở; chưa chạy Word thật, chưa mở quyền annotation hoặc Exactly/AtLeast.
 
 # Các phần còn thiếu và thứ tự hoàn thiện
 
