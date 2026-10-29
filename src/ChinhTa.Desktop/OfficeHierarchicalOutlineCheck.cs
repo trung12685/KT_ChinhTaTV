@@ -77,7 +77,7 @@ internal static class OfficeHierarchicalOutlineCheck
         foreach(var old in greeting.ElementsAfterSelf().TakeWhile(e=>e!=recipient).ToArray())old.Remove();
         XElement Run(string text,bool decorated=false)=>new(w+"r",new XElement(w+"rPr",
             new XElement(w+"rFonts",new XAttribute(w+"ascii","Times New Roman"),new XAttribute(w+"hAnsi","Times New Roman")),
-            new XElement(w+"sz",new XAttribute(w+"val",26)),new XElement(w+"b",new XAttribute(w+"val",decorated?1:0)),
+            new XElement(w+"b",new XAttribute(w+"val",decorated?1:0)),new XElement(w+"sz",new XAttribute(w+"val",26)),
             new XElement(w+"u",new XAttribute(w+"val",decorated?"single":"none"))),new XElement(w+"t",new XAttribute(XNamespace.Xml+"space","preserve"),text));
         XElement Row(string text)
         {

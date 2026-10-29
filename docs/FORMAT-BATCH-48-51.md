@@ -40,4 +40,6 @@ Kiểm gọi Undo sản xuất với Close lỗi, giữ nguyên nguồn, dirty s
 
 Core/OpenXML trên Linux: **6703 kiểm qua**, tăng **554** từ mốc 6149. Build DesktopChecks Release: **0 warning/error**. Các harness cô lập đã qua 124 kiểm mới về dẫn chiếu, 262 về literal, 168 về NBSP/NNBSP và 23 về đóng tài liệu. Các số Core đã nằm trong runner tổng, không cộng lại harness thành tổng khác; số WPF lấy từ evidence Windows. Windows CI của mã cuối đợt đang chờ.
 
+Lượt Windows đầu phát hiện lỗi schema trong fixture cũ: `OfficeComponentCheck`/`OfficeHierarchicalOutlineCheck` tạo `w:sz` trước `w:b` trong `w:rPr`. Đã sửa thứ tự thuộc tính ngay nơi tạo mẫu, không nới validator hoặc thay giá trị định dạng. Các kiểm mô hình giữ dẫn chiếu/lựa chọn đều qua trong harness cô lập. Runner Desktop bổ sung annotation lỗi chưa xử lý khi chạy GitHub Actions để giữ nguyên exit code và hiện rõ nguyên nhân từ mẫu tổng hợp.
+
 Word thực vẫn **NOT_RUN**, tổng 12 nhóm kiểm Word giữ nguyên. Không xuất ZIP 0.1.79 hoặc thay gói 0.1.78 trong đợt này.

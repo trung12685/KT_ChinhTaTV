@@ -88,8 +88,9 @@ internal static class OfficeComponentCheck
         XNamespace w="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
         XElement Run(string text,float size,bool bold=false,bool italic=false,bool broken=false)=>new(w+"r",new XElement(w+"rPr",
             new XElement(w+"rFonts",new XAttribute(w+"ascii",broken?"Arial":"Times New Roman"),new XAttribute(w+"hAnsi",broken?"Arial":"Times New Roman")),
-            new XElement(w+"sz",new XAttribute(w+"val",size*2)),new XElement(w+"b",new XAttribute(w+"val",bold?1:0)),
-            new XElement(w+"i",new XAttribute(w+"val",italic?1:0)),new XElement(w+"color",new XAttribute(w+"val",broken?"FF0000":"000000"))),new XElement(w+"t",new XAttribute(XNamespace.Xml+"space","preserve"),text));
+            new XElement(w+"b",new XAttribute(w+"val",bold?1:0)),new XElement(w+"i",new XAttribute(w+"val",italic?1:0)),
+            new XElement(w+"color",new XAttribute(w+"val",broken?"FF0000":"000000")),new XElement(w+"sz",new XAttribute(w+"val",size*2))),
+            new XElement(w+"t",new XAttribute(XNamespace.Xml+"space","preserve"),text));
         XElement Row(string text,float size,bool bold=false,bool italic=false,bool center=false,bool broken=false)=>new(w+"p",
             new XElement(w+"pPr",new XElement(w+"jc",new XAttribute(w+"val",center?"center":"left"))),Run(text,size,bold,italic,broken));
         foreach(var (name,bold) in new[]{("CƠ QUAN CHỦ QUẢN",false),("ĐƠN VỊ BAN HÀNH",true)})
