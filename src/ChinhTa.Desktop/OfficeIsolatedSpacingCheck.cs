@@ -1,6 +1,7 @@
 using System.IO;
 using System.IO.Compression;
 using System.Xml.Linq;
+using ChinhTa.Core;
 
 namespace ChinhTa.Desktop;
 
@@ -9,6 +10,28 @@ internal static class OfficeIsolatedSpacingCheck
 {
     internal const string First="Nội dung kế hoạch cần được giữ nguyên khi đối chiếu bản sao cô lập.";
     internal const string Second="Đoạn tiếp theo giữ nguyên phông chữ và khoảng trước sau của tài liệu.";
+    private static string ParagraphText(string text)=>text+"\vDòng thứ hai dùng cùng phông chữ.\vDòng thứ ba giữ nguyên baseline.";
+    internal static void RunCalibration(WordSession test,string seed,string folder,Action<string> pass)
+    {
+        foreach(string rule in new[]{"exact","atLeast"})
+        {
+            string source=Create(seed,folder,rule);byte[] digest=OfficeFileEvidence.Digest(source);test.Open(source);
+            string story=test.ReadCheckText();int undo=test.CheckUndoCount;bool changed=test.Changed;
+            var target=new SpacingDiagnosticTarget(ParagraphText(First),ParagraphText(Second));
+            var result=test.VerifyCheckSpacingCalibration(target);var repeated=test.MeasureSpacing(target);
+            var independent=test.MeasureSpacing(target with {NextText="Đoạn không có trong mẫu kiểm cô lập."});
+            if(result.Line.Status==SpacingCalibrationStatus.Unproven || result.Gap is not {Status:not SpacingGapCalibrationStatus.Unproven} ||
+                repeated.Line.Status!=result.Line.Status || repeated.Gap?.Status!=result.Gap.Status ||
+                !repeated.Line.SourceStepsPt.SequenceEqual(result.Line.SourceStepsPt) || !repeated.Line.SingleStepsPt.SequenceEqual(result.Line.SingleStepsPt) ||
+                !repeated.Line.OneAndHalfStepsPt.SequenceEqual(result.Line.OneAndHalfStepsPt) ||
+                repeated.Gap.SourceEffectPt!=result.Gap.SourceEffectPt || repeated.Gap.SixPointReferenceEffectPt!=result.Gap.SixPointReferenceEffectPt ||
+                independent.Line.Status!=result.Line.Status || independent.Gap?.Status!=SpacingGapCalibrationStatus.Unproven ||
+                !independent.Line.SourceStepsPt.SequenceEqual(result.Line.SourceStepsPt) ||
+                test.ReadCheckText()!=story || test.CheckUndoCount!=undo || test.Changed!=changed || !digest.SequenceEqual(OfficeFileEvidence.Digest(source)))
+                throw new InvalidOperationException("Hiệu chuẩn bản sao chưa chứng minh được vector dòng/khoảng đoạn hoặc chưa giữ nguồn/Undo khi đo lặp.");
+            pass($"Hiệu chuẩn {rule}: Single/1,5 và hai trial khoảng đoạn; hai lượt cùng kết quả, giữ nguyên nguồn/Undo; chỉ chẩn đoán, chưa sửa.");
+        }
+    }
     internal static string Create(string seed,string folder,string rule)
     {
         if(rule is not ("exact" or "atLeast"))throw new ArgumentException("Chế độ mẫu chưa hỗ trợ.",nameof(rule));

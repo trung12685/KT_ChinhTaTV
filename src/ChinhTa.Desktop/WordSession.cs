@@ -53,6 +53,7 @@ public sealed partial class WordSession : IDisposable
     public void Open(string path)
     {
         Coverage=null;CoverageNotice=null;NumberCoveragePreviewLayout=null;
+        spacingReferencePath=spacingReferenceFlat=null;
         using var timing=new WordOperationTiming("Word.Perf.Open");
         // Reuse only this session's own hidden application. A disconnected
         // document/application is released before the normal reconnect path.
@@ -925,7 +926,17 @@ public sealed partial class WordSession : IDisposable
         }
     }
     public string ExportPreview(IReadOnlyList<Issue> issues, IDictionary<Issue, PreviewAnchor> anchors)
-        => ReadWithRecovery("Word.ExportPreview", () => ExportPreviewCore(issues, anchors));
+        => ReadWithRecovery("Word.ExportPreview", () =>
+        {
+            spacingReferencePath=spacingReferenceFlat=null;
+            string path=ExportPreviewCore(issues,anchors);
+            // Bind the normal displayed preview to the post-export source. A
+            // diagnostic must reuse this reference, never export the live user
+            // document again (Word can update fields while exporting).
+            try{spacingReferenceFlat=ReadPageBodyXml();spacingReferencePath=path;}
+            catch(Exception){Diagnostics.Write("Word.SpacingReference.Unavailable",null);}
+            return path;
+        });
     private string ExportPreviewCore(IReadOnlyList<Issue> issues, IDictionary<Issue, PreviewAnchor> anchors)
     {
         using var timing=new WordOperationTiming("Word.Perf.Preview");

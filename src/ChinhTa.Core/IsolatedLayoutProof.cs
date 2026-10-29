@@ -13,9 +13,12 @@ public sealed class IsolatedLayoutProof
     private readonly IsolatedGlyphEvidence[] glyphs;
     public int PageCount=>pages.Length;
     public int GlyphRuns=>glyphs.Length;
+    public IReadOnlyList<IsolatedPageSize> PageSizes {get;}
+    public IReadOnlyList<IsolatedGlyphEvidence> GlyphEvidence {get;}
     public IsolatedLayoutProof(IEnumerable<IsolatedPageSize> pages,IEnumerable<IsolatedGlyphEvidence> glyphs)
     {
         this.pages=pages.ToArray();this.glyphs=glyphs.ToArray();
+        PageSizes=Array.AsReadOnly(this.pages);GlyphEvidence=Array.AsReadOnly(this.glyphs);
         if(this.pages.Length==0 || this.glyphs.Length==0 || this.pages.Any(p=>!Finite(p.Width,p.Height) || p.Width<=0 || p.Height<=0) ||
             this.glyphs.Any(g=>g.Page<1 || g.Page>this.pages.Length || g.Text.Length==0 || g.Shape.Length==0 || !Finite(g.X,g.Baseline)))
             throw new InvalidOperationException("Thiếu bằng chứng trang/glyph/baseline của bản sao Word cô lập.");

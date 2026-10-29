@@ -90,6 +90,12 @@ public partial class MainWindow : Window
         {MessageBox.Show(this,"Mở tài liệu và quét thành công để xem phạm vi của lần kiểm hiện tại.","Phạm vi kiểm tra");return;}
         new DocumentCoverageWindow(lastCoverage){Owner=this}.ShowDialog();
     }
+    private void SpacingMeasurementClick(object sender,RoutedEventArgs e)
+    {
+        hover.Stop();
+        if(!session.IsOpen){MessageBox.Show(this,"Hãy mở và quét tài liệu trước khi đo.","Đo giãn dòng");return;}
+        new SpacingCalibrationWindow(session.SpacingDiagnosticTargets(),session.MeasureSpacing){Owner=this}.ShowDialog();
+    }
     private void ReadingModeClick(object sender,RoutedEventArgs e)
     {
         session.UseOptimizedReading=((MenuItem)sender).IsChecked;

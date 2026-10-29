@@ -2,6 +2,8 @@
 
 Đợt 22 bổ sung nền tảng bản sao toàn gói và đối chiếu XPS trước hiệu chuẩn, cùng nhóm kiểm Word độc lập cho Exactly/AtLeast. Xem [FORMAT-BATCH-22.md](FORMAT-BATCH-22.md). Chưa đo Single/1,5 hoặc bỏ Before/After trên clone; C28/C29 vẫn giữ quyền sửa cũ. Nhóm Word mới chưa được thực thi trên môi trường Linux.
 
+Đợt 23–26 bổ sung mã hiệu chuẩn Single/1,5 và các trial khoảng đoạn 0/6pt, so vector baseline cùng paint/ảnh/nét, phiên Word chỉ đọc và cửa sổ đo thử theo yêu cầu. Xem [FORMAT-BATCH-23-26.md](FORMAT-BATCH-23-26.md). Các đoạn lịch sử bên dưới mô tả giới hạn trước đợt này; quyền sửa tự động C28/C29 vẫn giữ nguyên. Cần Word thật xác minh toàn luồng mới trước khi thiết kế writer/hậu kiểm sửa Exactly/AtLeast.
+
 # Các phần còn thiếu và thứ tự hoàn thiện
 
 Cập nhật ngày 29/10/2026 (UTC+7), mã 0.1.76 tích lũy năm cụm đợt 15–19 sau gói 0.1.75. Đối chiếu danh mục 33 nhóm có đề xuất có điều kiện, 8 nhóm thủ công, 1 quy tắc minh họa với đường quét, writer, hậu kiểm và bài Office. Đây là bản phân tích phạm vi mã và bằng chứng hiện có, không xác nhận ứng dụng đã kiểm mọi tài liệu hoặc mọi phiên bản Word.
