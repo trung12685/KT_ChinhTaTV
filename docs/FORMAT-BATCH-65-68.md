@@ -34,4 +34,10 @@ Nhóm `technical-text` có thêm mẫu bookmark cùng đoạn và qua đoạn. C
 
 ## Kiểm chứng
 
-Core/OpenXML cục bộ: **8362 kiểm qua**, tăng **276** từ 8086 (87 lịch sử định dạng, 183 ngày sinh và 6 giữ nguyên nhân phục hồi). Build DesktopChecks Release: **0 warning/error**. Harness riêng qua 120 kiểm ownership và 17 kiểm fixture bookmark; các số này thuộc runner tương ứng sau tích hợp, không cộng lặp vào Core. Windows CI và gói sẽ được ghi khi hoàn tất. Word thực vẫn **NOT_RUN**. Danh mục 33 nhóm đề xuất có điều kiện, 8 thủ công, 1 minh họa và 13 nhóm Word giữ nguyên.
+Core/OpenXML cục bộ: **8362 kiểm qua**, tăng **276** từ 8086 (87 lịch sử định dạng, 183 ngày sinh và 6 giữ nguyên nhân phục hồi). Build DesktopChecks Release: **0 warning/error**. Harness riêng qua 120 kiểm ownership và 17 kiểm fixture bookmark; các số này thuộc runner tương ứng sau tích hợp, không cộng lặp vào Core.
+
+[Windows CI 40967635856](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40967635856) của nguồn `8e9cb3b19eac0cfe300fb206b27065219ba6c3a9` đã **Success**; [job 123776065561](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40967635856/job/123776065561) qua Core/OpenXML, thực thi WPF/build và ghi evidence. Tổng Windows lấy từ `check-evidence.json` của đúng lượt; không suy từ Linux.
+
+Nhánh preview riêng dùng nguyên commit này; [workflow đóng gói 40967945181](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40967945181) đã **Success**, gồm publish, EXE, metadata và ZIP/tamper checks. [Tải 0.1.80](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40967945181/artifacts/12938519861) · [bằng chứng nguồn/digest](PREVIEW-0.1.80-EVIDENCE.md). Tài liệu cập nhật sau không đổi EXE đã khóa.
+
+Word thực vẫn **NOT_RUN**. Danh mục 33 nhóm đề xuất có điều kiện, 8 thủ công, 1 minh họa và 13 nhóm Word giữ nguyên.
