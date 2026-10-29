@@ -36,6 +36,8 @@ Tách phản hồi theo trạng thái thật: khi không đủ điều kiện m�
 
 ## Kiểm chứng
 
-Core/OpenXML cục bộ: **7674 kiểm qua**, tăng **653** so với mốc 7021 của 0.1.79. Build DesktopChecks Release: **0 warning/error**. Các harness nguồn cô lập đã qua 59 kiểm Undo trust, 551 chuỗi lệnh và 102 XML lịch sử di chuyển; các số này nằm trong runner tương ứng sau tích hợp, không cộng lặp vào tổng. Phản hồi UI có 13 kiểm managed/WPF, chưa thực thi WPF trên Linux. Fixture sửa chữ thực qua 11 kiểm schema/part/mô hình nguồn với bốn dòng lệnh mới. Windows CI của mã cuối đợt đang chờ.
+Core/OpenXML cục bộ: **7674 kiểm qua**, tăng **653** so với mốc 7021 của 0.1.79. Build DesktopChecks Release: **0 warning/error**. Các harness nguồn cô lập đã qua 59 kiểm Undo trust, 551 chuỗi lệnh và 102 XML lịch sử di chuyển; các số này nằm trong runner tương ứng sau tích hợp, không cộng lặp vào tổng. Phản hồi UI có 13 kiểm managed/WPF, chưa thực thi WPF trên Linux. Fixture sửa chữ thực qua 11 kiểm schema/part/mô hình nguồn với bốn dòng lệnh mới.
+
+[Windows CI](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40962906287) của commit `5ec846b554a373e411d07e7cb216d5045fb13213` đã **Success**: [job 123760002134](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40962906287/job/123760002134) qua Core/OpenXML, WPF/build, ghi evidence và tải log. Tổng Windows nằm trong `check-evidence.json` của CI, không suy từ Linux. Workflow này không đóng gói ứng dụng hoặc chạy Microsoft Word.
 
 Microsoft Word thực vẫn **NOT_RUN**, tổng 13 nhóm Word giữ nguyên. Không xuất ZIP 0.1.80 hoặc thay artifact 0.1.79.
