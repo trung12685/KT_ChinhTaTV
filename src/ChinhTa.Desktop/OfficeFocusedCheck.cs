@@ -46,7 +46,7 @@ internal static class OfficeFocusedCheck
     // Only the newly generated focused-check copies pass here. The historical
     // sample and full integration check retain their Word-tolerated ordering.
     // These are the same explicit schema sequences used by the signature fixture.
-    private static void OrderFixtureProperties(string path)
+    internal static void OrderFixtureProperties(string path)
     {
         using var zip=ZipFile.Open(path,ZipArchiveMode.Update);var entry=zip.GetEntry("word/document.xml")!;
         XDocument xml;using(var input=entry.Open())xml=XDocument.Load(input,LoadOptions.PreserveWhitespace);

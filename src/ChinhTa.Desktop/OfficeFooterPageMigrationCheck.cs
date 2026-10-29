@@ -13,13 +13,16 @@ internal static class OfficeFooterPageMigrationCheck
     internal static string Create(string modern,string folder)
     {
         string source=OfficePageNumberCheck.Create(modern,folder),path=Path.Combine(folder,"footer-page-input.docx");File.Copy(source,path);
-        using var zip=ZipFile.Open(path,ZipArchiveMode.Update);
+        using(var zip=ZipFile.Open(path,ZipArchiveMode.Update))
+        {
         XNamespace w="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
         var footer=new XDocument(new XElement(w+"ftr",new XElement(w+"p",new XElement(w+"pPr",new XElement(w+"jc",new XAttribute(w+"val","center"))),
             new XElement(w+"fldSimple",new XAttribute(w+"instr"," PAGE "),new XElement(w+"r",new XElement(w+"rPr",
                 new XElement(w+"rFonts",new XAttribute(w+"ascii","Times New Roman"),new XAttribute(w+"hAnsi","Times New Roman")),
                 new XElement(w+"color",new XAttribute(w+"val","000000")),new XElement(w+"sz",new XAttribute(w+"val",28))),new XElement(w+"t","1"))))));
         const string part="word/footer-number-kept.xml";zip.GetEntry(part)!.Delete();using(var output=zip.CreateEntry(part).Open())footer.Save(output,SaveOptions.DisableFormatting);
+        }
+        OfficeFocusedCheck.OrderFixtureProperties(path);
         return path;
     }
     public static void Run(WordSession test,string modern,string folder,Action<string> pass)

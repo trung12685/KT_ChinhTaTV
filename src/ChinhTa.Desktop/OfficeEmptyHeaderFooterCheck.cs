@@ -13,39 +13,42 @@ internal static class OfficeEmptyHeaderFooterCheck
     internal static string Create(string modern,string folder)
     {
         string seed=OfficePageLayoutCheck.Create(modern,folder),path=Path.Combine(folder,"empty-header-footer-page-input.docx");File.Copy(seed,path);
-        using var zip=ZipFile.Open(path,ZipArchiveMode.Update);
-        XDocument Read(string name){using var input=zip.GetEntry(name)!.Open();return XDocument.Load(input,LoadOptions.PreserveWhitespace);}
-        void Save(string name,XDocument doc){zip.GetEntry(name)?.Delete();using var output=zip.CreateEntry(name).Open();doc.Save(output,SaveOptions.DisableFormatting);}
-        XNamespace w="http://schemas.openxmlformats.org/wordprocessingml/2006/main",r="http://schemas.openxmlformats.org/officeDocument/2006/relationships",
-            rel="http://schemas.openxmlformats.org/package/2006/relationships",ct="http://schemas.openxmlformats.org/package/2006/content-types";
-        var doc=Read("word/document.xml");var section=doc.Descendants(w+"body").Single().Element(w+"sectPr")!;
-        section.Elements().Where(e=>e.Name==w+"headerReference" || e.Name==w+"footerReference").Remove();
-        var relations=zip.GetEntry("word/_rels/document.xml.rels") is null?new XDocument(new XElement(rel+"Relationships")):Read("word/_rels/document.xml.rels");
-        var types=Read("[Content_Types].xml");
-        void Add(string kind,string id,string name)
+        using(var zip=ZipFile.Open(path,ZipArchiveMode.Update))
         {
-            section.AddFirst(new XElement(w+(kind+"Reference"),new XAttribute(w+"type","default"),new XAttribute(r+"id",id)));
-            relations.Root!.Add(new XElement(rel+"Relationship",new XAttribute("Id",id),new XAttribute("Type",r.NamespaceName+"/"+kind),new XAttribute("Target",name)));
-            types.Root!.Add(new XElement(ct+"Override",new XAttribute("PartName","/word/"+name),
-                new XAttribute("ContentType","application/vnd.openxmlformats-officedocument.wordprocessingml."+kind+"+xml")));
-            Save("word/"+name,new XDocument(new XElement(w+(kind=="header"?"hdr":"ftr"),new XElement(w+"p",
-                new XElement(w+"pPr",new XElement(w+"pStyle",new XAttribute(w+"val","EmptyPageProof")))))));
+            XDocument Read(string name){using var input=zip.GetEntry(name)!.Open();return XDocument.Load(input,LoadOptions.PreserveWhitespace);}
+            void Save(string name,XDocument doc){zip.GetEntry(name)?.Delete();using var output=zip.CreateEntry(name).Open();doc.Save(output,SaveOptions.DisableFormatting);}
+            XNamespace w="http://schemas.openxmlformats.org/wordprocessingml/2006/main",r="http://schemas.openxmlformats.org/officeDocument/2006/relationships",
+                rel="http://schemas.openxmlformats.org/package/2006/relationships",ct="http://schemas.openxmlformats.org/package/2006/content-types";
+            var doc=Read("word/document.xml");var section=doc.Descendants(w+"body").Single().Element(w+"sectPr")!;
+            section.Elements().Where(e=>e.Name==w+"headerReference" || e.Name==w+"footerReference").Remove();
+            var relations=zip.GetEntry("word/_rels/document.xml.rels") is null?new XDocument(new XElement(rel+"Relationships")):Read("word/_rels/document.xml.rels");
+            var types=Read("[Content_Types].xml");
+            void Add(string kind,string id,string name)
+            {
+                section.AddFirst(new XElement(w+(kind+"Reference"),new XAttribute(w+"type","default"),new XAttribute(r+"id",id)));
+                relations.Root!.Add(new XElement(rel+"Relationship",new XAttribute("Id",id),new XAttribute("Type",r.NamespaceName+"/"+kind),new XAttribute("Target",name)));
+                types.Root!.Add(new XElement(ct+"Override",new XAttribute("PartName","/word/"+name),
+                    new XAttribute("ContentType","application/vnd.openxmlformats-officedocument.wordprocessingml."+kind+"+xml")));
+                Save("word/"+name,new XDocument(new XElement(w+(kind=="header"?"hdr":"ftr"),new XElement(w+"p",
+                    new XElement(w+"pPr",new XElement(w+"pStyle",new XAttribute(w+"val","EmptyPageProof")))))));
+            }
+            Add("footer","rIdEmptyPageFooter","footer-empty-page.xml");Add("header","rIdEmptyPageHeader","header-empty-page.xml");
+            var margins=section.Element(w+"pgMar")!;margins.SetAttributeValue(w+"header",454);margins.SetAttributeValue(w+"footer",454);
+            // The source fixture has no styles part. Define safe defaults and one
+            // explicit basedOn style so emptiness never depends on Word's template.
+            if(zip.GetEntry("word/styles.xml") is not null)throw new InvalidOperationException("Mẫu kiểm đầu/cuối trang trống cần nguồn không có styles riêng.");
+            var styles=new XDocument(new XElement(w+"styles",
+                new XElement(w+"docDefaults",new XElement(w+"rPrDefault",new XElement(w+"rPr")),new XElement(w+"pPrDefault",new XElement(w+"pPr"))),
+                new XElement(w+"style",new XAttribute(w+"type","paragraph"),new XAttribute(w+"default",1),new XAttribute(w+"styleId","Normal"),
+                    new XElement(w+"name",new XAttribute(w+"val","Normal")),new XElement(w+"pPr",new XElement(w+"spacing",new XAttribute(w+"before",0),new XAttribute(w+"after",0),new XAttribute(w+"line",240),new XAttribute(w+"lineRule","auto"))),
+                    new XElement(w+"rPr",new XElement(w+"rFonts",new XAttribute(w+"ascii","Times New Roman"),new XAttribute(w+"hAnsi","Times New Roman")),new XElement(w+"sz",new XAttribute(w+"val",26)))),
+                new XElement(w+"style",new XAttribute(w+"type","paragraph"),new XAttribute(w+"styleId","EmptyPageProof"),new XElement(w+"name",new XAttribute(w+"val","Empty page proof")),
+                    new XElement(w+"basedOn",new XAttribute(w+"val","Normal")),new XElement(w+"pPr",new XElement(w+"spacing",new XAttribute(w+"before",0),new XAttribute(w+"after",0))))));
+            relations.Root!.Add(new XElement(rel+"Relationship",new XAttribute("Id","rIdEmptyPageStyles"),new XAttribute("Type",r.NamespaceName+"/styles"),new XAttribute("Target","styles.xml")));
+            types.Root!.Add(new XElement(ct+"Override",new XAttribute("PartName","/word/styles.xml"),new XAttribute("ContentType","application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml")));
+            Save("word/document.xml",doc);Save("word/_rels/document.xml.rels",relations);Save("[Content_Types].xml",types);Save("word/styles.xml",styles);
         }
-        Add("footer","rIdEmptyPageFooter","footer-empty-page.xml");Add("header","rIdEmptyPageHeader","header-empty-page.xml");
-        var margins=section.Element(w+"pgMar")!;margins.SetAttributeValue(w+"header",454);margins.SetAttributeValue(w+"footer",454);
-        // The source fixture has no styles part. Define safe defaults and one
-        // explicit basedOn style so emptiness never depends on Word's template.
-        if(zip.GetEntry("word/styles.xml") is not null)throw new InvalidOperationException("Mẫu kiểm đầu/cuối trang trống cần nguồn không có styles riêng.");
-        var styles=new XDocument(new XElement(w+"styles",
-            new XElement(w+"docDefaults",new XElement(w+"rPrDefault",new XElement(w+"rPr")),new XElement(w+"pPrDefault",new XElement(w+"pPr"))),
-            new XElement(w+"style",new XAttribute(w+"type","paragraph"),new XAttribute(w+"default",1),new XAttribute(w+"styleId","Normal"),
-                new XElement(w+"name",new XAttribute(w+"val","Normal")),new XElement(w+"pPr",new XElement(w+"spacing",new XAttribute(w+"before",0),new XAttribute(w+"after",0),new XAttribute(w+"line",240),new XAttribute(w+"lineRule","auto"))),
-                new XElement(w+"rPr",new XElement(w+"rFonts",new XAttribute(w+"ascii","Times New Roman"),new XAttribute(w+"hAnsi","Times New Roman")),new XElement(w+"sz",new XAttribute(w+"val",26)))),
-            new XElement(w+"style",new XAttribute(w+"type","paragraph"),new XAttribute(w+"styleId","EmptyPageProof"),new XElement(w+"name",new XAttribute(w+"val","Empty page proof")),
-                new XElement(w+"basedOn",new XAttribute(w+"val","Normal")),new XElement(w+"pPr",new XElement(w+"spacing",new XAttribute(w+"before",0),new XAttribute(w+"after",0))))));
-        relations.Root!.Add(new XElement(rel+"Relationship",new XAttribute("Id","rIdEmptyPageStyles"),new XAttribute("Type",r.NamespaceName+"/styles"),new XAttribute("Target","styles.xml")));
-        types.Root!.Add(new XElement(ct+"Override",new XAttribute("PartName","/word/styles.xml"),new XAttribute("ContentType","application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml")));
-        Save("word/document.xml",doc);Save("word/_rels/document.xml.rels",relations);Save("[Content_Types].xml",types);Save("word/styles.xml",styles);return path;
+        OfficeFocusedCheck.OrderFixtureProperties(path);return path;
     }
     internal static void Run(WordSession test,string modern,string folder,Action<string> pass)
     {
