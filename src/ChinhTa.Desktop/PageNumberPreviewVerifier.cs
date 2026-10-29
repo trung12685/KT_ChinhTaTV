@@ -146,7 +146,11 @@ public static class PageNumberPreviewVerifier
             double baseline=transform.Transform(run.BaselineOrigin).Y;
             digits.Add(new(glyph,evidence.Value.Bounds,baseline));
         }
-        if(digits.Count>128)throw new InvalidOperationException("Vùng số cuối trang quá phức tạp để ghép PAGE.");
+        return GroupNumerals(digits);
+    }
+    private static FooterNumber[] GroupNumerals(List<FooterDigit> digits)
+    {
+        if(digits.Count>128)throw new InvalidOperationException("Vùng chữ số quá phức tạp để ghép PAGE.");
         var remaining=digits.ToHashSet();var result=new List<FooterNumber>();
         while(remaining.Count>0)
         {
@@ -162,10 +166,10 @@ public static class PageNumberPreviewVerifier
             var ordered=group.OrderBy(d=>d.Bounds.Left).ToArray();
             if(ordered.Max(d=>d.Baseline)-ordered.Min(d=>d.Baseline)>.75 ||
                 ordered.Max(d=>d.Bounds.Height)-ordered.Min(d=>d.Bounds.Height)>.5)
-                throw new InvalidOperationException("Cụm số cuối trang không cùng dòng nền/chiều cao.");
+                throw new InvalidOperationException("Cụm số không cùng dòng nền/chiều cao.");
             for(int i=1;i<ordered.Length;i++)
                 if(ordered[i].Bounds.Left<ordered[i-1].Bounds.Right-.5)
-                    throw new InvalidOperationException("Các cụm số cuối trang chồng lên nhau; không ghép PAGE.");
+                    throw new InvalidOperationException("Các cụm số chồng lên nhau; không ghép PAGE.");
             result.Add(new(string.Concat(ordered.Select(d=>d.Glyph.UnicodeString)),ordered));
         }
         return result.ToArray();
@@ -253,7 +257,7 @@ public static class PageNumberPreviewVerifier
         if(paginator.PageCount<1)throw new InvalidOperationException("Không có trang XPS để hậu kiểm số trang.");
         for(int n=0;n<paginator.PageCount;n++)
         {
-            using var rendered=paginator.GetPage(n);var page=Page(rendered);var numbers=new List<(string Text,Rect Bounds)>();
+            using var rendered=paginator.GetPage(n);var page=Page(rendered);var numbers=new List<FooterDigit>();
             double center=(leftMm*96/25.4+page.Width-rightMm*96/25.4)/2;
             foreach(var glyph in Walk(page).OfType<Glyphs>())
             {
@@ -263,12 +267,12 @@ public static class PageNumberPreviewVerifier
                 var evidence=GlyphEvidence(glyph,page,true);if(evidence is null)continue;
                 if(evidence.Value.Bounds.Top<0 || evidence.Value.Bounds.Bottom>topMm*96/25.4+.5)
                     throw new InvalidOperationException("Số trang XPS chưa nằm trọn trong lề trên.");
-                numbers.Add((value,evidence.Value.Bounds));
+                numbers.Add(new(glyph,evidence.Value.Bounds,PreviewPaintProof.ToPage(glyph,page)!.Transform(glyph.ToGlyphRun().BaselineOrigin).Y));
             }
             if(n==0)
             {if(numbers.Count!=0)throw new InvalidOperationException("XPS còn số ở vùng số trang đầu.");continue;}
-            string actual=string.Concat(numbers.OrderBy(i=>i.Bounds.Left).Select(i=>i.Text));
-            if(actual!=(n+1).ToString(CultureInfo.InvariantCulture) || numbers.Count==0)
+            var groups=GroupNumerals(numbers);
+            if(groups.Length!=1 || groups[0].Text!=(n+1).ToString(CultureInfo.InvariantCulture))
                 throw new InvalidOperationException("Số trang thực tế trên XPS chưa liên tiếp hoặc chưa có PAGE.");
             double left=numbers.Min(i=>i.Bounds.Left),right=numbers.Max(i=>i.Bounds.Right);
             if(Math.Abs((left+right)/2-center)>4)throw new InvalidOperationException("Số trang XPS chưa căn giữa vùng lề trên.");

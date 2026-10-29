@@ -11,7 +11,7 @@ public static class MultiDigitPageChecks
     private static readonly double W=210*96/25.4,H=297*96/25.4;
     private static Glyphs Glyph(string value,double x,double y)=>new(){FontUri=new Uri(System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Fonts),"times.ttf")),
         FontRenderingEmSize=14*96d/72,UnicodeString=value,OriginX=x,OriginY=y,Fill=Brushes.Black};
-    private static FixedDocumentSequence Scene(bool after=false,Action<Glyphs,int,int>? change=null,bool split=true,int count=12)
+    private static FixedDocumentSequence Scene(bool after=false,Action<Glyphs,int,int>? change=null,bool split=true,int count=12,Action<Glyphs,int,int>? headerChange=null)
     {
         var document=new FixedDocument();
         for(int n=1;n<=count;n++)
@@ -28,8 +28,12 @@ public static class MultiDigitPageChecks
             }
             else if(n>1)
             {
-                var glyph=Glyph(n.ToString(System.Globalization.CultureInfo.InvariantCulture),0,40);
-                glyph.OriginX=(30*96/25.4+W-15*96/25.4)/2-glyph.ToGlyphRun().ComputeAlignmentBox().Width/2;canvas.Children.Add(glyph);
+                string text=n.ToString(System.Globalization.CultureInfo.InvariantCulture);var full=Glyph(text,0,40);
+                double x=(30*96/25.4+W-15*96/25.4)/2-full.ToGlyphRun().ComputeAlignmentBox().Width/2;int index=0;
+                foreach(string chunk in split?text.Select(c=>c.ToString()):new[]{text})
+                {
+                    var glyph=Glyph(chunk,x,40);x+=glyph.ToGlyphRun().AdvanceWidths.Sum();headerChange?.Invoke(glyph,n,index++);canvas.Children.Add(glyph);
+                }
             }
             var content=new PageContent();((IAddChild)content).AddChild(page);document.Pages.Add(content);
         }
@@ -61,6 +65,12 @@ public static class MultiDigitPageChecks
                 "A multi-digit source cannot bind missing, displaced, overlapping, extra or differently styled numeral chunks");
         assert(Reject(()=>PageNumberPreviewVerifier.Capture(Scene(count:101,change:(g,n,i)=>{if(n==101)g.OriginY+=i*.6;}),20,Plan(101),20)),
             "Adjacent numeral chunks cannot bridge into a sloped or multiple-baseline PAGE group");
+        foreach(var change in new Action<Glyphs,int,int>[] {
+            (g,n,i)=>{if(n==10)g.OriginY+=i*4;},
+            (g,n,i)=>{if(n==10)g.OriginX+=i*15;},
+            (g,n,i)=>{if(n==10)g.OriginX-=i*4;}})
+            assert(Reject(()=>PageNumberPreviewVerifier.VerifyNumbers(Scene(after:true,headerChange:change),30,15,20)),
+                "Header PAGE cannot pass by concatenating separated, overlapping or different-baseline digits");
         assert(Reject(()=>PageNumberPreviewVerifier.VerifyNoMigratedFooter(Scene(),Plan(),20)),
             "After migration, split footer numerals cannot evade the residual PAGE check");
     }
