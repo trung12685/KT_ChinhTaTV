@@ -34,6 +34,8 @@ Không Show view tạo muộn khi đã biết timeout; giữ lỗi khởi độn
 
 ## Kiểm chứng
 
-Core/OpenXML cục bộ: **8086 kiểm qua**, tăng **412** từ 7674. Build DesktopChecks Release: **0 warning/error**. Harness riêng đã qua 143 kiểm annotation, 248 biểu mẫu, 21 hoàn tất lưu và 154 checkpoint/Save; số nằm trong runner tương ứng sau tích hợp, không cộng lặp. Cửa sổ tiến độ có 11 kiểm WPF mới, chưa thực thi WPF trên Linux. Fixture sửa chữ với ba FormRows mới qua 11 kiểm schema/part/mô hình nguồn. Windows CI của mã cuối đợt đang chờ; tổng Windows lấy từ evidence đúng lượt, không suy từ Linux.
+Core/OpenXML cục bộ: **8086 kiểm qua**, tăng **412** từ 7674. Build DesktopChecks Release: **0 warning/error**. Harness riêng đã qua 143 kiểm annotation, 248 biểu mẫu, 21 hoàn tất lưu và 154 checkpoint/Save; số nằm trong runner tương ứng sau tích hợp, không cộng lặp. Cửa sổ tiến độ có 11 kiểm WPF mới, chưa thực thi WPF trên Linux. Fixture sửa chữ với ba FormRows mới qua 11 kiểm schema/part/mô hình nguồn.
+
+[Windows CI](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40965965263) của commit `f314bc07735d0a891bfaa56251799c28b633f21d` đã **Success**: [job 123770424026](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40965965263/job/123770424026) qua Core/OpenXML, WPF/build, ghi evidence và tải log. WPF thực thi trên Windows gồm các bài cửa sổ tiến độ; Word COM vẫn không chạy. Tổng Windows lấy từ `check-evidence.json` của đúng lượt, không suy từ Linux. Workflow không đóng gói ứng dụng.
 
 Word thực vẫn **NOT_RUN**. Không xuất ZIP mới, giữ 13 nhóm Word và danh mục 33 nhóm đề xuất có điều kiện, 8 thủ công, 1 minh họa.
