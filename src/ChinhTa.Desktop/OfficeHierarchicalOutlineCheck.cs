@@ -15,7 +15,10 @@ internal static class OfficeHierarchicalOutlineCheck
         "Xem mục 1.1 tới 1.3 để đối chiếu.",
         "Xem mục (8), (1.4) để đối chiếu.",
         "Xem mục (1.1) – (1.5) để đối chiếu.",
-        "Xem mu\u0323c\u00a0số\u00a0(8), (001.004) để đối chiếu."
+        "Xem mu\u0323c\u00a0số\u00a0(8), (001.004) để đối chiếu.",
+        "Xem từ mục 1.3 đến mục 1.5 để đối chiếu.",
+        "Xem từ mục số 1.0 tới MỤC số 1.3 để đối chiếu.",
+        "Xem mục (8), mục (1.4) để đối chiếu."
     });
     public static void Run(WordSession test,string modern,string folder,Action<string> pass)
     {
@@ -36,9 +39,9 @@ internal static class OfficeHierarchicalOutlineCheck
         test.Undo();test.Check();
         if(test.ReadCheckText()!=original)throw new InvalidOperationException("Undo riêng số nhiều cấp chưa phục hồi chữ.");
         Issue[] Select()=>test.Check().Where(Body).Concat(OfficeComponentCheck.ReadLines(test).Where(i=>i.LineFix?.Role==LineRole.Subject)).ToArray();
-        var selected=Select();bool restored=false;
+        var selected=Select();bool restored=false,previousChanged=test.Changed;
         try{test.FixStagedFailureProbe(selected,3);}catch(InvalidOperationException e) when(e.InnerException is OfficeStagedProbeException){restored=true;}
-        if(!restored || test.ReadCheckText()!=original || test.CheckUndoCount!=0 || test.Changed)
+        if(!restored || test.ReadCheckText()!=original || test.CheckUndoCount!=0 || test.Changed!=previousChanged)
             throw new InvalidOperationException("Lỗi sau Line chưa phục hồi cả nhóm số nhiều cấp/dấu đơn/chữ.");
         test.FixSelection(Select());test.Check();
         string expected=original.Replace("1.4.","1.2.",StringComparison.Ordinal).Replace("2.4.","2.2.",StringComparison.Ordinal)
@@ -51,6 +54,17 @@ internal static class OfficeHierarchicalOutlineCheck
         test.Open(saved);test.Check();
         if(test.ReadCheckText()!=expected || test.Check().Any(Body) || !hash.SequenceEqual(SHA256.HashData(File.ReadAllBytes(source))))
             throw new InvalidOperationException("Lưu/mở số nhiều cấp chưa đúng hoặc nguồn thay đổi.");
+        RunReferences(test,modern,folder,pass);
+        pass("Số nhiều cấp: sửa riêng/chung số cuối, giữ tiền tố/tab/kiểu, dẫn chiếu chặn nhóm liên quan, lỗi sau Line/rollback, một Undo/lưu-mở/băm nguồn");
+    }
+    // The reference guard also runs independently: it needs neither a Line
+    // repair nor a successful earlier renumbering scenario to gather evidence.
+    internal static void RunReferences(WordSession test,string modern,string folder,Action<string> pass)
+    {
+        if(ReferenceRows.Count==0)throw new InvalidOperationException("Chưa có mẫu dẫn chiếu độc lập để kiểm; không được ghi PASS.");
+        string isolated=Path.Combine(folder,"decimal-reference-guards");Directory.CreateDirectory(isolated);
+        string seed=OfficeComponentCheck.Create(modern,isolated,false);
+        test.Profile=DocumentProfile.State;
         foreach(var reference in ReferenceRows.Select((text,index)=>(text,index)))
         {
             string guarded=Create(seed,isolated,reference.text,reference.index);
@@ -61,9 +75,9 @@ internal static class OfficeHierarchicalOutlineCheck
                 !blocked.Any(i=>!i.CanFix && i.Kind==FixKind.OutlineOrder && i.Original.Contains("1.4.",StringComparison.Ordinal)) ||
                 test.ReadCheckText()!=guardedText || test.Changed || test.CheckUndoCount!=0 ||
                 !guardedHash.SequenceEqual(SHA256.HashData(File.ReadAllBytes(guarded))))
-                throw new InvalidOperationException("Dẫn chiếu đơn/danh sách/khoảng chưa giữ riêng chuỗi liên quan hoặc làm đổi nguồn mẫu.");
+                throw new InvalidOperationException($"Mẫu dẫn chiếu {reference.index+1}: chưa giữ riêng chuỗi liên quan hoặc làm đổi nguồn mẫu.");
         }
-        pass("Số nhiều cấp: sửa riêng/chung số cuối, giữ tiền tố/tab/kiểu, dẫn chiếu chặn nhóm liên quan, lỗi sau Line/rollback, một Undo/lưu-mở/băm nguồn");
+        pass($"Dẫn chiếu mục: {ReferenceRows.Count} mẫu đơn/danh sách/khoảng, giữ 1.4 thủ công và 2.4 độc lập; quét không đổi chữ/dirty state/Undo/nguồn");
     }
     internal static string Create(string seed,string folder,string? reference=null,int referenceIndex=0)
     {

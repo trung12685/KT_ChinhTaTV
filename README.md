@@ -1,6 +1,6 @@
 # Chính tả Việt
 
-Đang phát triển **0.1.79** sau bản thử 0.1.78: [đợt 45–47](docs/FORMAT-BATCH-45-47.md) và [48–51](docs/FORMAT-BATCH-48-51.md) bổ sung hậu kiểm riêng C14, giữ dẫn chiếu mục/chuỗi literal/đệm biểu mẫu và phục hồi khi đóng tài liệu lỗi. Chưa có ZIP 0.1.79; gói tải dưới đây giữ nguyên mã 0.1.78.
+Đang hoàn thiện **0.1.79** sau bản thử 0.1.78: [đợt 45–47](docs/FORMAT-BATCH-45-47.md), [48–51](docs/FORMAT-BATCH-48-51.md) và [52–56](docs/FORMAT-BATCH-52-56.md). Thêm hậu kiểm dấu câu, giữ dẫn chiếu/literal/biểu mẫu, xử lý checkpoint lưu lỗi và trạng thái Hoàn tác/xem trước. [Hướng dẫn kiểm bản tích lũy](docs/PREVIEW-0.1.79.md); artifact mới chỉ có sau khi workflow đóng gói thành công, gói 0.1.78 dưới đây giữ nguyên.
 
 Đã có **[bản thử Windows 0.1.78](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40950303966/artifacts/12930333908)**, gom 12 cụm đợt 33–44 sau 0.1.77: giữ phiên/Undo khi mở lỗi, ô chọn/ngày chưa điền, khoảng cuối sau ngoặc và hậu kiểm định dạng. [Hướng dẫn dùng/kiểm Word](docs/PREVIEW-0.1.78.md) · [Nguồn và bằng chứng gói](docs/PREVIEW-0.1.78-EVIDENCE.md). Cần đăng nhập GitHub để tải; giải nén artifact rồi giải nén toàn bộ ZIP bên trong vào thư mục mới.
 

@@ -42,11 +42,20 @@ public static class OutlineRules
         return string.Join('.',label.Split('.').Select(component=>
         {string digits=component.TrimStart('0');return digits.Length==0?"0":digits;}));
     }
-    private static readonly Regex References=new(@"\b(?:"+string.Join('|',new[]{"mục","điểm","khoản","phần","chương"}.Select(ReferenceWord))+@")"+
-        ReferenceSpace+@"+(?:"+ReferenceWord("số")+ReferenceSpace+@"+)?"+ReferenceLabelToken+
-        @"(?:(?<joiner>"+ReferenceSpace+@"*[-–—,]"+ReferenceSpace+@"*|"+
-        ReferenceSpace+@"+(?:"+string.Join('|',new[]{"và","đến","tới"}.Select(ReferenceWord))+@")"+ReferenceSpace+@"+)"+
-        ReferenceLabelToken+@")*(?![0-9]|\.[0-9])(?=\s|[,;:.!?]|$)",RegexOptions.IgnoreCase|RegexOptions.CultureInvariant);
+    private static string ReferenceChain(string cue)
+    {
+        string introduction=ReferenceWord(cue)+ReferenceSpace+@"+(?:"+ReferenceWord("số")+ReferenceSpace+@"+)?";
+        // Repeated cue words belong to the same explicit chain only when they
+        // name the same kind of item. Build one alternative per fixed cue so
+        // NFC/NFD variants can mix without a source-text backreference or a
+        // guessed interval between different kinds of structural reference.
+        return @"\b"+introduction+ReferenceLabelToken+
+            @"(?:(?<joiner>"+ReferenceSpace+@"*[-–—,]"+ReferenceSpace+@"*|"+
+            ReferenceSpace+@"+(?:"+string.Join('|',new[]{"và","đến","tới"}.Select(ReferenceWord))+@")"+ReferenceSpace+@"+)"+
+            @"(?:"+introduction+@")?"+ReferenceLabelToken+@")*(?![0-9]|\.[0-9])(?=\s|[,;:.!?]|$)";
+    }
+    private static readonly Regex References=new(string.Join('|',new[]{"mục","điểm","khoản","phần","chương"}.Select(ReferenceChain)),
+        RegexOptions.IgnoreCase|RegexOptions.CultureInvariant);
     private static readonly Regex NumberPathHint=new(@"^[ \t]*(?<label>[0-9]+(?:\.[0-9]+)+)",RegexOptions.CultureInvariant|RegexOptions.NonBacktracking);
     private static readonly string[] Alphabets=["abcdefghijklmnopqrstuvwxyz","abcdđeghiklmnopqrstuvxy"];
     public static IReadOnlyList<OutlineFinding> Check(IReadOnlyList<Paragraph> rows)

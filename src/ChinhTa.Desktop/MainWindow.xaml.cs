@@ -196,7 +196,13 @@ public partial class MainWindow : Window
     }
     private void ShowPreview(Issue? issue)
     {
-        if (issue is null || issue == displayed || !anchors.TryGetValue(issue, out var anchor)) return;
+        if (issue is null || issue == displayed) return;
+        if(!anchors.TryGetValue(issue,out var anchor))
+        {
+            highlighter.Clear();pending=displayed=null;
+            Status.Text=IssueReviewCatalog.Describe(issue).Label+". Chưa ánh xạ chắc chắn được vị trí trên bản xem trước; không đánh dấu để tránh nhầm.";
+            return;
+        }
         if (Preview.Document is not System.Windows.Documents.FixedDocumentSequence document) return;
         var timer = Stopwatch.StartNew();
         Preview.GoToPage(anchor.Page);
@@ -331,7 +337,7 @@ public partial class MainWindow : Window
         Process.Start(new ProcessStartInfo { FileName = folder, UseShellExecute = true });
     }
     private void UndoClick(object sender, RoutedEventArgs e)
-    { if (session.IsOpen) Run(() => { session.Undo(); Scan(); }); }
+    { if (session.IsOpen) Run(() => EditThenScan.RunUndo(session.Undo,Scan)); }
     private void SaveClick(object sender, RoutedEventArgs e)
     {
         if (!session.IsOpen) return;

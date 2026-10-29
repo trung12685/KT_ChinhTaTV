@@ -11,11 +11,18 @@ public static class CasePreservationPlan
         patch.Kind==FixKind.DocumentHeadingFormat && patch.CharacterFormat is not null;
     private static bool Overlaps(Issue a,Issue b)=>a.Start<(long)b.Start+b.Length && b.Start<(long)a.Start+a.Length;
     private static bool Inside(Issue item,Issue row)=>item.Start>=row.Start && (long)item.Start+item.Length<=(long)row.Start+row.Length;
+    private static bool PunctuationTrackingCandidate(Issue issue)=>issue.Kind==FixKind.PunctuationSpace ||
+        issue.Kind is FixKind.ColonSpace or FixKind.SentenceAfterSpace or FixKind.ParenthesisSpace or FixKind.QuoteSpace &&
+        issue.Original.Any(c=>c!=' ');
     private static bool PunctuationRepair(Issue issue)
     {
         string mark=issue.Original.Trim(' ');
-        return issue.Kind==FixKind.PunctuationSpace && issue.CanFix && mark is "," or ";" &&
-            issue.Replacement==mark+" " && issue.Original!=issue.Replacement &&
+        bool retained=issue.Kind==FixKind.PunctuationSpace && mark is "," or ";" &&
+            issue.Replacement==mark+" " && issue.Original!=issue.Replacement ||
+            issue.AddsSpaceAfterColon || issue.AddsSpaceBeforeOpeningParenthesis || issue.AddsSpaceAfterClosingParenthesis ||
+            issue.AddsSpaceBeforeOpeningQuote || issue.AddsSpaceAfterClosingQuote ||
+            issue.Kind==FixKind.SentenceAfterSpace && issue.Original is "." or "?" or "!" && issue.Replacement==issue.Original+" ";
+        return retained && issue.CanFix &&
             issue.Format is null && !issue.IsStyleOnly && issue.LineFix is null && issue.CenterFix is null &&
             issue.PageFix is null && issue.NumberFix is null && issue.Prerequisites is null;
     }
@@ -32,7 +39,7 @@ public static class CasePreservationPlan
     public static IReadOnlyList<Issue> Regions(IReadOnlyList<Issue> selection,IReadOnlyList<WordParagraphSnapshot> proven)
     {
         var cases=selection.Where(i=>i.Kind is FixKind.SignatureFormat or FixKind.DocumentTypeText or FixKind.BodyFormat or FixKind.BodyParagraph or FixKind.BodyGap or FixKind.BodyLineSpacing).ToArray();
-        var punctuation=selection.Where(i=>i.Kind==FixKind.PunctuationSpace).ToArray();
+        var punctuation=selection.Where(PunctuationTrackingCandidate).ToArray();
         if(cases.Length==0 && punctuation.Length==0)return [];
         BatchPlan.Create(selection);
         var result=new Dictionary<int,Issue>();
@@ -57,7 +64,7 @@ public static class CasePreservationPlan
             // and source-style rules. A punctuation probe must never overwrite it.
             if(existingOwners.Any(probe=>Inside(item,probe)))continue;
             if(!PunctuationRepair(item))
-                throw new InvalidOperationException("Gợi ý dấu câu chưa có phạm vi khoảng trắng/dấu phẩy hoặc chấm phẩy đã xác minh; hãy quét lại.");
+                throw new InvalidOperationException("Gợi ý dấu câu chưa có ký hiệu gốc và phạm vi khoảng ASCII đã xác minh; hãy quét lại.");
             var rows=proven.Where(p=>p.Start<=item.Start && (long)item.Start+item.Length<=p.End).ToArray();
             if(rows.Length!=1)
                 throw new InvalidOperationException("Chưa có một đoạn đã đối chiếu XML duy nhất để giữ định dạng dấu câu.");

@@ -15,9 +15,9 @@ public static class OfficeFocusedChecks
         assert(OfficeFocusedCheck.CodeIdentity().Contains(typeof(WordSession).Module.ModuleVersionId.ToString(),StringComparison.Ordinal) &&
             OfficeFocusedCheck.CodeIdentity().Contains(typeof(Checker).Module.ModuleVersionId.ToString(),StringComparison.Ordinal),
             "The synthetic Word report identifies actual Desktop/Core modules even when successive previews share a development version");
-        assert(cases.Count==12 && cases.Select(c=>c.Id).Distinct().Count()==cases.Count && cases.Any(c=>c.Id=="isolated-spacing") && cases.Any(c=>c.Id=="spacing-calibration") && cases.Any(c=>c.Id=="technical-text") &&
+        assert(cases.Count==13 && cases.Select(c=>c.Id).Distinct().Count()==cases.Count && cases.Any(c=>c.Id=="isolated-spacing") && cases.Any(c=>c.Id=="spacing-calibration") && cases.Any(c=>c.Id=="technical-text") && cases.Any(c=>c.Id=="outline-references") &&
             cases.Any(c=>c.Id=="body-spacing") && cases.Any(c=>c.Id=="handwriting") && cases.Any(c=>c.Id=="footer-page-number") && cases.Any(c=>c.Id=="empty-page-layout"),
-            "Focused Word checks expose independent spacing and handwriting families rather than require an earlier Subject PASS");
+            "Focused Word checks expose independent reference, spacing and handwriting families rather than require an earlier Subject PASS");
         var success=new OfficeSuiteReport(cases.Select(c=>new OfficeSuiteResult(c,OfficeSuiteStatus.Pass)).ToArray());
         string summary=OfficeFocusedCheck.Summary(success);
         assert(summary.Contains("ĐẠT CÁC NHÓM ĐÃ CHỌN",StringComparison.Ordinal) && summary.Contains(OfficeFocusedCheck.Scope,StringComparison.Ordinal) &&
@@ -31,6 +31,13 @@ public static class OfficeFocusedChecks
             "The focused Word summary retains every selected family's actual PASS, FAIL and NOT_RUN result");
         bool emptyRejected=false;try{OfficeFocusedCheck.RequireCompleted(0);}catch(InvalidOperationException){emptyRejected=true;}
         assert(emptyRejected,"A focused Office callback that confirms no real assertion cannot silently earn PASS");
+        foreach(var invalid in new IReadOnlyList<OfficeSuiteCase>[]
+            {[],[new("unknown-reference-check","Unknown")],[cases[^1],cases[^1]]})
+        {
+            bool rejected=false;
+            try{OfficeFocusedCheck.Run(invalid);}catch(ArgumentException){rejected=true;}
+            assert(rejected,"Empty, unknown and duplicated focused selection fails before creating any Word session, including the independent reference suite");
+        }
         string folder=Path.Combine(Path.GetTempPath(),"ChinhTa-focused-"+Guid.NewGuid().ToString("N"));Directory.CreateDirectory(folder);
         try
         {

@@ -62,5 +62,18 @@ public static class WordCheckCommandChecks
         var invalidFolder=WordCheckCommand.Execute(["--word-check","technical-text"],suites=>new(new([new(suites[0],OfficeSuiteStatus.Pass)]),"PRIVATE-DOCUMENT-PATH"));
         assert(invalidFolder.ExitCode==1 && invalidFolder.Folder is null && !invalidFolder.Output.Contains("PRIVATE-DOCUMENT",StringComparison.Ordinal),
             "An unowned report path is neither printed nor accepted as complete run evidence");
+        assert(WordCheckCommand.TryParse(["--word-check","outline-references"],out var references) && references.Count==1 &&
+            references[0]==OfficeFocusedCheck.Cases.Single(s=>s.Id=="outline-references") && WordCheckCommand.Usage.Contains("outline-references",StringComparison.Ordinal),
+            "The independent reference suite is explicitly selectable by its own command ID without selecting Subject, Line or another Word family");
+        foreach(var status in new[]{OfficeSuiteStatus.Pass,OfficeSuiteStatus.Fail,OfficeSuiteStatus.NotRun})
+        {
+            var result=WordCheckCommand.Execute(["--word-check","outline-references"],suites=>
+                new(new([new(suites[0],status)]),folder));
+            assert(result.ExitCode==(status==OfficeSuiteStatus.Pass?0:1) && result.Folder==folder &&
+                result.Output.Contains("SELECTED outline-references",StringComparison.Ordinal) &&
+                result.Output.Contains((status==OfficeSuiteStatus.Pass?"PASS":status==OfficeSuiteStatus.Fail?"FAIL":"NOT_RUN")+" — "+references[0].Name,StringComparison.Ordinal) &&
+                result.Output.Contains(OfficeFocusedCheck.Scope,StringComparison.Ordinal),
+                "The independent reference command preserves its actual PASS/FAIL/NOT_RUN and limited report scope instead of borrowing a full-integration result");
+        }
     }
 }

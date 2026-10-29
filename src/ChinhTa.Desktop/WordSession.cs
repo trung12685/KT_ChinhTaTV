@@ -891,8 +891,19 @@ public sealed partial class WordSession : IDisposable
 
     private void Checkpoint()
     {
-        document!.Save();
-        snapshotCurrent = true;
+        // A failed Save may already have replaced or partially written the
+        // working file. Its previous verified state cannot survive that call.
+        snapshotCurrent = false;
+        try
+        {
+            document!.Save();
+            snapshotCurrent = true;
+        }
+        catch
+        {
+            Changed = true;
+            throw;
+        }
     }
     public void Undo() => UndoCore();
     private CheckpointCleanup? UndoCore(Action<string>? deleteRollback=null)

@@ -116,10 +116,10 @@ internal static class OfficeTechnicalTextCheck
             throw new InvalidOperationException("Một Undo của sửa riêng chưa về nguồn mẫu.");
         pass("Chữ trong đường dẫn/tên tệp/địa chỉ: chỉ cảnh báo; sửa riêng dấu câu văn xuôi, giữ dấu phẩy 14 pt đậm/gạch chân và thuộc tính đoạn, một Undo");
 
-        selected=test.Check().Where(Chosen).ToArray();bool restored=false;
+        selected=test.Check().Where(Chosen).ToArray();bool restored=false,previousChanged=test.Changed;
         try{test.FixTextFailureProbe(selected,selected.Length);}
         catch(InvalidOperationException error) when(error.InnerException is OfficeTextProbeException){restored=true;}
-        if(!restored || test.ReadCheckText()!=original || test.Changed || test.CheckUndoCount!=0 || test.ReadCheckDecorations(probe)!=decoration ||
+        if(!restored || test.ReadCheckText()!=original || test.Changed!=previousChanged || test.CheckUndoCount!=0 || test.ReadCheckDecorations(probe)!=decoration ||
             !originalStyles.Matches(test.ReadCheckCurrentStyles(Prose)))
             throw new InvalidOperationException("Lỗi cuối lượt chưa phục hồi văn xuôi, dòng kỹ thuật và trạng thái Undo.");
         VerifyKept();selected=test.Check().Where(Chosen).ToArray();
@@ -139,5 +139,6 @@ internal static class OfficeTechnicalTextCheck
             !SHA256.HashData(File.ReadAllBytes(source)).SequenceEqual(digest))
             throw new InvalidOperationException("Lưu/mở chưa giữ dòng kỹ thuật, phông/chữ hoặc nguồn mẫu bất biến.");
         VerifyKept();pass("Văn xuôi và khoảng cuối sau ngoặc cùng tài liệu có tên tệp/địa chỉ/ô trống: sửa nhóm, lỗi cuối lượt/rollback, một Undo, lưu-mở; nguồn, chuỗi kỹ thuật và ô chọn/ngày chưa điền giữ nguyên");
+        OfficeRetainedMarkCheck.Run(test,seed,folder,pass);
     }
 }
