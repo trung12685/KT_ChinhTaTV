@@ -38,8 +38,10 @@ Kiểm gọi Undo sản xuất với Close lỗi, giữ nguyên nguồn, dirty s
 
 ## Kiểm chứng
 
-Core/OpenXML trên Linux: **6703 kiểm qua**, tăng **554** từ mốc 6149. Build DesktopChecks Release: **0 warning/error**. Các harness cô lập đã qua 124 kiểm mới về dẫn chiếu, 262 về literal, 168 về NBSP/NNBSP và 23 về đóng tài liệu. Các số Core đã nằm trong runner tổng, không cộng lại harness thành tổng khác; số WPF lấy từ evidence Windows. Windows CI của mã cuối đợt đang chờ.
+Core/OpenXML trên Linux: **6703 kiểm qua**, tăng **554** từ mốc 6149. Build DesktopChecks Release: **0 warning/error**. Các harness cô lập đã qua 124 kiểm mới về dẫn chiếu, 262 về literal, 168 về NBSP/NNBSP và 23 về đóng tài liệu. Các số Core đã nằm trong runner tổng, không cộng lại harness thành tổng khác; số WPF lấy từ evidence Windows.
 
 Lượt Windows đầu phát hiện lỗi schema trong fixture cũ: `OfficeComponentCheck`/`OfficeHierarchicalOutlineCheck` tạo `w:sz` trước `w:b` trong `w:rPr`. Đã sửa thứ tự thuộc tính ngay nơi tạo mẫu, không nới validator hoặc thay giá trị định dạng. Các kiểm mô hình giữ dẫn chiếu/lựa chọn đều qua trong harness cô lập. Runner Desktop bổ sung annotation lỗi chưa xử lý khi chạy GitHub Actions để giữ nguyên exit code và hiện rõ nguyên nhân từ mẫu tổng hợp.
+
+[Windows CI cuối đợt](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40957803539) của commit `346301d45d05c763827a0eeb3a7dba6685bc08df` đã **Success**. [Job kiểm tra](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40957803539/job/123742436269) qua Core/OpenXML, WPF/build, ghi evidence và tải log. Harness fixture tạo lại từ mã đã sửa qua **41/41** kiểm (30 dẫn chiếu + 11 kỹ thuật), không còn lỗi schema; không cộng số harness này vào tổng CI. Tổng Core/WPF Windows nằm trong `check-evidence.json` của artifact kiểm tra. Workflow không đóng gói ứng dụng hoặc chạy Microsoft Word.
 
 Word thực vẫn **NOT_RUN**, tổng 12 nhóm kiểm Word giữ nguyên. Không xuất ZIP 0.1.79 hoặc thay gói 0.1.78 trong đợt này.
