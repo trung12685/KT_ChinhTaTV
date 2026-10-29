@@ -49,7 +49,7 @@ public sealed partial class WordSession
             }
             if(checkBody)PageLayoutBodyPreviewVerifier.Verify(sequence,expected);
         }
-        finally{if(File.Exists(path))File.Delete(path);}
+        finally{DeleteStagedBackup(path);}
     }
     private RepairBatchResult FixPageSelection(IReadOnlyList<Issue> selection,int? failAfterStage=null)
     {
@@ -137,7 +137,7 @@ public sealed partial class WordSession
         }
         finally
         {
-            repairProgress=previousProgress;if(File.Exists(candidate))File.Delete(candidate);
+            repairProgress=previousProgress;DeleteStagedBackup(candidate);
             if(!committed && !restored)snapshotCurrent=false;
         }
     }

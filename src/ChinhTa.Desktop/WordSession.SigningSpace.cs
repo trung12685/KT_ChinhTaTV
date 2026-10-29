@@ -21,7 +21,7 @@ public sealed partial class WordSession
             using var input=new XpsDocument(path,FileAccess.Read);
             return SignatureSpaceMeasurementReader.Read(input.GetFixedDocumentSequence(),new PreviewHighlighter(),target,anchors);
         }
-        finally{if(File.Exists(path))File.Delete(path);}
+        finally{DeleteStagedBackup(path);}
     }
     public SignatureSpaceResult ReserveHandSigningSpace()=>ReserveHandSigningSpaceCore(false);
     internal SignatureSpaceMeasurement ReadSigningSpaceProbe()

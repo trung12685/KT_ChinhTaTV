@@ -61,7 +61,7 @@ public sealed partial class WordSession
             if(ReadStoryText()!=expectedStory)throw new InvalidOperationException("Nội dung thay đổi giữa các bước sửa; phải khôi phục cả lượt.");
             return new(lines,lineIssues,evidence,centerIssues);
         }
-        finally{if(File.Exists(path))File.Delete(path);}
+        finally{DeleteStagedBackup(path);}
     }
     private void VerifyStagedFormats(IReadOnlyList<SelectedFormatProof> formats)=>
         SelectedFormatVerification.Verify(formats,lastFormatLayout,ReadPrefix,(start,end)=>(object)document!.Range(start,end),Release);
@@ -162,7 +162,7 @@ public sealed partial class WordSession
         }
         finally{if(!committed && !restored)snapshotCurrent=false;}
     }
-    private static void DeleteStagedBackup(string path)
+    internal static void DeleteStagedBackup(string path)
     {
         try{File.Delete(path);}
         catch(Exception error) when(error is IOException or UnauthorizedAccessException)

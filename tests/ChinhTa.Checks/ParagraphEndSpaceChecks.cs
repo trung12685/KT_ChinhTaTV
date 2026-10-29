@@ -83,5 +83,100 @@ public static class ParagraphEndSpaceChecks
             bool blocked=false;try{BatchPlan.Create([forged]);}catch(InvalidOperationException){blocked=true;}
             assert(blocked,"A malformed trailing-space payload cannot delete controls, write words or disguise a formatting operation");
         }
+        DelimitedEndingChecks(assert);
+    }
+    private static void DelimitedEndingChecks(Action<bool,string> assert)
+    {
+        Issue[] Find(string text,int cp=0,DocumentProfile profile=DocumentProfile.State)=>Checker.Check([new(cp,text)],profile)
+            .Where(i=>i.Kind==FixKind.ParagraphEndSpace).ToArray();
+        string Apply(string text,IEnumerable<Issue> selected)=>AtomicTextBatch.ExpectedStory(BatchPlan.Create(selected),text,i=>text[..i.Start]);
+        foreach(var sample in new (string Source,string Expected)[]
+        {
+            ("Đã duyệt “kế hoạch”.   \r\a","Đã duyệt “kế hoạch”.\r\a"),
+            ("Đã duyệt (kế hoạch)?  \n","Đã duyệt (kế hoạch)?\n"),
+            ("Theo mẫu \"nội dung\"! ","Theo mẫu \"nội dung\"!"),
+            ("😀 Đã duyệt “ke\u0302\u0301 hoa\u0323ch”;  \r","😀 Đã duyệt “ke\u0302\u0301 hoa\u0323ch”;\r"),
+            ("Đã duyệt “ kế hoạch ”  .   \r","Đã duyệt “ kế hoạch ”  .\r"),
+            ("Đã duyệt ( kế hoạch )  ;   \r","Đã duyệt ( kế hoạch )  ;\r")
+        })
+        {
+            string whole=sample.Source.TrimEnd('\r','\n','\a');
+            var direct=ParagraphEndSpaceRules.Check(new(83,sample.Source));
+            assert(direct is [{CanFix:true,BatchSafe:false,Kind:FixKind.ParagraphEndSpace,Replacement:""}] &&
+                direct[0].Original.All(c=>c==' ') && sample.Source.Substring(direct[0].Start-83,direct[0].Length)==direct[0].Original,
+                "One balanced final prose delimiter grants only the exact trailing ASCII gap after Unicode and before paragraph/cell markers");
+            foreach(var profile in Enum.GetValues<DocumentProfile>())
+            {
+                var found=Find(sample.Source,profile:profile);
+                CurrentTextPlan.Validate(found,Checker.Check([new(0,sample.Source)],profile));
+                assert(found.Length==1 && Apply(sample.Source,found)==sample.Expected,
+                    "Every profile removes the trailing gap after a proven final quote/parenthesis while retaining all unselected inner and pre-mark spaces");
+                var locked=Checker.Check([new(83,sample.Source,TextEditable:false)],profile);
+                assert(locked.Count==1 && !locked[0].CanFix && locked[0].Start==83 && locked[0].Original==whole && locked[0].Replacement==whole,
+                    "The extended delimited-ending scope remains a whole-paragraph manual warning when current XML edit permission is absent");
+            }
+            assert(ParagraphEndSpaceRules.Check(new(83,sample.Source,TextEditable:false)) is [{CanFix:false,Start:83}],
+                "The direct delimited-ending rule enforces text permission before proposing a deletion");
+        }
+        foreach(string source in new[]
+        {
+            "Đã duyệt “kế hoạch.   ","Đã duyệt kế hoạch”.   ","Đã duyệt (kế hoạch.   ","Đã duyệt kế hoạch).   ",
+            "Đã duyệt ((kế hoạch)).   ","Đã duyệt “kế (hoạch mới)”.   ","Đã duyệt (kế “hoạch mới”).   ",
+            "Đã duyệt \"kế hoạch “nội dung”\".   ","Đã duyệt \"kế hoạch\" và \"nội dung\".   ",
+            "Đã duyệt “kế hoạch” và (nội dung).   ","Đã duyệt [kế hoạch].   ","Đã duyệt ‘kế hoạch’.   ",
+            "Đã duyệt «kế hoạch».   ","Đã duyệt \"\".   ","Đã duyệt (    ).   ","Đã duyệt “kế hoạch”...   ",
+            "Đã duyệt “kế hoạch”?!   ","Đã duyệt “kế hoạch”.\u00a0   ","Đã duyệt “kế hoạch”.\t   ",
+            "Đã duyệt “kế hoạch 12”.   ","Đã duyệt (2026).   ","Đã 12 (kế hoạch).   ",
+            "Đã duyệt “nội dung ts”.   ","Đã duyệt (nội dung TP).   ","Đã duyệt (nội dung tp).   ",
+            "Đã duyệt “nội dung TS.”.   ","Đã duyệt “KẾ HOẠCH”.   ","Đã duyệt (kế HOẠCH).   ",
+            "Đã duyệt “Kế hoạch”.   ","Đã duyệt (kế).   ","Duyệt (kế hoạch).   ","“kế hoạch”.   ",
+            "Đã dùng fn(kế hoạch).   ","Đã dùng fn (kế hoạch).   ","Đã dùng parse(kế hoạch).   ",
+            "print(\"kế hoạch\");   ","Console.WriteLine(\"kế hoạch\");   ","Tệp mau.docx đã duyệt “kế hoạch”.   ",
+            "Số: đã duyệt (kế hoạch).   ","Hà Nội, ngày 3 tháng 1 năm 2026 đã duyệt “kế hoạch”.   "
+        })
+            assert(ParagraphEndSpaceRules.Check(new(0,source)).Count==0 && Find(source).Length==0,
+                "Trailing gaps after ambiguous, nested, technical, numeric, abbreviated or uppercase delimiters remain outside the narrow prose extension");
+
+        const string original="Đã duyệt “kế hoạch”.   \r";
+        var trailing=Find(original).Single();
+        foreach(string fresh in new[]{original.Replace("kế hoạch","KẾ HOẠCH",StringComparison.Ordinal),
+            original.Replace('“','[').Replace('”',']'),original.Replace("Đã duyệt","cfg=duệt",StringComparison.Ordinal)})
+        {
+            bool rejected=false;
+            try{CurrentTextPlan.Validate([trailing],Checker.Check([new(0,fresh)]));}catch(InvalidOperationException){rejected=true;}
+            assert(rejected && fresh.Substring(trailing.Start,trailing.Length)==trailing.Original,
+                "Identical trailing bytes and CPs cannot replay a stored choice after delimiter/case/technical context loses its proof");
+        }
+        bool permissionChanged=false;
+        try{CurrentTextPlan.Validate([trailing],Checker.Check([new(0,original,TextEditable:false)]));}catch(InvalidOperationException){permissionChanged=true;}
+        assert(permissionChanged,"A stored delimited-ending deletion cannot survive loss of the current XML text permission");
+
+        foreach(var sample in new (string Source,string Expected)[]
+        {
+            ("Theo mẫu “  nội dung  ”;   \r\a","Theo mẫu “nội dung”;\r\a"),
+            ("Theo mẫu (  nội dung  );   \r\a","Theo mẫu (nội dung);\r\a")
+        })
+        {
+            var selected=Checker.Check([new(0,sample.Source)]).Where(i=>i.CanFix).ToArray();
+            var gap=selected.Single(i=>i.Kind==FixKind.ParagraphEndSpace);
+            assert(selected.Length==3 && Apply(sample.Source,selected)==sample.Expected &&
+                !Checker.Check([new(0,sample.Expected)]).Any(i=>i.CanFix),
+                "The final trailing-gap deletion composes without overlap with both independently selected inner delimiter-edge repairs");
+            string trailingOnly=Apply(sample.Source,[gap]);
+            assert(trailingOnly.Contains("  nội dung  ",StringComparison.Ordinal) &&
+                Checker.Check([new(0,trailingOnly)]).Count(i=>i.CanFix)==2,
+                "Selecting only the trailing gap leaves both unselected inner-edge defects and their repair choices intact");
+            string current=sample.Source;int writes=0,restores=0;bool failed=false;
+            var plan=BatchPlan.Create(selected);
+            try
+            {
+                AtomicTextBatch.Apply(plan,i=>current.Substring(i.Start,i.Length),i=>
+                {writes++;current=current.Remove(i.Start,i.Length).Insert(i.Start,i.Replacement);return i.Replacement;},
+                    ()=>throw new IOException("synthetic delimited-ending save failure"),()=>{restores++;current=sample.Source;});
+            }
+            catch(IOException){failed=true;}
+            assert(failed && writes==plan.Count && restores==1 && current==sample.Source,
+                "A final-save failure restores the whole delimiter/trailing-space selection and all paragraph markers exactly once");
+        }
     }
 }

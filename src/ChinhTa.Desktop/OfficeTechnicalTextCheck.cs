@@ -18,8 +18,24 @@ internal static class OfficeTechnicalTextCheck
         "Địa chỉ https://example.invalid/tài  liệu/kế hoạch kế hoạch?mẫu=con đo",
         "Tên tệp \"Báo  cáo kế hoạch kế hoạch con đo.docx\" cần giữ nguyên."
     });
+    internal static IReadOnlyList<string> FormRows {get;}=Array.AsReadOnly(new[]
+    {
+        "Tích chọn [        ] nếu đồng ý.",
+        "Ngày sinh:    /    /2026"
+    });
+    internal static IReadOnlyList<string> ParagraphEndRows {get;}=Array.AsReadOnly(new[]
+    {
+        "Đã duyệt “kế hoạch”.   ",
+        "Theo mẫu (nội dung);   "
+    });
     internal const string ValidTechnical=@"Tệp C:\Mau\bao-cao.docx";
-    private static bool Chosen(Issue issue)=>issue.CanFix && issue.Kind is FixKind.Text or FixKind.PunctuationSpace or FixKind.RepeatedText;
+    private static bool Chosen(Issue issue)=>issue.CanFix && issue.Kind is FixKind.Text or FixKind.PunctuationSpace or FixKind.RepeatedText or FixKind.ParagraphEndSpace;
+    internal static string ExpectedText(string original)
+    {
+        string expected=original.Replace(Prose,FixedProse,StringComparison.Ordinal);
+        foreach(string row in ParagraphEndRows)expected=expected.Replace(row+"\r",row.TrimEnd(' ')+"\r",StringComparison.Ordinal);
+        return expected;
+    }
 
     internal static string Create(string seed,string folder)
     {
@@ -42,7 +58,7 @@ internal static class OfficeTechnicalTextCheck
         var retainedSection=new XElement(section);
         body.ReplaceNodes(new XElement(w+"p",new XElement(w+"pPr",new XElement(w+"jc",new XAttribute(w+"val","left"))),
             Run("Nội dung",true),Run(Prose["Nội dung".Length..])),
-            TechnicalRows.Select(Row),Row(ValidTechnical),retainedSection);
+            TechnicalRows.Select(Row),FormRows.Select(Row),ParagraphEndRows.Select(Row),Row(ValidTechnical),retainedSection);
         entry.Delete();using(var output=zip.CreateEntry("word/document.xml").Open())xml.Save(output);
         return path;
     }
@@ -53,16 +69,17 @@ internal static class OfficeTechnicalTextCheck
         void VerifyKept()
         {
             string story=test.ReadCheckText();
-            if(!TechnicalRows.Append(ValidTechnical).All(row=>story.Contains(row+"\r",StringComparison.Ordinal)))
-                throw new InvalidOperationException("Tên tệp, đường dẫn hoặc địa chỉ mẫu đã bị đổi.");
+            if(!TechnicalRows.Concat(FormRows).Append(ValidTechnical).All(row=>story.Contains(row+"\r",StringComparison.Ordinal)))
+                throw new InvalidOperationException("Tên tệp, đường dẫn, địa chỉ hoặc ô trống của mẫu đã bị đổi.");
             var current=test.Check();
             if(TechnicalRows.Any(row=>current.Count(i=>!i.CanFix && i.Original==row)!=1))
                 throw new InvalidOperationException("Dòng kỹ thuật chưa được giữ thành cảnh báo thủ công độc lập.");
         }
         var initial=test.Check();var selected=initial.Where(Chosen).ToArray();
-        if(selected.Length!=3 || !original.Contains(Prose+"\r",StringComparison.Ordinal) ||
+        if(selected.Length!=3+ParagraphEndRows.Count || selected.Count(i=>i.Kind==FixKind.ParagraphEndSpace)!=ParagraphEndRows.Count ||
+            !original.Contains(Prose+"\r",StringComparison.Ordinal) ||
             initial.Any(i=>i.CanFix && TechnicalRows.Contains(i.Original)))
-            throw new InvalidOperationException("Mẫu chưa phân biệt ba gợi ý văn xuôi với các dòng kỹ thuật phải giữ.");
+            throw new InvalidOperationException("Mẫu chưa phân biệt gợi ý văn xuôi/cuối đoạn với các dòng kỹ thuật và ô trống phải giữ.");
         var spaces=selected.Single(i=>i.Kind==FixKind.Text && i.Original=="  ");
         // Anchor to the actual returned Word CP and a verified literal prefix,
         // never to an index computed from the concatenated story string.
@@ -87,7 +104,7 @@ internal static class OfficeTechnicalTextCheck
         if(!restored || test.ReadCheckText()!=original || test.Changed || test.CheckUndoCount!=0 || test.ReadCheckDecorations(probe)!=decoration)
             throw new InvalidOperationException("Lỗi cuối lượt chưa phục hồi văn xuôi, dòng kỹ thuật và trạng thái Undo.");
         VerifyKept();test.FixMany(test.Check().Where(Chosen));
-        string expected=original.Replace(Prose,FixedProse,StringComparison.Ordinal);
+        string expected=ExpectedText(original);
         if(test.ReadCheckText()!=expected || test.CheckUndoCount!=1 || test.Check().Any(Chosen) || test.ReadCheckDecorations(probe)!=decoration)
             throw new InvalidOperationException("Sửa nhóm văn xuôi chưa đạt nguyên văn/kiểu/Undo hoặc còn lỗi đã chọn.");
         VerifyKept();string saved=Path.Combine(folder,"technical-text-fixed.docx");test.SaveCopy(saved);test.Undo();test.Check();
@@ -97,6 +114,6 @@ internal static class OfficeTechnicalTextCheck
         if(test.ReadCheckText()!=expected || test.Check().Any(Chosen) || test.ReadCheckDecorations(probe)!=decoration ||
             !SHA256.HashData(File.ReadAllBytes(source)).SequenceEqual(digest))
             throw new InvalidOperationException("Lưu/mở chưa giữ dòng kỹ thuật, phông/chữ hoặc nguồn mẫu bất biến.");
-        VerifyKept();pass("Văn xuôi cùng tài liệu có tên tệp/địa chỉ: sửa nhóm, lỗi cuối lượt/rollback, một Undo, lưu-mở; nguồn và các dòng kỹ thuật giữ nguyên");
+        VerifyKept();pass("Văn xuôi và khoảng cuối sau ngoặc cùng tài liệu có tên tệp/địa chỉ/ô trống: sửa nhóm, lỗi cuối lượt/rollback, một Undo, lưu-mở; nguồn, chuỗi kỹ thuật và ô chọn/ngày chưa điền giữ nguyên");
     }
 }

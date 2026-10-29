@@ -1,6 +1,6 @@
 # Chính tả Việt
 
-Đang tích lũy mã **0.1.78** sau bản thử 0.1.77: [đợt 33–36](docs/FORMAT-BATCH-33-36.md) xử lý chuyển tài liệu, phục hồi, bảo vệ chuỗi kỹ thuật và dọn phiên Word. Chưa xuất ZIP 0.1.78; artifact bên dưới vẫn là mã 0.1.77 đã đóng gói.
+Đang tích lũy mã **0.1.78** sau bản thử 0.1.77: [đợt 33–36](docs/FORMAT-BATCH-33-36.md) xử lý chuyển tài liệu/phục hồi; [đợt 37–40](docs/FORMAT-BATCH-37-40.md) giữ ô chọn/ngày chưa điền, sửa khoảng cuối sau ngoặc và xử lý lỗi tài nguyên khi sửa. Chưa xuất ZIP 0.1.78; artifact bên dưới vẫn là mã 0.1.77 đã đóng gói.
 
 Đã có [bản thử Windows0.1.77](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40940520669/artifacts/12927431090), gom đợt20–32. Đăng nhập GitHub để tải artifact, giải nén rồi giải nén toàn bộ ZIP bên trong vào thư mục mới. Bản release gần nhất vẫn0.1.76.
 

@@ -30,21 +30,25 @@ public static class TechnicalTextDesktopChecks
             XNamespace w="http://schemas.openxmlformats.org/wordprocessingml/2006/main";XElement body;
             using(var zip=ZipFile.OpenRead(fixture))using(var stream=zip.GetEntry("word/document.xml")!.Open())body=XDocument.Load(stream).Root!.Element(w+"body")!;
             string[] rows=body.Elements(w+"p").Select(p=>string.Concat(p.Descendants(w+"t").Select(t=>t.Value))).ToArray();
-            assert(rows.SequenceEqual(new[]{OfficeTechnicalTextCheck.Prose}.Concat(OfficeTechnicalTextCheck.TechnicalRows).Append(OfficeTechnicalTextCheck.ValidTechnical)) &&
+            assert(rows.SequenceEqual(new[]{OfficeTechnicalTextCheck.Prose}.Concat(OfficeTechnicalTextCheck.TechnicalRows).Concat(OfficeTechnicalTextCheck.FormRows).Concat(OfficeTechnicalTextCheck.ParagraphEndRows).Append(OfficeTechnicalTextCheck.ValidTechnical)) &&
                 body.Elements(w+"sectPr").Count()==1 && body.Elements().Last().Name==w+"sectPr",
                 "The fixture preserves literal paths, repeated filename words and significant double spaces in separate paragraphs with a retained section");
             var paragraphs=new List<Paragraph>();int offset=200;
             foreach(string row in rows){paragraphs.Add(new(offset,row+"\r"));offset+=row.Length+1;}
             var issues=Checker.Check(paragraphs,DocumentProfile.Personal);var model=new IssueReviewModel(issues);model.All.IsChecked=true;
             var selected=model.Choices.Where(c=>c.IsChecked).Select(c=>c.Issue).ToArray();
-            assert(selected.Length==3 && model.Choices.Count(c=>!c.Issue.CanFix && !c.IsChecked)==3 &&
-                selected.All(i=>i.Start>=paragraphs[0].Start && (long)i.Start+i.Length<=paragraphs[0].Start+OfficeTechnicalTextCheck.Prose.Length),
-                "Select all chooses only the three prose repairs, leaving filename/path/address warnings unselected");
+            var expectedSelected=3+OfficeTechnicalTextCheck.ParagraphEndRows.Count;
+            assert(selected.Length==expectedSelected && model.Choices.Count(c=>!c.Issue.CanFix && !c.IsChecked)==3 &&
+                selected.Count(i=>i.Kind==FixKind.ParagraphEndSpace)==OfficeTechnicalTextCheck.ParagraphEndRows.Count &&
+                selected.Where(i=>i.Kind!=FixKind.ParagraphEndSpace).All(i=>i.Start>=paragraphs[0].Start && (long)i.Start+i.Length<=paragraphs[0].Start+OfficeTechnicalTextCheck.Prose.Length),
+                "Select all chooses only ordinary prose and proven trailing-gap repairs, leaving technical warnings and intentional form blanks untouched");
             string story=string.Concat(paragraphs.Select(p=>p.Text));int origin=paragraphs[0].Start;
-            var plan=BatchPlan.Create(selected);string expected=story.Replace(OfficeTechnicalTextCheck.Prose,OfficeTechnicalTextCheck.FixedProse,StringComparison.Ordinal);
+            var plan=BatchPlan.Create(selected);string expected=OfficeTechnicalTextCheck.ExpectedText(story);
             assert(AtomicTextBatch.ExpectedStory(plan,story,i=>story[..(i.Start-origin)])==expected &&
-                OfficeTechnicalTextCheck.TechnicalRows.All(row=>expected.Contains(row+"\r",StringComparison.Ordinal)),
-                "The mixed review plan changes only prose while keeping all technical literal text byte-for-byte in the expected story");
+                OfficeTechnicalTextCheck.TechnicalRows.Concat(OfficeTechnicalTextCheck.FormRows).All(row=>expected.Contains(row+"\r",StringComparison.Ordinal)),
+                "The mixed review plan changes only prose while keeping technical literals and blank checkbox/date fields byte-for-byte in the expected story");
+            assert(OfficeTechnicalTextCheck.FormRows.All(row=>!Checker.Check([new(0,row)],DocumentProfile.Personal).Any(i=>i.CanFix && !i.IsStyleOnly)),
+                "The actual Word fixture keeps square checkbox width and empty slash-date components out of mechanical text repairs");
             var old=Checker.Check([new(0,"Nội dung  báo cáo.")],DocumentProfile.Personal).Where(i=>i.CanFix).ToArray();
             var current=Checker.Check([new(0,@"Nội dung  báo cáo. C:\Tep\mau.docx")],DocumentProfile.Personal);
             bool stale=false;try{CurrentTextPlan.Validate(old,current);}catch(InvalidOperationException){stale=true;}

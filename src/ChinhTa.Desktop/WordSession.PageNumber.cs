@@ -18,7 +18,7 @@ public sealed partial class WordSession
             if(verify && migration is not null)PageNumberPreviewVerifier.VerifyNoMigratedFooter(sequence,migration,layout.BottomMm);
             return PageNumberPreviewVerifier.Capture(sequence,layout.TopMm,verify?null:migration,layout.BottomMm);
         }
-        finally{if(File.Exists(path))File.Delete(path);}
+        finally{DeleteStagedBackup(path);}
     }
     private RepairBatchResult FixNumberSelection(IReadOnlyList<Issue> selection,int? failAfterStage=null)
     {
@@ -72,7 +72,7 @@ public sealed partial class WordSession
                         DocxPageNumberEditor.VerifyLive(live.Package,after.Package,fix,live.Pages);
                         PageNumberPreviewVerifier.Preserve(visualBefore,NumberPreview(layout,true,migration));repairProgress?.Confirm(1);
                     }
-                    finally{if(File.Exists(source))File.Delete(source);}
+                    finally{DeleteStagedBackup(source);}
                     if(failAfterStage==2)throw new OfficeStagedProbeException();
                 },
                 ()=>
@@ -109,6 +109,6 @@ public sealed partial class WordSession
                 "Sửa PAGE chưa hoàn tất; giữ checkpoint để phục hồi: "+before,failure);
         }
         finally
-        {repairProgress=previousProgress;if(File.Exists(candidate))File.Delete(candidate);if(!committed && !restored)snapshotCurrent=false;}
+        {repairProgress=previousProgress;DeleteStagedBackup(candidate);if(!committed && !restored)snapshotCurrent=false;}
     }
 }

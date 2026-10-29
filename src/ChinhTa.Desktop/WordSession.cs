@@ -469,7 +469,7 @@ public sealed partial class WordSession : IDisposable
         finally
         {
             try { if (File.Exists(path)) File.Delete(path); }
-            catch (IOException error) { Diagnostics.Write("Word.LineVerify.Cleanup",error); }
+            catch (Exception error) when(error is IOException or UnauthorizedAccessException) { Diagnostics.Write("Word.LineVerify.Cleanup",error); }
         }
     }
     private (IReadOnlyList<LineGeometry> Preserve, LineAnchorFrame? MottoFrame) ReadPlacementBaseline(IReadOnlyList<Issue> plan,string checkpoint)
@@ -499,7 +499,7 @@ public sealed partial class WordSession : IDisposable
             }
             return (RenderedLineVerifier.RetainOtherStrokes(baseline,replaced),frame);
         }
-        finally {if(File.Exists(path))File.Delete(path);}
+        finally {DeleteStagedBackup(path);}
     }
     private IReadOnlyList<Issue> ApplyLinePackage(IReadOnlyList<Issue> plan, string before, bool verifyReference = true)
     {
@@ -592,7 +592,7 @@ public sealed partial class WordSession : IDisposable
             throw new InvalidOperationException("Chưa áp dụng được nhóm đường kẻ. " +
                 "Bản trước lượt sửa được giữ tại: " + before, error);
         }
-        finally { if (File.Exists(candidate)) File.Delete(candidate); }
+        finally { DeleteStagedBackup(candidate); }
     }
     public void Fix(Issue issue) => FixMany([issue]);
     public void FixMany(IEnumerable<Issue> issues) { FixSelection(issues); }
@@ -641,7 +641,7 @@ public sealed partial class WordSession : IDisposable
             }
             return new(bound,residual);
         }
-        finally{if(File.Exists(path))File.Delete(path);}
+        finally{DeleteStagedBackup(path);}
     }
     private void LogReferenceBindings(IReadOnlyList<Issue> requested,string stage)
     {
@@ -861,13 +861,17 @@ public sealed partial class WordSession : IDisposable
                 },()=>
                 {
                     Progress(RepairActivity.Restoring,"Chưa đạt hậu kiểm; đang phục hồi nhóm chữ/phông.");
-                    // Close this private Word instance, including a disconnected COM server.
-                    foreach(var styled in formatRanges)Release(styled.Range);
-                    formatRanges.Clear();
-                    SwapCheckpoint(RecoveryPath,before,CloseConnection,Connect);
-                    if(ReadStoryText()!=originalStory)
-                        throw new InvalidOperationException("Chưa xác minh được chữ sau phục hồi checkpoint.");
-                    restored=true;
+                    var recovery=TrackedRangeCleanup.Restore(formatRanges,styled=>styled.Range,Release,()=>
+                    {
+                        // Closing the private application and restoring the
+                        // checkpoint must still be attempted after an RCW fault.
+                        SwapCheckpoint(RecoveryPath,before,CloseConnection,Connect);
+                        if(ReadStoryText()!=originalStory)
+                            throw new InvalidOperationException("Chưa xác minh được chữ sau phục hồi checkpoint.");
+                    });
+                    restored=recovery.Restored;
+                    RecordTrackedRangeCleanup(recovery.CleanupFailure);
+                    if(recovery.Failure is { } failure)System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failure).Throw();
                 });
                 undoCheckpoints.Push(before); // Only a fully committed action enters the Undo stack.
                 Changed=true;snapshotCurrent=true;
@@ -888,7 +892,7 @@ public sealed partial class WordSession : IDisposable
                     : "Lượt sửa chưa hoàn tất; giữ bản trước để phục hồi: "+before,error);
             }
         }
-        finally{foreach(var styled in formatRanges)Release(styled.Range);}
+        finally{RecordTrackedRangeCleanup(TrackedRangeCleanup.Drain(formatRanges,styled=>styled.Range,Release));}
     }
 
     private void Checkpoint()

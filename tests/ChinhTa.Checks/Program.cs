@@ -63,6 +63,7 @@ CheckpointCleanupChecks.Run(Assert);
 IndependentCleanupChecks.Run(Assert);
 RepeatedTextChecks.Run(Assert);
 TechnicalTextChecks.Run(Assert);
+BlankFormSpacingChecks.Run(Assert);
 InitialRepeatChecks.Run(Assert);
 PunctuationSpaceChecks.Run(Assert);
 ParentheticalPunctuationChecks.Run(Assert);
