@@ -32,6 +32,8 @@ Kiểm dùng đúng verifier/reader với managed ranges: đọc phông đúng/s
 
 ## Kiểm chứng
 
-Core/OpenXML trên Linux: **5775 kiểm qua**, tăng **146** từ mốc 5629. Build DesktopChecks Release: 0 warning/error. Harness reader managed có 95 kiểm qua, gồm boundary mới và hồi quy reader/format/cleanup; không cộng vào số Core. CI Windows của mã cuối đợt đang chờ, chưa suy số WPF từ việc biên dịch.
+Core/OpenXML trên Linux: **5775 kiểm qua**, tăng **146** từ mốc 5629. Build DesktopChecks Release: 0 warning/error. Harness reader managed có 95 kiểm qua, gồm boundary mới và hồi quy reader/format/cleanup; không cộng vào số Core.
+
+CI Windows của mã triển khai `9bd2918dc4443ffcc3041707bcd38817cdfc47fe`: [run 40949079333 — Success](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40949079333), [job 123712070425](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40949079333/job/123712070425). Core/OpenXML, WPF/build, ghi bằng chứng và lưu log đều thành công, gồm fixture Word bổ sung và toàn bộ lớp kiểm mới đã đăng ký. Số Windows thực nằm trong `check-evidence.json`/log của run; không suy từ số Linux. Workflow này chỉ lưu kết quả kiểm, không tạo ZIP ứng dụng. Cập nhật tài liệu sau commit trên không thay code đã kiểm.
 
 Word runtime vẫn **NOT_RUN**. Các thay đổi thuộc mã phát triển 0.1.78; gói 0.1.77 và main giữ nguyên. Chưa dùng kiểm Core/WPF để mở quyền tự sửa Exactly/AtLeast hoặc chứng nhận mọi DOCX.
