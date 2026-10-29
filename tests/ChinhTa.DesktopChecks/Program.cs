@@ -44,6 +44,15 @@ static class Program
     [STAThread]
     static void Main(string[] args)
     {
+        if(Environment.GetEnvironmentVariable("GITHUB_ACTIONS")=="true")
+            AppDomain.CurrentDomain.UnhandledException+=(_,failure)=>
+            {
+                // Only synthetic DesktopChecks run here. Preserve the failing
+                // exit code while surfacing its cause in the CI annotation.
+                if(failure.ExceptionObject is Exception error)
+                    Console.WriteLine("::error::"+error.ToString().Replace("%","%25",StringComparison.Ordinal)
+                        .Replace("\r","%0D",StringComparison.Ordinal).Replace("\n","%0A",StringComparison.Ordinal));
+            };
         if(args.Length==2 && args[0]=="--verify-report-package")
         {
             ProgressReportDesktopChecks.VerifyPackage(args[1],Assert);
