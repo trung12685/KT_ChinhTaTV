@@ -1,4 +1,4 @@
-> Mã phát triển 0.1.77: đợt20 mở PAGE cuối trang tới10.000trang, gồm số tách cụm XPS; chưa đóng gói và chưa có Word thực PASS. Bản tải gần nhất vẫn0.1.76.
+> Bản thử0.1.77 đã gom đợt20–32 thành [một artifact Windows](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40940520669/artifacts/12927431090), nguồn `ac6f50cc2751835667971204dd4828d973c9408a`. CI Windows đã qua; Word thực vẫn NOT_RUN. Xem [hướng dẫn](PREVIEW-0.1.77.md) và [bằng chứng](PREVIEW-0.1.77-EVIDENCE.md). Release gần nhất vẫn0.1.76.
 
 Đợt 22 bổ sung nền tảng bản sao toàn gói và đối chiếu XPS trước hiệu chuẩn, cùng nhóm kiểm Word độc lập cho Exactly/AtLeast. Xem [FORMAT-BATCH-22.md](FORMAT-BATCH-22.md). Chưa đo Single/1,5 hoặc bỏ Before/After trên clone; C28/C29 vẫn giữ quyền sửa cũ. Nhóm Word mới chưa được thực thi trên môi trường Linux.
 
@@ -6,9 +6,11 @@
 
 Đợt 27–29 xử lý các việc độc lập trong lúc chưa có Word-runtime: bảo toàn khoảng/lặp thuộc đường dẫn và tên tệp; phân loại lỗi đo để lỗi toàn vẹn/COM/cleanup không biến thành thiếu bằng chứng; thêm nhóm kiểm Word riêng cho sửa chữ, tổng12nhóm. Xem [FORMAT-BATCH-27-29.md](FORMAT-BATCH-27-29.md). Cần tiếp tục giảm báo nhầm theo dữ liệu và mẫu, không dừng toàn bộ phát triển để chờ riêng Exactly/AtLeast.
 
+Đợt30–32 tiếp tục bảo vệ tên tệp Office/OpenDocument, nhận đúng manifest DOCX hỏng, thêm lệnh kiểm ba nhóm và giữ lỗi đóng phiên kiểm. Bản thử có runtime đi kèm, kiểm EXE/ZIP/manifest và thử thay đổi file trên bản sao trước khi tải lên. Việc tiếp theo cần kết quả `office-groups.txt` trên máy Windows có Word cho ba nhóm clone, hiệu chuẩn và sửa chữ; đồng thời tiếp tục giảm báo nhầm theo mẫu. Quyền sửa Exactly/AtLeast vẫn giữ nguyên.
+
 # Các phần còn thiếu và thứ tự hoàn thiện
 
-Cập nhật ngày 29/10/2026 (UTC+7), mã 0.1.76 tích lũy năm cụm đợt 15–19 sau gói 0.1.75. Đối chiếu danh mục 33 nhóm có đề xuất có điều kiện, 8 nhóm thủ công, 1 quy tắc minh họa với đường quét, writer, hậu kiểm và bài Office. Đây là bản phân tích phạm vi mã và bằng chứng hiện có, không xác nhận ứng dụng đã kiểm mọi tài liệu hoặc mọi phiên bản Word.
+Phân tích nền dưới đây lập cho mã0.1.76 ngày29/10/2026 (UTC+7); các đoạn đầu tài liệu cập nhật đợt20–32 và gói thử0.1.77. Danh mục vẫn33 nhóm có đề xuất có điều kiện,8 nhóm thủ công,1 quy tắc minh họa. Phân tích phạm vi mã và bằng chứng không xác nhận ứng dụng đã kiểm mọi tài liệu hoặc mọi phiên bản Word.
 
 ## Việc cần giải quyết trước khi mở rộng luật
 

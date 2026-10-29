@@ -1,10 +1,10 @@
 # Chính tả Việt
 
-Đang phát triển0.1.77: [PAGE cuối trang nhiều chữ số](docs/FORMAT-BATCH-20.md). Chưa có ZIP0.1.77; bản tải gần nhất vẫn0.1.76.
+Đã có [bản thử Windows0.1.77](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40940520669/artifacts/12927431090), gom đợt20–32. Đăng nhập GitHub để tải artifact, giải nén rồi giải nén toàn bộ ZIP bên trong vào thư mục mới. Bản release gần nhất vẫn0.1.76.
 
 Mã nguồn mới có [đo thử giãn dòng/khoảng đoạn trên bản sao](docs/FORMAT-BATCH-23-26.md), [bảo toàn đường dẫn/tên tệp và xử lý lỗi đo](docs/FORMAT-BATCH-27-29.md). Quyền tự sửa Exactly/AtLeast vẫn cần bằng chứng Word thực; các kết quả Core/WPF không thay kiểm Word.
 
-[Bản thử Windows0.1.77 và cách kiểm Word](docs/PREVIEW-0.1.77.md) được tạo thành artifact riêng bởi workflow **Windows preview artifact**; không thay các release bên dưới. [Đợt30–32](docs/FORMAT-BATCH-30-32.md) bổ sung lệnh kiểm theo nhóm và điều kiện đóng phiên nghiêm ngặt.
+[Cách dùng và kiểm Word](docs/PREVIEW-0.1.77.md) · [Bằng chứng đúng gói đã tạo](docs/PREVIEW-0.1.77-EVIDENCE.md). Core/OpenXML, WPF, EXE đã publish và kiểm toàn vẹn ZIP đều qua trên Windows; Microsoft Word thực chưa được chạy. [Đợt30–32](docs/FORMAT-BATCH-30-32.md) bổ sung lệnh kiểm theo nhóm và điều kiện đóng phiên nghiêm ngặt. Các release bên dưới giữ nguyên.
 
 ## Bản thử tích lũy 0.1.76 — phạm vi kiểm và hậu kiểm khổ/lề/số trang
 

@@ -2,6 +2,8 @@
 
 Đây là bản thử trước phát hành, gom các thay đổi sau0.1.76. Bản0.1.76 và các tag/gói cũ giữ nguyên. Bản thử có sẵn .NET8 runtime, cần Windowsx64 và Microsoft Word desktop đã cài/khởi động/kích hoạt được bình thường. Không cần cài SDK để dùng EXE. Chưa có kết quả Word thực được ghi nhận cho mã mới.
 
+[Tải artifact đã kiểm](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40940520669/artifacts/12927431090) · [Nguồn, CI và digest artifact](PREVIEW-0.1.77-EVIDENCE.md). Tên artifact: `ChinhTaViet-0.1.77-preview-ac6f50cc`; cần đăng nhập GitHub. Artifact được lưu30ngày từ lần chạy29/10/2026 (UTC).
+
 ## Bắt đầu
 
 1. Tải artifact `ChinhTaViet-0.1.77-preview-<mã commit>` từ workflow Windows preview, giải nén artifact rồi giải nén **toàn bộ** ZIP bên trong vào một thư mục mới có quyền ghi. Giữ `samples`, DLL và các tệp đi kèm cạnh EXE; không ghép vào thư mục của bản cũ.
@@ -12,10 +14,10 @@
 
 Đóng gói này ưu tiên xác minh ba nhóm độc lập: clone trung thực, hiệu chuẩn Single/1,5/khoảng đoạn, và sửa chữ giữ tên tệp/đường dẫn. Có hai cách:
 
-- Chạy `KIEM-TRA-WORD.cmd`. Lệnh chỉ chọn ba nhóm trên và các mẫu giả đi kèm; không nhận đường dẫn tài liệu cá nhân. Cửa sổ console giữ kết quả cuối, mã0 chỉ khi đủ cả ba nhóm PASS; mã1 nghĩa là có FAIL/NOT_RUN; mã2 là lệnh không hợp lệ.
+- Chạy `KIEM-TRA-WORD.cmd`. Lệnh chỉ chọn ba nhóm trên và các mẫu giả đi kèm; không nhận đường dẫn tài liệu cá nhân. Cửa sổ giữ mã thoát và vị trí báo cáo; kết quả từng nhóm nằm trong `office-groups.txt`. Mã0 chỉ khi đủ cả ba nhóm PASS; mã1 nghĩa là có FAIL/NOT_RUN hoặc phiên kiểm/báo cáo chưa hoàn tất; mã2 là lệnh không hợp lệ.
 - Trong ứng dụng chọn **Kiểm tra → Kiểm tra từng nhóm Word…**, chọn **Đối chiếu bản sao cô lập Exactly/AtLeast**, **Đo Single/1,5 và khoảng đoạn trên bản sao**, **Sửa chữ và giữ đường dẫn/tên tệp**, rồi chạy. Đây là kết quả các nhóm đã chọn, không thay bài Word toàn bộ.
 
-Lệnh tương đương khi cần chạy trong script:
+Lệnh tương đương khi cần chạy trong script; mở PowerShell tại thư mục vừa giải nén:
 
 ```powershell
 $p = Start-Process -FilePath .\ChinhTa.Desktop.exe -ArgumentList '--word-check','isolated-spacing,spacing-calibration,technical-text' -Wait -PassThru

@@ -24,6 +24,8 @@ Chạy Core/OpenXML và WPF thật, kiểm số dương/đúngrunner/exitcode; m
 
 `scripts/PreviewMetadata` có kiểm giả lập dương/âm cho metadata, code-report hiện tại, file thiếu/thừa/đổi, traversal/reparse và manifest; workflow mới là bằng chứng góiWindows thực. Các con số harness không cộng vào runnerCore/WPF.
 
+Đã tạo một artifact từ `ac6f50cc2751835667971204dd4828d973c9408a`; [run40940520669](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40940520669) qua mọi bước, gồm EXE, ZIP đã giải nén và các probe thay đổi file trên bản sao. [Bằng chứng và đường tải](PREVIEW-0.1.77-EVIDENCE.md). Run trước dừng ở kiểm metadata và chưa tải artifact lên; script sau đó được sửa đọc/ghi UTF-8 tường minh và kiểm bằng `EncodingWarning` thành lỗi. Không hạ điều kiện xác minh để tạo gói.
+
 ## Điều kiện tiếp theo
 
 Người kiểm trên máy Windows có Word chạy launcher hoặc chọn ba nhóm trong menu, giữ đúng `office-groups.txt`. Chỉ sau khi clone/hiệu chuẩn/giữ nguồn/cleanup thực được xác minh mới thiết kế writer Exactly/AtLeast/khoảng đoạn gộp. Gói preview chưa biến CI thành kết quả Word, chưa chứng nhận mọi văn bản hoặc chính tả/ngữ nghĩa tiếng Việt hoàn chỉnh.
