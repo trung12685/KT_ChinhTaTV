@@ -23,6 +23,8 @@ public static class OutlineRules
     private static readonly Regex Hint=new(@"^[ \t]*(?:(?:[0-9]+\.)+[0-9]+[.)]|[0-9]{1,3}[.)]|[IVXLCDM]{1,12}[.)]|[a-zđ][.)]|[-–—+•●○*])(?:\s|$)",RegexOptions.CultureInvariant|RegexOptions.NonBacktracking);
     private const string ReferenceLabel=@"(?:[0-9]+(?:\.[0-9]+)*|[IVXLCDM]{1,12}|[a-zđ])";
     private const string ReferenceSpace=@"[\p{Zs}\t]";
+    private const string ReferenceLabelToken=@"(?:\("+ReferenceSpace+@"*(?<label>"+ReferenceLabel+@")"+ReferenceSpace+@"*\)|(?<label>"+ReferenceLabel+@")(?:[.)])?)";
+    private sealed record NumericReferenceRange(string[] Prefix,string Lower,string Upper);
     // Expand only fixed cue words, never normalize the paragraph or reuse
     // normalized offsets as Word CPs. References grant no edit permission;
     // they conservatively freeze numbering that would leave dangling labels.
@@ -41,24 +43,59 @@ public static class OutlineRules
         {string digits=component.TrimStart('0');return digits.Length==0?"0":digits;}));
     }
     private static readonly Regex References=new(@"\b(?:"+string.Join('|',new[]{"mục","điểm","khoản","phần","chương"}.Select(ReferenceWord))+@")"+
-        ReferenceSpace+@"+(?:"+ReferenceWord("số")+ReferenceSpace+@"+)?(?:\("+ReferenceSpace+@"*(?<label>"+ReferenceLabel+@")"+ReferenceSpace+@"*\)|"+
-        @"(?<label>"+ReferenceLabel+@")(?:[.)])?(?:(?:"+ReferenceSpace+@"*[-–—,]"+ReferenceSpace+@"*|"+
-        ReferenceSpace+@"+(?:"+string.Join('|',new[]{"và","đến","tới"}.Select(ReferenceWord))+@")"+ReferenceSpace+@"+)(?<label>"+ReferenceLabel+
-        @")(?:[.)])?)*)(?![0-9]|\.[0-9])(?=\s|[,;:.!?]|$)",RegexOptions.IgnoreCase|RegexOptions.CultureInvariant);
+        ReferenceSpace+@"+(?:"+ReferenceWord("số")+ReferenceSpace+@"+)?"+ReferenceLabelToken+
+        @"(?:(?<joiner>"+ReferenceSpace+@"*[-–—,]"+ReferenceSpace+@"*|"+
+        ReferenceSpace+@"+(?:"+string.Join('|',new[]{"và","đến","tới"}.Select(ReferenceWord))+@")"+ReferenceSpace+@"+)"+
+        ReferenceLabelToken+@")*(?![0-9]|\.[0-9])(?=\s|[,;:.!?]|$)",RegexOptions.IgnoreCase|RegexOptions.CultureInvariant);
     private static readonly Regex NumberPathHint=new(@"^[ \t]*(?<label>[0-9]+(?:\.[0-9]+)+)",RegexOptions.CultureInvariant|RegexOptions.NonBacktracking);
     private static readonly string[] Alphabets=["abcdefghijklmnopqrstuvwxyz","abcdđeghiklmnopqrstuvxy"];
     public static IReadOnlyList<OutlineFinding> Check(IReadOnlyList<Paragraph> rows)
     {
         var result=new List<OutlineFinding>();var roots=new List<Node>();var root=new Node(null);var path=new List<Node>();
         var references=new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        foreach(var label in rows.SelectMany(p=>References.Matches(p.Text).Cast<Match>())
-            .SelectMany(m=>m.Groups["label"].Captures.Cast<Capture>()).Select(c=>c.Value))
+        var referenceRanges=new List<NumericReferenceRange>();
+        var uncertainRangePrefixes=new List<string[]>();
+        foreach(var match in rows.SelectMany(p=>References.Matches(p.Text).Cast<Match>()))
         {
-            string key=ReferenceKey(label);references.Add(key);
-            if(key.Length>0 && char.IsAsciiDigit(key[0]))
-                // Edited paths have at most four components. Deeper references
-                // still guard those prefixes without quadratic prefix allocation.
-                for(int dot=key.IndexOf('.'),depth=0;dot>=0 && depth<4;dot=key.IndexOf('.',dot+1),depth++)references.Add(key[..dot]);
+            string[] labels=match.Groups["label"].Captures.Cast<Capture>().Select(c=>ReferenceKey(c.Value)).ToArray();
+            foreach(string key in labels)
+            {
+                references.Add(key);
+                if(key.Length>0 && char.IsAsciiDigit(key[0]))
+                    // Edited paths have at most four components. Deeper references
+                    // still guard those prefixes without quadratic prefix allocation.
+                    for(int dot=key.IndexOf('.'),depth=0;dot>=0 && depth<4;dot=key.IndexOf('.',dot+1),depth++)references.Add(key[..dot]);
+            }
+            var joiners=match.Groups["joiner"].Captures;
+            for(int i=0;i<joiners.Count;i++)
+            {
+                string joiner=joiners[i].Value.Trim().Normalize(NormalizationForm.FormC);
+                if(joiner is not ("-" or "–" or "—") && !joiner.Equals("đến",StringComparison.OrdinalIgnoreCase) && !joiner.Equals("tới",StringComparison.OrdinalIgnoreCase))continue;
+                if(!char.IsAsciiDigit(labels[i][0]) || !char.IsAsciiDigit(labels[i+1][0]))continue;
+                string[] left=labels[i].Split('.'),right=labels[i+1].Split('.');
+                int common=0;while(common<Math.Min(left.Length,right.Length) && left[common]==right[common])common++;
+                if(left.Length==right.Length && common>=left.Length-1)
+                {
+                    string lower=left[^1],upper=right[^1];
+                    if(CompareReferenceNumber(lower,upper)>0)(lower,upper)=(upper,lower);
+                    referenceRanges.Add(new(left[..^1],lower,upper));
+                }
+                else
+                    // An explicit range across different hierarchy prefixes/depths
+                    // cannot be resolved as one sibling interval. Freeze the shared
+                    // numeric subtree instead of guessing its interior labels.
+                    uncertainRangePrefixes.Add(left[..common]);
+            }
+        }
+        bool Referenced(string label)
+        {
+            string key=ReferenceKey(label);
+            if(references.Contains(key))return true;
+            if(key.Length==0 || !char.IsAsciiDigit(key[0]))return false;
+            string[] parts=key.Split('.');
+            bool StartsWith(string[] prefix)=>parts.Length>=prefix.Length && parts.Take(prefix.Length).SequenceEqual(prefix,StringComparer.Ordinal);
+            return uncertainRangePrefixes.Any(StartsWith) || referenceRanges.Any(range=>parts.Length>range.Prefix.Length && StartsWith(range.Prefix) &&
+                CompareReferenceNumber(parts[range.Prefix.Length],range.Lower)>=0 && CompareReferenceNumber(parts[range.Prefix.Length],range.Upper)<=0);
         }
         void Notice(Paragraph row,FixKind kind,string title,string message)
         {
@@ -149,8 +186,8 @@ public static class OutlineRules
                     Family.Letter=>alphabets.Where(a=>index<a.Length).Select(a=>a[index].ToString()).Distinct().ToArray(),
                     _=>[]
                 };
-                bool referenced=members.Any(m=>m.Row.Outline!.HasReferences || references.Contains(ReferenceKey(m.Label))) ||
-                    Enumerable.Range(0,members.Length).SelectMany(Expected).Select(ReferenceKey).Any(references.Contains);
+                bool referenced=members.Any(m=>m.Row.Outline!.HasReferences || Referenced(m.Label)) ||
+                    Enumerable.Range(0,members.Length).SelectMany(Expected).Any(Referenced);
                 for(int i=1;i<members.Length;i++)
                 {
                     var item=members[i];var expected=Expected(i);
@@ -170,6 +207,9 @@ public static class OutlineRules
         }
         return result.OrderBy(f=>f.Issue.Start).ToArray();
     }
+    // Components are canonical digit strings, so length then ordinal comparison
+    // has arbitrary precision and never overflows on an external reference.
+    private static int CompareReferenceNumber(string left,string right)=>left.Length!=right.Length?left.Length.CompareTo(right.Length):string.CompareOrdinal(left,right);
     private static bool CanonicalNumberPath(Marker marker)=>marker.NumberPath is { } path && path.All(p=>p.Length<=3 && p[0] is >='1' and <='9');
     private static bool DirectNumberChild(Marker child,Marker parent)=>child.NumberPath is {Length:>1} c &&
         parent.NumberPath is { } p && c.Length==p.Length+1 && c.Take(p.Length).SequenceEqual(p,StringComparer.Ordinal);

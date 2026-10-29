@@ -85,10 +85,12 @@ public sealed partial class WordSession
         timing.Mark("Connect");timing.Count("Completed",1);
     }
     private void CloseForOpen()=>WordOpenSessionPolicy.Prepare(UseOptimizedReading,CloseDocumentForOpen,CloseApplicationForOpen);
-    private void CloseDocumentForOpen()
+    private void CloseDocumentForOpen()=>CloseOwnedDocument(Release);
+    internal void CloseOwnedDocument(Action<object?> release)
     {
+        ArgumentNullException.ThrowIfNull(release);
         object? owned=document;document=null;
-        var failure=CloseOwnedConnection(owned,null,Release);
+        var failure=CloseOwnedConnection(owned,null,release);
         if(failure is not null)ExceptionDispatchInfo.Capture(failure).Throw();
     }
     private void CloseApplicationForOpen()

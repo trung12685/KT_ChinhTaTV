@@ -8,10 +8,19 @@ namespace ChinhTa.Desktop;
 
 internal static class OfficeHierarchicalOutlineCheck
 {
+    internal static IReadOnlyList<string> ReferenceRows {get;}=Array.AsReadOnly(new[]
+    {
+        "Xem mục 1.2 để đối chiếu.",
+        "Xem mục 1.1 đến 1.5 để đối chiếu.",
+        "Xem mục 1.1 tới 1.3 để đối chiếu.",
+        "Xem mục (8), (1.4) để đối chiếu.",
+        "Xem mục (1.1) – (1.5) để đối chiếu.",
+        "Xem mu\u0323c\u00a0số\u00a0(8), (001.004) để đối chiếu."
+    });
     public static void Run(WordSession test,string modern,string folder,Action<string> pass)
     {
         string isolated=Path.Combine(folder,"decimal-outline");Directory.CreateDirectory(isolated);
-        string seed=OfficeComponentCheck.Create(modern,isolated,false),source=Create(seed,isolated,false),guarded=Create(seed,isolated,true);
+        string seed=OfficeComponentCheck.Create(modern,isolated,false),source=Create(seed,isolated);
         byte[] hash=SHA256.HashData(File.ReadAllBytes(source));test.Profile=DocumentProfile.State;test.Open(source);
         bool Body(Issue i)=>i.CanFix && i.Kind is FixKind.OutlineOrder or FixKind.OutlineMarker or FixKind.Text or FixKind.RepeatedText;
         var found=test.Check();var orders=found.Where(i=>i.CanFix && i.Kind==FixKind.OutlineOrder).ToArray();
@@ -42,15 +51,23 @@ internal static class OfficeHierarchicalOutlineCheck
         test.Open(saved);test.Check();
         if(test.ReadCheckText()!=expected || test.Check().Any(Body) || !hash.SequenceEqual(SHA256.HashData(File.ReadAllBytes(source))))
             throw new InvalidOperationException("Lưu/mở số nhiều cấp chưa đúng hoặc nguồn thay đổi.");
-        test.Open(guarded);var blocked=test.Check();
-        if(blocked.Any(i=>i.CanFix && i.Title?.Contains("1.4 → 1.2",StringComparison.Ordinal)==true) ||
-            !blocked.Any(i=>!i.CanFix && i.Kind==FixKind.OutlineOrder))
-            throw new InvalidOperationException("Dẫn chiếu đến nhãn dự kiến chưa chặn sửa riêng chuỗi liên quan.");
+        foreach(var reference in ReferenceRows.Select((text,index)=>(text,index)))
+        {
+            string guarded=Create(seed,isolated,reference.text,reference.index);
+            byte[] guardedHash=SHA256.HashData(File.ReadAllBytes(guarded));test.Open(guarded);
+            string guardedText=test.ReadCheckText();var blocked=test.Check();
+            var independent=blocked.Where(i=>i.CanFix && i.Kind==FixKind.OutlineOrder).ToArray();
+            if(independent.Length!=1 || independent[0].OutlineContext?.Label!="2.4" ||
+                !blocked.Any(i=>!i.CanFix && i.Kind==FixKind.OutlineOrder && i.Original.Contains("1.4.",StringComparison.Ordinal)) ||
+                test.ReadCheckText()!=guardedText || test.Changed || test.CheckUndoCount!=0 ||
+                !guardedHash.SequenceEqual(SHA256.HashData(File.ReadAllBytes(guarded))))
+                throw new InvalidOperationException("Dẫn chiếu đơn/danh sách/khoảng chưa giữ riêng chuỗi liên quan hoặc làm đổi nguồn mẫu.");
+        }
         pass("Số nhiều cấp: sửa riêng/chung số cuối, giữ tiền tố/tab/kiểu, dẫn chiếu chặn nhóm liên quan, lỗi sau Line/rollback, một Undo/lưu-mở/băm nguồn");
     }
-    private static string Create(string seed,string folder,bool reference)
+    internal static string Create(string seed,string folder,string? reference=null,int referenceIndex=0)
     {
-        string path=Path.Combine(folder,reference?"decimal-referenced.docx":"decimal-input.docx");File.Copy(seed,path);
+        string path=Path.Combine(folder,reference is null?"decimal-input.docx":$"decimal-referenced-{referenceIndex}.docx");File.Copy(seed,path);
         using var zip=ZipFile.Open(path,ZipArchiveMode.Update);var entry=zip.GetEntry("word/document.xml")!;XDocument xml;
         using(var input=entry.Open())xml=XDocument.Load(input,LoadOptions.PreserveWhitespace);
         XNamespace w="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
@@ -75,7 +92,7 @@ internal static class OfficeHierarchicalOutlineCheck
         }
         var rows=new[]{"1. Mục cha","\t1.1.\tNhánh đầu","\t1.4.\tNhánh sau","- Nội dung  kế hoạch kế hoạch",
             "2. Mục cha sau","\t2.1.\tNhánh đầu","\t2.4.\tNhánh sau"}.Select(Row).ToList();
-        if(reference)rows.Add(Row("Xem mục 1.2 để đối chiếu."));recipient.AddBeforeSelf(rows);
+        if(reference is not null)rows.Add(Row(reference));recipient.AddBeforeSelf(rows);
         entry.Delete();using(var output=zip.CreateEntry("word/document.xml").Open())xml.Save(output);return path;
     }
 }

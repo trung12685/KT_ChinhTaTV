@@ -375,13 +375,7 @@ public sealed partial class WordSession : IDisposable
         return inventory.Lines.Select(line => new WordLineShape(line.Id, line.AnchorStart,
             line.Page, line.Geometry, line.AppOwned)).ToArray();
     }
-    private void CloseDocumentOnly()
-    {
-        if (document is null) return;
-        document.Close(0);
-        Release(document);
-        document = null;
-    }
+    private void CloseDocumentOnly()=>CloseDocumentForOpen();
     internal object? CheckApplicationIdentity=>LineCheckArtifactFolder is not null?(object?)app:throw new InvalidOperationException("Chỉ dùng trong phiên kiểm Word riêng.");
     internal string ReadCheckText() => ReadStoryText(); // Isolated Office check; never logged.
     internal (int Bold,int Underline,int Alignment) ReadCheckDecorations(Issue issue)

@@ -16,7 +16,11 @@ internal static class OfficeTechnicalTextCheck
     {
         @"Tệp C:\Báo  cáo\kế hoạch kế hoạch\con đo.docx",
         "Địa chỉ https://example.invalid/tài  liệu/kế hoạch kế hoạch?mẫu=con đo",
-        "Tên tệp \"Báo  cáo kế hoạch kế hoạch con đo.docx\" cần giữ nguyên."
+        "Tên tệp \"Báo  cáo kế hoạch kế hoạch con đo.docx\" cần giữ nguyên.",
+        "Console.WriteLine(@\"Báo  cáo\")",
+        "print(r\"Báo  cáo\")",
+        "print(f\"kế hoạch kế hoạch\")",
+        "logger.Log(2, \"Báo  cáo\")"
     });
     internal static IReadOnlyList<string> FormRows {get;}=Array.AsReadOnly(new[]
     {
@@ -24,7 +28,9 @@ internal static class OfficeTechnicalTextCheck
         "Tích chọn [    X    ] nếu đồng ý.",
         "Ngày sinh:    /    /2026",
         "Ngày sinh:    /    /…",
+        "Ngày sinh:\u00a0    /    /____",
         "Số:    ...    /BC-ABC",
+        "Số:\u202f    ...    /BC-ABC",
         "Ngày 03 tháng        năm 2026",
         "So\u0302\u0301:        /BC-ABC"
     });

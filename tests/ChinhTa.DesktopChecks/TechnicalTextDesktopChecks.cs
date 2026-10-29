@@ -38,7 +38,7 @@ public static class TechnicalTextDesktopChecks
             var issues=Checker.Check(paragraphs,DocumentProfile.Personal);var model=new IssueReviewModel(issues);model.All.IsChecked=true;
             var selected=model.Choices.Where(c=>c.IsChecked).Select(c=>c.Issue).ToArray();
             var expectedSelected=3+OfficeTechnicalTextCheck.ParagraphEndRows.Count;
-            assert(selected.Length==expectedSelected && model.Choices.Count(c=>!c.Issue.CanFix && !c.IsChecked)==3 &&
+            assert(selected.Length==expectedSelected && model.Choices.Count(c=>!c.Issue.CanFix && !c.IsChecked)==OfficeTechnicalTextCheck.TechnicalRows.Count &&
                 selected.Count(i=>i.Kind==FixKind.ParagraphEndSpace)==OfficeTechnicalTextCheck.ParagraphEndRows.Count &&
                 selected.Where(i=>i.Kind!=FixKind.ParagraphEndSpace).All(i=>i.Start>=paragraphs[0].Start && (long)i.Start+i.Length<=paragraphs[0].Start+OfficeTechnicalTextCheck.Prose.Length),
                 "Select all chooses only ordinary prose and proven trailing-gap repairs, leaving technical warnings and intentional form blanks untouched");
