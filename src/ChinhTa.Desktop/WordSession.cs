@@ -982,7 +982,7 @@ public sealed partial class WordSession : IDisposable
         {
             if (oldDocument is not null)
                 try { oldDocument.Close(0); }
-                catch (COMException error) { Diagnostics.Write("Word.Close", error); }
+                catch (COMException error) { Diagnostics.Write("Word.Close", error);if(LineCheckArtifactFolder is not null)checkCleanupFailures.Add(error); }
         }
         finally
         {
@@ -991,7 +991,7 @@ public sealed partial class WordSession : IDisposable
             {
                 if (oldApp is not null)
                     try { oldApp.Quit(0); }
-                    catch (COMException error) { Diagnostics.Write("Word.Quit", error); }
+                    catch (COMException error) { Diagnostics.Write("Word.Quit", error);if(LineCheckArtifactFolder is not null)checkCleanupFailures.Add(error); }
             }
             finally { Release(oldApp); }
         }

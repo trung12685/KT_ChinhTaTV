@@ -58,6 +58,21 @@ public static class TechnicalTextChecks
         }
         foreach(string text in new[]{@"Mở C:\TaiLieu\mau.docx","https://example.vn/mau.docx","Giá trị config = 12;"})
             assert(RepeatedTextRules.Check(new(0,text)).Count==0,"A technical paragraph without an actual mechanical repetition receives no repetition warning");
+        foreach(string extension in new[]{"doc","docx","docm","dot","dotx","dotm","rtf","odt","ott",
+            "xls","xlsx","xlsm","xlsb","xlt","xltx","xltm","ods","ots","ppt","pptx","pptm","pot","potx","potm","pps","ppsx","ppsm","odp","otp"})
+        {
+            string text="Tên tệp Báo  cáo kế hoạch kế hoạch con đo."+extension;
+            var issues=Checker.Check([new(31,text)],DocumentProfile.Personal);
+            assert(TechnicalTextContext.IsTechnical(text) && issues.Count==1 && !issues[0].CanFix && issues[0].Start==31 &&
+                issues[0].Original==text && issues[0].Replacement==text,
+                "Bare Office/OpenDocument filenames preserve significant spaces, repeated words and demo-spelling text: "+extension);
+        }
+        foreach(string text in new[]{"Tên tệp kế hoạch kế hoạch a\u0301.docm","Tên tệp kế hoạch kế hoạch a\u0323.odt","Tên tệp Báo  cáo.RTF\r\a"})
+            assert(TechnicalTextContext.IsTechnical(text) && !Checker.Check([new(0,text)],DocumentProfile.Personal).Any(i=>i.CanFix),
+                "Filename detection preserves decomposed final letters, uppercase extensions and Word paragraph endings");
+        foreach(string text in new[]{"Nội dung kế hoạch kế hoạch đã duyệt.","Công tác ngày/đêm kế hoạch kế hoạch đã xong."})
+            assert(!TechnicalTextContext.IsTechnical(text) && Checker.Check([new(0,text)],DocumentProfile.Personal).Any(i=>i.Kind==FixKind.RepeatedText && i.CanFix),
+                "Additional known filename suffixes do not turn ordinary prose into a technical filename scope");
         const string guarded=@"Mở C:\tài liệu tài liệu\bao-cao.docx";
         var unsafeRow=RepeatedTextRules.Check(new(40,guarded,TextEditable:false));
         assert(unsafeRow.Count==1 && !unsafeRow[0].CanFix && unsafeRow[0].Start==40 && unsafeRow[0].Original==guarded,

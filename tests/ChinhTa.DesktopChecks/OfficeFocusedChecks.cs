@@ -12,6 +12,9 @@ public static class OfficeFocusedChecks
     public static void Run(Action<bool,string> assert)
     {
         var cases=OfficeFocusedCheck.Cases;
+        assert(OfficeFocusedCheck.CodeIdentity().Contains(typeof(WordSession).Module.ModuleVersionId.ToString(),StringComparison.Ordinal) &&
+            OfficeFocusedCheck.CodeIdentity().Contains(typeof(Checker).Module.ModuleVersionId.ToString(),StringComparison.Ordinal),
+            "The synthetic Word report identifies actual Desktop/Core modules even when successive previews share a development version");
         assert(cases.Count==12 && cases.Select(c=>c.Id).Distinct().Count()==cases.Count && cases.Any(c=>c.Id=="isolated-spacing") && cases.Any(c=>c.Id=="spacing-calibration") && cases.Any(c=>c.Id=="technical-text") &&
             cases.Any(c=>c.Id=="body-spacing") && cases.Any(c=>c.Id=="handwriting") && cases.Any(c=>c.Id=="footer-page-number") && cases.Any(c=>c.Id=="empty-page-layout"),
             "Focused Word checks expose independent spacing and handwriting families rather than require an earlier Subject PASS");

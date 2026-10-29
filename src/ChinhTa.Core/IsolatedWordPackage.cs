@@ -178,6 +178,7 @@ public sealed class IsolatedWordPackage
         catch(InvalidOperationException error) when(error is not SpacingDiagnosticException)
         {throw new SpacingDiagnosticException(SpacingDiagnosticFailureCode.IntegrityFailed,error);}
         catch(InvalidDataException error){throw new SpacingDiagnosticException(SpacingDiagnosticFailureCode.IntegrityFailed,error);}
+        catch(XmlException error){throw new SpacingDiagnosticException(SpacingDiagnosticFailureCode.IntegrityFailed,error);}
     }
     private void VerifyFileCore(string path)
     {

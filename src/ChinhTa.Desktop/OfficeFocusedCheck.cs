@@ -17,6 +17,8 @@ internal sealed record OfficeFocusedCheckResult(OfficeSuiteReport Report,string 
 internal static class OfficeFocusedCheck
 {
     internal const string Scope="Chỉ các nhóm đã chọn, bộ đọc cũ; không xác nhận bài Word toàn bộ hoặc so sánh hai bộ đọc.";
+    internal static string CodeIdentity()=>
+        $"DESKTOP_MODULE {typeof(OfficeFocusedCheck).Module.ModuleVersionId}\nCORE_MODULE {typeof(Checker).Module.ModuleVersionId}";
     internal static IReadOnlyList<OfficeSuiteCase> Cases {get;}=Array.AsReadOnly(new[]
     {
         new OfficeSuiteCase("handwriting","Chỗ ký tay 80 pt"),
@@ -78,7 +80,7 @@ internal static class OfficeFocusedCheck
             throw new ArgumentException("Hãy chọn ít nhất một nhóm kiểm Word hợp lệ.",nameof(selected));
         string folder=Path.Combine(Path.GetDirectoryName(Diagnostics.LogPath)!,"OfficeGroups-"+Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(folder);string reportPath=Path.Combine(folder,"office-groups.txt");
-        File.WriteAllText(reportPath,$"ChinhTaViet {typeof(OfficeFocusedCheck).Assembly.GetName().Version}\n{DateTimeOffset.Now:O}\nMODE Legacy\n{Scope}\nSELECTED {string.Join(",",selected.Select(s=>s.Id))}\n");
+        File.WriteAllText(reportPath,$"ChinhTaViet {typeof(OfficeFocusedCheck).Assembly.GetName().Version}\n{DateTimeOffset.Now:O}\n{CodeIdentity()}\nMODE Legacy\n{Scope}\nSELECTED {string.Join(",",selected.Select(s=>s.Id))}\n");
         void Note(string message)=>File.AppendAllText(reportPath,message+Environment.NewLine);
         var report=OfficeSuiteRunner.Run(selected,
             suite=>
@@ -92,7 +94,7 @@ internal static class OfficeFocusedCheck
                 try{test.Open(modern);Note(suite.Id+" "+test.OfficeDescription);return new FocusedSession(test,modern,isolated);}
                 catch(Exception failure)
                 {
-                    try{test.Dispose();}
+                    try{test.DisposeCheckSession();}
                     catch(Exception cleanup){throw new AggregateException("Chưa mở và đóng được phiên Word riêng.",failure,cleanup);}
                     throw;
                 }
@@ -122,7 +124,7 @@ internal static class OfficeFocusedCheck
                     default:throw new InvalidOperationException("Nhóm kiểm chưa được nối với bài kiểm thực.");
                 }
                 RequireCompleted(completed);
-            },current=>current.Test.Dispose(),result=>
+            },current=>current.Test.DisposeCheckSession(),result=>
             {
                 // Persist the completed result before opening the next Word
                 // instance, so a later crash cannot suppress earlier evidence.

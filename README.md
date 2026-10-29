@@ -4,6 +4,8 @@
 
 Mã nguồn mới có [đo thử giãn dòng/khoảng đoạn trên bản sao](docs/FORMAT-BATCH-23-26.md), [bảo toàn đường dẫn/tên tệp và xử lý lỗi đo](docs/FORMAT-BATCH-27-29.md). Quyền tự sửa Exactly/AtLeast vẫn cần bằng chứng Word thực; các kết quả Core/WPF không thay kiểm Word.
 
+[Bản thử Windows0.1.77 và cách kiểm Word](docs/PREVIEW-0.1.77.md) được tạo thành artifact riêng bởi workflow **Windows preview artifact**; không thay các release bên dưới. [Đợt30–32](docs/FORMAT-BATCH-30-32.md) bổ sung lệnh kiểm theo nhóm và điều kiện đóng phiên nghiêm ngặt.
+
 ## Bản thử tích lũy 0.1.76 — phạm vi kiểm và hậu kiểm khổ/lề/số trang
 
 Năm cụm đợt 15–19 sau 0.1.75: sổ phạm vi lần quét cho 33 nhóm, số PAGE được vẽ thật, bảo toàn bitmap, chuyển footer PAGE-only có điều kiện và sửa khổ/lề khi đầu–cuối trang thực sự trống. Thêm hai bài kiểm Word riêng, tổng tám nhóm; giữ khoảng ký tay 80 pt, bộ đọc thử nghiệm tắt mặc định và dừng tối ưu tốc độ.

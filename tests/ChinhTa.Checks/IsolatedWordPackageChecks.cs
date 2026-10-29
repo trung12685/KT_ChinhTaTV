@@ -64,6 +64,20 @@ public static class IsolatedWordPackageChecks
             }
             bool tamper=false;try{package.VerifyFile(second);}catch(SpacingDiagnosticException error) when(error.Code==SpacingDiagnosticFailureCode.IntegrityFailed){tamper=true;}
             assert(tamper,"A one-byte binary drift in a Word copy is rejected even if its part size and XML still match");
+            string brokenManifest=Path.Combine(folder,"broken-content-types.docx");package.WriteNew(brokenManifest);
+            using(var zip=ZipFile.Open(brokenManifest,ZipArchiveMode.Update))
+            {
+                zip.GetEntry("[Content_Types].xml")!.Delete();
+                using var output=new StreamWriter(zip.CreateEntry("[Content_Types].xml").Open());output.Write("<Types");
+            }
+            SpacingDiagnosticException? manifestFailure=null;
+            try{package.VerifyFile(brokenManifest);}catch(SpacingDiagnosticException error){manifestFailure=error;}
+            assert(manifestFailure is {Code:SpacingDiagnosticFailureCode.IntegrityFailed,InnerException:XmlException},
+                "A malformed content-type manifest is an integrity failure, not a Word operation or unsupported-evidence result");
+            bool fallback=false,propagated=false;
+            try{SpacingDiagnosticGuard.Optional(()=>{package.VerifyFile(brokenManifest);return true;},()=>{fallback=true;return false;});}
+            catch(SpacingDiagnosticException error) when(error.Code==SpacingDiagnosticFailureCode.IntegrityFailed){propagated=true;}
+            assert(propagated && !fallback,"Optional spacing evidence cannot swallow a broken DOCX content-type manifest");
             void Rejected(Action<XElement> change,string description,bool passive=false)
             {
                 var fixture=Fixture();change(fixture);bool rejected=false;

@@ -274,6 +274,8 @@ DelimiterClusterReviewChecks.Run(Assert);
         SpacingTrialPreviewChecks.Run(Assert);
         SpacingCalibrationReportChecks.Run(Assert);
         TechnicalTextDesktopChecks.Run(Assert);
+        WordCheckCommandChecks.Run(Assert);
+        WordCheckCleanupChecks.Run(Assert);
         BodyEmphasisWriterChecks.Run(Assert);
         RepairProgressDesktopChecks.Run(Assert);
         DocumentTypeCatalogDesktopChecks.Run(Assert);
