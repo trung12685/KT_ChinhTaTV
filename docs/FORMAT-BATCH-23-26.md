@@ -48,4 +48,6 @@ dotnet run --project tests/ChinhTa.DesktopChecks -c Release
 
 Log và số kiểm thực tế được ghi trong biên bản tiếp tục; không cộng số assertion từ harness phụ vào runner chính. Các ca mới bao phủ bảo toàn toàn gói/schema, context/style/stale, math dương/âm, reflow/phông/clip/paint/ảnh/nét, thứ tự vẽ, lỗi đóng/khôi phục kép và UI không lộ chữ/không giữ kết quả cũ.
 
+Kết quả cuối trên mã triển khai: **5.143 assertion Core/OpenXML đạt trên Linux**, tăng155 so với4.988 của đợt22; build DesktopChecks/Desktop Release không cảnh báo hoặc lỗi. **Windows CI đạt**, [run40915207524](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40915207524), [job123593485346](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40915207524/job/123593485346): Core/OpenXML, WPF/build và ghi evidence đều `success`. Đã đối chiếu đúng commit `2eabc4d`; số assertion Windows không suy từ Linux hoặc baseline. Xem [bằng chứng đợt23–26](handoff-evidence/batch23-26-evidence.json).
+
 Bước còn cần Word thật: clone nguồn khớp trên Office đang dùng; các mức Single/1,5, trial0/6pt không reflow; font subset/PAGE ổn định; dọn dẹp khi COM lỗi; nguồn/Undo không đổi. Sau đó mới thiết kế writer Exactly/AtLeast và khoảng đoạn gộp với sửa riêng/chung, hậu kiểm, lỗi giữa/cuối lượt, một Undo và lưu/mở lại. Chưa có quyền sửa hoặc kết quảWordPASS mới ở đợt này.

@@ -1,0 +1,31 @@
+{
+  "Version": "0.1.77",
+  "Branch": "feature/isolated-spacing-proof-batch22",
+  "BaseCommit": "3e3f05ca0d157c97e799c31fdc5cddcff171cacb",
+  "ImplementationCommit": "2eabc4dea70fe14485bb33259fa22cb511da51c8",
+  "Batches": [
+    23,
+    24,
+    25,
+    26
+  ],
+  "LinuxCoreChecks": 5143,
+  "AddedLinuxAssertions": 155,
+  "LinuxCoreExitCode": 0,
+  "LocalDesktopBuild": "success",
+  "LocalBuildWarnings": 0,
+  "LocalBuildErrors": 0,
+  "WindowsRunId": 40915207524,
+  "WindowsJobId": 123593485346,
+  "WindowsRunUrl": "https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40915207524",
+  "WindowsConclusion": "success",
+  "WindowsCoreStep": "success",
+  "WindowsWpfStep": "success",
+  "WindowsRecordEvidenceStep": "success",
+  "WindowsAssertionTotals": null,
+  "WindowsEvidenceNote": "Run and job status verified for implementation commit; exact assertion totals not inferred.",
+  "ActualWordRuntime": "NOT_RUN",
+  "NewAutomaticSpacingPermission": false,
+  "Packaged": false,
+  "MainOrExistingTagsChanged": false
+}

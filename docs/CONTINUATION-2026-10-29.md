@@ -1,5 +1,7 @@
 # Tiếp tục sau bàn giao — 29/10/2026
 
+**Cập nhật sau biên bản đợt22:** đã hoàn thành thêm đợt23–26 trên cùng nhánh, có menu đo thử theo yêu cầu, bốn trial spacing, toán baseline/6pt-reference và bảo vệ nguồn/tài nguyên. Core Linux5.143đạt và WindowsCI [run40915207524](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40915207524) đạt cho mã triển khai `2eabc4d`. Xem [FORMAT-BATCH-23-26.md](FORMAT-BATCH-23-26.md). Phần dưới giữ bằng chứng lịch sử đợt22; chưa Word thực PASS, chưa mở tự sửa Exactly/AtLeast và chưa đóng ZIP mới.
+
 - Nguồn bàn giao: `5977e8a54e8e9a190f333dd3c1607bad6dd6d65f`, từ mã phát triển `6180757eebdbf59b82b6435bb351cba68c712103` (0.1.77). Đã đọc lại head GitHub trước khi làm; nhánh phát triển chưa thay đổi tại thời điểm bắt đầu. ZIP người dùng khớp 483/483 tệp tree Git, không có tệp thừa.
 - Nhánh làm việc mới: [`feature/isolated-spacing-proof-batch22`](https://github.com/trung12685/KT_ChinhTaTV/tree/feature/isolated-spacing-proof-batch22), đã đẩy lên GitHub. Commit triển khai: `705ece02fff0436873c5fd74fa8463aea953e0ba`. Không sửa main, merge PR61, ghi đè tag hoặc xuất ZIP Windows.
 - Hoàn thành nền tảng [đợt 22](FORMAT-BATCH-22.md): full Flat OPC → DOCX, kiểm toàn vẹn/quan hệ, proof toàn trang/glyph/baseline/paint/ảnh/nét, phiên Word diagnostic riêng chỉ đọc và nhóm kiểm Exactly/AtLeast. Chưa mở quyền sửa tự động mới; giữ danh mục 33/8/1 và các ưu tiên trong USER-PREFERENCES.md.
