@@ -12,6 +12,8 @@ internal static class OfficeTechnicalTextCheck
 {
     internal const string Prose="Nội dung  kế hoạch kế hoạch  ,báo cáo đã xong.";
     internal const string FixedProse="Nội dung kế hoạch, báo cáo đã xong.";
+    // Each row has a supported candidate that must become one manual warning.
+    // A technical row without findings belongs among the no-error controls.
     internal static IReadOnlyList<string> TechnicalRows {get;}=Array.AsReadOnly(new[]
     {
         @"Tệp C:\Báo  cáo\kế hoạch kế hoạch\con đo.docx",
@@ -26,7 +28,7 @@ internal static class OfficeTechnicalTextCheck
         "tool --label \"Báo  cáo kế hoạch kế hoạch\"",
         "cmd /c echo \"Báo  cáo\"",
         "[\"Báo  cáo\", \"kế hoạch kế hoạch\", \"con đo\"]",
-        "[[\"Nội dung:báo cáo\"], [\"Đã hoàn thành.Cần làm tiếp.\"]]"
+        "[[\"Nội dung  báo cáo\"], [1, true, null]]"
     });
     internal static IReadOnlyList<string> FormRows {get;}=Array.AsReadOnly(new[]
     {
