@@ -36,6 +36,8 @@ Hai đoạn mới được thêm vào fixture Word sửa chữ hiện có. Kiể
 
 ## Kiểm chứng
 
-Core/OpenXML trên Linux: **5629 kiểm qua**, tăng **160** từ mốc 5469. Build DesktopChecks Release: 0 warning/error. Harness range cleanup có 11 kiểm managed qua, không cộng vào số Core. CI Windows của mã cuối đợt đang chờ; chưa ghi số WPF hoặc Word thực từ việc biên dịch.
+Core/OpenXML trên Linux: **5629 kiểm qua**, tăng **160** từ mốc 5469. Build DesktopChecks Release: 0 warning/error. Harness range cleanup có 11 kiểm managed qua, không cộng vào số Core.
+
+CI Windows của mã triển khai `a3b17dee8f8f1dcc76ea500960616c6f098b63ce`: [run 40946225091 — Success](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40946225091), [job 123702175926](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40946225091/job/123702175926). Core/OpenXML, WPF/build, ghi bằng chứng và lưu log đều thành công. Runner chính đã đăng ký các lớp kiểm mới, gồm schema/mô hình lựa chọn của fixture Word mở rộng và file-sharing lock trên Windows. Số kiểm Windows thực nằm trong `check-evidence.json`/log của run; không suy từ số Linux. Workflow chỉ lưu kết quả kiểm, không tạo ZIP ứng dụng. Cập nhật tài liệu sau commit trên không đổi code đã kiểm.
 
 Word runtime vẫn **NOT_RUN**. Gói 0.1.77 giữ nguyên; các thay đổi ở đây thuộc mã phát triển 0.1.78. Chưa dùng kết quả Core/WPF để mở quyền sửa Exactly/AtLeast hoặc chứng nhận mọi DOCX.
