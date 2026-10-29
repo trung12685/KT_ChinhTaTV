@@ -1,4 +1,4 @@
-> Đang phát triển 0.1.80: [đợt 57–60](FORMAT-BATCH-57-60.md), chưa ZIP mới. Gói gần nhất vẫn [Windows 0.1.79](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40960198832/artifacts/12935094001), nguồn `3e8f268ad935a9cfb24a12427ec36224a7848e02`, gom [đợt 45–47](FORMAT-BATCH-45-47.md), [48–51](FORMAT-BATCH-48-51.md) và [52–56](FORMAT-BATCH-52-56.md). Xem [hướng dẫn](PREVIEW-0.1.79.md) và [bằng chứng](PREVIEW-0.1.79-EVIDENCE.md). Core/WPF, EXE, metadata và ZIP đã qua; Word thực vẫn NOT_RUN. Main/tag/gói cũ giữ nguyên. Release gần nhất vẫn 0.1.76.
+> Đang phát triển 0.1.80: [đợt 57–60](FORMAT-BATCH-57-60.md) và [61–64](FORMAT-BATCH-61-64.md), chưa ZIP mới. Gói gần nhất vẫn [Windows 0.1.79](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40960198832/artifacts/12935094001), nguồn `3e8f268ad935a9cfb24a12427ec36224a7848e02`, gom [đợt 45–47](FORMAT-BATCH-45-47.md), [48–51](FORMAT-BATCH-48-51.md) và [52–56](FORMAT-BATCH-52-56.md). Xem [hướng dẫn](PREVIEW-0.1.79.md) và [bằng chứng](PREVIEW-0.1.79-EVIDENCE.md). Core/WPF, EXE, metadata và ZIP đã qua; Word thực vẫn NOT_RUN. Main/tag/gói cũ giữ nguyên. Release gần nhất vẫn 0.1.76.
 
 Đợt 22 bổ sung nền tảng bản sao toàn gói và đối chiếu XPS trước hiệu chuẩn, cùng nhóm kiểm Word độc lập cho Exactly/AtLeast. Xem [FORMAT-BATCH-22.md](FORMAT-BATCH-22.md). Chưa đo Single/1,5 hoặc bỏ Before/After trên clone; C28/C29 vẫn giữ quyền sửa cũ. Nhóm Word mới chưa được thực thi trên môi trường Linux.
 
@@ -21,6 +21,8 @@
 Đợt 52–56 hoàn thiện dẫn chiếu lặp cùng cue (“từ mục… đến mục…”); thêm fingerprint khi giữ dấu hai chấm/kết câu/ngoặc/nháy để chèn một khoảng. Save lỗi không còn giữ cờ checkpoint đã xác minh hoặc xóa dữ liệu phục hồi khi đóng. Hoàn tác xong nhưng quét lỗi có thông báo riêng; chọn mục thiếu anchor xóa dấu cũ. Có nhóm Word độc lập thứ 13 `outline-references` để kiểm dẫn chiếu không cần các bước Line trước đạt. Không đổi writer dấu câu hoặc mở quyền Exactly/AtLeast; các phần cần Word thực vẫn chưa được xác nhận.
 
 Đợt 57–60 xử lý chuỗi Save ghi dở rồi Undo lỗi: kết quả byte không đổi/được trả lại không còn nâng đầu vào chưa chắc thành đã xác minh. XML có lịch sử moveTo/moveFrom hoặc mốc move range không còn chỉ cần chữ khớp để cấp quyền sửa. Đối số lệnh có nháy được giữ dữ liệu trong grammar hẹp; UI không hướng dẫn mở lại tự động khi phiên/bản tạm chưa đủ điều kiện. Không chấp nhận/từ chối revision, không mở quyền Track Changes hoặc Exactly/AtLeast. Gói 0.1.79 giữ nguyên.
+
+Đợt 61–64 giữ vùng chữ có bookmark/comment/permission trong phạm vi đã ghép, nhận ô chọn tròn và nhãn ngày sinh đầy đủ; chờ queue/Saved của Word trước xác nhận checkpoint, dọn cửa sổ tiến độ nếu tạo muộn sau lỗi khởi động. Không thay Options, tự lặp Save, đoán CP hoặc tuyên bố bảo toàn mọi annotation. Chờ có giới hạn không cắt được COM call đang treo; còn cần kết quả Word thực. Danh mục 33/8/1 và 13 nhóm Word giữ nguyên.
 
 # Các phần còn thiếu và thứ tự hoàn thiện
 

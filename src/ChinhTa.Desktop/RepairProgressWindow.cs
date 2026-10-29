@@ -19,6 +19,7 @@ public sealed class RepairProgressWindow:Window,IDisposable
     private readonly Stopwatch clock=Stopwatch.StartNew();
     private readonly DispatcherTimer heartbeat=new(){Interval=TimeSpan.FromMilliseconds(250)};
     private bool allowClose;
+    private bool closed;
     public int Heartbeats{get;private set;}
     public RepairProgressUpdate Current{get;private set;}
     public RepairProgressWindow(string version,int total)
@@ -33,7 +34,7 @@ public sealed class RepairProgressWindow:Window,IDisposable
         Content=content;Background=new SolidColorBrush(Color.FromRgb(241,245,249));
         Current=new(RepairActivity.Preparing,0,total,"Đang chuẩn bị lượt sửa…");Apply(Current);
         heartbeat.Tick+=(_,_)=>{Heartbeats++;elapsed.Text=$"Đã chờ {clock.Elapsed.TotalSeconds:F0} giây · Word có thể cần thời gian cho bước hiện tại.";};
-        heartbeat.Start();Closing+=ClosingProgress;Closed+=(_,_)=>heartbeat.Stop();
+        heartbeat.Start();Closing+=ClosingProgress;Closed+=(_,_)=>{closed=true;heartbeat.Stop();};
     }
     private void ClosingProgress(object? sender,CancelEventArgs e){if(!allowClose)e.Cancel=true;}
     public void Apply(RepairProgressUpdate update)
@@ -43,7 +44,7 @@ public sealed class RepairProgressWindow:Window,IDisposable
         bar.Value=update.Fraction;
         count.Foreground=update.Activity==RepairActivity.Completed?Brushes.DarkGreen:Brushes.Black;
     }
-    internal void Finish(){allowClose=true;Close();}
+    internal void Finish(){if(closed)return;allowClose=true;heartbeat.Stop();Close();}
     public void Dispose()=>Finish();
 }
 
@@ -55,39 +56,74 @@ public sealed class RepairProgressDialog:IDisposable
     private readonly Thread thread;
     private readonly TaskCompletionSource<RepairProgressWindow> ready=new(TaskCreationOptions.RunContinuationsAsynchronously);
     private RepairProgressWindow? window;
-    private bool disposed;
-    public RepairProgressDialog(IntPtr owner,string version,int total)
+    private int disposed;
+    public RepairProgressDialog(IntPtr owner,string version,int total):
+        this(owner,()=>new RepairProgressWindow(version,total),TimeSpan.FromSeconds(8)){}
+    internal RepairProgressDialog(IntPtr owner,Func<RepairProgressWindow> createWindow,TimeSpan startupTimeout)
     {
-        thread=new Thread(()=>
+        ArgumentNullException.ThrowIfNull(createWindow);
+        if(startupTimeout<=TimeSpan.Zero)throw new ArgumentOutOfRangeException(nameof(startupTimeout));
+        thread=new Thread(()=>RunDisplay(owner,createWindow)){IsBackground=true,Name="Repair progress display"};
+        try
         {
-            try
-            {
-                var view=new RepairProgressWindow(version,total);
-                if(owner!=IntPtr.Zero)new WindowInteropHelper(view){Owner=owner};
-                view.Closed+=(_,_)=>view.Dispatcher.BeginInvokeShutdown(DispatcherPriority.Background);
-                view.Show();ready.TrySetResult(view);Dispatcher.Run();
-            }
-            catch(Exception error){ready.TrySetException(error);}
-        }){IsBackground=true,Name="Repair progress display"};
-        thread.SetApartmentState(ApartmentState.STA);thread.Start();
-        if(!ready.Task.Wait(TimeSpan.FromSeconds(8)))throw new InvalidOperationException("Chưa mở được cửa sổ tiến độ; chưa bắt đầu sửa.");
-        window=ready.Task.GetAwaiter().GetResult();
+            thread.SetApartmentState(ApartmentState.STA);thread.Start();
+            using var timeoutCancellation=new CancellationTokenSource();
+            var timeout=Task.Delay(startupTimeout,timeoutCancellation.Token);
+            if(Task.WhenAny(ready.Task,timeout).GetAwaiter().GetResult()!=ready.Task)
+                throw new InvalidOperationException("Chưa mở được cửa sổ tiến độ; chưa bắt đầu sửa.");
+            timeoutCancellation.Cancel();
+            ready.Task.GetAwaiter().GetResult();
+        }
+        catch{RequestClose();throw;}
+    }
+    private void RunDisplay(IntPtr owner,Func<RepairProgressWindow> createWindow)
+    {
+        Dispatcher? dispatcher=null;RepairProgressWindow? view=null;
+        try
+        {
+            var ownedDispatcher=Dispatcher.CurrentDispatcher;dispatcher=ownedDispatcher;
+            if(Volatile.Read(ref disposed)!=0)return;
+            view=createWindow()??throw new InvalidOperationException("Chưa tạo được cửa sổ tiến độ; chưa bắt đầu sửa.");
+            Interlocked.Exchange(ref window,view);
+            view.Closed+=(_,_)=>
+            {if(!ownedDispatcher.HasShutdownStarted)ownedDispatcher.BeginInvokeShutdown(DispatcherPriority.Background);};
+            if(Volatile.Read(ref disposed)!=0)return;
+            if(owner!=IntPtr.Zero)new WindowInteropHelper(view){Owner=owner};
+            if(Volatile.Read(ref disposed)!=0)return;
+            view.Show();
+            if(Volatile.Read(ref disposed)!=0 || !ready.TrySetResult(view))return;
+            Dispatcher.Run();
+        }
+        catch(Exception error)
+        {
+            if(!ready.TrySetException(error))Diagnostics.Write("UI.ProgressDisplay",error);
+        }
+        finally
+        {
+            Interlocked.CompareExchange(ref window,null,view);
+            var cleanup=IndependentCleanup.Complete(null,
+                [()=>view?.Finish(),()=>{if(dispatcher is not null && !dispatcher.HasShutdownFinished)dispatcher.InvokeShutdown();}]);
+            if(cleanup is not null)Diagnostics.Write("UI.ProgressDisplay.Cleanup",cleanup);
+            ready.TrySetCanceled();
+        }
     }
     public void Report(RepairProgressUpdate update)
     {
-        var view=window;if(disposed || view is null || view.Dispatcher.HasShutdownStarted)return;
+        var view=Volatile.Read(ref window);if(Volatile.Read(ref disposed)!=0 || view is null || view.Dispatcher.HasShutdownStarted)return;
         try{view.Dispatcher.InvokeAsync(()=>view.Apply(update),DispatcherPriority.Background);}catch(InvalidOperationException){ }
     }
     public (RepairProgressUpdate Update,int Heartbeats) Snapshot()
     {
-        var view=window??throw new InvalidOperationException("Chưa có cửa sổ tiến độ.");
+        var view=Volatile.Read(ref window)??throw new InvalidOperationException("Chưa có cửa sổ tiến độ.");
         return view.Dispatcher.Invoke(()=>(view.Current,view.Heartbeats),DispatcherPriority.ContextIdle);
     }
-    public void Dispose()
+    private void RequestClose()
     {
-        if(disposed)return;disposed=true;var view=window;window=null;
+        if(Interlocked.Exchange(ref disposed,1)!=0)return;
+        ready.TrySetCanceled();var view=Interlocked.Exchange(ref window,null);
         if(view is not null && !view.Dispatcher.HasShutdownStarted)
             try{view.Dispatcher.InvokeAsync(view.Finish,DispatcherPriority.Send);}catch(InvalidOperationException){ }
         // Do not synchronously wait across owner/UI dispatchers while Word is busy.
     }
+    public void Dispose()=>RequestClose();
 }

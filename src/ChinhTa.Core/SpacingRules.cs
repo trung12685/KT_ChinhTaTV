@@ -13,9 +13,14 @@ public static class SpacingRules
     private const string DayLabel=@"ng(?:à|a\u0300)y";
     private const string MonthLabel=@"th(?:á|a\u0301)ng";
     private const string YearLabel=@"n(?:ă|a\u0306)m";
+    private const string BirthDateLabel=DayLabel+@"[ \t\u00A0\u202F]*,[ \t\u00A0\u202F]*"+MonthLabel+
+        @"[ \t\u00A0\u202F]*,[ \t\u00A0\u202F]*"+YearLabel+@"[ \t\u00A0\u202F]+sinh";
     private static readonly Regex BlankNumber=new(@"^[ \t\u00A0\u202F]*"+NumberLabel+@"[ \t\u00A0\u202F]*:(?<blank>[._… \t\u00A0\u202F]*)(?=/[ \t\u00A0\u202F]*[\p{L}\p{N}])",
         RegexOptions.IgnoreCase|RegexOptions.CultureInvariant);
-    private static readonly Regex MarkedCheckbox=new(@"\[(?<left>[ \u00A0\u202F]*)(?:[Xx✓✔])(?<right>[ \u00A0\u202F]*)\]",
+    private const string MarkedChoiceInner=@"(?<left>[ \u00A0\u202F]*)(?:[Xx✓✔])(?<right>[ \u00A0\u202F]*)";
+    // Both square checkboxes and round selection fields have significant width.
+    // Keep explicit alternatives: mismatched '(X]' must not establish a field.
+    private static readonly Regex MarkedChoice=new(@"(?:\["+MarkedChoiceInner+@"\]|\("+MarkedChoiceInner+@"\))",
         RegexOptions.CultureInvariant|RegexOptions.NonBacktracking);
     // Date words establish the field shape, including a partially filled form
     // outside an identified administrative header. Only blank/placeholder slots
@@ -27,14 +32,14 @@ public static class SpacingRules
     // placeholder characters too: a period cannot stand in as a successful
     // boundary before an unparsed year. Filled slots retain ordinary review.
     // Raw captures preserve both NFC/NFD label offsets without normalization.
-    private static readonly Regex SlashDateFields=new(@"^[ \t\u00A0\u202F]*(?:ng(?:à|a\u0300)y(?:[ \t\u00A0\u202F]+sinh)?|sinh[ \t\u00A0\u202F]+ng(?:à|a\u0300)y)[ \t\u00A0\u202F]*:(?<day>[0-9._… \t\u00A0\u202F]*)/(?<month>[0-9._… \t\u00A0\u202F]*)/(?<year>[0-9._… \t\u00A0\u202F]*)(?=$|[\r\n\a(,;])",
+    private static readonly Regex SlashDateFields=new(@"^[ \t\u00A0\u202F]*(?:ng(?:à|a\u0300)y(?:[ \t\u00A0\u202F]+sinh)?|sinh[ \t\u00A0\u202F]+ng(?:à|a\u0300)y|"+BirthDateLabel+@")[ \t\u00A0\u202F]*:(?<day>[0-9._… \t\u00A0\u202F]*)/(?<month>[0-9._… \t\u00A0\u202F]*)/(?<year>[0-9._… \t\u00A0\u202F]*)(?=$|[\r\n\a(,;])",
         RegexOptions.IgnoreCase|RegexOptions.CultureInvariant);
     public static bool IsBlankField(string text,int start,int length,bool identifiedAdministrativeHeader=false)
     {
         // Empty delimiters may be a form/checkbox field, never collapse their width.
         if(length>0 && start>0 && (long)start+length<text.Length && (text[start-1]=='(' && text[start+length]==')' || text[start-1]=='[' && text[start+length]==']' || text[start-1]=='“' && text[start+length]=='”' || text[start-1]=='"' && text[start+length]=='"') &&
             text.AsSpan(start,length).IndexOfAnyExcept(' ')<0)return true;
-        foreach(Match checkbox in MarkedCheckbox.Matches(text))
+        foreach(Match checkbox in MarkedChoice.Matches(text))
             foreach(string name in new[]{"left","right"})
             {
                 var padding=checkbox.Groups[name];

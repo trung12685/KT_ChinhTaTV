@@ -30,9 +30,12 @@ internal static class OfficeTechnicalTextCheck
     {
         "Tích chọn [        ] nếu đồng ý.",
         "Tích chọn [    X    ] nếu đồng ý.",
+        "Giới tính: Nam (    X    ) Nữ (        )",
+        "Tích chọn (    ✓    ) nếu đồng ý.",
         "Ngày sinh:    /    /2026",
         "Ngày sinh:    /    /…",
         "Ngày sinh:\u00a0    /    /____",
+        "Ngày, tháng, năm sinh:    /    /____",
         "Số:    ...    /BC-ABC",
         "Số:\u202f    ...    /BC-ABC",
         "Ngày 03 tháng        năm 2026",

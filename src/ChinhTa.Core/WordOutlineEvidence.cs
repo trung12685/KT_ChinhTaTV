@@ -10,9 +10,11 @@ public sealed record OutlineParagraphInfo(OutlineScope Scope,int Indent=0,int? H
 
 // Resolve paragraph-list evidence from the same live XML used for text proof.
 // Unknown/cyclic styles or indentation never become ordinary manual list text.
-internal sealed class WordOutlineEvidence(XDocument xml)
+internal sealed class WordOutlineEvidence(XDocument xml,IReadOnlySet<XElement>? annotationTextScope=null)
 {
     private static readonly XNamespace W="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+    private readonly IReadOnlySet<XElement> annotatedParagraphs=annotationTextScope??WordAnnotationTextScope.Read(
+        xml.Descendants(W+"document").Single().Element(W+"body")??throw new InvalidOperationException("Missing document body"));
     private readonly IReadOnlyDictionary<XElement,(ComponentRole Role,bool Last)> recipients=RecipientContext.Read(xml);
     private IReadOnlyDictionary<XElement,ComponentRole>? signatures;
     private readonly XElement? styles=xml.Descendants(W+"styles").FirstOrDefault();
@@ -24,6 +26,7 @@ internal sealed class WordOutlineEvidence(XDocument xml)
         Regex.IsMatch(e.Name==W+"fldSimple"?(string?)e.Attribute(W+"instr")??"":e.Value,@"\b(?:REF|PAGEREF|NOTEREF)\b",RegexOptions.IgnoreCase|RegexOptions.CultureInvariant));
     public OutlineParagraphInfo Describe(XElement p,bool textEditable)
     {
+        if(annotatedParagraphs.Contains(p))return new(OutlineScope.Complex,HasReferences:references);
         if(recipients.TryGetValue(p,out var recipient))return new(OutlineScope.Recipient,RecipientRole:recipient.Role,LastRecipient:recipient.Last);
         signatures??=SignatureContext.Read(xml,recipients);
         if(signatures.TryGetValue(p,out var signature))return new(OutlineScope.Signature,SignatureRole:signature);

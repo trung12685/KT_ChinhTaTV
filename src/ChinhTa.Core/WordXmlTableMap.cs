@@ -30,12 +30,13 @@ public static class WordXmlTableMap
         bool includeLayout=true,Action<int,bool>? onFormatEditable=null)
         =>Read(snapshot.Document,live,onMismatch,onParagraphMatched,onTextEditable,includeLayout,onFormatEditable,snapshot);
     internal static IReadOnlyList<LayoutParagraph> Read(XDocument xml,IReadOnlyList<WordParagraphSnapshot> live,
-        Action<WordXmlMappingException>? onMismatch,Action<int,int>? onParagraphMatched,Action<int,bool>? onTextEditable,bool includeLayout,Action<int,bool>? onFormatEditable=null,WordXmlSnapshot? snapshot=null)
+        Action<WordXmlMappingException>? onMismatch,Action<int,int>? onParagraphMatched,Action<int,bool>? onTextEditable,bool includeLayout,Action<int,bool>? onFormatEditable=null,WordXmlSnapshot? snapshot=null,IReadOnlySet<XElement>? annotationTextScope=null)
     {
         var body = xml.Descendants(W + "document").Single().Element(W + "body")
             ?? throw new InvalidOperationException("Missing document body");
         var paragraphs = snapshot?.Paragraphs??body.Descendants(W + "p").Where(p => !p.Ancestors(W + "txbxContent").Any()).ToArray();
         var externalBoundary=ExternalContentBoundary(body);
+        annotationTextScope??=snapshot?.AnnotationTextScope??WordAnnotationTextScope.Read(body);
         live = AlignBodyBlanks(paragraphs, live,snapshot);
         int verified = Math.Min(paragraphs.Length, live.Count);
         IReadOnlySet<XElement> formatLines=onFormatEditable is null?new HashSet<XElement>():snapshot?.OwnedLines??OwnedLineFormatProof.Read(xml);
@@ -63,7 +64,7 @@ public static class WordXmlTableMap
             onFormatEditable?.Invoke(live[i].Start,OwnedLineFormatProof.IsFormatText(p,formatLines));
             if(onTextEditable is not null)
             {
-                bool editable=IsPlainText(p);
+                bool editable=IsPlainText(p) && !annotationTextScope.Contains(p);
                 onTextEditable(live[i].Start,editable);
             }
         }

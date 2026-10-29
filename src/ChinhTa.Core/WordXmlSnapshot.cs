@@ -12,8 +12,10 @@ public sealed class WordXmlSnapshot
     private readonly string[] texts;
     private readonly Lazy<WordOutlineEvidence> outline;
     private readonly Lazy<HashSet<XElement>> ownedLines;
+    private readonly Lazy<IReadOnlySet<XElement>> annotationTextScope;
     internal WordOutlineEvidence Outline=>outline.Value;
     internal IReadOnlySet<XElement> OwnedLines=>ownedLines.Value;
+    internal IReadOnlySet<XElement> AnnotationTextScope=>annotationTextScope.Value;
     public int ParagraphCount=>Paragraphs.Length;
     private WordXmlSnapshot(string currentXml)
     {
@@ -24,7 +26,8 @@ public sealed class WordXmlSnapshot
         // stay separate exactly as in the existing proof. Geometry guards remain.
         Paragraphs=body.Descendants(W+"p").Where(p=>!p.Ancestors(W+"txbxContent").Any()).ToArray();
         texts=Paragraphs.Select(WordXmlTableMap.TextOf).ToArray();
-        outline=new(()=>new WordOutlineEvidence(Document));
+        annotationTextScope=new(()=>WordAnnotationTextScope.Read(body));
+        outline=new(()=>new WordOutlineEvidence(Document,AnnotationTextScope));
         ownedLines=new(()=>OwnedLineFormatProof.Read(Document));
     }
     public static WordXmlSnapshot Parse(string currentXml)=>new(currentXml);

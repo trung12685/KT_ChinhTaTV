@@ -30,14 +30,15 @@ public static class WordTextProof
             var body=xml.Descendants(w+"document").Single().Element(w+"body")??throw new InvalidOperationException("Missing document body");
             var ps=snapshot?.Paragraphs??body.Descendants(w+"p")
                 .Where(p=>!p.Ancestors(w+"txbxContent").Any()).ToArray();
-            var evidence=onOutline is null?null:snapshot?.Outline??new WordOutlineEvidence(xml);
+            var annotationTextScope=snapshot?.AnnotationTextScope??WordAnnotationTextScope.Read(body);
+            var evidence=onOutline is null?null:snapshot?.Outline??new WordOutlineEvidence(xml,annotationTextScope);
             var matched=new Dictionary<int,int>();
             WordXmlTableMap.Read(xml,live,onMismatch??(_=>{}),(start,index)=>{matched[start]=index;onParagraphMatched?.Invoke(start,index);},
                 (start,canEdit)=>
                 {
                     if(canEdit)editable.Add(start);
                     if(onOutline is not null)onOutline(start,evidence!.Describe(ps[matched[start]],canEdit));
-                },includeLayout:false,onFormatEditable:onFormatEditable,snapshot:snapshot);
+                },includeLayout:false,onFormatEditable:onFormatEditable,snapshot:snapshot,annotationTextScope:annotationTextScope);
         }
         return editable;
     }

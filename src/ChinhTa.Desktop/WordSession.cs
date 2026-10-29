@@ -897,6 +897,7 @@ public sealed partial class WordSession : IDisposable
         try
         {
             document!.Save();
+            WordSaveCompletion.Wait(()=>(int)app!.BackgroundSavingStatus,()=>(bool)document.Saved);
             snapshotCurrent = true;
         }
         catch

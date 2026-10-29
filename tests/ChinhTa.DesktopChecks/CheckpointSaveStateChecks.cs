@@ -9,17 +9,25 @@ public static class CheckpointSaveStateChecks
     {
         public int Saves;
         public int Closes;
+        public bool Saved{get;private set;}
         public void Save()
         {
             Saves++;
             if(failure is null || partialWrite)File.WriteAllText(path,failure is null?"verified saved working":"uncertain partial save");
             if(failure is not null)throw failure;
+            Saved=true;
         }
         public void Close(int saveChanges)
         {
             if(saveChanges!=0)throw new Exception("The managed document must close without an additional save");
             Closes++;
         }
+    }
+    public sealed class Application
+    {
+        public int BackgroundSavingStatus=>0;
+        public void Quit(int saveChanges)
+        {if(saveChanges!=0)throw new Exception("The managed application must not save on close");}
     }
     private static object? Field(WordSession session,string name)=>typeof(WordSession)
         .GetField(name,BindingFlags.Instance|BindingFlags.NonPublic)!.GetValue(session);
@@ -90,7 +98,7 @@ public static class CheckpointSaveStateChecks
                     File.WriteAllText(undo,"retained prior action");
                     Property(session,"Source",source);Property(session,"Changed",priorChanged);Field(session,"snapshotCurrent",priorSnapshot);
                     var stack=(Stack<string>)Field(session,"undoCheckpoints")!;stack.Push(undo);
-                    var document=new Document(session.RecoveryPath,null,false);Field(session,"document",document);
+                    var document=new Document(session.RecoveryPath,null,false);Field(session,"document",document);Field(session,"app",new Application());
                     typeof(WordSession).GetMethod("Checkpoint",BindingFlags.Instance|BindingFlags.NonPublic)!.Invoke(session,null);
                     assert(document.Saves==1 && Field(session,"snapshotCurrent") is true && session.Changed==priorChanged &&
                         File.ReadAllText(session.RecoveryPath)=="verified saved working",

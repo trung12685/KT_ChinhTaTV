@@ -1,6 +1,6 @@
 # Chính tả Việt
 
-Mã đang phát triển **0.1.80**: [đợt 57–60](docs/FORMAT-BATCH-57-60.md) siết độ tin cậy sau lưu/Undo lỗi, giữ lịch sử tracked move và chuỗi đối số lệnh, sửa hướng dẫn phục hồi. Chưa xuất ZIP 0.1.80; gói 0.1.79 bên dưới giữ nguyên.
+Mã đang phát triển **0.1.80**: [đợt 57–60](docs/FORMAT-BATCH-57-60.md) và [61–64](docs/FORMAT-BATCH-61-64.md) siết phục hồi, chờ Word lưu xong, bảo vệ vùng đánh dấu/biểu mẫu và vòng đời tiến độ. Chưa xuất ZIP 0.1.80; gói 0.1.79 bên dưới giữ nguyên.
 
 Đã có **[bản thử Windows 0.1.79](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40960198832/artifacts/12935094001)**, gom 12 cụm sau 0.1.78: [đợt 45–47](docs/FORMAT-BATCH-45-47.md), [48–51](docs/FORMAT-BATCH-48-51.md) và [52–56](docs/FORMAT-BATCH-52-56.md). Thêm hậu kiểm dấu câu, giữ dẫn chiếu/literal/biểu mẫu, xử lý checkpoint lưu lỗi và trạng thái Hoàn tác/xem trước. [Hướng dẫn dùng/kiểm Word](docs/PREVIEW-0.1.79.md) · [Nguồn và bằng chứng gói](docs/PREVIEW-0.1.79-EVIDENCE.md). Cần đăng nhập GitHub để tải; giải nén artifact rồi giải nén toàn bộ ZIP bên trong vào thư mục mới. Word thật vẫn NOT_RUN.
 
