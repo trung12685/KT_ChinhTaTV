@@ -23,7 +23,7 @@ dotnet build tests/ChinhTa.DesktopChecks -c Release
 
 Các ca Core mới kiểm DOCX fixture mở được theo schema, toàn vẹn ảnh/quan hệ/content type/namespace, bảo toàn nguồn và không ghi đè, thay một byte ảnh, lỗi quan hệ, field/link không hỗ trợ, bốn mẫu DOCX có sẵn không thêm hoặc che lỗi schema gốc, và bằng chứng baseline bất biến. Các ca WPF mới có cả phông thay thế, dòng mất/lệch, đổi màu/opacity/clip, ảnh đổi/dịch, hình nét khác cùng bounding box và thứ tự vẽ đổi, cùng schema mẫu Office. **Biên dịch các ca WPF không phải chạy chúng.** Số kiểm Linux cuối đợt và trạng thái build nằm trong [CONTINUATION-2026-10-29.md](CONTINUATION-2026-10-29.md).
 
-Windows vẫn cần chạy:
+Lệnh kiểm trên Windows (bộ DesktopChecks đã đạt trong CI của commit triển khai; ứng dụng/nhóm Word bên dưới chưa chạy trên Word thật):
 
 ```powershell
 dotnet run --project tests/ChinhTa.DesktopChecks -c Release
