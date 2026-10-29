@@ -33,7 +33,9 @@ internal static class OfficeFocusedCheck
         new OfficeSuiteCase("spacing-calibration","Đo Single/1,5 và khoảng đoạn trên bản sao"),
         new OfficeSuiteCase("technical-text","Sửa chữ và giữ đường dẫn/tên tệp"),
         new OfficeSuiteCase("body-format","Phông/căn nội dung và phối hợp"),
-        new OfficeSuiteCase("outline-references","Dẫn chiếu mục đơn, danh sách và khoảng số")
+        new OfficeSuiteCase("outline-references","Dẫn chiếu mục đơn, danh sách và khoảng số"),
+        new OfficeSuiteCase("retained-marks","Giữ kiểu dấu câu khi thêm khoảng"),
+        new OfficeSuiteCase("annotated-text","Giữ bookmark khi sửa đoạn độc lập")
     });
     private sealed record FocusedSession(WordSession Test,string Seed,string Folder);
     internal static string Summary(OfficeSuiteReport report)=>
@@ -104,27 +106,7 @@ internal static class OfficeFocusedCheck
             {
                 int completed=0;
                 void Pass(string detail){completed++;Note($"STEP_PASS {suite.Id}: {detail}");}
-                switch(suite.Id)
-                {
-                    case "handwriting":OfficeSignatureWritingSpaceCheck.Run(current.Test,current.Seed,current.Folder,Pass);break;
-                    case "signature":OfficeSignatureFormatCheck.Run(current.Test,current.Seed,current.Folder,Pass);break;
-                    case "page-layout":OfficePageLayoutCheck.Run(current.Test,current.Seed,current.Folder,Pass);break;
-                    case "page-number":OfficePageNumberCheck.Run(current.Test,current.Seed,current.Folder,Pass);break;
-                    case "footer-page-number":OfficeFooterPageMigrationCheck.Run(current.Test,current.Seed,current.Folder,Pass);break;
-                    case "footer-page-number-long":OfficeFooterPageMigrationCheck.Run(current.Test,current.Seed,current.Folder,Pass,true);break;
-                    case "empty-page-layout":OfficeEmptyHeaderFooterCheck.Run(current.Test,current.Seed,current.Folder,Pass);break;
-                    case "body-spacing":
-                        // Build only the body fixture. An earlier font/Line test
-                        // must not stop the spacing assertions from starting.
-                        string seed=CreateBodySpacingSource(current.Seed,current.Folder);
-                        OfficeBodySpacingCheck.Run(current.Test,seed,current.Folder,Pass);break;
-                    case "body-format":OfficeBodyFormatCheck.Run(current.Test,current.Seed,current.Folder,Pass);break;
-                    case "isolated-spacing":OfficeIsolatedSpacingCheck.Run(current.Test,current.Seed,current.Folder,Pass);break;
-                    case "spacing-calibration":OfficeIsolatedSpacingCheck.RunCalibration(current.Test,current.Seed,current.Folder,Pass);break;
-                    case "technical-text":OfficeTechnicalTextCheck.Run(current.Test,current.Seed,current.Folder,Pass);break;
-                    case "outline-references":OfficeHierarchicalOutlineCheck.RunReferences(current.Test,current.Seed,current.Folder,Pass);break;
-                    default:throw new InvalidOperationException("Nhóm kiểm chưa được nối với bài kiểm thực.");
-                }
+                Scenario(suite.Id)(current.Test,current.Seed,current.Folder,Pass);
                 RequireCompleted(completed);
             },current=>current.Test.DisposeCheckSession(),result=>
             {
@@ -142,9 +124,32 @@ internal static class OfficeFocusedCheck
     }
     internal static void RequireCompleted(int completed)
     {if(completed<=0)throw new InvalidOperationException("Nhóm kiểm chưa xác nhận bước nào; không được ghi PASS.");}
+    // Resolve before executing: the standalone text families do not invoke the
+    // earlier technical-text or retained-mark fixture as a prerequisite.
+    internal static Action<WordSession,string,string,Action<string>> Scenario(string id)=>id switch
+    {
+        "handwriting"=>OfficeSignatureWritingSpaceCheck.Run,
+        "signature"=>OfficeSignatureFormatCheck.Run,
+        "page-layout"=>OfficePageLayoutCheck.Run,
+        "page-number"=>OfficePageNumberCheck.Run,
+        "footer-page-number"=>(test,seed,folder,pass)=>OfficeFooterPageMigrationCheck.Run(test,seed,folder,pass),
+        "footer-page-number-long"=>(test,seed,folder,pass)=>OfficeFooterPageMigrationCheck.Run(test,seed,folder,pass,true),
+        "empty-page-layout"=>OfficeEmptyHeaderFooterCheck.Run,
+        // Build only the body source, without requiring font/Line checks.
+        "body-spacing"=>(test,seed,folder,pass)=>OfficeBodySpacingCheck.Run(test,CreateBodySpacingSource(seed,folder),folder,pass),
+        "body-format"=>OfficeBodyFormatCheck.Run,
+        "isolated-spacing"=>OfficeIsolatedSpacingCheck.Run,
+        "spacing-calibration"=>OfficeIsolatedSpacingCheck.RunCalibration,
+        "technical-text"=>OfficeTechnicalTextCheck.Run,
+        "outline-references"=>OfficeHierarchicalOutlineCheck.RunReferences,
+        "retained-marks"=>OfficeRetainedMarkCheck.Run,
+        "annotated-text"=>OfficeAnnotatedTextCheck.Run,
+        _=>throw new InvalidOperationException("Nhóm kiểm chưa được nối với bài kiểm thực.")
+    };
     internal static IReadOnlyList<OfficeSuiteCase>? Select(Window owner)
     {
         var dialog=new Window{Title="Kiểm tra từng nhóm Word",Owner=owner,Width=610,SizeToContent=SizeToContent.Height,
+            MaxHeight=Math.Max(240,SystemParameters.WorkArea.Height-40),
             WindowStartupLocation=WindowStartupLocation.CenterOwner,ResizeMode=ResizeMode.NoResize};
         var panel=new StackPanel{Margin=new Thickness(18)};
         panel.Children.Add(new TextBlock{Text="Mỗi nhóm dùng một phiên Word và tài liệu mẫu riêng. Nhóm lỗi không ngăn nhóm tiếp theo chạy.",TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,0,0,10)});
@@ -159,7 +164,9 @@ internal static class OfficeFocusedCheck
             if(!boxes.Any(b=>b.IsChecked==true)){MessageBox.Show(dialog,"Hãy chọn ít nhất một nhóm.","Chọn nhóm kiểm");return;}
             dialog.DialogResult=true;
         };
-        buttons.Children.Add(start);buttons.Children.Add(cancel);panel.Children.Add(buttons);dialog.Content=panel;
+        buttons.Children.Add(start);buttons.Children.Add(cancel);panel.Children.Add(buttons);
+        dialog.Content=new ScrollViewer{Content=panel,VerticalScrollBarVisibility=ScrollBarVisibility.Auto,
+            HorizontalScrollBarVisibility=ScrollBarVisibility.Disabled};
         return dialog.ShowDialog()==true?boxes.Where(b=>b.IsChecked==true).Select(b=>(OfficeSuiteCase)b.Tag).ToArray():null;
     }
 }

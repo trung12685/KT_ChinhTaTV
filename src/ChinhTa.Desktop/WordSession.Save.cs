@@ -9,8 +9,9 @@ public sealed partial class WordSession
     {
         try
         {
+            VerifiedSaveCopy.GuardOutsideDirectory(folder,path);
             Checkpoint();
-            VerifiedSaveCopy.Write(RecoveryPath,path,undoCheckpoints.Prepend(Source),copy);
+            VerifiedSaveCopy.Write(RecoveryPath,path,undoCheckpoints.Prepend(Source),copy,[folder]);
             Changed=false; // Only publication of the complete verified copy counts as saved.
         }
         catch(Exception error)

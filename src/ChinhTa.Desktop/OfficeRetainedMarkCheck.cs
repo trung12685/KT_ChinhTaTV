@@ -6,7 +6,7 @@ using ChinhTa.Core;
 
 namespace ChinhTa.Desktop;
 
-// Part of the existing technical-text Word group, using synthetic samples only.
+// Standalone and within technical-text, using synthetic samples only.
 internal static class OfficeRetainedMarkCheck
 {
     internal sealed record Sample(string Source,string Expected,char Mark,FixKind Kind);

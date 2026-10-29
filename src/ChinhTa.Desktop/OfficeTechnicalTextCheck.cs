@@ -24,7 +24,9 @@ internal static class OfficeTechnicalTextCheck
         "echo \"Báo  cáo kế hoạch kế hoạch\"",
         "printf '%s' 'kế hoạch kế hoạch'",
         "tool --label \"Báo  cáo kế hoạch kế hoạch\"",
-        "cmd /c echo \"Báo  cáo\""
+        "cmd /c echo \"Báo  cáo\"",
+        "[\"Báo  cáo\", \"kế hoạch kế hoạch\", \"con đo\"]",
+        "[[\"Nội dung:báo cáo\"], [\"Đã hoàn thành.Cần làm tiếp.\"]]"
     });
     internal static IReadOnlyList<string> FormRows {get;}=Array.AsReadOnly(new[]
     {

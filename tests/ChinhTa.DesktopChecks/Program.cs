@@ -258,6 +258,7 @@ static class Program
         SignatureObservationChecks.Run(Assert);
         SignatureSpaceDesktopChecks.Run(Assert);
         OfficeFocusedChecks.Run(Assert);
+        IndependentTextSuiteChecks.Run(Assert);
         CoverageDesktopChecks.Run(Assert);
         PageNumberPaintChecks.Run(Assert);
         PageBitmapChecks.Run(Assert);
@@ -299,6 +300,7 @@ DelimiterClusterReviewChecks.Run(Assert);
         UndoCheckpointTrustChecks.Run(Assert);
         RecoveryFeedbackChecks.Run(Assert);
         DisconnectedRecoveryFeedbackChecks.Run(Assert);
+        PrivateWorkspaceSaveChecks.Run(Assert);
         OwnedWordObjectChecks.Run(Assert);
         RepairProgressStartupChecks.Run(Assert);
         UnmappedPreviewSelectionChecks.Run(Assert);

@@ -11,13 +11,14 @@ public sealed partial class WordSession
     {
         if(!Path.GetExtension(destination).Equals(".txt",StringComparison.OrdinalIgnoreCase))
             throw new InvalidOperationException("Chọn tên báo cáo có đuôi .txt.");
+        VerifiedSaveCopy.GuardOutsideDirectory(folder,destination);
         string source=Path.Combine(folder,Guid.NewGuid()+".report.txt");
         try
         {
             File.WriteAllText(source,report,new UTF8Encoding(true));
             var protectedFiles=undoCheckpoints.Append(RecoveryPath);
             if(Source.Length>0)protectedFiles=protectedFiles.Append(Source);
-            VerifiedSaveCopy.Write(source,destination,protectedFiles);
+            VerifiedSaveCopy.Write(source,destination,protectedFiles,protectedDirectories:[folder]);
         }
         finally
         {

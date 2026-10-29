@@ -25,6 +25,7 @@ public static class OutlineRules
     private const string ReferenceSpace=@"[\p{Zs}\t]";
     private const string ReferenceLabelToken=@"(?:\("+ReferenceSpace+@"*(?<label>"+ReferenceLabel+@")"+ReferenceSpace+@"*\)|(?<label>"+ReferenceLabel+@")(?:[.)])?)";
     private sealed record NumericReferenceRange(string[] Prefix,string Lower,string Upper);
+    private sealed record RomanReferenceRange(int Lower,int Upper);
     // Expand only fixed cue words, never normalize the paragraph or reuse
     // normalized offsets as Word CPs. References grant no edit permission;
     // they conservatively freeze numbering that would leave dangling labels.
@@ -63,6 +64,7 @@ public static class OutlineRules
         var result=new List<OutlineFinding>();var roots=new List<Node>();var root=new Node(null);var path=new List<Node>();
         var references=new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var referenceRanges=new List<NumericReferenceRange>();
+        var romanReferenceRanges=new List<RomanReferenceRange>();
         var uncertainRangePrefixes=new List<string[]>();
         foreach(var match in rows.SelectMany(p=>References.Matches(p.Text).Cast<Match>()))
         {
@@ -80,7 +82,15 @@ public static class OutlineRules
             {
                 string joiner=joiners[i].Value.Trim().Normalize(NormalizationForm.FormC);
                 if(joiner is not ("-" or "–" or "—") && !joiner.Equals("đến",StringComparison.OrdinalIgnoreCase) && !joiner.Equals("tới",StringComparison.OrdinalIgnoreCase))continue;
-                if(!char.IsAsciiDigit(labels[i][0]) || !char.IsAsciiDigit(labels[i+1][0]))continue;
+                if(!char.IsAsciiDigit(labels[i][0]) || !char.IsAsciiDigit(labels[i+1][0]))
+                {
+                    // Resolve only canonical Roman spellings (case-insensitive,
+                    // as for the existing reference grammar). Apply their interval
+                    // to Roman sibling groups only, never to Arabic/letter labels.
+                    int lower=RomanValue(labels[i].ToUpperInvariant()),upper=RomanValue(labels[i+1].ToUpperInvariant());
+                    if(lower>0 && upper>0)romanReferenceRanges.Add(new(Math.Min(lower,upper),Math.Max(lower,upper)));
+                    continue;
+                }
                 string[] left=labels[i].Split('.'),right=labels[i+1].Split('.');
                 int common=0;while(common<Math.Min(left.Length,right.Length) && left[common]==right[common])common++;
                 if(left.Length==right.Length && common>=left.Length-1)
@@ -96,10 +106,15 @@ public static class OutlineRules
                     uncertainRangePrefixes.Add(left[..common]);
             }
         }
-        bool Referenced(string label)
+        bool Referenced(string label,Family family)
         {
             string key=ReferenceKey(label);
             if(references.Contains(key))return true;
+            if(family==Family.Roman)
+            {
+                int value=RomanValue(key);
+                if(romanReferenceRanges.Any(range=>value>=range.Lower && value<=range.Upper))return true;
+            }
             if(key.Length==0 || !char.IsAsciiDigit(key[0]))return false;
             string[] parts=key.Split('.');
             bool StartsWith(string[] prefix)=>parts.Length>=prefix.Length && parts.Take(prefix.Length).SequenceEqual(prefix,StringComparer.Ordinal);
@@ -195,8 +210,8 @@ public static class OutlineRules
                     Family.Letter=>alphabets.Where(a=>index<a.Length).Select(a=>a[index].ToString()).Distinct().ToArray(),
                     _=>[]
                 };
-                bool referenced=members.Any(m=>m.Row.Outline!.HasReferences || Referenced(m.Label)) ||
-                    Enumerable.Range(0,members.Length).SelectMany(Expected).Any(Referenced);
+                bool referenced=members.Any(m=>m.Row.Outline!.HasReferences || Referenced(m.Label,m.Family)) ||
+                    Enumerable.Range(0,members.Length).SelectMany(Expected).Any(label=>Referenced(label,first.Family));
                 for(int i=1;i<members.Length;i++)
                 {
                     var item=members[i];var expected=Expected(i);

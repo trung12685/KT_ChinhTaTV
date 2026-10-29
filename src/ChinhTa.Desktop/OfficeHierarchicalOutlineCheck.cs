@@ -20,6 +20,14 @@ internal static class OfficeHierarchicalOutlineCheck
         "Xem từ mục số 1.0 tới MỤC số 1.3 để đối chiếu.",
         "Xem mục (8), mục (1.4) để đối chiếu."
     });
+    internal static IReadOnlyList<string> RomanReferenceRows {get;}=Array.AsReadOnly(new[]
+    {
+        "Xem từ mục IV đến mục X để đối chiếu.",
+        "Xem mục (IV) – (X) để đối chiếu.",
+        "Xem mu\u0323c\u00a0số\u00a0(iv) tới MỤC số (x) để đối chiếu.",
+        "Xem mục X đến mục IV để đối chiếu.",
+        "Xem từ phần IV tới phần X để đối chiếu."
+    });
     public static void Run(WordSession test,string modern,string folder,Action<string> pass)
     {
         string isolated=Path.Combine(folder,"decimal-outline");Directory.CreateDirectory(isolated);
@@ -61,7 +69,7 @@ internal static class OfficeHierarchicalOutlineCheck
     // repair nor a successful earlier renumbering scenario to gather evidence.
     internal static void RunReferences(WordSession test,string modern,string folder,Action<string> pass)
     {
-        if(ReferenceRows.Count==0)throw new InvalidOperationException("Chưa có mẫu dẫn chiếu độc lập để kiểm; không được ghi PASS.");
+        if(ReferenceRows.Count==0 || RomanReferenceRows.Count==0)throw new InvalidOperationException("Chưa có đủ mẫu dẫn chiếu độc lập để kiểm; không được ghi PASS.");
         string isolated=Path.Combine(folder,"decimal-reference-guards");Directory.CreateDirectory(isolated);
         string seed=OfficeComponentCheck.Create(modern,isolated,false);
         test.Profile=DocumentProfile.State;
@@ -78,10 +86,23 @@ internal static class OfficeHierarchicalOutlineCheck
                 throw new InvalidOperationException($"Mẫu dẫn chiếu {reference.index+1}: chưa giữ riêng chuỗi liên quan hoặc làm đổi nguồn mẫu.");
         }
         pass($"Dẫn chiếu mục: {ReferenceRows.Count} mẫu đơn/danh sách/khoảng, giữ 1.4 thủ công và 2.4 độc lập; quét không đổi chữ/dirty state/Undo/nguồn");
+        foreach(var reference in RomanReferenceRows.Select((text,index)=>(text,index)))
+        {
+            string guarded=Create(seed,isolated,reference.text,reference.index,roman:true);
+            byte[] guardedHash=SHA256.HashData(File.ReadAllBytes(guarded));test.Open(guarded);
+            string guardedText=test.ReadCheckText();var blocked=test.Check();
+            var independent=blocked.Where(i=>i.CanFix && i.Kind==FixKind.OutlineOrder).ToArray();
+            if(independent is not [{Original:"9",Replacement:"3"}] || independent[0].OutlineContext?.Label!="9" ||
+                !blocked.Any(i=>!i.CanFix && i.Kind==FixKind.OutlineOrder && i.Original.StartsWith("IX.",StringComparison.Ordinal)) ||
+                test.ReadCheckText()!=guardedText || test.Changed || test.CheckUndoCount!=0 ||
+                !guardedHash.SequenceEqual(SHA256.HashData(File.ReadAllBytes(guarded))))
+                throw new InvalidOperationException($"Mẫu dẫn chiếu La Mã {reference.index+1}: chưa giữ IX thủ công và nhánh số độc lập hoặc đã đổi nguồn mẫu.");
+        }
+        pass($"Dẫn chiếu La Mã: {RomanReferenceRows.Count} mẫu khoảng IV–X giữ IX thủ công, nhánh 1/2/9 độc lập vẫn duyệt 9 → 3; quét không đổi chữ/dirty state/Undo/nguồn");
     }
-    internal static string Create(string seed,string folder,string? reference=null,int referenceIndex=0)
+    internal static string Create(string seed,string folder,string? reference=null,int referenceIndex=0,bool roman=false)
     {
-        string path=Path.Combine(folder,reference is null?"decimal-input.docx":$"decimal-referenced-{referenceIndex}.docx");File.Copy(seed,path);
+        string path=Path.Combine(folder,reference is null?"decimal-input.docx":$"{(roman?"roman":"decimal")}-referenced-{referenceIndex}.docx");File.Copy(seed,path);
         using var zip=ZipFile.Open(path,ZipArchiveMode.Update);var entry=zip.GetEntry("word/document.xml")!;XDocument xml;
         using(var input=entry.Open())xml=XDocument.Load(input,LoadOptions.PreserveWhitespace);
         XNamespace w="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
@@ -104,8 +125,9 @@ internal static class OfficeHierarchicalOutlineCheck
             }
             return p;
         }
-        var rows=new[]{"1. Mục cha","\t1.1.\tNhánh đầu","\t1.4.\tNhánh sau","- Nội dung  kế hoạch kế hoạch",
-            "2. Mục cha sau","\t2.1.\tNhánh đầu","\t2.4.\tNhánh sau"}.Select(Row).ToList();
+        var rows=(roman?new[]{"I. Mục cha","1. Nhánh đầu","2. Nhánh giữa","9. Nhánh sau","II. Mục cha tiếp","IX. Mục cha cuối"}:
+            new[]{"1. Mục cha","\t1.1.\tNhánh đầu","\t1.4.\tNhánh sau","- Nội dung  kế hoạch kế hoạch",
+            "2. Mục cha sau","\t2.1.\tNhánh đầu","\t2.4.\tNhánh sau"}).Select(Row).ToList();
         if(reference is not null)rows.Add(Row(reference));recipient.AddBeforeSelf(rows);
         entry.Delete();using(var output=zip.CreateEntry("word/document.xml").Open())xml.Save(output);return path;
     }

@@ -1,4 +1,4 @@
-> Đã có [bản thử Windows 0.1.80](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40967945181/artifacts/12938519861), nguồn `8e9cb3b19eac0cfe300fb206b27065219ba6c3a9`, gom [đợt 57–60](FORMAT-BATCH-57-60.md), [61–64](FORMAT-BATCH-61-64.md) và [65–68](FORMAT-BATCH-65-68.md). Xem [hướng dẫn](PREVIEW-0.1.80.md) và [bằng chứng](PREVIEW-0.1.80-EVIDENCE.md). Core/WPF, EXE, metadata và ZIP đã qua; Word thực vẫn NOT_RUN. Gói trước [0.1.79](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40960198832/artifacts/12935094001) và main/tag/gói cũ giữ nguyên. Release gần nhất vẫn 0.1.76.
+> Mã đang phát triển 0.1.81: [đợt 69–72](FORMAT-BATCH-69-72.md), chưa ZIP mới. Bản tải gần nhất [Windows 0.1.80](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40967945181/artifacts/12938519861), nguồn `8e9cb3b19eac0cfe300fb206b27065219ba6c3a9`, gom [đợt 57–60](FORMAT-BATCH-57-60.md), [61–64](FORMAT-BATCH-61-64.md) và [65–68](FORMAT-BATCH-65-68.md). Xem [hướng dẫn](PREVIEW-0.1.80.md) và [bằng chứng](PREVIEW-0.1.80-EVIDENCE.md). Core/WPF, EXE, metadata và ZIP của gói đã qua; Word thực vẫn NOT_RUN. Main/tag/gói cũ giữ nguyên. Release gần nhất vẫn 0.1.76.
 
 Đợt 22 bổ sung nền tảng bản sao toàn gói và đối chiếu XPS trước hiệu chuẩn, cùng nhóm kiểm Word độc lập cho Exactly/AtLeast. Xem [FORMAT-BATCH-22.md](FORMAT-BATCH-22.md). Chưa đo Single/1,5 hoặc bỏ Before/After trên clone; C28/C29 vẫn giữ quyền sửa cũ. Nhóm Word mới chưa được thực thi trên môi trường Linux.
 
@@ -25,6 +25,8 @@
 Đợt 61–64 giữ vùng chữ có bookmark/comment/permission trong phạm vi đã ghép, nhận ô chọn tròn và nhãn ngày sinh đầy đủ; chờ queue/Saved của Word trước xác nhận checkpoint, dọn cửa sổ tiến độ nếu tạo muộn sau lỗi khởi động. Không thay Options, tự lặp Save, đoán CP hoặc tuyên bố bảo toàn mọi annotation. Chờ có giới hạn không cắt được COM call đang treo; còn cần kết quả Word thực. Danh mục 33/8/1 và 13 nhóm Word giữ nguyên.
 
 Đợt 65–68 chặn thêm lịch sử thuộc tính chữ/đoạn/bảng chưa hỗ trợ; giữ ô “Sinh ngày … tháng … năm …”; giải phóng từng acquisition đã lấy ở các đường section/cặp child khi getter lỗi và giữ nguyên lỗi thao tác. UI nhận đúng mất kết nối sau bản lưu chưa chắc dù còn document reference. Nhóm Word sửa chữ thêm mẫu bookmark cùng/qua đoạn và các bước giữ phần chưa chọn qua sửa/Undo/lưu-mở; chưa chạy Word thật, chưa mở quyền annotation hoặc Exactly/AtLeast.
+
+Đợt 69–72 bổ sung `retained-marks`/`annotated-text` chạy độc lập, tổng 15 nhóm trong mã mới (gói 0.1.80 vẫn 13). Giữ dữ liệu trong mảng JSON dạng đoạn và nội dung khoảng dẫn chiếu La Mã canonical; từ chối công bố DOCX/TXT vào thư mục riêng sẽ bị xóa khi đóng phiên. Không gán kết quả Word từ kiểm schema/mô phỏng. Cần chạy các bài mới trên đúng gói tương lai có mã 0.1.81; chưa tạo ZIP trong đợt này.
 
 # Các phần còn thiếu và thứ tự hoàn thiện
 

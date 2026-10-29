@@ -1,3 +1,5 @@
+using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 
 namespace ChinhTa.Core;
@@ -46,7 +48,30 @@ public static class TechnicalTextContext
     private static readonly Regex FilenameOrDomain=new(
         @"[\p{L}\p{M}\p{N}_.-]\.(?:docx?|docm|dotx?|dotm|rtf|odt|ott|xlsx?|xlsm|xlsb|xltx?|xltm|ods|ots|pptx?|pptm|potx?|potm|ppsx?|ppsm|odp|otp|pdf|txt|csv|json|xml|ya?ml|ini|cfg|log|zip|rar|7z|exe|dll|png|jpe?g)(?:$|[^\p{L}\p{M}\p{N}_])|[a-z0-9][a-z0-9.-]*\.(?:vn|com|net|org|io|dev|gov|edu)/",Options);
 
+    private static bool IsJsonArray(string text)
+    {
+        int start=0,end=text.Length;
+        while(start<end && text[start] is ' ' or '\t' or '\r' or '\n')start++;
+        while(end>start && text[end-1] is ' ' or '\t' or '\r' or '\n' or '\a')end--;
+        // Only a complete array-shaped paragraph establishes this scope; a
+        // quoted bracket embedded in prose remains outside this recognition.
+        if(end-start<2 || text[start]!='[' || text[end-1]!=']')return false;
+        byte[] bytes=Encoding.UTF8.GetBytes(text[start..end]);
+        const int depthBudget=64;
+        var reader=new Utf8JsonReader(bytes,new JsonReaderOptions {MaxDepth=depthBudget+1});
+        try
+        {
+            while(reader.Read())
+                // A valid JSON prefix this deep is already technical. Do not
+                // let a parser-depth limit restore permission to edit values;
+                // the unparsed remainder is conservatively manual.
+                if(reader.CurrentDepth>=depthBudget && reader.TokenType is JsonTokenType.StartArray or JsonTokenType.StartObject)return true;
+            return reader.TokenType==JsonTokenType.EndArray && reader.BytesConsumed==bytes.Length;
+        }
+        catch(JsonException){return false;}
+    }
+
     public static bool IsTechnical(string text)=>text.Contains('`') || text.Contains('\\') || Paths.IsMatch(text) || RootFilename.IsMatch(text) || Schemes.IsMatch(text) ||
         Email.IsMatch(text) || Assignment.IsMatch(text) || MarkupOrObject.IsMatch(text) || QuotedFunctionArgument.IsMatch(text) ||
-        QuotedLongOption.IsMatch(text) || QuotedOutputCommand.IsMatch(text) || FilenameOrDomain.IsMatch(text);
+        QuotedLongOption.IsMatch(text) || QuotedOutputCommand.IsMatch(text) || FilenameOrDomain.IsMatch(text) || IsJsonArray(text);
 }

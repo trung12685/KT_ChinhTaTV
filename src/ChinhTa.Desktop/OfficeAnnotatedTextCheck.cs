@@ -7,8 +7,8 @@ using ChinhTa.Core;
 
 namespace ChinhTa.Desktop;
 
-// Runs only as part of the synthetic technical-text Word group. Building this
-// fixture or checking its XML does not establish that Microsoft Word passed it.
+// Runs in its standalone group and the synthetic technical-text Word group.
+// Building this fixture or checking its XML is not a Microsoft Word PASS.
 internal static class OfficeAnnotatedTextCheck
 {
     private static readonly XNamespace W="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
