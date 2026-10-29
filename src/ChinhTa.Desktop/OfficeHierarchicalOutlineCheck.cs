@@ -18,7 +18,10 @@ internal static class OfficeHierarchicalOutlineCheck
         "Xem mu\u0323c\u00a0số\u00a0(8), (001.004) để đối chiếu.",
         "Xem từ mục 1.3 đến mục 1.5 để đối chiếu.",
         "Xem từ mục số 1.0 tới MỤC số 1.3 để đối chiếu.",
-        "Xem mục (8), mục (1.4) để đối chiếu."
+        "Xem mục (8), mục (1.4) để đối chiếu.",
+        "Xem “mục 1.4” để đối chiếu.",
+        "Xem [mục 1.3 đến mục 1.5] để đối chiếu.",
+        "Xem «mục (8), mục (1.4)» để đối chiếu."
     });
     internal static IReadOnlyList<string> RomanReferenceRows {get;}=Array.AsReadOnly(new[]
     {
@@ -26,7 +29,9 @@ internal static class OfficeHierarchicalOutlineCheck
         "Xem mục (IV) – (X) để đối chiếu.",
         "Xem mu\u0323c\u00a0số\u00a0(iv) tới MỤC số (x) để đối chiếu.",
         "Xem mục X đến mục IV để đối chiếu.",
-        "Xem từ phần IV tới phần X để đối chiếu."
+        "Xem từ phần IV tới phần X để đối chiếu.",
+        "Xem “từ mục IV đến mục X” để đối chiếu.",
+        "Xem [mục (IV) – (X)] để đối chiếu."
     });
     public static void Run(WordSession test,string modern,string folder,Action<string> pass)
     {

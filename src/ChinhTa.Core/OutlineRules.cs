@@ -24,6 +24,10 @@ public static class OutlineRules
     private const string ReferenceLabel=@"(?:[0-9]+(?:\.[0-9]+)*|[IVXLCDM]{1,12}|[a-zđ])";
     private const string ReferenceSpace=@"[\p{Zs}\t]";
     private const string ReferenceLabelToken=@"(?:\("+ReferenceSpace+@"*(?<label>"+ReferenceLabel+@")"+ReferenceSpace+@"*\)|(?<label>"+ReferenceLabel+@")(?:[.)])?)";
+    // A quoted/bracketed citation still refers to its labels. Require the
+    // closing suffix to reach a real boundary, not a partial token such as
+    // 'mục 4"suffix'. This recognizes terminal delimiters, not their pairing.
+    private const string ReferenceBoundary=@"(?=\s|[,;:.!?]|$|[""'”’»`)\]}]+(?:\s|[,;:.!?]|$))";
     private sealed record NumericReferenceRange(string[] Prefix,string Lower,string Upper);
     private sealed record RomanReferenceRange(int Lower,int Upper);
     // Expand only fixed cue words, never normalize the paragraph or reuse
@@ -53,7 +57,7 @@ public static class OutlineRules
         return @"\b"+introduction+ReferenceLabelToken+
             @"(?:(?<joiner>"+ReferenceSpace+@"*[-–—,]"+ReferenceSpace+@"*|"+
             ReferenceSpace+@"+(?:"+string.Join('|',new[]{"và","đến","tới"}.Select(ReferenceWord))+@")"+ReferenceSpace+@"+)"+
-            @"(?:"+introduction+@")?"+ReferenceLabelToken+@")*(?![0-9]|\.[0-9])(?=\s|[,;:.!?]|$)";
+            @"(?:"+introduction+@")?"+ReferenceLabelToken+@")*(?![0-9]|\.[0-9])"+ReferenceBoundary;
     }
     private static readonly Regex References=new(string.Join('|',new[]{"mục","điểm","khoản","phần","chương"}.Select(ReferenceChain)),
         RegexOptions.IgnoreCase|RegexOptions.CultureInvariant);

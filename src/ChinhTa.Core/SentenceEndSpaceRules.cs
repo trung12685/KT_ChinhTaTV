@@ -7,13 +7,11 @@ namespace ChinhTa.Core;
 // prose context. Do not rewrite words, punctuation, trailing spaces or terminators.
 public static class SentenceEndSpaceRules
 {
-    private static readonly Regex DateWords=new(@"\bngày\b[^\r\n\a]*\btháng\b[^\r\n\a]*\bnăm\b",
-        RegexOptions.IgnoreCase|RegexOptions.CultureInvariant|RegexOptions.NonBacktracking);
     private static readonly Regex Word=new(@"\p{L}[\p{L}\p{M}]*",RegexOptions.CultureInvariant|RegexOptions.NonBacktracking);
     public static IReadOnlyList<Issue> Check(Paragraph paragraph)
     {
         string text=paragraph.Text.TrimEnd('\r','\n','\a');
-        if(AdministrativeHeaderRules.IsCandidate(text) || DateWords.IsMatch(text) ||
+        if(AdministrativeHeaderRules.IsCandidate(text) || DateWordContext.Contains(text) ||
             text.IndexOfAny(['\t','\r','\n','\a','\v','\f','@','/','\\','_','=','`','<','>','[',']','{','}','+','*','^','|'])>=0)return Array.Empty<Issue>();
         int mark=text.Length-1;
         while(mark>=0 && text[mark]==' ')mark--;

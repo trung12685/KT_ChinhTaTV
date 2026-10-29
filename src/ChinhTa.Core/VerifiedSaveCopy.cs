@@ -92,6 +92,18 @@ public static class VerifiedSaveCopy
         while(missing.TryPop(out string? part))resolved=Path.Combine(resolved,part);
         return resolved;
     }
+    // Read-only preflight. It cannot promise that permissions or aliases stay
+    // unchanged, so Write repeats this boundary immediately before publication.
+    public static string ValidateDestination(string working,string destination,IEnumerable<string> protectedFiles,
+        IEnumerable<string>? protectedDirectories=null)
+    {
+        working=Path.GetFullPath(working);destination=Path.GetFullPath(destination);
+        foreach(string directory in protectedDirectories??[])GuardOutsideDirectory(directory,destination);
+        Guard(working,destination,protectedFiles.Select(Path.GetFullPath).ToArray());
+        string parent=Path.GetDirectoryName(destination)??throw new IOException("Chưa xác định được thư mục lưu.");
+        if(!Directory.Exists(parent))throw new DirectoryNotFoundException("Thư mục lưu chưa tồn tại; hãy chọn một thư mục khác.");
+        return destination;
+    }
     public static void Write(string working,string destination,IEnumerable<string> protectedFiles,
         Action<Stream,Stream>? copy=null,IEnumerable<string>? protectedDirectories=null)
     {
@@ -100,8 +112,7 @@ public static class VerifiedSaveCopy
         var protectedFolders=protectedDirectories?.Select(Path.GetFullPath).ToArray()??[];
         void GuardDestination()
         {
-            foreach(string directory in protectedFolders)GuardOutsideDirectory(directory,destination);
-            Guard(working,destination,protectedPaths);
+            ValidateDestination(working,destination,protectedPaths,protectedFolders);
         }
         GuardDestination();
         string stage=Path.Combine(Path.GetDirectoryName(destination)!,".ChinhTaViet-"+Guid.NewGuid().ToString("N")+".tmp");

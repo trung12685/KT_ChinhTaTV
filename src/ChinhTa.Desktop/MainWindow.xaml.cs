@@ -39,8 +39,10 @@ public partial class MainWindow : Window
         if (ProfileInfo is not null) ProfileInfo.Text = DocumentProfiles.Description(session.Profile);
         if (session.IsOpen) Run(Scan);
     }
-    private void Run(Action action)
+    private void Run(Action action)=>Run(action,message=>MessageBox.Show(this,message,"Không thể thực hiện",MessageBoxButton.OK,MessageBoxImage.Warning));
+    internal void Run(Action action,Action<string> showFailure)
     {
+        ArgumentNullException.ThrowIfNull(action);ArgumentNullException.ThrowIfNull(showFailure);
         hover.Stop();
         Mouse.OverrideCursor = Cursors.Wait;
         try { action(); }
@@ -54,8 +56,8 @@ public partial class MainWindow : Window
             var feedback=DescribeOperationFailure(session,ex);
             Status.Text=feedback.Status;
             string cleanupNotice=cleanupFailure is null?"":"\n\nChưa dọn hết bản xem trước. Các lỗi dọn dẹp và lỗi thao tác ban đầu đều đã được giữ trong nhật ký.";
-            MessageBox.Show(this, feedback.Message + cleanupNotice + "\n\nBản làm việc: " + session.RecoveryPath +
-                "\nNhật ký: " + Diagnostics.LogPath, "Không thể thực hiện", MessageBoxButton.OK, MessageBoxImage.Warning);
+            showFailure(feedback.Message + cleanupNotice + "\n\nBản làm việc: " + session.RecoveryPath +
+                "\nNhật ký: " + Diagnostics.LogPath);
         }
         finally { Mouse.OverrideCursor = null; }
     }
@@ -121,7 +123,7 @@ public partial class MainWindow : Window
         hover.Stop();
         if(!session.IsOpen || lastCoverage is null)
         {MessageBox.Show(this,"Mở tài liệu và quét thành công để xem phạm vi của lần kiểm hiện tại.","Phạm vi kiểm tra");return;}
-        new DocumentCoverageWindow(lastCoverage){Owner=this}.ShowDialog();
+        new DocumentCoverageWindow(lastCoverage,session.SaveProgressReport){Owner=this}.ShowDialog();
     }
     private void SpacingMeasurementClick(object sender,RoutedEventArgs e)
     {
@@ -372,7 +374,23 @@ public partial class MainWindow : Window
     {
         if (!session.IsOpen) return;
         var dialog = new SaveFileDialog { Filter = "Word (*.docx)|*.docx", FileName = Path.GetFileNameWithoutExtension(session.Source) + "_da-sua.docx" };
-        if (dialog.ShowDialog(this) == true) Run(() => { session.SaveCopy(dialog.FileName); Status.Text = "Đã lưu bản sao: " + dialog.FileName; });
+        if (dialog.ShowDialog(this) == true) SaveCopyTo(dialog.FileName);
+    }
+    internal void SaveCopyTo(string path,Action<Action>? execute=null,Action<string>? showRejected=null)
+    {
+        hover.Stop();string destination;
+        try{destination=session.ValidateSaveCopyDestination(path);}
+        catch(Exception error)
+        {
+            Diagnostics.Write("UI.SaveDestination",error);
+            Status.Text="Chưa lưu bản sao: đích lưu chưa hợp lệ. Danh sách lỗi và bản xem trước được giữ; hãy chọn tên hoặc thư mục khác.";
+            string message=error.Message+"\n\nDanh sách lỗi và bản xem trước được giữ. Hãy chọn tên hoặc thư mục khác để lưu bản sao.";
+            if(showRejected is not null)showRejected(message);
+            else MessageBox.Show(this,message,"Chọn lại đích lưu",MessageBoxButton.OK,MessageBoxImage.Information);
+            return;
+        }
+        Action<Action> run=execute??Run;
+        run(()=>{session.SaveCopy(destination);Status.Text="Đã lưu bản sao: "+destination;});
     }
     private void OnClosing(object? sender, CancelEventArgs e)
     {

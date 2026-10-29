@@ -1,6 +1,6 @@
 # Chính tả Việt
 
-Mã đang phát triển **0.1.81**: [đợt 69–72](docs/FORMAT-BATCH-69-72.md), bổ sung hai bài Word độc lập, giữ mảng JSON/dẫn chiếu La Mã và chặn đích lưu nằm trong thư mục sẽ bị dọn khi đóng phiên. Chưa xuất ZIP 0.1.81; bản tải 0.1.80 bên dưới giữ nguyên.
+Đang chuẩn bị bản thử **0.1.81**, gom [đợt 69–72](docs/FORMAT-BATCH-69-72.md) và [73–77](docs/FORMAT-BATCH-73-77.md): bài Word độc lập, dữ liệu/dẫn chiếu/Unicode, kiểm đích trước lưu, đối chiếu XPS và báo cáo phạm vi TXT. [Hướng dẫn kiểm](docs/PREVIEW-0.1.81.md). Chỉ có bản tải sau khi workflow đóng gói thành công; gói 0.1.80 bên dưới giữ nguyên.
 
 Đã có **[bản thử Windows 0.1.80](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40967945181/artifacts/12938519861)**, gom [đợt 57–60](docs/FORMAT-BATCH-57-60.md), [61–64](docs/FORMAT-BATCH-61-64.md) và [65–68](docs/FORMAT-BATCH-65-68.md): phục hồi/lưu nền, lịch sử thay đổi, bookmark, biểu mẫu, ownership COM và thông báo giao diện. [Hướng dẫn kiểm Word](docs/PREVIEW-0.1.80.md) · [Nguồn và bằng chứng gói](docs/PREVIEW-0.1.80-EVIDENCE.md). Core/WPF, EXE, metadata và ZIP đã qua; Word thực vẫn NOT_RUN. Cần đăng nhập GitHub để tải, giải nén toàn bộ ZIP bên trong vào thư mục mới. Gói cũ giữ nguyên.
 

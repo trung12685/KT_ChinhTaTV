@@ -1,4 +1,4 @@
-> Mã đang phát triển 0.1.81: [đợt 69–72](FORMAT-BATCH-69-72.md), chưa ZIP mới. Bản tải gần nhất [Windows 0.1.80](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40967945181/artifacts/12938519861), nguồn `8e9cb3b19eac0cfe300fb206b27065219ba6c3a9`, gom [đợt 57–60](FORMAT-BATCH-57-60.md), [61–64](FORMAT-BATCH-61-64.md) và [65–68](FORMAT-BATCH-65-68.md). Xem [hướng dẫn](PREVIEW-0.1.80.md) và [bằng chứng](PREVIEW-0.1.80-EVIDENCE.md). Core/WPF, EXE, metadata và ZIP của gói đã qua; Word thực vẫn NOT_RUN. Main/tag/gói cũ giữ nguyên. Release gần nhất vẫn 0.1.76.
+> Đang chuẩn bị bản thử 0.1.81, gom [đợt 69–72](FORMAT-BATCH-69-72.md) và [73–77](FORMAT-BATCH-73-77.md). Xem [hướng dẫn mới](PREVIEW-0.1.81.md); chỉ có bản tải khi workflow đóng gói thành công. Gói trước [Windows 0.1.80](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40967945181/artifacts/12938519861), nguồn `8e9cb3b19eac0cfe300fb206b27065219ba6c3a9`, [hướng dẫn](PREVIEW-0.1.80.md) và [bằng chứng](PREVIEW-0.1.80-EVIDENCE.md) giữ nguyên. Word thực vẫn NOT_RUN; main/tag/gói cũ giữ nguyên. Release gần nhất vẫn 0.1.76.
 
 Đợt 22 bổ sung nền tảng bản sao toàn gói và đối chiếu XPS trước hiệu chuẩn, cùng nhóm kiểm Word độc lập cho Exactly/AtLeast. Xem [FORMAT-BATCH-22.md](FORMAT-BATCH-22.md). Chưa đo Single/1,5 hoặc bỏ Before/After trên clone; C28/C29 vẫn giữ quyền sửa cũ. Nhóm Word mới chưa được thực thi trên môi trường Linux.
 
@@ -27,6 +27,8 @@
 Đợt 65–68 chặn thêm lịch sử thuộc tính chữ/đoạn/bảng chưa hỗ trợ; giữ ô “Sinh ngày … tháng … năm …”; giải phóng từng acquisition đã lấy ở các đường section/cặp child khi getter lỗi và giữ nguyên lỗi thao tác. UI nhận đúng mất kết nối sau bản lưu chưa chắc dù còn document reference. Nhóm Word sửa chữ thêm mẫu bookmark cùng/qua đoạn và các bước giữ phần chưa chọn qua sửa/Undo/lưu-mở; chưa chạy Word thật, chưa mở quyền annotation hoặc Exactly/AtLeast.
 
 Đợt 69–72 bổ sung `retained-marks`/`annotated-text` chạy độc lập, tổng 15 nhóm trong mã mới (gói 0.1.80 vẫn 13). Giữ dữ liệu trong mảng JSON dạng đoạn và nội dung khoảng dẫn chiếu La Mã canonical; từ chối công bố DOCX/TXT vào thư mục riêng sẽ bị xóa khi đóng phiên. Không gán kết quả Word từ kiểm schema/mô phỏng. Cần chạy các bài mới trên đúng gói tương lai có mã 0.1.81; chưa tạo ZIP trong đợt này.
+
+Đợt 73–77 giữ dẫn chiếu có dấu đóng nháy/ngoặc và thống nhất loại trừ ngày tháng NFC/NFD; kiểm đích lưu chỉ đọc trước Save, giữ trạng thái duyệt khi chọn nhầm. Đối chiếu bản sao/trial so thêm chế độ vẽ glyph/nét XPS, chưa mở quyền Exactly/AtLeast. Cửa sổ phạm vi kiểm có xuất TXT snapshot, không quét lại hoặc đổi Word/Undo. Gom cùng 69–72 cho bản thử 0.1.81 sau kiểm chứng; vẫn cần kết quả Word thực.
 
 # Các phần còn thiếu và thứ tự hoàn thiện
 

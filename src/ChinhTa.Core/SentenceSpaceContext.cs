@@ -1,20 +1,17 @@
 using System.Globalization;
-using System.Text.RegularExpressions;
 
 namespace ChinhTa.Core;
 
 // Shared conservative prose boundaries for independent before/after sentence fixes.
 internal static class SentenceSpaceContext
 {
-    private static readonly Regex DateWords=new(@"\bngày\b[^\r\n\a]*\btháng\b[^\r\n\a]*\bnăm\b",
-        RegexOptions.IgnoreCase|RegexOptions.CultureInvariant|RegexOptions.NonBacktracking);
     private static readonly HashSet<string> Abbreviations=new(StringComparer.OrdinalIgnoreCase)
         {"tp","tx","tt","tr","ts","ths","pgs","gs","dr","mr","mrs","ms","etc","vs","st","no","tel","fax","tnhh","http","https","ftp","file","mailto","data","urn"};
     private static readonly HashSet<string> Suffixes=new(StringComparer.OrdinalIgnoreCase)
         {"com","net","org","vn","gov","edu","io","dev","doc","docx","xls","xlsx","ppt","pptx","pdf","txt","exe","zip","rar","csv","xml","json","dll","log","jpg","png"};
     internal static bool Supported(string text)
     {
-        return !(AdministrativeHeaderRules.IsCandidate(text) || DateWords.IsMatch(text) ||
+        return !(AdministrativeHeaderRules.IsCandidate(text) || DateWordContext.Contains(text) ||
             text.IndexOfAny(['\t','\r','\n','\a','\v','\f','\u00a0','@','/','\\','_','=','`','<','>','[',']','{','}','+','*','^','|'])>=0);
     }
     internal static bool ClearEnding(string text,int leftEnd)

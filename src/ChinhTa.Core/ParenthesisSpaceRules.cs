@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Text.RegularExpressions;
 
 namespace ChinhTa.Core;
 
@@ -7,17 +6,13 @@ namespace ChinhTa.Core;
 // Keep delimiters and words/runs; every edit has a positive source span.
 public static class ParenthesisSpaceRules
 {
-    // A date annotation can be outside the strict header parser. Keep such rows
-    // out of this generic edit rule without broadening administrative recognition.
-    private static readonly Regex DateWords=new(@"\bngày\b[^\r\n\a]*\btháng\b[^\r\n\a]*\bnăm\b",
-        RegexOptions.IgnoreCase|RegexOptions.CultureInvariant|RegexOptions.NonBacktracking);
     private static readonly HashSet<string> Functions=new(StringComparer.OrdinalIgnoreCase)
         {"fn","func","function","sin","cos","tan","cot","log","ln","exp","sqrt","abs","max","min"};
     internal static bool IsFunctionName(string value)=>Functions.Contains(value);
     public static IReadOnlyList<Issue> Check(Paragraph paragraph)
     {
         string text=paragraph.Text;
-        if(AdministrativeHeaderRules.IsCandidate(text) || DateWords.IsMatch(text) || text.IndexOfAny(['\t','@','/','\\','_','=','`','<','>','[',']','{','}'])>=0)
+        if(AdministrativeHeaderRules.IsCandidate(text) || DateWordContext.Contains(text) || text.IndexOfAny(['\t','@','/','\\','_','=','`','<','>','[',']','{','}'])>=0)
             return Array.Empty<Issue>();
         var pairs=ProseDelimiterContext.Parentheses(text);if(pairs is null)return [];
         if(pairs.Count==0)return [];

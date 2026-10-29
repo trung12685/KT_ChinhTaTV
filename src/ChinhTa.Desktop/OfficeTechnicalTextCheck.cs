@@ -42,6 +42,8 @@ internal static class OfficeTechnicalTextCheck
         "Ngày, tháng, năm sinh:    /    /____",
         "Sinh ngày    tháng    năm    (chưa điền)",
         "Sinh ngày 03 tháng    năm 2026",
+        "Ninh Bình ( bản nháp ), ngày 03 tháng 10 năm 2026",
+        "Ninh Bình ( bản nháp ), ngày 03 tháng 10 năm 2026".Normalize(System.Text.NormalizationForm.FormD),
         "Số:    ...    /BC-ABC",
         "Số:\u202f    ...    /BC-ABC",
         "Ngày 03 tháng        năm 2026",

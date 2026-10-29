@@ -16,12 +16,13 @@ internal sealed class IsolatedSpacingPreview
     private readonly IsolatedLayoutProof layout;
     private readonly PageNumberVisualSnapshot artwork;
     private readonly string[] drawingOrder;
+    private readonly string[] rendering;
     private readonly Rect[] glyphBounds;
     internal IsolatedLayoutProof Layout=>layout;
     internal int Pages=>layout.PageCount;
     internal int GlyphRuns=>layout.GlyphRuns;
-    private IsolatedSpacingPreview(IsolatedLayoutProof layout,PageNumberVisualSnapshot artwork,string[] drawingOrder,Rect[] glyphBounds)
-    {this.layout=layout;this.artwork=artwork;this.drawingOrder=drawingOrder;this.glyphBounds=glyphBounds;}
+    private IsolatedSpacingPreview(IsolatedLayoutProof layout,PageNumberVisualSnapshot artwork,string[] drawingOrder,string[] rendering,Rect[] glyphBounds)
+    {this.layout=layout;this.artwork=artwork;this.drawingOrder=drawingOrder;this.rendering=rendering;this.glyphBounds=glyphBounds;}
     private static IEnumerable<DependencyObject> Walk(DependencyObject root)
     {
         yield return root;
@@ -33,11 +34,43 @@ internal sealed class IsolatedSpacingPreview
         if(!double.IsFinite(value))throw new InvalidOperationException("Glyph/baseline XPS không hữu hạn.");
         return value.ToString("R",CultureInfo.InvariantCulture);
     }
+    private static string Rendering(Visual leaf,FixedPage page,bool text)
+    {
+        // Geometry, glyph advances and solid paint do not describe rasterization.
+        // Keep the resolved leaf values and relevant ancestor transitions;
+        // do not infer that a default on a child cancels every renderer option.
+        // Empty wrappers contribute nothing, while an explicit override remains
+        // conservative evidence even if a particular backend draws it identically.
+        DependencyProperty[] properties=text?
+            [TextOptions.TextRenderingModeProperty,TextOptions.TextFormattingModeProperty,TextOptions.TextHintingModeProperty,
+                RenderOptions.ClearTypeHintProperty,UIElement.SnapsToDevicePixelsProperty,FrameworkElement.UseLayoutRoundingProperty]:
+            [RenderOptions.EdgeModeProperty,UIElement.SnapsToDevicePixelsProperty,FrameworkElement.UseLayoutRoundingProperty];
+        static string Value(DependencyObject node,DependencyProperty property)
+        {
+            object value=node.GetValue(property);
+            if(value is not (bool or Enum) || value is Enum mode && !Enum.IsDefined(mode.GetType(),mode))
+                throw new InvalidOperationException("Chế độ vẽ XPS chưa được chứng minh cho bản sao cô lập.");
+            return property.Name+"="+value;
+        }
+        var evidence=new List<string>{"leaf:"+string.Join(",",properties.Select(property=>Value(leaf,property)))};
+        for(DependencyObject? node=leaf;node is Visual;node=VisualTreeHelper.GetParent(node))
+        {
+            var current=node;var parent=ReferenceEquals(current,page)?null:VisualTreeHelper.GetParent(current);
+            // Style setters and inherited values can affect rendering without
+            // a local DP value. Compare resolved transitions, not just locals.
+            var local=properties.Where(property=>!Equals(current.GetValue(property),
+                    parent?.GetValue(property)??property.GetMetadata(current.GetType()).DefaultValue))
+                .Select(property=>Value(current,property)).ToArray();
+            if(local.Length>0)evidence.Add(string.Join(",",local));
+            if(ReferenceEquals(node,page))return string.Join("|",evidence);
+        }
+        throw new InvalidOperationException("Chưa ghép được chế độ vẽ XPS về đúng trang.");
+    }
     internal static IsolatedSpacingPreview Capture(FixedDocumentSequence sequence)
     {
         var artwork=PageNumberPreviewVerifier.CaptureAll(sequence);
         var paginator=sequence.DocumentPaginator;paginator.ComputePageCount();
-        var sizes=new List<IsolatedPageSize>();var glyphs=new List<IsolatedGlyphEvidence>();var order=new List<string>();var glyphBounds=new List<Rect>();
+        var sizes=new List<IsolatedPageSize>();var glyphs=new List<IsolatedGlyphEvidence>();var order=new List<string>();var rendering=new List<string>();var glyphBounds=new List<Rect>();
         var fonts=new Dictionary<GlyphTypeface,string>();
         for(int n=0;n<paginator.PageCount;n++)
         {
@@ -56,8 +89,9 @@ internal sealed class IsolatedSpacingPreview
                     var m=transform.Value;
                     order.Add("path:"+path.Data.GetFlattenedPathGeometry(.000001,ToleranceType.Absolute).ToString(CultureInfo.InvariantCulture)+"|"+
                         string.Join(",",new[]{m.M11,m.M12,m.M21,m.M22,m.OffsetX,m.OffsetY}.Select(Number)));
+                    rendering.Add("path:"+Rendering(path,page,false));
                 }
-                else if(visual is Glyphs)order.Add("glyph");
+                else if(visual is Glyphs glyph){order.Add("glyph");rendering.Add("glyph:"+Rendering(glyph,page,true));}
                 else if(BitmapPageVisualProof.IsBitmapLeaf(visual))
                 {
                     var bitmap=BitmapPageVisualProof.Read(visual,page);
@@ -94,7 +128,7 @@ internal sealed class IsolatedSpacingPreview
                 glyphBounds.Add(bounds);
             }
         }
-        return new(new(sizes,glyphs),artwork,order.ToArray(),glyphBounds.ToArray());
+        return new(new(sizes,glyphs),artwork,order.ToArray(),rendering.ToArray(),glyphBounds.ToArray());
     }
     private static bool Near(double a,double b)=>double.IsFinite(a) && double.IsFinite(b) && Math.Abs(a-b)<=.01;
     private static bool SameRect(Rect a,Rect b,double verticalShift=0)=>!a.IsEmpty && !b.IsEmpty &&
@@ -122,6 +156,8 @@ internal sealed class IsolatedSpacingPreview
         SpacingCalibration.RequireTrial(layout,trial.layout,visibleParagraphTexts);
         if(!drawingOrder.SequenceEqual(trial.drawingOrder))
             throw new InvalidOperationException("Bản thử đổi hình học nét/thứ tự vẽ XPS; không hiệu chuẩn spacing.");
+        if(!rendering.SequenceEqual(trial.rendering))
+            throw new InvalidOperationException("Bản thử đổi chế độ vẽ chữ/nét XPS; không hiệu chuẩn spacing.");
         var before=BindGlyphPaint();var after=trial.BindGlyphPaint();
         for(int i=0;i<before.Length;i++)
         {
@@ -164,6 +200,8 @@ internal sealed class IsolatedSpacingPreview
         layout.RequireSame(copy.layout);
         if(!drawingOrder.SequenceEqual(copy.drawingOrder))
             throw new InvalidOperationException("Bản sao đổi hình học nét hoặc thứ tự vẽ XPS; không hiệu chuẩn spacing.");
+        if(!rendering.SequenceEqual(copy.rendering))
+            throw new InvalidOperationException("Bản sao đổi chế độ vẽ chữ/nét XPS; không hiệu chuẩn spacing.");
         PageNumberPreviewVerifier.Preserve(artwork,copy.artwork);
         // Existing PAGE proof permits .5 XPS units. Clone calibration requires
         // matching positions and dimensions more strictly, including artwork.

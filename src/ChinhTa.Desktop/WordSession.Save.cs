@@ -5,11 +5,20 @@ namespace ChinhTa.Desktop;
 
 public sealed partial class WordSession
 {
+    // This phase reads only paths and session ownership. It never asks Word to
+    // save or changes checkpoint/dirty/Undo/review state.
+    internal string ValidateSaveCopyDestination(string path)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(path);
+        if(!Path.GetExtension(path).Equals(".docx",StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("Chọn tên bản sao có đuôi .docx.");
+        return VerifiedSaveCopy.ValidateDestination(RecoveryPath,path,undoCheckpoints.Prepend(Source),[folder]);
+    }
     private void SaveCopyCore(string path,Action<Stream,Stream>? copy=null)
     {
         try
         {
-            VerifiedSaveCopy.GuardOutsideDirectory(folder,path);
+            path=ValidateSaveCopyDestination(path);
             Checkpoint();
             VerifiedSaveCopy.Write(RecoveryPath,path,undoCheckpoints.Prepend(Source),copy,[folder]);
             Changed=false; // Only publication of the complete verified copy counts as saved.

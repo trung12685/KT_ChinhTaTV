@@ -24,6 +24,8 @@ HeaderReviewChecks.Run(Assert);
 VerifiedSaveCopyChecks.Run(Assert);
 DirectoryContainmentSaveChecks.Run(Assert);
 RomanReferenceRangeChecks.Run(Assert);
+QuotedOutlineReferenceChecks.Run(Assert);
+UnicodeDateExclusionChecks.Run(Assert);
 JsonArrayLiteralChecks.Run(Assert);
 WordSaveCompletionChecks.Run(Assert);
 DocumentHeadingChecks.Run(Assert);

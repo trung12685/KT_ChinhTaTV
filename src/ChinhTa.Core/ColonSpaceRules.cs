@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Text.RegularExpressions;
 
 namespace ChinhTa.Core;
 
@@ -7,14 +6,12 @@ namespace ChinhTa.Core;
 // uses the colon as a positive source anchor and never rewrites either word.
 public static class ColonSpaceRules
 {
-    private static readonly Regex DateWords=new(@"\bngày\b[^\r\n\a]*\btháng\b[^\r\n\a]*\bnăm\b",
-        RegexOptions.IgnoreCase|RegexOptions.CultureInvariant|RegexOptions.NonBacktracking);
     private static readonly HashSet<string> Protocols=new(StringComparer.OrdinalIgnoreCase)
         {"http","https","ftp","file","mailto","tel","data","urn"};
     public static IReadOnlyList<Issue> Check(Paragraph paragraph)
     {
         string text=paragraph.Text.TrimEnd('\r','\n','\a');
-        if(AdministrativeHeaderRules.IsCandidate(text) || DateWords.IsMatch(text) ||
+        if(AdministrativeHeaderRules.IsCandidate(text) || DateWordContext.Contains(text) ||
             text.IndexOfAny(['\t','\r','\n','\a','\v','\f','@','/','\\','_','=','`','<','>','[',']','{','}','+','*','^','|'])>=0)return Array.Empty<Issue>();
         var result=new List<Issue>();
         for(int mark=0;mark<text.Length;mark++)
