@@ -23,6 +23,8 @@ internal static class OfficeFocusedCheck
         new OfficeSuiteCase("signature","Phông khối ký"),
         new OfficeSuiteCase("page-layout","Khổ giấy và lề"),
         new OfficeSuiteCase("page-number","Số trang"),
+        new OfficeSuiteCase("footer-page-number","Chuyển PAGE cuối trang"),
+        new OfficeSuiteCase("empty-page-layout","Khổ/lề với đầu–cuối trang trống"),
         new OfficeSuiteCase("body-spacing","Khoảng đoạn/giãn dòng và phối hợp"),
         new OfficeSuiteCase("body-format","Phông/căn nội dung và phối hợp")
     });
@@ -44,7 +46,7 @@ internal static class OfficeFocusedCheck
     // Only the newly generated focused-check copies pass here. The historical
     // sample and full integration check retain their Word-tolerated ordering.
     // These are the same explicit schema sequences used by the signature fixture.
-    private static void OrderFixtureProperties(string path)
+    internal static void OrderFixtureProperties(string path)
     {
         using var zip=ZipFile.Open(path,ZipArchiveMode.Update);var entry=zip.GetEntry("word/document.xml")!;
         XDocument xml;using(var input=entry.Open())xml=XDocument.Load(input,LoadOptions.PreserveWhitespace);
@@ -101,6 +103,8 @@ internal static class OfficeFocusedCheck
                     case "signature":OfficeSignatureFormatCheck.Run(current.Test,current.Seed,current.Folder,Pass);break;
                     case "page-layout":OfficePageLayoutCheck.Run(current.Test,current.Seed,current.Folder,Pass);break;
                     case "page-number":OfficePageNumberCheck.Run(current.Test,current.Seed,current.Folder,Pass);break;
+                    case "footer-page-number":OfficeFooterPageMigrationCheck.Run(current.Test,current.Seed,current.Folder,Pass);break;
+                    case "empty-page-layout":OfficeEmptyHeaderFooterCheck.Run(current.Test,current.Seed,current.Folder,Pass);break;
                     case "body-spacing":
                         // Build only the body fixture. An earlier font/Line test
                         // must not stop the spacing assertions from starting.

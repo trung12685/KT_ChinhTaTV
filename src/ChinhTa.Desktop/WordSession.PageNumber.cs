@@ -8,14 +8,15 @@ public sealed partial class WordSession
 {
     private (PageNumberPackage Package,int Pages) CurrentNumberPackage()=>
         (PageNumberDocumentReader.ReadCurrent((object)document!),(int)document!.ComputeStatistics(2));
-    private PageNumberVisualSnapshot NumberPreview(SectionLayout layout,bool verify)
+    private PageNumberVisualSnapshot NumberPreview(SectionLayout layout,bool verify,PageFooterMigration? migration=null)
     {
         string path=ExportPreviewCore([],new Dictionary<Issue,PreviewAnchor>());
         try
         {
             using var xps=new XpsDocument(path,FileAccess.Read);var sequence=xps.GetFixedDocumentSequence();
             if(verify)PageNumberPreviewVerifier.VerifyNumbers(sequence,layout.LeftMm,layout.RightMm,layout.TopMm);
-            return PageNumberPreviewVerifier.Capture(sequence,layout.TopMm);
+            if(verify && migration is not null)PageNumberPreviewVerifier.VerifyNoMigratedFooter(sequence,migration,layout.BottomMm);
+            return PageNumberPreviewVerifier.Capture(sequence,layout.TopMm,verify?null:migration,layout.BottomMm);
         }
         finally{if(File.Exists(path))File.Delete(path);}
     }
@@ -53,7 +54,9 @@ public sealed partial class WordSession
                     if(matching.Length==0 && PageNumberRules.Satisfied(live.Package,live.Pages,fix))
                     {numberSatisfied=true;repairProgress?.Confirm(1);return;}
                     if(matching.Length!=1)throw new InvalidOperationException("Cấu hình PAGE không còn khớp phần đã duyệt; phải phục hồi cả lượt.");
-                    string textBefore=ReadStoryText();var layout=ReadCurrentPageLayout();var visualBefore=NumberPreview(layout,false);
+                    string textBefore=ReadStoryText();var layout=ReadCurrentPageLayout();var migration=fix.FooterMigration;
+                    if(migration is not null)PageNumberRules.VerifyFooterMigration(live.Package,live.Pages,fix);
+                    var visualBefore=NumberPreview(layout,false,migration);
                     Checkpoint();string source=Path.Combine(folder,Guid.NewGuid()+".number.source.docx");File.Copy(RecoveryPath,source);
                     try
                     {
@@ -62,12 +65,12 @@ public sealed partial class WordSession
                         SwapCheckpoint(RecoveryPath,candidate,CloseDocumentOnly,Connect);CheckCore();
                         var after=CurrentNumberPackage();
                         if(ReadStoryText()!=textBefore || !PageNumberRules.ProvenStandard(after.Package,after.Pages))throw new InvalidOperationException("Header PAGE hoặc phần thân chưa đạt sau mở lại.");
-                        DocxPageNumberEditor.VerifyLive(live.Package,after.Package);
-                        PageNumberPreviewVerifier.Preserve(visualBefore,NumberPreview(layout,true));
+                        DocxPageNumberEditor.VerifyLive(live.Package,after.Package,fix,live.Pages);
+                        PageNumberPreviewVerifier.Preserve(visualBefore,NumberPreview(layout,true,migration));
                         Checkpoint();CheckCore();after=CurrentNumberPackage();
                         if(!PageNumberRules.ProvenStandard(after.Package,after.Pages))throw new InvalidOperationException("PAGE chưa đạt sau lưu.");
-                        DocxPageNumberEditor.VerifyLive(live.Package,after.Package);
-                        PageNumberPreviewVerifier.Preserve(visualBefore,NumberPreview(layout,true));repairProgress?.Confirm(1);
+                        DocxPageNumberEditor.VerifyLive(live.Package,after.Package,fix,live.Pages);
+                        PageNumberPreviewVerifier.Preserve(visualBefore,NumberPreview(layout,true,migration));repairProgress?.Confirm(1);
                     }
                     finally{if(File.Exists(source))File.Delete(source);}
                     if(failAfterStage==2)throw new OfficeStagedProbeException();

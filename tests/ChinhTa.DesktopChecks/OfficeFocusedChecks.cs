@@ -12,8 +12,8 @@ public static class OfficeFocusedChecks
     public static void Run(Action<bool,string> assert)
     {
         var cases=OfficeFocusedCheck.Cases;
-        assert(cases.Count==6 && cases.Select(c=>c.Id).Distinct().Count()==cases.Count &&
-            cases.Any(c=>c.Id=="body-spacing") && cases.Any(c=>c.Id=="handwriting"),
+        assert(cases.Count==8 && cases.Select(c=>c.Id).Distinct().Count()==cases.Count &&
+            cases.Any(c=>c.Id=="body-spacing") && cases.Any(c=>c.Id=="handwriting") && cases.Any(c=>c.Id=="footer-page-number") && cases.Any(c=>c.Id=="empty-page-layout"),
             "Focused Word checks expose independent spacing and handwriting families rather than require an earlier Subject PASS");
         var success=new OfficeSuiteReport(cases.Select(c=>new OfficeSuiteResult(c,OfficeSuiteStatus.Pass)).ToArray());
         string summary=OfficeFocusedCheck.Summary(success);
@@ -56,6 +56,17 @@ public static class OfficeFocusedChecks
                 var texts=xml.Descendants(w+"p").Select(p=>string.Concat(p.Descendants(w+"t").Select(t=>t.Value))).ToArray();
                 assert(new[]{"Nội dung  kế hoạch kế hoạch đã được duyệt.","Công tác tổng hợp đã được thực hiện đầy đủ.","Nội dung đã đạt yêu cầu cần được giữ nguyên."}.All(texts.Contains),
                     "The extracted body source retains every paragraph required by the existing direct spacing scenario");
+            }
+            foreach(var scenario in new[]{"footer-page-number","empty-page-layout"})
+            {
+                string isolated=Path.Combine(folder,scenario);Directory.CreateDirectory(isolated);
+                string fixture=scenario=="footer-page-number"?OfficeFooterPageMigrationCheck.Create(modern,isolated):OfficeEmptyHeaderFooterCheck.Create(modern,isolated);
+                using var package=WordprocessingDocument.Open(fixture,false);
+                var errors=new OpenXmlValidator().Validate(package).ToArray();
+                assert(errors.Length==0,"The independent "+scenario+" Office fixture is schema-valid without requiring Subject or Word runtime: "+
+                    string.Join(" | ",errors.Take(8).Select(e=>e.Id+": "+e.Description)));
+                assert(SHA256.HashData(File.ReadAllBytes(sample)).SequenceEqual(digest),
+                    "Preparing "+scenario+" keeps the bundled source bytes unchanged");
             }
             assert(digest.SequenceEqual(SHA256.HashData(File.ReadAllBytes(sample))) && Path.GetFullPath(seed)!=Path.GetFullPath(sample),
                 "Focused Word fixture preparation keeps the bundled source bytes unchanged and uses its own copy");

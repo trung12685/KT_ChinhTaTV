@@ -6,9 +6,22 @@ using System.Xml.Linq;
 
 namespace ChinhTa.Core;
 
-public sealed record PageNumberFix(string SourceKey)
+public sealed record PageFooterSource(string Font,float Size,bool Italic,string Color,bool Bold=false)
 {
-    public bool Valid=>SourceKey.Length==64 && SourceKey.All(Uri.IsHexDigit);
+    public bool Valid=>!string.IsNullOrWhiteSpace(Font) && !Font.Any(char.IsControl) && float.IsFinite(Size) && Size is >0 and <=1638 &&
+        Regex.IsMatch(Color??"",@"^(?:[0-9A-F]{6}|auto)$",RegexOptions.CultureInvariant);
+}
+public sealed record PageFooterMigration(PageFooterSource? Default,PageFooterSource? First,bool DifferentFirst,int Pages)
+{
+    public bool Valid=>(Default is not null || First is not null) && (Default is null || Default.Valid) && (First is null || First.Valid) && Pages is >=1 and <=9;
+    public PageFooterSource? Source(int page)=>page==1 && DifferentFirst?First:Default;
+    public bool Removes(string type)=>type=="default"?Default is not null:type=="first" && First is not null;
+}
+public sealed record PageNumberFix(string SourceKey,PageFooterMigration? FooterMigration=null)
+{
+    public bool Valid=>SourceKey.Length==64 && SourceKey.All(Uri.IsHexDigit) && (FooterMigration is null || FooterMigration.Valid);
+    public string Suggestion=>FooterMigration is null?Action:
+        "Chuyển riêng trường PAGE đã kiểm từ cuối trang lên giữa lề trên; đánh từ 1, ẩn trang đầu, Times New Roman đen cỡ 13–14 đứng. Giữ nguyên nội dung và phần footer khác.";
     public const string Action="Đánh số tự động, Times New Roman đen, cỡ 13–14, đứng, giữa lề trên; đánh từ 1 và ẩn trang đầu. Giữ cỡ đúng, nội dung và footer.";
 }
 internal sealed record NumberFont(string? Name,float? Size,bool? Italic,string? Color)
@@ -17,7 +30,7 @@ internal sealed record NumberFont(string? Name,float? Size,bool? Italic,string? 
     public bool Correct=>Known && Name!.Equals("Times New Roman",StringComparison.OrdinalIgnoreCase) && Size is >=13 and <=14 && Italic==false && Color is "000000" or "auto";
 }
 internal sealed record NumberHeader(XElement Paragraph,XElement Result,string Code,NumberFont Font,bool? Centered,bool SafeLayout);
-internal sealed record NumberAnalysis(bool Covered,string Key,bool Repairable,IReadOnlyList<string> Errors,SectionLayout? Layout,NumberHeader? Header,bool Create,bool CopyFooter);
+internal sealed record NumberAnalysis(bool Covered,string Key,bool Repairable,IReadOnlyList<string> Errors,SectionLayout? Layout,NumberHeader? Header,bool Create,bool CopyFooter,PageFooterMigration? Migration=null,NumberHeader? FooterSource=null);
 
 public static class PageNumberRules
 {
@@ -188,7 +201,45 @@ public static class PageNumberRules
         var defaultFooter=resolved.GetValueOrDefault("footerReference:default").Root;
         var firstFooter=resolved.GetValueOrDefault("footerReference:first").Root;
         bool footerSafe=firstDifferent || firstFooter is null || (defaultFooter is null?Empty(firstFooter):Canonical(firstFooter,ignoreParagraphIds:true)==Canonical(defaultFooter,ignoreParagraphIds:true));
-        bool copyFooter=!firstDifferent && firstFooter is null && defaultFooter is not null;
+        NumberHeader? Footer(XElement? root)=>root is null || !HasPage(root)?null:Header(package,root);
+        var defaultNumber=Footer(defaultFooter);var firstNumber=Footer(firstFooter);
+        // Underlines, borders, shading and other decoration can render as extra
+        // paths independently of the PAGE glyph. They need their own binding;
+        // this initial migration slice only detaches an undecorated PAGE result.
+        bool PlainFooterResult(NumberHeader value)
+        {
+            string[] allowed=["rStyle","rFonts","b","bCs","i","iCs","color","sz","szCs","lang","noProof","snapToGrid"];
+            return Properties(package,value.Paragraph,value.Result).All(p=>p is null ||
+                p.Elements().All(e=>e.Name.Namespace==W && allowed.Contains(e.Name.LocalName)) &&
+                !p.Elements().GroupBy(e=>e.Name).Any(g=>g.Count()>1));
+        }
+        bool? FooterBold(NumberHeader value)
+        {
+            var properties=Properties(package,value.Paragraph,value.Result);
+            var direct=value.Result.Element(W+"rPr")?.Element(W+"b");
+            var inherited=properties.Skip(1).Select(p=>p?.Element(W+"b")).Where(e=>e is not null).ToArray();
+            // Style bold is a toggle. Without a direct override, multiple
+            // inherited toggles require a separate effective-style proof.
+            if(direct is null && inherited.Length>1)return null;
+            var bold=direct??inherited.SingleOrDefault();
+            return bold is null?false:(string?)bold.Attribute(W+"val") switch
+            {null or "1" or "true" or "on"=>true,"0" or "false" or "off"=>false,_=>null};
+        }
+        PageFooterSource? Source(NumberHeader? value)=>value is {SafeLayout:true,Font.Known:true} && PlainFooterResult(value) && FooterBold(value) is { } bold &&
+            !Regex.IsMatch(value.Code,@"\\\*\s+(?:ROMAN|alphabetic)\b",RegexOptions.IgnoreCase|RegexOptions.CultureInvariant) &&
+            Regex.IsMatch(value.Font.Color??"",@"^(?:[0-9A-F]{6}|auto)$",RegexOptions.CultureInvariant)?
+            new(value.Font.Name!,value.Font.Size!.Value,value.Font.Italic!.Value,value.Font.Color!,bold):null;
+        var defaultSource=Source(defaultNumber);var firstSource=Source(firstNumber);
+        bool pureFooters=(!HasPage(defaultFooter??new XElement(W+"ftr")) || defaultSource is not null) &&
+            (!HasPage(firstFooter??new XElement(W+"ftr")) || firstSource is not null);
+        bool decimalSource=(string?)num?.Attribute(W+"fmt") is null or "decimal" &&
+            (num?.Attribute(W+"start") is null || PageLayoutGuard.Number(num,"start")==1);
+        PageFooterMigration? migration=footerPage && pages is >=1 and <=9 && pureFooters && decimalSource && geometry is {BottomMm:>0}?
+            new(defaultSource,firstSource,firstDifferent,pages):null;
+        // Both PAGE-only references can be removed without exposing a previously
+        // hidden custom first footer. Mixed footers retain the original safeguard.
+        if(migration is not null && defaultSource is not null && (firstFooter is null || firstSource is not null))footerSafe=true;
+        bool copyFooter=!firstDifferent && firstFooter is null && defaultFooter is not null && migration?.Default is null;
         bool otherSafe=(string?)package.Parts["word/document.xml"].Root?.Element(W+"background")?.Attribute(W+"color") is null or "FFFFFF" &&
             (string?)section.Element(W+"pgMar")?.Attribute(W+"gutter") is null or "0" &&
             (string?)section.Element(W+"pgSz")?.Attribute(W+"orient") is null or "portrait" &&
@@ -197,12 +248,18 @@ public static class PageNumberRules
             !refs.Any(e=>(string?)e.Attribute(W+"type")=="even") && !HasPage(body) &&
             section.Element(W+"pgNumType")?.Attributes().Any(a=>!a.IsNamespaceDeclaration && a.Name!=W+"fmt" && a.Name!=W+"start")!=true &&
             section.Element(W+"docGrid")?.Attribute(W+"type")?.Value is null or "default";
-        var parts=resolved.OrderBy(p=>p.Key,StringComparer.Ordinal).Select(p=>p.Key+"="+Canonical(p.Value.Root,p.Key.StartsWith("headerReference:",StringComparison.Ordinal) && Header(package,p.Value.Root) is not null,true));
+        var parts=resolved.OrderBy(p=>p.Key,StringComparer.Ordinal).Select(p=>p.Key+"="+Canonical(p.Value.Root,p.Key.StartsWith("headerReference:",StringComparison.Ordinal) && Header(package,p.Value.Root) is not null || p.Key.StartsWith("footerReference:",StringComparison.Ordinal) && Source(Footer(p.Value.Root)) is not null,true));
         string configuration=firstDifferent+"|"+Canonical(num??new XElement(W+"pgNumType"))+"|"+(string?)section.Element(W+"pgMar")?.Attribute(W+"header")+"|"+
-            string.Join("|",parts)+"|"+header?.Font;
+            string.Join("|",parts)+"|"+header?.Font+"|"+migration;
         string key=Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(configuration)));
-        bool safe=legalPage && headerFits && firstSafe && settingsSafe && footerSafe && otherSafe && !footerPage && primarySafe;
-        return new(create || header is not null || firstPage || footerPage,key,safe,errors,geometry,header,create,copyFooter);
+        bool safe=legalPage && headerFits && firstSafe && settingsSafe && footerSafe && otherSafe && (!footerPage || migration is not null) && primarySafe;
+        return new(create || header is not null || firstPage || footerPage,key,safe,errors,geometry,header,create,copyFooter,migration,defaultNumber??firstNumber);
+    }
+    public static void VerifyFooterMigration(PageNumberPackage package,int pages,PageNumberFix fix)
+    {
+        var source=Analyze(package,pages);
+        if(fix.FooterMigration is null || !fix.Valid || !source.Repairable || source.Key!=fix.SourceKey || source.Migration!=fix.FooterMigration)
+            throw new InvalidOperationException("Vùng PAGE cuối trang không còn khớp phần đã duyệt; hãy quét lại.");
     }
     public static string ConfigurationKey(PageNumberPackage package,int pages)=>Analyze(package,pages).Key;
     public static bool Satisfied(PageNumberPackage package,int pages,PageNumberFix fix)
@@ -220,6 +277,6 @@ public static class PageNumberRules
         var analysis=Analyze(package,pages);if(!analysis.Covered || analysis.Errors.Count==0)return [];
         bool repair=analysis.Repairable && !char.IsControl(anchor[0]) && !char.IsWhiteSpace(anchor[0]);
         return [new(start,1,anchor,anchor,string.Join("; ",analysis.Errors)+(repair?".":". Header/footer hoặc cấu trúc chưa đủ điều kiện tự sửa; giữ nguyên và đối chiếu trong Word."),false,
-            FixKind.PageNumber,CanFix:repair,Citation:Citation,Title:analysis.Errors.Count==1?analysis.Errors[0]:"Số trang chưa đúng thể thức",NumberFix:repair?new(analysis.Key):null)];
+            FixKind.PageNumber,CanFix:repair,Citation:Citation,Title:analysis.Errors.Count==1?analysis.Errors[0]:"Số trang chưa đúng thể thức",NumberFix:repair?new(analysis.Key,analysis.Migration):null)];
     }
 }

@@ -43,6 +43,8 @@ InlineSignatureImageChecks.Run(Assert);
 SignatureWritingSpaceChecks.Run(Assert);
 PageLayoutChecks.Run(Assert);
 PageNumberChecks.Run(Assert);
+FooterPageMigrationChecks.Run(Assert);
+EmptyHeaderFooterChecks.Run(Assert);
 FormatAssessmentChecks.Run(Assert);
 FontSizeEvidenceChecks.Run(Assert);
 SelectiveSizeChecks.Run(Assert);

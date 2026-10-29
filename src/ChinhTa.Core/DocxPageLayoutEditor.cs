@@ -38,7 +38,7 @@ public static class DocxPageLayoutEditor
         {
             if(zip.Entries.Select(e=>e.FullName).Distinct(StringComparer.Ordinal).Count()!=zip.Entries.Count)throw new InvalidOperationException("DOCX có phần trùng tên.");
             doc=Read(zip,"word/document.xml");
-            if(!PageLayoutGuard.Eligible(Evidence(zip,doc),fix.Before))throw new InvalidOperationException("Bố cục không còn đủ điều kiện sửa trang.");
+            if(!PageLayoutGuard.Eligible(Evidence(zip,doc),fix.Before,PageNumberPackage.FromFile(source)))throw new InvalidOperationException("Bố cục không còn đủ điều kiện sửa trang.");
         }
         Patch(doc,fix);
         File.Copy(source,candidate);
@@ -66,11 +66,16 @@ public static class DocxPageLayoutEditor
     public static void VerifyBody(string beforeXml,string afterXml,PageLayoutFix fix)
     {
         if(!fix.Valid)throw new InvalidOperationException("Thiếu đề xuất trang đã duyệt.");
+        if(EmptyHeaderFooterScope.HasReferences(XDocument.Parse(beforeXml,LoadOptions.PreserveWhitespace)) &&
+            !PageLayoutGuard.Eligible(XDocument.Parse(afterXml,LoadOptions.PreserveWhitespace),fix.After))
+            throw new InvalidOperationException("Đầu/cuối trang trống hoặc phạm vi bố cục chưa còn khớp sau mở lại; phải phục hồi.");
         XElement Canonical(string xml,bool patch)
         {
-            var doc=XDocument.Parse(xml);if(patch)Patch(doc,fix);
+            var doc=XDocument.Parse(xml,LoadOptions.PreserveWhitespace);if(patch)Patch(doc,fix);
             var body=new XElement(PageLayoutGuard.Body(doc)??throw new InvalidOperationException("Không có phần thân để đối chiếu."));
             body.Descendants(W+"lastRenderedPageBreak").Remove();
+            body.DescendantsAndSelf().Attributes().Where(a=>a.IsNamespaceDeclaration).Remove();
+            foreach(var space in body.DescendantNodes().OfType<XText>().Where(t=>t.Parent?.Name!=W+"t" && string.IsNullOrWhiteSpace(t.Value)).ToArray())space.Remove();
             foreach(var size in body.Descendants(W+"pgSz"))
             {
                 if((string?)size.Attribute(W+"orient")=="portrait")size.Attribute(W+"orient")!.Remove();

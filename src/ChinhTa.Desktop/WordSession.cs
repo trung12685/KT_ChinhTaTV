@@ -324,7 +324,7 @@ public sealed partial class WordSession : IDisposable
                             (double)setup.LeftMargin * mmPerPoint, (double)setup.RightMargin * mmPerPoint,
                             (int)setup.MirrorMargins != 0);
                         if(count==1 && Profile==DocumentProfile.State && pageXml is not null && !textProofUnavailable && textProofWarning is null &&
-                            PageLayoutGuard.Eligible(System.Xml.Linq.XDocument.Parse(pageXml),layout))layout=layout with {RepairEligible=true};
+                            PageLayoutGuard.Eligible(System.Xml.Linq.XDocument.Parse(pageXml,System.Xml.Linq.LoadOptions.PreserveWhitespace),layout,pagePackage))layout=layout with {RepairEligible=true};
                         sectionCoverage.Add(layout);
                         issues.AddRange(PageRules.Check(layout, Profile));
                     }

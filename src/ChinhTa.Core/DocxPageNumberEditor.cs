@@ -21,7 +21,7 @@ public static class DocxPageNumberEditor
     private static PageNumberPackage Patch(PageNumberPackage source,PageNumberFix fix,int pages)
     {
         var analysis=PageNumberRules.Analyze(source,pages);
-        if(!fix.Valid || !analysis.Repairable || analysis.Key!=fix.SourceKey || analysis.Errors.Count==0)
+        if(!fix.Valid || !analysis.Repairable || analysis.Key!=fix.SourceKey || analysis.Migration!=fix.FooterMigration || analysis.Errors.Count==0)
             throw new InvalidOperationException("Cấu hình PAGE hoặc điều kiện sửa đã thay đổi; hãy quét lại.");
         var target=source.Clone();var section=target.Section!;
         var references=section.Elements(W+"headerReference").Where(e=>(string?)e.Attribute(W+"type")=="default").ToArray();
@@ -47,6 +47,7 @@ public static class DocxPageNumberEditor
             var first=source.Section!.Elements(W+"headerReference").SingleOrDefault(e=>(string?)e.Attribute(W+"type")=="first");
             if(first is not null && source.Resolve(first) is { } part && PageNumberRules.Header(source,part.Root) is {Font.Known:true} oldFirst)inherited=oldFirst;
         }
+        inherited??=analysis.FooterSource;
         float size=inherited?.Font.Size is >=13 and <=14?inherited.Font.Size.Value:13;
         var rpr=inherited?.Result.Element(W+"rPr") is { } original?new XElement(original):new XElement(W+"rPr");
         Child(rpr,"rFonts",new(W+"rFonts",new XAttribute(W+"ascii","Times New Roman"),new XAttribute(W+"hAnsi","Times New Roman")),RunOrder);
@@ -67,6 +68,10 @@ public static class DocxPageNumberEditor
         // Do not delete a first-header part: dropping its reference hides only the
         // PAGE-only header. Custom first headers are excluded by the source guard.
         section.Elements(W+"headerReference").Where(e=>(string?)e.Attribute(W+"type")=="first").Remove();
+        // Preserve every old footer part and relationship. Only the explicitly
+        // approved PAGE-only references are detached; no mixed footer is edited.
+        if(fix.FooterMigration is { } migration)
+            section.Elements(W+"footerReference").Where(e=>migration.Removes((string?)e.Attribute(W+"type")??"")).Remove();
         if(analysis.CopyFooter)
         {
             var footer=section.Elements(W+"footerReference").Single(e=>(string?)e.Attribute(W+"type")=="default");
@@ -109,8 +114,10 @@ public static class DocxPageNumberEditor
             if(!xx.ToArray().SequenceEqual(yy.ToArray()))throw new InvalidOperationException("Nội dung/phần khác bị đổi khi sửa PAGE.");
         }
     }
-    public static void VerifyLive(PageNumberPackage before,PageNumberPackage after)
+    public static void VerifyLive(PageNumberPackage before,PageNumberPackage after,PageNumberFix? fix=null,int pages=0)
     {
+        var migration=fix?.FooterMigration;
+        if(migration is not null)PageNumberRules.VerifyFooterMigration(before,pages,fix!);
         XElement Body(PageNumberPackage package)
         {
             var body=new XElement(package.Body??throw new InvalidOperationException("Thiếu phần thân để hậu kiểm PAGE."));
@@ -121,9 +128,32 @@ public static class DocxPageNumberEditor
         }
         if(PageNumberRules.Canonical(Body(before))!=PageNumberRules.Canonical(Body(after)))throw new InvalidOperationException("Phần thân/chữ/bảng bị đổi ngoài PAGE.");
         var oldRefs=before.Section!.Elements(PageNumberPackage.W+"footerReference").ToArray();
+        var expectedTypes=oldRefs.Where(e=>migration?.Removes((string?)e.Attribute(W+"type")??"")!=true)
+            .Select(e=>(string?)e.Attribute(W+"type")??"").ToList();
+        if(!PageNumberRules.On(before.Section.Element(W+"titlePg")) && migration?.Default is null &&
+            oldRefs.Any(e=>(string?)e.Attribute(W+"type")=="default") && !expectedTypes.Contains("first"))expectedTypes.Add("first");
+        if(!expectedTypes.Order(StringComparer.Ordinal).SequenceEqual(after.Section!.Elements(W+"footerReference")
+            .Select(e=>(string?)e.Attribute(W+"type")??"").Order(StringComparer.Ordinal)))
+            throw new InvalidOperationException("Tham chiếu footer thay đổi ngoài phần PAGE đã duyệt.");
         foreach(var old in oldRefs)
         {
             var current=after.Section!.Elements(W+"footerReference").SingleOrDefault(e=>(string?)e.Attribute(W+"type")== (string?)old.Attribute(W+"type"));
+            string type=(string?)old.Attribute(W+"type")??"";
+            if(migration?.Removes(type)==true)
+            {
+                if(current is not null || before.Resolve(old) is not { } removed ||
+                    !after.Parts.TryGetValue(removed.Path,out var retained) || retained.Root is null ||
+                    PageNumberRules.Canonical(removed.Root,ignoreParagraphIds:true)!=PageNumberRules.Canonical(retained.Root,ignoreParagraphIds:true))
+                    throw new InvalidOperationException("PAGE cuối trang chưa bỏ đúng tham chiếu hoặc phần footer gốc không còn nguyên.");
+                var oldRelations=before.Parts.GetValueOrDefault("word/_rels/document.xml.rels")?.Root?.Elements(Rel+"Relationship")
+                    .Where(e=>(string?)e.Attribute("Id")== (string?)old.Attribute(PageNumberPackage.R+"id")).ToArray();
+                var newRelations=after.Parts.GetValueOrDefault("word/_rels/document.xml.rels")?.Root?.Elements(Rel+"Relationship")
+                    .Where(e=>(string?)e.Attribute("Id")== (string?)old.Attribute(PageNumberPackage.R+"id")).ToArray();
+                if(oldRelations is not {Length:1} || newRelations is not {Length:1} ||
+                    PageNumberRules.Canonical(oldRelations[0])!=PageNumberRules.Canonical(newRelations[0]))
+                    throw new InvalidOperationException("Quan hệ footer PAGE gốc đã mất hoặc thay đổi.");
+                continue;
+            }
             if(current is null || before.Resolve(old) is not { } source || after.Resolve(current) is not { } target ||
                 PageNumberRules.Canonical(source.Root,ignoreParagraphIds:true)!=PageNumberRules.Canonical(target.Root,ignoreParagraphIds:true))throw new InvalidOperationException("Footer cũ thay đổi hoặc mất sau sửa PAGE.");
         }
@@ -131,7 +161,7 @@ public static class DocxPageNumberEditor
         if(!PageNumberRules.On(before.Section.Element(W+"titlePg")))
         {
             var sourceRef=oldRefs.SingleOrDefault(e=>(string?)e.Attribute(W+"type")=="default");
-            if(sourceRef is not null)
+            if(sourceRef is not null && migration?.Default is null)
             {
                 var first=after.Section!.Elements(W+"footerReference").SingleOrDefault(e=>(string?)e.Attribute(W+"type")=="first");
                 if(first is null || before.Resolve(sourceRef) is not { } source || after.Resolve(first) is not { } target ||

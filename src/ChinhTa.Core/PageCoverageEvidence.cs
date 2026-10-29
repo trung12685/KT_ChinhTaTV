@@ -15,7 +15,7 @@ public sealed record PageCoverageEvidence(IReadOnlyDictionary<string,CoverageObs
         // must not disappear merely because coverage uses a package snapshot.
         var xml=package is null?null:new XDocument(new XElement("snapshot",package.Parts.Values
             .Where(p=>p.Root is not null).Select(p=>new XElement(p.Root!))));
-        bool ordinary=completeTextProof && sections.Count==1 && known==1 && xml is not null && PageLayoutGuard.Eligible(xml,sections[0]);
+        bool ordinary=completeTextProof && sections.Count==1 && known==1 && xml is not null && PageLayoutGuard.Eligible(xml,sections[0],package);
         observations["C32"]=new(ordinary?CoverageState.Observed:known>0?CoverageState.Partial:CoverageState.Unavailable,
             sections.Count,known,ordinary?"Đã đọc khổ/lề của một section dọc thông thường trong phạm vi hỗ trợ; không chứng nhận toàn bộ bố cục.":
             "Chỉ kiểm được phần thông số trang đã đọc; nhiều section, header/footer, hình, cột hoặc bố cục chưa rõ còn cần đối chiếu thủ công.");
