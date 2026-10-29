@@ -70,8 +70,14 @@ jobs:
       - name: Preview metadata tamper regression checks
         shell: pwsh
         run: |
-          python scripts/PreviewMetadata/checks.py | Tee-Object -FilePath artifacts/preview-metadata-checks.log
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -X warn_default_encoding -W error::EncodingWarning scripts/PreviewMetadata/checks.py 2>&1 | Tee-Object -FilePath artifacts/preview-metadata-checks.log
+          $checkExit = $LASTEXITCODE
+          if ($checkExit -ne 0) {
+            "`nSynthetic metadata checks failed (exit $checkExit). Last synthetic-fixture diagnostics:`n``````text" >> $env:GITHUB_STEP_SUMMARY
+            Get-Content artifacts/preview-metadata-checks.log -Tail 40 >> $env:GITHUB_STEP_SUMMARY
+            '```' >> $env:GITHUB_STEP_SUMMARY
+            exit $checkExit
+          }
           $log = Get-Content artifacts/preview-metadata-checks.log -Raw
           $match = [regex]::Match($log, '(?m)^(\d+) preview-metadata checks passed')
           if (-not $match.Success -or [int]$match.Groups[1].Value -le 0) { throw 'Missing successful metadata regression total' }

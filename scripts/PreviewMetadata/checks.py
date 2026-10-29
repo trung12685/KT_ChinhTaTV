@@ -12,15 +12,15 @@ with tempfile.TemporaryDirectory(prefix='preview-metadata-tests-') as temp:
  executable=bytearray(128);executable[:2]=b'MZ';struct.pack_into('<I',executable,0x3c,64);executable[64:68]=b'PE\x00\x00';struct.pack_into('<H',executable,68,0x8664)
  for name in required:(folder/name).write_bytes(executable if name.endswith('.exe') else b'fixture')
  config={'runtimeOptions':{'includedFrameworks':[{'name':'Microsoft.WindowsDesktop.App','version':'8.0.0'}]}}
- (folder/'ChinhTa.Desktop.runtimeconfig.json').write_text(json.dumps(config))
+ (folder/'ChinhTa.Desktop.runtimeconfig.json').write_text(json.dumps(config),encoding='utf-8')
  (folder/'samples').mkdir(); (folder/'samples/sample.docx').write_bytes(b'synthetic-docx-payload')
- (folder/'KIEM-TRA-WORD.cmd').write_text('@echo off\n')
+ (folder/'KIEM-TRA-WORD.cmd').write_text('@echo off\n',encoding='utf-8')
  evidence={'Version':version,'CoreChecks':123,'WpfChecks':45,'Commit':'a'*40,'RunUrl':'https://github.com/trung12685/KT_ChinhTaTV/actions/runs/123'}
- (folder/'build-checks.json').write_text(json.dumps(evidence))
- guide=base/f'PREVIEW-{version}.md';guide.write_text('# Synthetic preview guide\nWord NOT_RUN\n')
+ (folder/'build-checks.json').write_text(json.dumps(evidence),encoding='utf-8')
+ guide=base/f'PREVIEW-{version}.md';guide.write_text('# Synthetic preview guide\nWord NOT_RUN\n',encoding='utf-8')
  def run(command,*extra,ok=True,target=folder):
   global checks
-  p=subprocess.run([dotnet,str(dll),command,str(target),version,*map(str,extra)],capture_output=True,text=True)
+  p=subprocess.run([dotnet,str(dll),command,str(target),version,*map(str,extra)],capture_output=True,text=True,encoding='utf-8')
   if (p.returncode==0)!=ok:raise AssertionError(f'{command} expected ok={ok}, got {p.returncode}: {p.stdout}\n{p.stderr}')
   checks+=1
  run('prepare',guide)
@@ -34,7 +34,7 @@ with tempfile.TemporaryDirectory(prefix='preview-metadata-tests-') as temp:
   shutil.rmtree(folder);shutil.copytree(pristine,folder)
  (folder/'ChinhTa.Core.dll').write_bytes(b'changed')
  run('verify',ok=False);restore()
- (folder/'unexpected.txt').write_text('unlisted')
+ (folder/'unexpected.txt').write_text('unlisted',encoding='utf-8')
  run('verify',ok=False);restore()
  (folder/'samples/sample.docx').unlink()
  run('verify',ok=False);restore()
@@ -42,17 +42,17 @@ with tempfile.TemporaryDirectory(prefix='preview-metadata-tests-') as temp:
  run('prepare',guide,ok=False);restore()
  # Evidence drift is not legitimized by current version alone.
  changed=dict(evidence,CoreChecks=124)
- (folder/'build-checks.json').write_text(json.dumps(changed))
+ (folder/'build-checks.json').write_text(json.dumps(changed),encoding='utf-8')
  run('verify',ok=False);restore()
- (folder/f'ChinhTaViet-{version}-tien-do.txt').write_text('stale report')
+ (folder/f'ChinhTaViet-{version}-tien-do.txt').write_text('stale report',encoding='utf-8')
  run('verify',ok=False);restore()
- report=folder/f'ChinhTaViet-{version}-tien-do.txt';text=report.read_text(encoding='utf-8-sig');report.write_text(text.replace('Core/OpenXML','wrong-label'))
+ report=folder/f'ChinhTaViet-{version}-tien-do.txt';text=report.read_text(encoding='utf-8-sig');report.write_text(text.replace('Core/OpenXML','wrong-label'),encoding='utf-8')
  run('verify',ok=False);restore()
- (folder/f'SUPPORTED-FIXES-{version}.md').write_text('missing capability list')
+ (folder/f'SUPPORTED-FIXES-{version}.md').write_text('missing capability list',encoding='utf-8')
  run('verify',ok=False);restore()
  (folder/'KIEM-TRA-WORD.cmd').unlink()
  run('verify',ok=False);restore()
- m=folder/'FILES.sha256';m.write_text('0'*64+'  ../escape\n')
+ m=folder/'FILES.sha256';m.write_text('0'*64+'  ../escape\n',encoding='utf-8')
  run('verify',ok=False);restore()
  # Link rejection must happen before recursive descent.
  try:
@@ -62,7 +62,7 @@ with tempfile.TemporaryDirectory(prefix='preview-metadata-tests-') as temp:
  else:
   run('verify',ok=False);restore()
  config['runtimeOptions']={'frameworks':[{'name':'Microsoft.WindowsDesktop.App','version':'8.0.0'}]}
- (folder/'ChinhTa.Desktop.runtimeconfig.json').write_text(json.dumps(config))
+ (folder/'ChinhTa.Desktop.runtimeconfig.json').write_text(json.dumps(config),encoding='utf-8')
  run('verify',ok=False);restore()
  (folder/'ChinhTa.Desktop.exe').write_bytes(b'not-windows')
  run('verify',ok=False);restore()
@@ -75,9 +75,9 @@ with tempfile.TemporaryDirectory(prefix='preview-metadata-tests-') as temp:
  (folder/'hostfxr.dll').unlink()
  run('verify',ok=False);restore()
  # Zero tests never qualify as build evidence.
- (folder/'build-checks.json').write_text(json.dumps(dict(evidence,WpfChecks=0)))
+ (folder/'build-checks.json').write_text(json.dumps(dict(evidence,WpfChecks=0)),encoding='utf-8')
  run('verify',ok=False);restore()
  # A tampered assertion remains invalid even with a freshly rehashed manifest.
- (folder/'FILES.sha256').unlink();(folder/f'ChinhTaViet-{version}-tien-do.txt').write_text('tampered report')
+ (folder/'FILES.sha256').unlink();(folder/f'ChinhTaViet-{version}-tien-do.txt').write_text('tampered report',encoding='utf-8')
  run('manifest',ok=False)
  print(f'{checks} preview-metadata checks passed (synthetic payloads only; no Windows/Word execution).')
