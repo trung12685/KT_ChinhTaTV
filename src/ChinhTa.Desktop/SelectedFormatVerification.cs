@@ -17,6 +17,7 @@ internal static class SelectedFormatVerification
             if(matches.Length!=1)throw new InvalidOperationException("Chưa đối chiếu lại được vùng phông sau các nhóm sửa.");
             dynamic range=readRange(matches[0].Start,matches[0].Start+proof.Text.Length);
             dynamic? paragraph=null;
+            Exception? primary=null;
             try
             {
                 int? alignment=null;
@@ -29,7 +30,13 @@ internal static class SelectedFormatVerification
                 if(proof.Sizes is not null && !proof.Sizes.Matches(VisibleFormatReader.ReadSizes((object)range,proof.Text)))
                     throw new InvalidOperationException("Cỡ chữ đã đổi sau các nhóm sửa; phải khôi phục cả lượt.");
             }
-            finally{release(paragraph);release(range);}
+            catch(Exception failure){primary=failure;}
+            finally
+            {
+                var failure=IndependentCleanup.Complete(primary,
+                    [()=>release((object?)paragraph),()=>release((object)range)]);
+                if(failure is not null)System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failure).Throw();
+            }
         }
     }
 }

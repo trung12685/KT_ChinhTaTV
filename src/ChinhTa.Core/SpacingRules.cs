@@ -4,10 +4,22 @@ namespace ChinhTa.Core;
 
 public static class SpacingRules
 {
-    private static readonly Regex BlankNumber=new(@"^[ \t]*Số[ \t]*:(?<blank>[ \t]{2,})(?=/[\p{L}\p{N}])",
+    // Match canonical label spellings directly. Normalizing the paragraph
+    // would change source offsets before Word has approved any edit.
+    private const string NumberLabel=@"S(?:ố|o\u0302\u0301)";
+    private const string DayLabel=@"ng(?:à|a\u0300)y";
+    private const string MonthLabel=@"th(?:á|a\u0301)ng";
+    private const string YearLabel=@"n(?:ă|a\u0306)m";
+    private static readonly Regex BlankNumber=new(@"^[ \t]*"+NumberLabel+@"[ \t]*:(?<blank>[ \t]{2,})(?=/[\p{L}\p{N}])",
         RegexOptions.IgnoreCase|RegexOptions.CultureInvariant);
-    private static readonly Regex BlankDay=new(@"^[ \t]*(?:[\p{L}\p{M}][\p{L}\p{M} .’'\-]*,[ \t]*)?ngày(?<blank>[ \t]{2,})tháng[ \t]+(?:\d{1,2}[ \t]+)?năm[ \t]+\d{4}[ .\t\r\a]*$",
-        RegexOptions.IgnoreCase|RegexOptions.CultureInvariant);
+    private static readonly Regex MarkedCheckbox=new(@"\[(?<left> *)(?:[Xx✓✔])(?<right> *)\]",
+        RegexOptions.CultureInvariant|RegexOptions.NonBacktracking);
+    // Date words establish the field shape, including a partially filled form
+    // outside an identified administrative header. Only blank/placeholder slots
+    // keep their padding; annotations and filled slots retain ordinary review.
+    private static readonly Regex WordDateFields=new(@"^[ \t]*(?:(?<place>[\p{L}\p{M}][\p{L}\p{M} .’'\-]*),[ \t]*)?"+
+        DayLabel+@":?(?<day>[0-9._… \t]*)"+MonthLabel+@"(?<month>[0-9._… \t]*)"+YearLabel+
+        @"(?<year>[0-9._… \t]*)(?=$|[\r\n\a(,;.])",RegexOptions.IgnoreCase|RegexOptions.CultureInvariant);
     // A labelled date form, not an arbitrary slash in prose. Keep only fields
     // consisting entirely of spaces/tabs; a filled field still gets its usual
     // spacing review. Match both spellings of the accent without normalizing
@@ -19,14 +31,31 @@ public static class SpacingRules
         // Empty delimiters may be a form/checkbox field, never collapse their width.
         if(length>0 && start>0 && (long)start+length<text.Length && (text[start-1]=='(' && text[start+length]==')' || text[start-1]=='[' && text[start+length]==']' || text[start-1]=='“' && text[start+length]=='”' || text[start-1]=='"' && text[start+length]=='"') &&
             text.AsSpan(start,length).IndexOfAnyExcept(' ')<0)return true;
+        foreach(Match checkbox in MarkedCheckbox.Matches(text))
+            foreach(string name in new[]{"left","right"})
+            {
+                var padding=checkbox.Groups[name];
+                if(length>0 && start>=padding.Index && (long)start+length<=padding.Index+padding.Length)return true;
+            }
         if(identifiedAdministrativeHeader && AdministrativeHeaderRules.IsBlankTemplateSpacing(text,start,length))return true;
-        foreach(var pattern in new[]{BlankNumber,BlankDay})
+        var number=BlankNumber.Match(text);
+        if(number.Success)
         {
-            var match=pattern.Match(text);
-            if(!match.Success)continue;
-            var blank=match.Groups["blank"];
+            var blank=number.Groups["blank"];
             if(start>=blank.Index && (long)start+length<=blank.Index+blank.Length)return true;
         }
+        var wordDate=WordDateFields.Match(text);
+        // An annotated place/date row belongs to the identified-header proof
+        // above. Do not extend that exception to an arbitrary body paragraph.
+        bool dateScope=wordDate.Success && (!wordDate.Groups["place"].Success ||
+            text[(wordDate.Index+wordDate.Length)..].All(c=>c is ' ' or '\t' or '.' or '\r' or '\n' or '\a'));
+        if(dateScope && length>0)
+            foreach(string name in new[]{"day","month","year"})
+            {
+                var field=wordDate.Groups[name];
+                if(field.Value.All(c=>c is ' ' or '\t' or '.' or '_' or '…') && start>=field.Index &&
+                    (long)start+length<=field.Index+field.Length)return true;
+            }
         var date=SlashDateFields.Match(text);
         if(date.Success && length>0)
             foreach(string name in new[]{"day","month","year"})

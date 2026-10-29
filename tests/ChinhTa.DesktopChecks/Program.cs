@@ -259,6 +259,8 @@ static class Program
         PageLayoutDesktopChecks.Run(Assert);
         PageNumberDesktopChecks.Run(Assert);
         SelectedFormatVerificationChecks.Run(Assert);
+        SelectedFormatCleanupChecks.Run(Assert);
+        FontSizeReaderBoundaryChecks.Run(Assert);
         OfficeReaderCheckPolicyChecks.Run(Assert);
         OfficeFileEvidenceChecks.Run(Assert);
         OfficeMappingEvidenceChecks.Run(Assert);

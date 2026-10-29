@@ -23,9 +23,28 @@ internal static class RetainedGlyphProjection
             if(oldEnd-prefix==newEnd-prefix)
                 for(int k=prefix;k<oldEnd;k++)
                     if(char.ToUpperInvariant(edit.Original[k])==char.ToUpperInvariant(edit.Replacement[k]))replacement[k]=values[start+k];
+            // A combined spacing repair can move an existing comma/semicolon
+            // past its old edge spaces. It is still the same source glyph even
+            // when neither common-edge comparison can map it. Only one exact
+            // punctuation glyph surrounded by ASCII spaces is unambiguous;
+            // never guess a correspondence for multiple marks or changed text.
+            if(SinglePunctuation(edit.Original,out int originalMark) && SinglePunctuation(edit.Replacement,out int replacementMark) &&
+                edit.Original[originalMark]==edit.Replacement[replacementMark])
+                replacement[replacementMark]=values[start+originalMark];
             values.RemoveRange(start,edit.Length);values.InsertRange(start,replacement);
             text=text.Remove(start,edit.Length).Insert(start,edit.Replacement);
         }
         return (text,values);
+    }
+    private static bool SinglePunctuation(string text,out int position)
+    {
+        position=-1;
+        for(int i=0;i<text.Length;i++)
+        {
+            if(text[i]==' ')continue;
+            if(position>=0 || !char.IsPunctuation(text[i]))return false;
+            position=i;
+        }
+        return position>=0;
     }
 }

@@ -7,6 +7,8 @@ public static class FormatObservationChecks
     public sealed class Counts { public int Fonts,Words,Characters; }
     public sealed class Range(string text,VisibleFormatChecks.Font font,Counts calls,Range[]? words=null,Range[]? characters=null,Exception? wordError=null)
     {
+        public int Start{get;init;}
+        public int End=>Start+text.Length;
         public string Text=>text;
         public VisibleFormatChecks.Font Font {get{calls.Fonts++;return font;}}
         public Children Words {get{calls.Words++;if(wordError is not null)throw wordError;return new(words??[]);}}
@@ -65,7 +67,7 @@ public static class FormatObservationChecks
         assert(VisibleFormatReader.Read(root,longText,true).Count==600 && counts.Fonts==601 && counts.Characters==0,
             "A 2400-character mixed-aggregate fixture uses 601 font reads instead of 1801 aggregate/visible-character reads; this is a call-count fixture, not an Office timing claim");
         counts=new();const string sizedText="BÁO CÁO\v";
-        var sizedChars=sizedText.Select((c,i)=>new Range(c.ToString(),Good(i<3?13:14),counts)).ToArray();
+        var sizedChars=sizedText.Select((c,i)=>new Range(c.ToString(),Good(i<3?13:14),counts){Start=i}).ToArray();
         root=new(sizedText,Unknown(),counts,characters:sizedChars);
         var sizeProof=VisibleFormatReader.ReadSizes(root,sizedText);
         assert(sizeProof.Text==sizedText && sizeProof.Sizes[0]==13 && sizeProof.Sizes[4]==14 && sizeProof.Sizes[3] is null &&

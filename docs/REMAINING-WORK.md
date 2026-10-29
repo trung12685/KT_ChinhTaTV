@@ -1,4 +1,4 @@
-> Mã đang tích lũy 0.1.78: [đợt 33–36](FORMAT-BATCH-33-36.md) và [37–40](FORMAT-BATCH-37-40.md). Chưa có ZIP mới. Bản thử 0.1.77 đã gom đợt 20–32 thành [một artifact Windows](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40940520669/artifacts/12927431090), nguồn `ac6f50cc2751835667971204dd4828d973c9408a`; giữ nguyên gói đó. CI Windows của gói đã qua; Word thực vẫn NOT_RUN. Xem [hướng dẫn](PREVIEW-0.1.77.md) và [bằng chứng](PREVIEW-0.1.77-EVIDENCE.md). Release gần nhất vẫn 0.1.76.
+> Mã đang tích lũy 0.1.78: [đợt 33–36](FORMAT-BATCH-33-36.md), [37–40](FORMAT-BATCH-37-40.md) và [41–44](FORMAT-BATCH-41-44.md). Chưa có ZIP mới. Bản thử 0.1.77 đã gom đợt 20–32 thành [một artifact Windows](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40940520669/artifacts/12927431090), nguồn `ac6f50cc2751835667971204dd4828d973c9408a`; giữ nguyên gói đó. CI Windows của gói đã qua; Word thực vẫn NOT_RUN. Xem [hướng dẫn](PREVIEW-0.1.77.md) và [bằng chứng](PREVIEW-0.1.77-EVIDENCE.md). Release gần nhất vẫn 0.1.76.
 
 Đợt 22 bổ sung nền tảng bản sao toàn gói và đối chiếu XPS trước hiệu chuẩn, cùng nhóm kiểm Word độc lập cho Exactly/AtLeast. Xem [FORMAT-BATCH-22.md](FORMAT-BATCH-22.md). Chưa đo Single/1,5 hoặc bỏ Before/After trên clone; C28/C29 vẫn giữ quyền sửa cũ. Nhóm Word mới chưa được thực thi trên môi trường Linux.
 
@@ -11,6 +11,8 @@
 Đợt 33–36 xử lý thêm các lỗi mở/đóng và báo nhầm đã tái hiện: chuyển tài liệu qua bản tạm, giữ trạng thái cũ tới khi mở thành công; phân biệt rollback thành công với lỗi phục hồi thật; giữ chuỗi trong lời gọi hàm/email Unicode và đường dẫn POSIX; bỏ preview cũ khi quét lỗi, thử dọn mọi tài nguyên độc lập. Kiểm callback và tệp thật không thay kiểm luồng Word thực.
 
 Đợt 37–40 tiếp tục sửa lỗi release range có thể bỏ qua rollback và lỗi xóa tệp tạm che kết quả chính. C01 giữ ô vuông trống và các trường ngày slash có nhãn rõ; C25 nhận khoảng cuối sau một cặp quote/ngoặc đơn văn xuôi đã chứng minh. Kịch bản Word sửa chữ bổ sung các mẫu này, vẫn cần chạy thực sau khi có gói mới. Chưa mở parser mọi biểu mẫu, cú pháp mã hoặc dấu ngoặc lồng.
+
+Đợt 41–44 giữ dấu câu cũ trong bằng chứng style/cỡ của lượt sửa chung; đọc cỡ theo ranh giới Word thực; bổ sung ô đã đánh dấu, nhãn NFC/NFD và trường ngày bằng chữ; dọn đủ tài nguyên hậu kiểm phông mà không che lỗi chính. Phép chiếu chỉ nhận một dấu không đổi giữa ASCII spaces; chưa có fingerprint cho mọi lượt chỉ sửa dấu câu. Không thêm mutation path hoặc suy việc Word giữ định dạng từ kiểm Core/fake.
 
 # Các phần còn thiếu và thứ tự hoàn thiện
 

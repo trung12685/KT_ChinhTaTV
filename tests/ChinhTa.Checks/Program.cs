@@ -64,6 +64,8 @@ IndependentCleanupChecks.Run(Assert);
 RepeatedTextChecks.Run(Assert);
 TechnicalTextChecks.Run(Assert);
 BlankFormSpacingChecks.Run(Assert);
+FormFieldVariantChecks.Run(Assert);
+RetainedPunctuationChecks.Run(Assert);
 InitialRepeatChecks.Run(Assert);
 PunctuationSpaceChecks.Run(Assert);
 ParentheticalPunctuationChecks.Run(Assert);

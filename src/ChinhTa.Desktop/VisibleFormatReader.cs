@@ -28,6 +28,8 @@ public static partial class VisibleFormatReader
     {
         dynamic range=rangeObject;
         if((string?)range.Text!=expected)throw new InvalidOperationException("Vùng giữ cỡ chữ đã thay đổi.");
+        int start=(int)range.Start,end=(int)range.End,cursor=start;
+        if(start<0 || end<=start)throw new InvalidOperationException("Chưa rõ biên vùng giữ cỡ chữ.");
         dynamic characters=range.Characters;var text=new StringBuilder();var sizes=new List<float?>();
         try
         {
@@ -38,7 +40,11 @@ public static partial class VisibleFormatReader
                 dynamic child=characters[i];
                 try
                 {
-                    string value=(string?)child.Text??"";text.Append(value);float? size=null;
+                    string value=(string?)child.Text??"";int from=(int)child.Start,to=(int)child.End;
+                    if(from!=cursor || to<=from || to>end || value.Length==0 ||
+                        text.Length>expected.Length-value.Length || !expected.AsSpan(text.Length,value.Length).SequenceEqual(value))
+                        throw new InvalidOperationException("Ký tự nằm ngoài vùng giữ cỡ chữ hoặc không khớp nguồn.");
+                    cursor=to;text.Append(value);float? size=null;
                     if(!string.IsNullOrWhiteSpace(value))
                     {dynamic font=child.Font;try{size=(float)font.Size;}finally{Release(font);}}
                     sizes.AddRange(value.Select(c=>char.IsWhiteSpace(c)?(float?)null:size));
@@ -47,7 +53,8 @@ public static partial class VisibleFormatReader
             }
         }
         finally{Release(characters);}
-        if(text.ToString()!=expected)throw new InvalidOperationException("Chưa đối chiếu đủ ký tự để giữ cỡ chữ.");
+        if(cursor!=end || text.ToString()!=expected || (int)range.Start!=start || (int)range.End!=end || (string?)range.Text!=expected)
+            throw new InvalidOperationException("Chưa đối chiếu đủ ký tự để giữ cỡ chữ.");
         return new(expected,sizes);
     }
     public static bool Matches(object range,string expected,CharacterFormat? character,HeadingFormat? heading,int? alignment=null)=>

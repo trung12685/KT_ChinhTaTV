@@ -21,7 +21,10 @@ internal static class OfficeTechnicalTextCheck
     internal static IReadOnlyList<string> FormRows {get;}=Array.AsReadOnly(new[]
     {
         "Tích chọn [        ] nếu đồng ý.",
-        "Ngày sinh:    /    /2026"
+        "Tích chọn [    X    ] nếu đồng ý.",
+        "Ngày sinh:    /    /2026",
+        "Ngày 03 tháng        năm 2026",
+        "So\u0302\u0301:        /BC-ABC"
     });
     internal static IReadOnlyList<string> ParagraphEndRows {get;}=Array.AsReadOnly(new[]
     {
