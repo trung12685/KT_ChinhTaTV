@@ -34,6 +34,10 @@ Khi quét lỗi, preview trước đó được tách khỏi viewer cùng danh s
 
 ## Kiểm chứng và phần tiếp theo
 
-Core/OpenXML trên Linux: **5469 kiểm qua**, tăng **126** từ mốc 5343. Build DesktopChecks Release qua, 0 warning/error; WPF runtime chờ CI Windows trên đúng mã. Harness riêng của cleanup kết nối có 7 kiểm managed-fake qua; không cộng số này vào Core. Kiểm Core dùng tệp thật và callback giả. Microsoft Word thực vẫn NOT_RUN. Chưa dùng những kiểm này để xác nhận mọi DOCX, Office 2021 hoặc mở quyền tự sửa Exactly/AtLeast.
+Core/OpenXML trên Linux: **5469 kiểm qua**, tăng **126** từ mốc 5343. Build DesktopChecks Release qua, 0 warning/error. Harness riêng của cleanup kết nối có 7 kiểm managed-fake qua; không cộng số này vào Core. Kiểm Core dùng tệp thật và callback giả.
+
+CI Windows của mã triển khai `8e82e6b58c2293293a9f1dabfc0672f9c1eb8e10`: [run 40943703022 — Success](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40943703022), [job 123693391260](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40943703022/job/123693391260). Core/OpenXML, WPF/build, ghi bằng chứng và lưu log đều thành công. Các lớp kiểm mới đã được đăng ký trong runner chính; số kiểm Windows thực nằm ở `check-evidence.json`/log của run, không suy từ số Linux. Workflow chỉ lưu kết quả kiểm, không tạo ZIP ứng dụng. Những cập nhật tài liệu sau mã triển khai không thay code đã kiểm.
+
+Microsoft Word thực vẫn **NOT_RUN**. Chưa dùng những kiểm này để xác nhận mọi DOCX, Office 2021 hoặc mở quyền tự sửa Exactly/AtLeast. Bản thử Windows 0.1.77 giữ nguyên tại nguồn đã ghi trong tài liệu riêng; chưa có gói 0.1.78.
 
 Bản tiếp theo trên máy có Word cần kiểm thêm: mở tài liệu A đã sửa, thử tài liệu B hỏng/không đọc được, quét và lưu lại A; mở B hợp lệ rồi đảm bảo Undo cũ không còn tác động; kiểm đóng khi preview bị khóa; chạy lại ba nhóm trong launcher của đúng gói sau khi tích lũy đủ và tạo bản thử mới.
