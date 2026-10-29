@@ -251,6 +251,10 @@ static class Program
         OfficeFocusedChecks.Run(Assert);
         CoverageDesktopChecks.Run(Assert);
         PageNumberPaintChecks.Run(Assert);
+        PageBitmapChecks.Run(Assert);
+        FooterPageMigrationDesktopChecks.Run(Assert);
+        PageLayoutBodyChecks.Run(Assert);
+        EmptyPageLayoutDesktopChecks.Run(Assert);
         PageLayoutDesktopChecks.Run(Assert);
         PageNumberDesktopChecks.Run(Assert);
         SelectedFormatVerificationChecks.Run(Assert);

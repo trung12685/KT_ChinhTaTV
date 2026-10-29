@@ -22,19 +22,20 @@ public static class PageLayoutGuard
     }
     private static bool Optional(XElement? e,string name,params int[] allowed)=>e?.Attribute(W+name) is null || Number(e,name) is int n && allowed.Contains(n);
     private static bool On(XElement e)=>(string?)e.Attribute(W+"val") is not ("0" or "false" or "off");
-    public static bool Eligible(XDocument xml,SectionLayout live)
+    public static bool Eligible(XDocument xml,SectionLayout live,PageNumberPackage? package=null)
     {
         var body=Body(xml);var sections=body?.Descendants(W+"sectPr").ToArray();
-        if(body is null || sections is not {Length:1} || sections[0].Parent!=body || live.Number!=1 || live.MirrorMargins ||
+        if(body is null || sections is not {Length:1} || sections[0].Parent!=body || sections[0]!=body.Elements().LastOrDefault() || live.Number!=1 || live.MirrorMargins ||
             live.WidthMm>live.HeightMm || !PageLayoutFix.Known(live))return false;
         if(sections[0].Elements(W+"pgSz").Count()!=1 || sections[0].Elements(W+"pgMar").Count()!=1)return false;
         var source=Read(xml,live);if(source is null || !PageLayoutFix.Matches(source,live))return false;
         var section=sections[0];
         string[] unsafeNames=["drawing","pict","object","sdt","altChunk","fldChar","instrText","fldSimple","ins","del","moveFrom","moveTo",
-            "footnoteReference","endnoteReference","tab","tblpPr","gridSpan","vMerge","hMerge","txbxContent","headerReference","footerReference","pgBorders","textDirection","framePr","formProt"];
+            "footnoteReference","endnoteReference","tab","tblpPr","gridSpan","vMerge","hMerge","txbxContent","pgBorders","textDirection","framePr","formProt"];
         if(body.Descendants().Any(e=>e.Name.Namespace==W && unsafeNames.Contains(e.Name.LocalName) || e.Name.NamespaceName=="http://schemas.openxmlformats.org/officeDocument/2006/math") ||
             body.Descendants(W+"tbl").Any(t=>t.Ancestors(W+"tbl").Any()) ||
             xml.Descendants().Any(e=>e.Name.Namespace==W && e.Name.LocalName is "mirrorMargins" or "gutterAtTop" or "bookFoldPrinting" or "bookFoldRevPrinting" && On(e)))return false;
+        if(!EmptyHeaderFooterScope.Proven(xml,package))return false;
         if((string?)section.Element(W+"pgSz")?.Attribute(W+"orient") is not (null or "portrait") ||
             !Optional(section.Element(W+"pgMar"),"gutter",0) ||
             (string?)section.Element(W+"vAlign")?.Attribute(W+"val") is not (null or "top") ||

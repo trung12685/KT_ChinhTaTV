@@ -1,5 +1,6 @@
 using System.IO;
 using System.Windows.Xps.Packaging;
+using System.Xml.Linq;
 using ChinhTa.Core;
 
 namespace ChinhTa.Desktop;
@@ -26,12 +27,18 @@ public sealed partial class WordSession
         }
         finally{Release(sections);}
     }
-    private void VerifyPagePreview(SectionLayout expected)
+    private void VerifyPagePreview(SectionLayout expected,bool checkBody=false)
     {
+        if(checkBody)
+        {
+            var current=XDocument.Parse(ReadPageBodyXml(),LoadOptions.PreserveWhitespace);
+            if(!EmptyHeaderFooterScope.HasReferences(current) || !EmptyHeaderFooterScope.Proven(current))
+                throw new InvalidOperationException("Đầu/cuối trang không còn được chứng minh trống sau lượt sửa; phải phục hồi.");
+        }
         string path=ExportPreviewCore([],new Dictionary<Issue,PreviewAnchor>());
         try
         {
-            using var xps=new XpsDocument(path,FileAccess.Read);var paginator=xps.GetFixedDocumentSequence().DocumentPaginator;
+            using var xps=new XpsDocument(path,FileAccess.Read);var sequence=xps.GetFixedDocumentSequence();var paginator=sequence.DocumentPaginator;
             paginator.ComputePageCount();
             if(paginator.PageCount<1)throw new InvalidOperationException("Chưa dựng được trang để hậu kiểm.");
             for(int i=0;i<paginator.PageCount;i++)
@@ -40,6 +47,7 @@ public sealed partial class WordSession
                 if(Math.Abs(page.Size.Width-expected.WidthMm*96/25.4)>1 || Math.Abs(page.Size.Height-expected.HeightMm*96/25.4)>1)
                     throw new InvalidOperationException("Khổ trang XPS chưa khớp thiết lập đã duyệt; phải phục hồi.");
             }
+            if(checkBody)PageLayoutBodyPreviewVerifier.Verify(sequence,expected);
         }
         finally{if(File.Exists(path))File.Delete(path);}
     }
@@ -54,6 +62,7 @@ public sealed partial class WordSession
         string original=ReadStoryText();var postconditions=CaptureSelectionPostconditions(selected,original);
         Checkpoint();string before=Path.Combine(folder,Guid.NewGuid()+".page.undo.docx"),candidate=Path.Combine(folder,Guid.NewGuid()+".page.candidate.docx");
         File.Copy(RecoveryPath,before);string xmlBefore=ReadPageBodyXml();
+        bool checkEmptyHeaderFooterBody=EmptyHeaderFooterScope.HasReferences(XDocument.Parse(xmlBefore));
         int depth=undoCheckpoints.Count;bool previousChanged=Changed,restored=false,committed=false;
         var oldLines=verifiedLineEdits.ToArray();var previousProgress=repairProgress;repairProgress=RepairProgressTracker.ForSelection(repairProgress,selected.Count,ProgressReporter);
         RepairBatchResult otherResult=new(0,0,0);
@@ -67,7 +76,9 @@ public sealed partial class WordSession
                     Progress(RepairActivity.Editing,"Đang áp dụng khổ giấy/lề đã duyệt và phân trang lại.");
                     SwapCheckpoint(RecoveryPath,candidate,CloseDocumentOnly,Connect);CheckCore();
                     if(ReadStoryText()!=original || !PageLayoutFix.Matches(fix.After,ReadCurrentPageLayout()))throw new InvalidOperationException("Chữ hoặc thiết lập sau đổi trang chưa đúng.");
-                    DocxPageLayoutEditor.VerifyBody(xmlBefore,ReadPageBodyXml(),fix);repairProgress?.Confirm(1);verifiedLineEdits.Clear();
+                    DocxPageLayoutEditor.VerifyBody(xmlBefore,ReadPageBodyXml(),fix);
+                    if(checkEmptyHeaderFooterBody)VerifyPagePreview(fix.After,true);
+                    repairProgress?.Confirm(1);verifiedLineEdits.Clear();
                     if(failAfterStage==1)throw new OfficeStagedProbeException();
                 },
                 ()=>
@@ -99,7 +110,7 @@ public sealed partial class WordSession
                     if(ReadStoryText()!=postconditions.Expected || !PageLayoutFix.Matches(fix.After,ReadCurrentPageLayout()))throw new InvalidOperationException("Hậu kiểm cả lượt sửa trang/chữ chưa đạt.");
                     if(remaining.Length==0)DocxPageLayoutEditor.VerifyBody(xmlBefore,ReadPageBodyXml(),fix);
                     VerifySelectionPostconditions(postconditions);
-                    VerifyPagePreview(fix.After);
+                    VerifyPagePreview(fix.After,checkEmptyHeaderFooterBody);
                 },
                 ()=>
                 {

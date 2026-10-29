@@ -51,7 +51,7 @@ public record Issue(int Start, int Length, string Original, string Replacement,
     public bool AddsSpaceBeforeOpeningQuote=>Kind==FixKind.QuoteSpace && Original is "“" or "\"" && Replacement==" "+Original;
     public bool AddsSpaceAfterClosingQuote => Kind==FixKind.QuoteSpace && Original is "”" or "\"" && Replacement==Original+" ";
     public bool AddsSpaceAfterClosingParenthesis => Kind==FixKind.ParenthesisSpace && Original==")" && Replacement==") ";
-    public string Suggestion => NumberFix is not null?PageNumberFix.Action:PageFix is not null?PageFix.Suggestion:!CanFix ? "Kiểm tra thủ công; không tự sửa."
+    public string Suggestion => NumberFix is not null?NumberFix.Suggestion:PageFix is not null?PageFix.Suggestion:!CanFix ? "Kiểm tra thủ công; không tự sửa."
         : LineFix is not null ? Prerequisites is {Count:>0} required?$"Sửa kèm {required.Count} mục liên quan, đo lại rồi tạo/đặt lại đường kẻ.":"Tạo/đặt lại Shape Line theo số đo và cấu hình đã chọn."
         : CenterFix is not null ? "Căn giữa trong ô đã xác minh, bỏ thụt lề ngang; giữ nguyên chữ và khoảng cách dọc."
         : Format is {RepairInvalidSizes:true,MaximumSize:float headingMaximum} selectiveHeading ? $"Times New Roman, đen, đứng, đậm; chỉ đưa cỡ ngoài {selectiveHeading.Size:0.#}–{headingMaximum:0.#} về {selectiveHeading.Size:0.#}; giữ cỡ đúng và chữ."+(selectiveHeading.Alignment is null?"":" Căn giữa trong ô.")

@@ -1,3 +1,4 @@
+using ChinhTa.Core;
 using System.Globalization;
 using System.Text;
 using System.Windows;
@@ -47,7 +48,7 @@ public static class PageNumberPreviewVerifier
         var color=solid.Color;
         return $"{color.R:X2}{color.G:X2}{color.B:X2}@"+(opacity*brush.Opacity*color.ScA).ToString("0.########",CultureInfo.InvariantCulture);
     }
-    private static (Rect Bounds,string Paint)? GlyphEvidence(Glyphs glyph,FixedPage page,bool number)
+    private static (Rect Bounds,string Paint)? GlyphEvidence(Glyphs glyph,FixedPage page,bool number,bool includeInk=false)
     {
         double opacity=Opacity(glyph,page);string paint=Brush(glyph.Fill,opacity);
         if(opacity==0 || paint=="none")return null;
@@ -82,6 +83,7 @@ public static class PageNumberPreviewVerifier
             typeface.Weight+"|"+typeface.Stretch+"|"+glyph.StyleSimulations+"|"+size.ToString("0.####",CultureInfo.InvariantCulture)+"|"+
             run.IsSideways+"|"+run.BidiLevel+"|"+string.Join(",",new[]{matrix.M11,matrix.M12,matrix.M21,matrix.M22}
                 .Select(v=>(v/scale).ToString("0.########",CultureInfo.InvariantCulture)));
+        if(includeInk)bounds.Union(inkBounds);
         return (bounds,paint+"|"+style);
     }
     private static (Rect Bounds,string Paint)? PathEvidence(Path path,FixedPage page)
@@ -114,24 +116,83 @@ public static class PageNumberPreviewVerifier
             string.Join(",",(path.StrokeDashArray?.ToArray()??[]).Select(x=>x.ToString("0.####",CultureInfo.InvariantCulture)))+"|"+
             path.StrokeDashOffset.ToString("0.####",CultureInfo.InvariantCulture)+"|"+path.StrokeMiterLimit.ToString("0.####",CultureInfo.InvariantCulture)));
     }
-    public static PageNumberVisualSnapshot Capture(FixedDocumentSequence sequence,double topMm)
+    private static bool FooterStyle(Glyphs glyph,FixedPage page,PageFooterSource source)
+    {
+        var transform=PreviewPaintProof.ToPage(glyph,page);if(transform is null)return false;
+        var matrix=transform.Value;var run=glyph.ToGlyphRun();var font=run.GlyphTypeface;
+        bool italic=font.Style!=FontStyles.Normal || (glyph.StyleSimulations&StyleSimulations.ItalicSimulation)!=0;
+        bool bold=font.Weight>=FontWeights.SemiBold || (glyph.StyleSimulations&StyleSimulations.BoldSimulation)!=0;
+        string color=source.Color=="auto"?"000000":source.Color;
+        return !run.IsSideways && run.BidiLevel%2==0 && matrix.M11>0 && matrix.M22>0 && Math.Abs(matrix.M12)<.001 && Math.Abs(matrix.M21)<.001 &&
+            font.FamilyNames.Values.Any(v=>v.Equals(source.Font,StringComparison.OrdinalIgnoreCase)) &&
+            Math.Abs(glyph.FontRenderingEmSize*matrix.M22*.75-source.Size)<.02 && italic==source.Italic && bold==source.Bold &&
+            Opacity(glyph,page)==1 && glyph.Fill is SolidColorBrush brush && brush.Opacity==1 && brush.Color.A==255 &&
+            $"{brush.Color.R:X2}{brush.Color.G:X2}{brush.Color.B:X2}"==color;
+    }
+    private static HashSet<Glyphs> FooterGlyphs(FixedPage page,int number,PageFooterMigration migration,double bottomMm)
+    {
+        var source=migration.Source(number);if(source is null)return [];
+        double edge=page.Height-bottomMm*96/25.4;string expected=number.ToString(CultureInfo.InvariantCulture);
+        var found=new List<Glyphs>();
+        foreach(var glyph in Walk(page).OfType<Glyphs>().Where(g=>g.UnicodeString==expected))
+        {
+            var initial=Bounds(glyph,page);if(initial.IsEmpty || initial.Bottom<edge-.25)continue;
+            var evidence=GlyphEvidence(glyph,page,false);if(evidence is null)continue;
+            if(evidence.Value.Bounds.Top<edge-.25 || evidence.Value.Bounds.Bottom>page.Height+.25 || !FooterStyle(glyph,page,source))
+                throw new InvalidOperationException("Chữ số cuối trang chưa khớp phông/vùng PAGE đã duyệt; không di chuyển.");
+            found.Add(glyph);
+        }
+        if(found.Count!=1)throw new InvalidOperationException("Chưa ghép duy nhất một số PAGE cuối trang với phần đã duyệt.");
+        return found.ToHashSet();
+    }
+    public static void VerifyNoMigratedFooter(FixedDocumentSequence sequence,PageFooterMigration migration,double bottomMm)
+    {
+        if(!migration.Valid || !double.IsFinite(bottomMm) || bottomMm<=0)throw new InvalidOperationException("Thiếu mốc PAGE cuối trang để hậu kiểm.");
+        var paginator=sequence.DocumentPaginator;paginator.ComputePageCount();
+        if(paginator.PageCount!=migration.Pages)throw new InvalidOperationException("Số trang thay đổi khi di chuyển PAGE.");
+        for(int n=0;n<paginator.PageCount;n++)
+        {
+            if(migration.Source(n+1) is null)continue;
+            using var rendered=paginator.GetPage(n);var page=Page(rendered);double edge=page.Height-bottomMm*96/25.4;
+            string expected=(n+1).ToString(CultureInfo.InvariantCulture);
+            foreach(var glyph in Walk(page).OfType<Glyphs>().Where(g=>g.UnicodeString==expected))
+            {
+                var bounds=Bounds(glyph,page);if(bounds.IsEmpty || bounds.Bottom<edge-.25)continue;
+                if(GlyphEvidence(glyph,page,false) is not null)throw new InvalidOperationException("Còn số PAGE cuối trang sau di chuyển; phải phục hồi.");
+            }
+        }
+    }
+    public static PageNumberVisualSnapshot Capture(FixedDocumentSequence sequence,double topMm,PageFooterMigration? footerMigration=null,double bottomMm=0)
     {
         if(!double.IsFinite(topMm) || topMm<=0)throw new InvalidOperationException("Chưa rõ vùng lề trên để bảo toàn nội dung PAGE.");
+        return CaptureCore(sequence,topMm,footerMigration,bottomMm,false);
+    }
+    // C32 containment must inspect every painted leaf, including the upper band.
+    // Include ink overhang as well as alignment bounds for that proof.
+    public static PageNumberVisualSnapshot CaptureAll(FixedDocumentSequence sequence)=>CaptureCore(sequence,0,null,0,true);
+    private static PageNumberVisualSnapshot CaptureCore(FixedDocumentSequence sequence,double topMm,PageFooterMigration? footerMigration,double bottomMm,bool all)
+    {
         var paginator=sequence.DocumentPaginator;paginator.ComputePageCount();var items=new List<PageBodyVisual>();
         if(paginator.PageCount<1)throw new InvalidOperationException("Không có trang XPS để bảo toàn nội dung PAGE.");
+        if(footerMigration is not null && (!footerMigration.Valid || paginator.PageCount!=footerMigration.Pages || !double.IsFinite(bottomMm) || bottomMm<=0))
+            throw new InvalidOperationException("Thiếu số đo/trang nguồn PAGE cuối trang đã duyệt.");
         for(int n=0;n<paginator.PageCount;n++)
         {
             using var rendered=paginator.GetPage(n);var page=Page(rendered);
+            var removed=footerMigration is null?new HashSet<Glyphs>():FooterGlyphs(page,n+1,footerMigration,bottomMm);
             foreach(var visual in Walk(page).OfType<Visual>().Where(v=>VisualTreeHelper.GetChildrenCount(v)==0))
             {
+                if(visual is Glyphs removedGlyph && removed.Contains(removedGlyph))continue;
                 var bounds=Bounds(visual,page);
-                if(bounds.IsEmpty || bounds.Bottom<=topMm*96/25.4+.25)continue;
+                if(bounds.IsEmpty || !all && !BitmapPageVisualProof.IsBitmapLeaf(visual) && bounds.Bottom<=topMm*96/25.4+.25)continue;
                 var evidence=visual switch
-                {Glyphs leafGlyph=>GlyphEvidence(leafGlyph,page,false),Path path=>PathEvidence(path,page),
+                {Visual bitmap when BitmapPageVisualProof.IsBitmapLeaf(bitmap)=>BitmapPageVisualProof.Read(bitmap,page),
+                    Glyphs leafGlyph=>GlyphEvidence(leafGlyph,page,false,all),Path path=>PathEvidence(path,page),
                     _=>throw new InvalidOperationException("Loại nội dung XPS chưa hỗ trợ bảo toàn paint khi kiểm PAGE; giữ thủ công.")};
                 if(evidence is null)continue;
                 string text=visual is Glyphs glyph?(glyph.UnicodeString??"").Normalize(NormalizationForm.FormC):"";
-                items.Add(new(n+1,visual.GetType().FullName??visual.GetType().Name,text,evidence.Value.Bounds,evidence.Value.Paint));
+                string kind=BitmapPageVisualProof.IsBitmapLeaf(visual)?BitmapPageVisualProof.Kind:visual.GetType().FullName??visual.GetType().Name;
+                items.Add(new(n+1,kind,text,evidence.Value.Bounds,evidence.Value.Paint));
             }
         }
         return new(paginator.PageCount,items.OrderBy(i=>i.Page).ThenBy(i=>i.Kind,StringComparer.Ordinal).ThenBy(i=>i.Text,StringComparer.Ordinal)

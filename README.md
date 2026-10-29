@@ -1,8 +1,12 @@
 # Chính tả Việt
 
-## Đang phát triển 0.1.76 — phạm vi kiểm và số trang hiển thị thật
+## Bản thử tích lũy 0.1.76 — phạm vi kiểm và hậu kiểm khổ/lề/số trang
 
-[Đợt 15](docs/FORMAT-BATCH-15.md) thêm bảng phạm vi của lần quét cho 33 nhóm, tách trạng thái quan sát khỏi số cảnh báo. [Đợt 16](docs/FORMAT-BATCH-16.md) yêu cầu số trang thực sự hiện đủ và bảo toàn paint của nội dung/footer. [Phần đã làm và còn thiếu](docs/REMAINING-WORK.md). Hai cụm sau 0.1.75, chưa ZIP 0.1.76; bản tải hiện tại vẫn 0.1.75. CI không chạy Word thực.
+Năm cụm đợt 15–19 sau 0.1.75: sổ phạm vi lần quét cho 33 nhóm, số PAGE được vẽ thật, bảo toàn bitmap, chuyển footer PAGE-only có điều kiện và sửa khổ/lề khi đầu–cuối trang thực sự trống. Thêm hai bài kiểm Word riêng, tổng tám nhóm; giữ khoảng ký tay 80 pt, bộ đọc thử nghiệm tắt mặc định và dừng tối ưu tốc độ.
+
+[Thay đổi](docs/CHANGES-0.1.76.md) · [Phạm vi](docs/SUPPORTED-FIXES-0.1.76.md) · [Kiểm Word](docs/OFFICE-CHECK-0.1.76.md) · [Phần còn thiếu](docs/REMAINING-WORK.md).
+
+[Tải Windows thử 0.1.76](https://github.com/trung12685/KT_ChinhTaTV/releases/download/v0.1.76/ChinhTaViet-0.1.76-win-x64.zip). Chỉ dùng khi asset đã xuất hiện tại release; số kiểm/commit thật nằm trong build-checks.json và TXT đi kèm. CI không chạy Microsoft Word, chưa xác nhận bài Word thực đã PASS. Giữ nguyên các bản tải cũ bên dưới.
 
 ## Bản thử tích lũy 0.1.75 — thể thức và kiểm Word theo nhóm
 
