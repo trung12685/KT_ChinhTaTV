@@ -1,0 +1,31 @@
+{
+  "Version": "0.1.77",
+  "Workspace": "/workspace/work/KT_ChinhTaTV-number77-review",
+  "Commit": "6180757eebdbf59b82b6435bb351cba68c712103",
+  "Tree": "7d85c829ef54938916454c47572baeecdc7cc541",
+  "Branch": "feature/multidigit-page-batch20",
+  "PullRequest": "https://github.com/trung12685/KT_ChinhTaTV/pull/61",
+  "CoreChecks": 4929,
+  "WpfChecks": 857,
+  "LocalAssertions": 5123,
+  "SourceFilesVerified": 14,
+  "HeadRunId": 40818456375,
+  "FeatureJobId": 123265053249,
+  "HeadRunUrl": "https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40818456375",
+  "Conclusion": "success",
+  "NewFeatureStepsSinceRelease": 2,
+  "Packaged": false,
+  "ActualOfficeRuntimePass": false,
+  "FinalHeadVerified": true,
+  "LastPackageVersion": "0.1.76",
+  "LastPackageCommit": "dd6858881887e9168547aaf13cb2e39e59832708",
+  "LastZipSHA256": "801c3ff17564fe006e8cabcd18522f1d9777ca8cd8163ff6c8599b8dcad27fec",
+  "Draft": true,
+  "Merged": false,
+  "SourceManifest": "/workspace/work/number77-manifest.json",
+  "LastGreenBatch20Run": 40818166344,
+  "LastGreenBatch20Checks": {
+    "Core": 4929,
+    "Wpf": 854
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "Version": "0.1.76",
+  "Workspace": "/workspace/work/KT_ChinhTaTV-layout76-review",
+  "Commit": "dd6858881887e9168547aaf13cb2e39e59832708",
+  "Tree": "2abf647543fe08b88f2dbcfb25bdc89ab5a1f106",
+  "SourceFilesVerified": 34,
+  "CoreChecks": 4922,
+  "WpfChecks": 838,
+  "LocalAssertions": 5116,
+  "FeatureRunId": 40816663432,
+  "FeatureJobId": 123259225482,
+  "FeatureConclusion": "success",
+  "PullRequest": "https://github.com/trung12685/KT_ChinhTaTV/pull/60",
+  "Draft": true,
+  "Merged": false,
+  "ActualOfficeRuntimePass": false,
+  "PackagePending": false,
+  "PreservedMainCommit": "da6cf3b0999dbfb60d16ab1eae9733b0f1f20c81",
+  "PreservedBaseline67Commit": "784a41ae9db8dcad02b9cccd69ab8836b9a56dae",
+  "PreservedRelease75Commit": "fa04375d56255abddb8307d528d5956178fcb9e9",
+  "IntermediateFailures": [
+    {
+      "RunId": 40815772173,
+      "CoreChecks": 4922,
+      "Cause": "New fixture rPr order, normalized before validation"
+    },
+    {
+      "RunId": 40816163741,
+      "CoreChecks": 4922,
+      "Cause": "Negative fixture empty Glyphs invalid in WPF, remove absent glyph instead"
+    },
+    {
+      "RunId": 40816370521,
+      "CoreChecks": 4922,
+      "Cause": "Blank FixedPage paper bounds treated as unknown leaf; accept plain white blank pages and reject unknown paper/masks/effects"
+    }
+  ],
+  "AddedCoreChecks": 150,
+  "AddedWpfChecks": 119,
+  "PackageRunId": 40816855249,
+  "PackageJobId": 123259839118,
+  "PackageConclusion": "success",
+  "PackageChecks": 3,
+  "ReleaseId": 427462330,
+  "ReleaseUrl": "https://github.com/trung12685/KT_ChinhTaTV/releases/tag/v0.1.76",
+  "ZipUrl": "https://github.com/trung12685/KT_ChinhTaTV/releases/download/v0.1.76/ChinhTaViet-0.1.76-win-x64.zip",
+  "ZipBytes": 72944807,
+  "ZipSHA256": "801c3ff17564fe006e8cabcd18522f1d9777ca8cd8163ff6c8599b8dcad27fec",
+  "ReportUrl": "https://github.com/trung12685/KT_ChinhTaTV/releases/download/v0.1.76/ChinhTaViet-0.1.76-tien-do.txt",
+  "ReportSHA256": "67669b10f3cc71599e84c8081a614869c8ac9100715ca45d25944c933d9527c1",
+  "BuildChecksSHA256": "ca50fd9d4cfdf00a824fce27725b185be524f95028ae230048bc3b10609d46e2",
+  "ChecksumFileSHA256": "86e0bfa56c99886644b8be9cde6fc449fb86f37a05401e304c9aa6dd3ba1fdbf",
+  "SmallAssetDigestsVerified": 3,
+  "ReleaseAssets": 8,
+  "TagCommit": "dd6858881887e9168547aaf13cb2e39e59832708",
+  "TagVerified": true,
+  "ZipDownloaded": false
+}

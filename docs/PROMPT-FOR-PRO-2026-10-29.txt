@@ -1,0 +1,9 @@
+Tôi đang chuyển dự án Chính tả Việt (KT_ChinhTaTV) từ tài khoản cũ sang đây. ZIP đính kèm chứa docs/HANDOFF-PRO-2026-10-29.md, mã nguồn đầy đủ ở thư mục gốc, tài liệu lịch sử và evidence. Hãy đọc docs/HANDOFF-PRO-2026-10-29.md trước, đối chiếu trạng thái với evidence và mã, rồi tiếp tục thực hiện công việc, không làm lại các phần đã xong.
+
+Điểm tiếp tục là mã phát triển0.1.77, commit6180757eebdbf59b82b6435bb351cba68c712103, draftPR61, branchfeature/multidigit-page-batch20; CI4929Core/OpenXML+857WPFđạt. Mới2cụmđợt20–21, chưaZIP0.1.77. Bản tải gần nhất0.1.76.
+
+Ưu tiên: thể thức/ổn định trước, lỗi chữ cơ bản tiếp, từ điển/ngữ cảnh cuối. Dừng tối ưu tốc độ, bộ đọc thử nghiệm OFF. Giữ khoảng ký tay80pt, không ưu tiên nhận diện ảnh chữ ký. Không sửa main, ghi đè tag/gói cũ hoặc tự merge draftPR. Làm các cụm có ý nghĩa, kiểm bảo toàn/rollback/Undo/lưu-mở; 5–10cụm mới đóng gói. Không gọi CI là Word thực.
+
+Bắt đầu bằng rà soát nền tảng bản sao Word cô lập trung thực và đối chiếu XPS cho Exactly/AtLeast/khoảng đoạn gộp, theo docs/HANDOFF-PRO-2026-10-29.md. Đây là phần chưa triển khai hoàn chỉnh: giữ mọi XML/binarypart/quan hệ; bản sao phải khớp nguồn trước hiệu chuẩn; không suy Single từ cỡ font hay lấy khoảng giữa hai hộp mực chữ so thẳng6pt. Tiến hành viết mã và kiểm thử khi đủ môi trường; nêu rõ phần nào cần MicrosoftWord, không nới guard để hiện sửa được.
+
+Nếu GitHub đã được kết nối, kiểm lại head hiện tại trước push để không ghi đè tiến độ mới. Nếu chưa có GitHub, tiếp tục với mã nguồn trong ZIP; không hỏi lại những yêu cầu đã ghi rõ. Hãy báo ngắn gọn đã hiểu trạng thái nào, phần sẽ làm trước, rồi thực hiện.
