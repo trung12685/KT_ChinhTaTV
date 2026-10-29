@@ -41,4 +41,6 @@ VerifiedSaveCopy nhận danh sách thư mục cần giữ ngoài phạm vi dọn
 
 Core/OpenXML cục bộ: **8681 kiểm qua**, tăng **319** từ 8362: 181 JSON, 106 La Mã và 32 đích lưu trên Linux. Windows có thêm nhánh kiểm alias riêng; không suy tổng từ Linux. Harness riêng qua 88 kiểm SaveCopy/report/Dispose, 18 kiểm nhóm Word độc lập và 90 kiểm fixture dẫn chiếu (45 mới); số thuộc runner tương ứng sau tích hợp, không cộng lặp vào Core. Fixture sửa chữ thực tế với hai dòng JSON đã qua 11 kiểm schema/part/selection/expected-story; mỗi dòng kỹ thuật có ứng viên lỗi thuộc phạm vi để đối chiếu đúng một cảnh báo thủ công.
 
-Build DesktopChecks Release: **0 warning/error**. Windows CI được cập nhật sau khi hoàn tất. Word thực vẫn **NOT_RUN**; quyền Exactly/AtLeast, bộ đọc thử nghiệm OFF, khoảng ký tay 80 pt và danh mục 33/8/1 giữ nguyên. Không xuất ZIP mới trong đợt này.
+Build DesktopChecks Release: **0 warning/error**. [Windows CI 40970610908](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40970610908) của nguồn `d57cd13b786c68a18af9997ff0bafb71438571a8` đã **Success**; [job 123786120256](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40970610908/job/123786120256) qua Core/OpenXML, thực thi WPF/build, ghi evidence và tải log. Tổng Windows lấy từ `check-evidence.json` của đúng lượt, không suy từ Linux hoặc cộng harness riêng.
+
+Word thực vẫn **NOT_RUN**; quyền Exactly/AtLeast, bộ đọc thử nghiệm OFF, khoảng ký tay 80 pt và danh mục 33/8/1 giữ nguyên. Không xuất ZIP mới trong đợt này.
