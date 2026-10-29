@@ -1,5 +1,7 @@
 > Mã phát triển 0.1.77: đợt20 mở PAGE cuối trang tới10.000trang, gồm số tách cụm XPS; chưa đóng gói và chưa có Word thực PASS. Bản tải gần nhất vẫn0.1.76.
 
+Đợt 22 bổ sung nền tảng bản sao toàn gói và đối chiếu XPS trước hiệu chuẩn, cùng nhóm kiểm Word độc lập cho Exactly/AtLeast. Xem [FORMAT-BATCH-22.md](FORMAT-BATCH-22.md). Chưa đo Single/1,5 hoặc bỏ Before/After trên clone; C28/C29 vẫn giữ quyền sửa cũ. Nhóm Word mới chưa được thực thi trên môi trường Linux.
+
 # Các phần còn thiếu và thứ tự hoàn thiện
 
 Cập nhật ngày 29/10/2026 (UTC+7), mã 0.1.76 tích lũy năm cụm đợt 15–19 sau gói 0.1.75. Đối chiếu danh mục 33 nhóm có đề xuất có điều kiện, 8 nhóm thủ công, 1 quy tắc minh họa với đường quét, writer, hậu kiểm và bài Office. Đây là bản phân tích phạm vi mã và bằng chứng hiện có, không xác nhận ứng dụng đã kiểm mọi tài liệu hoặc mọi phiên bản Word.

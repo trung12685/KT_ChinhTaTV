@@ -27,6 +27,7 @@ internal static class OfficeFocusedCheck
         new OfficeSuiteCase("footer-page-number-long","Chuyển PAGE từ 10 trang"),
         new OfficeSuiteCase("empty-page-layout","Khổ/lề với đầu–cuối trang trống"),
         new OfficeSuiteCase("body-spacing","Khoảng đoạn/giãn dòng và phối hợp"),
+        new OfficeSuiteCase("isolated-spacing","Đối chiếu bản sao cô lập Exactly/AtLeast"),
         new OfficeSuiteCase("body-format","Phông/căn nội dung và phối hợp")
     });
     private sealed record FocusedSession(WordSession Test,string Seed,string Folder);
@@ -113,6 +114,7 @@ internal static class OfficeFocusedCheck
                         string seed=CreateBodySpacingSource(current.Seed,current.Folder);
                         OfficeBodySpacingCheck.Run(current.Test,seed,current.Folder,Pass);break;
                     case "body-format":OfficeBodyFormatCheck.Run(current.Test,current.Seed,current.Folder,Pass);break;
+                    case "isolated-spacing":OfficeIsolatedSpacingCheck.Run(current.Test,current.Seed,current.Folder,Pass);break;
                     default:throw new InvalidOperationException("Nhóm kiểm chưa được nối với bài kiểm thực.");
                 }
                 RequireCompleted(completed);

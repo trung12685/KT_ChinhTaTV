@@ -270,6 +270,7 @@ QuoteAfterReviewChecks.Run(Assert);
 DelimiterClusterReviewChecks.Run(Assert);
         BodyParagraphWriterChecks.Run(Assert);
         BodySpacingWriterChecks.Run(Assert);
+        IsolatedSpacingPreviewChecks.Run(Assert);
         BodyEmphasisWriterChecks.Run(Assert);
         RepairProgressDesktopChecks.Run(Assert);
         DocumentTypeCatalogDesktopChecks.Run(Assert);
