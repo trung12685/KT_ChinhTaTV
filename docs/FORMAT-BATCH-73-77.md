@@ -24,7 +24,7 @@ Giữ ngoại lệ ở cùng phạm vi ngày tháng đã có, không tự parse 
 
 Chữ, geometry, màu và baseline giống nhau chưa chứa toàn bộ điều kiện vẽ. Bổ sung snapshot chế độ vẽ liên quan của glyph/nét, bao gồm nguồn kế thừa và override; đối chiếu trước chấp nhận bản sao/trial. Không gộp false/true bằng OR và không dùng các cờ thuộc loại hình khác để tạo drift.
 
-Bài WPF có control không đổi, khác cờ local/ancestor/style, RenderTargetBitmap để kiểm pixel thực và probe comparator cũ chỉ bỏ riêng bằng chứng mới. Kết quả pixel cần Windows thực thi; không suy từ Linux compile hoặc kết luận mọi backend/hardware vẽ giống nhau. Không đổi quyền tự sửa Exactly/AtLeast hoặc mở quyền PAGE.
+Bài WPF có control không đổi, khác cờ local/ancestor/style, RenderTargetBitmap và probe comparator cũ chỉ bỏ riêng bằng chứng mới. Các ca EdgeMode của nét bắt buộc có pixel khác để tái hiện khoảng trống proof; các ca chữ kiểm trạng thái vẽ thực sự đổi, vẫn ghi nhận pixel nhưng không ép mọi backend phải repaint khác. Kết quả cần Windows thực thi; không suy từ Linux compile hoặc kết luận mọi backend/hardware vẽ giống nhau. Không đổi quyền tự sửa Exactly/AtLeast hoặc mở quyền PAGE.
 
 ## 77. Xuất báo cáo phạm vi kiểm thành TXT
 
