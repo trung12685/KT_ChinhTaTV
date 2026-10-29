@@ -30,6 +30,8 @@ Fixture Word sửa chữ bổ sung cả hai loại; không tạo group Word mớ
 
 ## Kiểm chứng
 
-Core/OpenXML trên Linux: **6149 kiểm qua**, tăng **374** từ mốc 5775. Build DesktopChecks Release: 0 warning/error. Các harness nguồn riêng đã qua 86 kiểm pure C14, 185 kiểm dẫn chiếu và 103 kiểm placeholder cùng hồi quy liên quan; số này đã nằm trong runner Core, không cộng thêm lần nữa. WPF có kiểm production session/helper với managed ranges và mô hình fixture DOCX. CI Windows của mã cuối đợt đang chờ.
+Core/OpenXML trên Linux: **6149 kiểm qua**, tăng **374** từ mốc 5775. Build DesktopChecks Release: 0 warning/error. Các harness nguồn riêng đã qua 86 kiểm pure C14, 185 kiểm dẫn chiếu và 103 kiểm placeholder cùng hồi quy liên quan; số này đã nằm trong runner Core, không cộng thêm lần nữa. WPF có kiểm production session/helper với managed ranges và mô hình fixture DOCX.
+
+[Windows CI](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40955088245) của commit `4e421db1cc6ac4f96d957d19b9b707cff756dba3` đã **Success**. [Job kiểm tra](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40955088245/job/123732990832) qua từng bước Core/OpenXML, WPF/build, ghi evidence và tải log. Tổng kiểm Windows nằm trong `check-evidence.json` của artifact CI; không suy từ tổng Linux. Workflow này không đóng gói ứng dụng hoặc chạy Microsoft Word.
 
 Word thực vẫn **NOT_RUN**. Cần kiểm riêng dấu câu 14 pt có kiểu khác khoảng bên cạnh, tổ hợp nhiều nhóm, Undo/lưu-mở/nguồn bất biến trước khi kết luận Word đã giữ định dạng. Bản 0.1.78 đã đóng gói giữ nguyên tại commit/URL của gói; mã ở đây chưa có ZIP 0.1.79.
