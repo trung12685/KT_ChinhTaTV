@@ -10,7 +10,7 @@ namespace ChinhTa.Desktop;
 // if Word discards a detached footer part or the measured body changes.
 internal static class OfficeFooterPageMigrationCheck
 {
-    internal static string Create(string modern,string folder)
+    internal static string Create(string modern,string folder,bool multiDigit=false)
     {
         string source=OfficePageNumberCheck.Create(modern,folder),path=Path.Combine(folder,"footer-page-input.docx");File.Copy(source,path);
         using(var zip=ZipFile.Open(path,ZipArchiveMode.Update))
@@ -20,17 +20,28 @@ internal static class OfficeFooterPageMigrationCheck
             new XElement(w+"fldSimple",new XAttribute(w+"instr"," PAGE "),new XElement(w+"r",new XElement(w+"rPr",
                 new XElement(w+"rFonts",new XAttribute(w+"ascii","Times New Roman"),new XAttribute(w+"hAnsi","Times New Roman")),
                 new XElement(w+"color",new XAttribute(w+"val","000000")),new XElement(w+"sz",new XAttribute(w+"val",28))),new XElement(w+"t","1"))))));
+        if(multiDigit)
+        {
+            var entry=zip.GetEntry("word/document.xml")!;XDocument document;
+            using(var input=entry.Open())document=XDocument.Load(input,LoadOptions.PreserveWhitespace);
+            var section=document.Descendants(w+"body").Single().Element(w+"sectPr")!;
+            for(int i=0;i<10;i++)section.AddBeforeSelf(new XElement(w+"p",
+                new XElement(w+"pPr",new XElement(w+"pageBreakBefore")),new XElement(w+"r",new XElement(w+"t","Nội dung trang bổ sung cần giữ nguyên."))));
+            entry.Delete();using(var output=zip.CreateEntry("word/document.xml").Open())document.Save(output,SaveOptions.DisableFormatting);
+        }
         const string part="word/footer-number-kept.xml";zip.GetEntry(part)!.Delete();using(var output=zip.CreateEntry(part).Open())footer.Save(output,SaveOptions.DisableFormatting);
         }
         OfficeFocusedCheck.OrderFixtureProperties(path);
         return path;
     }
-    public static void Run(WordSession test,string modern,string folder,Action<string> pass)
+    public static void Run(WordSession test,string modern,string folder,Action<string> pass,bool multiDigit=false)
     {
-        string isolated=Path.Combine(folder,"footer-page-migration");Directory.CreateDirectory(isolated);string source=Create(modern,isolated);
+        string isolated=Path.Combine(folder,"footer-page-migration");Directory.CreateDirectory(isolated);string source=Create(modern,isolated,multiDigit);
         byte[] sourceHash=SHA256.HashData(File.ReadAllBytes(source));test.Profile=DocumentProfile.State;test.Open(source);
         Issue Approved()=>test.Check().Single(i=>i.CanFix && i.NumberFix?.FooterMigration is not null);
-        var issue=Approved();string original=test.ReadCheckText();
+        var issue=Approved();
+        if(multiDigit && issue.NumberFix!.FooterMigration!.Pages<10)throw new InvalidOperationException("Mẫu PAGE nhiều chữ số chưa đạt ít nhất10trang thực tế.");
+        string original=test.ReadCheckText();
         bool restored=false;
         try{test.FixStagedFailureProbe([issue],2);}catch(InvalidOperationException error) when(error.InnerException is OfficeStagedProbeException){restored=true;}
         if(!restored || test.ReadCheckText()!=original || test.CheckUndoCount!=0 || test.Changed || Approved().NumberFix is null)

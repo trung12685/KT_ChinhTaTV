@@ -253,6 +253,7 @@ static class Program
         PageNumberPaintChecks.Run(Assert);
         PageBitmapChecks.Run(Assert);
         FooterPageMigrationDesktopChecks.Run(Assert);
+        MultiDigitPageChecks.Run(Assert);
         PageLayoutBodyChecks.Run(Assert);
         EmptyPageLayoutDesktopChecks.Run(Assert);
         PageLayoutDesktopChecks.Run(Assert);

@@ -1,5 +1,7 @@
 # Chính tả Việt
 
+Đang phát triển0.1.77: [PAGE cuối trang nhiều chữ số](docs/FORMAT-BATCH-20.md). Chưa có ZIP0.1.77; bản tải gần nhất vẫn0.1.76.
+
 ## Bản thử tích lũy 0.1.76 — phạm vi kiểm và hậu kiểm khổ/lề/số trang
 
 Năm cụm đợt 15–19 sau 0.1.75: sổ phạm vi lần quét cho 33 nhóm, số PAGE được vẽ thật, bảo toàn bitmap, chuyển footer PAGE-only có điều kiện và sửa khổ/lề khi đầu–cuối trang thực sự trống. Thêm hai bài kiểm Word riêng, tổng tám nhóm; giữ khoảng ký tay 80 pt, bộ đọc thử nghiệm tắt mặc định và dừng tối ưu tốc độ.

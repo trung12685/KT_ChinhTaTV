@@ -24,6 +24,7 @@ internal static class OfficeFocusedCheck
         new OfficeSuiteCase("page-layout","Khổ giấy và lề"),
         new OfficeSuiteCase("page-number","Số trang"),
         new OfficeSuiteCase("footer-page-number","Chuyển PAGE cuối trang"),
+        new OfficeSuiteCase("footer-page-number-long","Chuyển PAGE từ 10 trang"),
         new OfficeSuiteCase("empty-page-layout","Khổ/lề với đầu–cuối trang trống"),
         new OfficeSuiteCase("body-spacing","Khoảng đoạn/giãn dòng và phối hợp"),
         new OfficeSuiteCase("body-format","Phông/căn nội dung và phối hợp")
@@ -104,6 +105,7 @@ internal static class OfficeFocusedCheck
                     case "page-layout":OfficePageLayoutCheck.Run(current.Test,current.Seed,current.Folder,Pass);break;
                     case "page-number":OfficePageNumberCheck.Run(current.Test,current.Seed,current.Folder,Pass);break;
                     case "footer-page-number":OfficeFooterPageMigrationCheck.Run(current.Test,current.Seed,current.Folder,Pass);break;
+                    case "footer-page-number-long":OfficeFooterPageMigrationCheck.Run(current.Test,current.Seed,current.Folder,Pass,true);break;
                     case "empty-page-layout":OfficeEmptyHeaderFooterCheck.Run(current.Test,current.Seed,current.Folder,Pass);break;
                     case "body-spacing":
                         // Build only the body fixture. An earlier font/Line test
