@@ -126,5 +126,66 @@ public static class BatchAndSpacingChecks
                 "Rollback failure preserves original and step backups for recovery");
         }
         finally{Directory.Delete(folder,true);}
+        LineCleanupChecks(assert);
+    }
+    private static void LineCleanupChecks(Action<bool,string> assert)
+    {
+        string folder=Path.Combine(Path.GetTempPath(),"LineCleanupChecks-"+Guid.NewGuid().ToString("N"));Directory.CreateDirectory(folder);
+        string current=Path.Combine(folder,"current.docx"),before=Path.Combine(folder,"before.docx");
+        var plan=new[]{LineRole.Agency,LineRole.Subject}.Select(role=>new Issue(0,1,"x","x","",false,
+            FixKind.ShapeLine,LineFix:new(null,10,20,30,role))).ToArray();
+        try
+        {
+            void Reset()
+            {
+                foreach(string path in Directory.GetFiles(folder,"*.step.docx"))File.Delete(path);
+                File.WriteAllText(current,"original");File.WriteAllText(before,"original");
+            }
+            foreach(Exception cleanupError in new Exception[]{new IOException("locked cleanup"),new UnauthorizedAccessException("denied cleanup")})
+            {
+                Reset();int writes=0,restores=0,deletes=0,verifies=0;var undo=new Stack<string>();
+                var cleanup=AtomicLineBatch.Apply(current,before,plan,(item,_)=>
+                {writes++;File.AppendAllText(current,"/"+item.LineFix!.Role);},()=>
+                {restores++;File.Copy(before,current,true);},()=>verifies++,deleteBackup:_=>{deletes++;throw cleanupError;});
+                undo.Push(before); // The production caller publishes Undo only after Apply returns.
+                assert(cleanup.Count==2 && cleanup.All(c=>ReferenceEquals(c.Error,cleanupError) && File.Exists(c.RetainedPath)) &&
+                    writes==2 && verifies==1 && restores==0 && deletes==2 && undo.Count==1 &&
+                    File.ReadAllText(current)=="original/Agency/Subject" && File.ReadAllText(undo.Peek())=="original",
+                    "Locked or denied step cleanup returns every retained backup without reversing a verified Line action or preventing its single Undo publication");
+                Reset();writes=restores=deletes=0;var primary=new AggregateException("operation failure",new IOException("nested cause"));Exception? observed=null;
+                try
+                {
+                    AtomicLineBatch.Apply(current,before,plan,(_,_)=>
+                    {File.AppendAllText(current,"/edit");if(++writes==2)throw primary;},()=>
+                    {restores++;File.Copy(before,current,true);},deleteBackup:_=>{deletes++;throw cleanupError;});
+                }
+                catch(Exception error){observed=error;}
+                var retained=observed?.Data[AtomicLineBatch.CleanupDataKey] as IReadOnlyList<CheckpointCleanup>;
+                assert(ReferenceEquals(observed,primary) && writes==2 && restores==1 && deletes==2 &&
+                    File.ReadAllText(current)=="original" && retained is {Count:2} &&
+                    retained.All(c=>ReferenceEquals(c.Error,cleanupError) && File.Exists(c.RetainedPath)),
+                    "Cleanup denial after a real rollback preserves the exact nested primary exception, restored file and retained-backup diagnostics");
+            }
+            Reset();int attempts=0;
+            var partial=AtomicLineBatch.Apply(current,before,plan,(_,_)=>File.AppendAllText(current,"/edit"),()=>
+                File.Copy(before,current,true),deleteBackup:path=>{if(++attempts==1)throw new UnauthorizedAccessException("first cleanup denied");File.Delete(path);});
+            assert(attempts==2 && partial.Count==1 && Directory.GetFiles(folder,"*.step.docx").Length==1 &&
+                partial[0].RetainedPath==Directory.GetFiles(folder,"*.step.docx").Single() && File.ReadAllText(current)=="original/edit/edit",
+                "Failure deleting one step backup still attempts every remaining cleanup exactly once and reports only the retained file");
+            Reset();int writesBeforeRestore=0,cleanupAttempts=0;
+            IOException operationFailure=new("edit failed"),restoreFailure=new("restore failed");AggregateException? failedRecovery=null;
+            try
+            {
+                AtomicLineBatch.Apply(current,before,plan,(_,_)=>
+                {File.AppendAllText(current,"/partial");if(++writesBeforeRestore==2)throw operationFailure;},()=>throw restoreFailure,
+                    deleteBackup:_=>cleanupAttempts++);
+            }
+            catch(AggregateException error){failedRecovery=error;}
+            assert(failedRecovery is not null && failedRecovery.InnerExceptions.Count==2 &&
+                ReferenceEquals(failedRecovery.InnerExceptions[0],operationFailure) && ReferenceEquals(failedRecovery.InnerExceptions[1],restoreFailure) &&
+                writesBeforeRestore==2 && cleanupAttempts==0 && Directory.GetFiles(folder,"*.step.docx").Length==2 && File.ReadAllText(before)=="original",
+                "Actual Line recovery failure keeps both causes and all original/step backups without invoking any cleanup");
+        }
+        finally{Directory.Delete(folder,true);}
     }
 }

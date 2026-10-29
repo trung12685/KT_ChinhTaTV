@@ -40,7 +40,7 @@ public static class CheckpointCleanupChecks
                 var warning=caught?.Data[CheckpointSwap.CleanupDataKey] as CheckpointCleanup;
                 assert(ReferenceEquals(caught,primary) && warning is not null && ReferenceEquals(warning.Error,cleanupError) &&
                     File.ReadAllText(current)=="before" && File.ReadAllText(warning.RetainedPath)=="before" && deletes==1 &&
-                    (failClose?closes==1 && opens==0:closes==2 && opens==2),
+                    (failClose?closes==1 && opens==0:closes==2 && opens==2) && CheckpointSwap.CurrentIsVerified(caught!),
                     "Close/open failure retains its original exception and restored bytes even if backup cleanup also fails");
                 File.Delete(warning!.RetainedPath);
             }
@@ -60,16 +60,59 @@ public static class CheckpointCleanupChecks
             try{CheckpointSwap.Apply(current,candidate,()=>{},()=>{throw ++opens==1?candidateFailure:restoreFailure;},_=>deletes++);}
             catch(AggregateException error){aggregate=error;}
             var kept=Directory.GetFiles(folder,"*.rollback.docx");
-            assert(aggregate is not null && aggregate.InnerExceptions.Count==2 && ReferenceEquals(aggregate.InnerExceptions[0],candidateFailure) &&
+            assert(aggregate is CheckpointRestoreException typed && typed.RollbackPath==kept.Single() &&
+                !CheckpointSwap.CurrentIsVerified(aggregate) && aggregate.InnerExceptions.Count==2 && ReferenceEquals(aggregate.InnerExceptions[0],candidateFailure) &&
                 ReferenceEquals(aggregate.InnerExceptions[1],restoreFailure) && deletes==0 && kept.Length==1 && File.ReadAllText(kept[0])=="before",
                 "A genuine restoration failure retains both causes and its backup; it never enters cleanup or reports success");
             File.Delete(kept[0]);
             Reset();File.Delete(candidate);Exception? copyFailure=null;
             try{CheckpointSwap.Apply(current,candidate,()=>{},()=>{},_=>throw new IOException("cleanup"));}
             catch(FileNotFoundException error){copyFailure=error;}
-            assert(copyFailure is not null && copyFailure.Data[CheckpointSwap.CleanupDataKey] is CheckpointCleanup && File.ReadAllText(current)=="before",
+            assert(copyFailure is not null && copyFailure.Data[CheckpointSwap.CleanupDataKey] is CheckpointCleanup &&
+                CheckpointSwap.CurrentIsVerified(copyFailure) && File.ReadAllText(current)=="before",
                 "Candidate copy failure restores the original and cannot be hidden behind a subsequent cleanup exception");
             foreach(var path in Directory.GetFiles(folder,"*.rollback.docx"))File.Delete(path);
+
+            assert(!CheckpointSwap.CurrentIsVerified(new IOException("unclassified")) &&
+                !CheckpointSwap.CurrentIsVerified(new AggregateException(new IOException("unclassified nested cause"))),
+                "Unknown exceptions never establish that a checkpoint was verified; aggregate shape is not a recovery outcome");
+            foreach(bool failClose in new[]{true,false})
+            foreach(bool denyCleanup in new[]{true,false})
+            {
+                Reset();closes=opens=deletes=0;
+                var primary=new AggregateException("operation aggregate",new AggregateException(new IOException("nested operation failure")));
+                Exception? observed=null;
+                try
+                {
+                    CheckpointSwap.Apply(current,candidate,()=>{closes++;if(failClose)throw primary;},()=>
+                    {if(++opens==1)throw primary;},path=>{deletes++;if(denyCleanup)throw new IOException("cleanup denied");File.Delete(path);});
+                }
+                catch(Exception error){observed=error;}
+                assert(ReferenceEquals(observed,primary) && CheckpointSwap.CurrentIsVerified(observed!) &&
+                    File.ReadAllText(current)=="before" && File.ReadAllText(candidate)=="after" &&
+                    (failClose?closes==1 && opens==0:closes==2 && opens==2) && deletes==1 &&
+                    (!denyCleanup || observed!.Data[CheckpointSwap.CleanupDataKey] is CheckpointCleanup),
+                    "Nested operation aggregates retain identity and an explicit safe checkpoint outcome after unchanged close failure or successful rollback, even when cleanup fails");
+                foreach(var path in Directory.GetFiles(folder,"*.rollback.docx"))File.Delete(path);
+            }
+            Reset();opens=0;CheckpointRestoreException? innerFailure=null;
+            try{CheckpointSwap.Apply(current,candidate,()=>{},()=>throw new IOException("inner open and recovery fail"));}
+            catch(CheckpointRestoreException error){innerFailure=error;}
+            assert(innerFailure is not null && !CheckpointSwap.CurrentIsVerified(innerFailure) &&
+                File.Exists(innerFailure.RollbackPath),"An actual inner restoration failure reports an unverified outcome and retains its named recovery file");
+            Reset();Exception? outerFailure=null;
+            try{CheckpointSwap.Apply(current,candidate,()=>{},()=>{if(++opens==1)throw innerFailure!;});}
+            catch(Exception error){outerFailure=error;}
+            assert(ReferenceEquals(outerFailure,innerFailure) && CheckpointSwap.CurrentIsVerified(outerFailure!) &&
+                File.ReadAllText(current)=="before" && opens==2 && File.Exists(innerFailure!.RollbackPath),
+                "A successful outer rollback records its own verified outcome even when its operation propagates an inner restoration exception; the inner recovery file remains intact");
+            File.Delete(innerFailure!.RollbackPath);
+            File.Delete(current);Exception? absentCurrent=null;closes=0;
+            try{CheckpointSwap.Apply(current,candidate,()=>closes++,()=>{});}
+            catch(FileNotFoundException error){absentCurrent=error;}
+            assert(absentCurrent is not null && !CheckpointSwap.CurrentIsVerified(absentCurrent) && closes==0 &&
+                !File.Exists(current) && File.ReadAllText(candidate)=="after",
+                "Failure to establish the initial checkpoint backup cannot claim verified recovery or close Word");
 
             // Model the exact Undo boundary: consume the stack entry only after the
             // real file swap returns, including the successful-reopen/cleanup-failure case.

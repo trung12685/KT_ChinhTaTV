@@ -51,25 +51,7 @@ public sealed partial class WordSession : IDisposable
         if (value is not null && Marshal.IsComObject(value)) Marshal.ReleaseComObject(value);
     }
     public void Open(string path)
-    {
-        Coverage=null;CoverageNotice=null;NumberCoveragePreviewLayout=null;
-        spacingReferencePath=spacingReferenceFlat=null;
-        using var timing=new WordOperationTiming("Word.Perf.Open");
-        // Reuse only this session's own hidden application. A disconnected
-        // document/application is released before the normal reconnect path.
-        WordOpenSessionPolicy.Prepare(UseOptimizedReading,CloseDocumentOnly,CloseConnection);
-        timing.Count("WarmWordAvailable",app is null?0:1);
-        undoCheckpoints.Clear();verifiedLineEdits.Clear();
-        lastLayout = [];lastFormatLayout=[];lastWordParagraphs=[];AdministrativePositionTargets=[];
-        Source = Path.GetFullPath(path);
-        Changed = false;
-        Recovered = false;
-        File.Copy(path, RecoveryPath, true);
-        snapshotCurrent = true;
-        timing.Mark("PrepareCopy");
-        ReadWithRecovery("Word.Open", () => { Connect(); return true; });
-        timing.Mark("Connect");timing.Count("Completed",1);
-    }
+        =>OpenTransactional(path);
     private void Connect()
     {
         using var timing=new WordOperationTiming("Word.Perf.Connect");
@@ -85,11 +67,7 @@ public sealed partial class WordSession : IDisposable
         try { document = docs.Open(working, ReadOnly: false, AddToRecentFiles: false, Visible: false); }
         finally { Release(docs); }
         timing.Mark("OpenDocument");
-        if ((bool)document!.TrackRevisions || (int)document.ProtectionType != -1)
-        {
-            DisposeDocument();
-            throw new InvalidOperationException("Bản thử chưa hỗ trợ Track Changes hoặc tài liệu được bảo vệ.");
-        }
+        EnsureEditableOpenedDocument((object)document!,CloseApplicationForOpen);
     }
     private void Reconnect()
     {
@@ -529,6 +507,7 @@ public sealed partial class WordSession : IDisposable
             throw new InvalidOperationException("Phát sinh lỗi chữ/phông cần xử lý trước đường kẻ; phải phục hồi cả lượt và quét lại.");
         string candidate = Path.Combine(folder, Guid.NewGuid() + ".candidate.docx");
         bool previousChanged = Changed;
+        bool currentVerified=true;
         IReadOnlyList<Issue> acceptancePlan=plan;
         try
         {
@@ -541,23 +520,33 @@ public sealed partial class WordSession : IDisposable
             void ApplyCandidate()
             {
                 int openAttempts = 0;
-                SwapCheckpoint(RecoveryPath, candidate, CloseDocumentOnly, () =>
+                currentVerified=false;
+                try
                 {
-                    bool verifyLines = ++openAttempts == 1;
-                    Connect();
-                    if (ReadStoryText() != expectedText)
-                        throw new InvalidOperationException("Nội dung chữ thay đổi sau khi mở candidate; phải khôi phục bản trước.");
-                    if(verifyReference)
+                    SwapCheckpoint(RecoveryPath, candidate, CloseDocumentOnly, () =>
                     {
-                        // Refresh on both candidate open and restoration. Neither file is assumed
-                        // to retain the CPs observed before the preceding open/save cycle.
-                        CheckCore();
-                        LogReferenceBindings(acceptancePlan,verifyLines?"Candidate":"Restored");
-                        if(verifyLines)
-                            acceptancePlan=LineReferenceBinding.Rebind(acceptancePlan,LineTargets,expectedText,ReadStoryText());
-                    }
-                    if (verifyLines) VerifyLineResult(acceptancePlan,baseline.Preserve,verifyReference);
-                });
+                        bool verifyLines = ++openAttempts == 1;
+                        Connect();
+                        if (ReadStoryText() != expectedText)
+                            throw new InvalidOperationException("Nội dung chữ thay đổi sau khi mở candidate; phải khôi phục bản trước.");
+                        if(verifyReference)
+                        {
+                            // Refresh on both candidate open and restoration. Neither file is assumed
+                            // to retain the CPs observed before the preceding open/save cycle.
+                            CheckCore();
+                            LogReferenceBindings(acceptancePlan,verifyLines?"Candidate":"Restored");
+                            if(verifyLines)
+                                acceptancePlan=LineReferenceBinding.Rebind(acceptancePlan,LineTargets,expectedText,ReadStoryText());
+                        }
+                        if (verifyLines) VerifyLineResult(acceptancePlan,baseline.Preserve,verifyReference);
+                    });
+                    currentVerified=true;
+                }
+                catch(Exception failure)
+                {
+                    currentVerified=CheckpointSwap.CurrentIsVerified(failure);
+                    throw;
+                }
             }
             try { ApplyCandidate(); }
             catch (RenderedLineMismatchException mismatch)
@@ -598,8 +587,8 @@ public sealed partial class WordSession : IDisposable
             CaptureCheckArtifact(candidate, "failed-line-candidate.docx");
             Diagnostics.Write("Word.LinePackage", error);
             // A failed candidate open is rolled back by CheckpointSwap. Keep backups if rollback fails.
-            snapshotCurrent = error is not AggregateException;
-            Changed = previousChanged;
+            snapshotCurrent = currentVerified;
+            Changed = currentVerified?previousChanged:true;
             throw new InvalidOperationException("Chưa áp dụng được nhóm đường kẻ. " +
                 "Bản trước lượt sửa được giữ tại: " + before, error);
         }
@@ -705,11 +694,12 @@ public sealed partial class WordSession : IDisposable
         if (plan.All(i => i.LineFix is not null))
         {
             bool previousChanged=Changed;
+            bool restored=false;
             string expectedText=ReadStoryText();
             try
             {
                 var accepted=new Dictionary<LineRole,Issue>();
-                AtomicLineBatch.Apply(RecoveryPath,before,plan,
+                var cleanup=AtomicLineBatch.Apply(RecoveryPath,before,plan,
                     (item,step)=>
                     {
                         Progress(RepairActivity.Editing,"Đang sửa "+IssueReviewCatalog.Describe(item).Label.ToLowerInvariant()+".");
@@ -724,7 +714,7 @@ public sealed partial class WordSession : IDisposable
                         foreach(var completed in ApplyLinePackage([current],step,verifyReference:verifyReference))
                             accepted[completed.LineFix!.Role]=completed;
                     },
-                    ()=>{Progress(RepairActivity.Restoring,"Đang phục hồi cả nhóm đường kẻ.");SwapCheckpoint(RecoveryPath,before,CloseDocumentOnly,Connect);},
+                    ()=>{Progress(RepairActivity.Restoring,"Đang phục hồi cả nhóm đường kẻ.");SwapCheckpoint(RecoveryPath,before,CloseDocumentOnly,Connect);restored=true;},
                     ()=>
                     {
                         Progress(RepairActivity.Verifying,"Kiểm vị trí và nét thật của nhóm đường kẻ trên XPS.");
@@ -735,13 +725,16 @@ public sealed partial class WordSession : IDisposable
                             throw new InvalidOperationException("Nội dung chữ thay đổi sau lượt sửa Line; phải khôi phục bản trước.");
                     },
                     verifyReference ? ()=>ReadRemainingLines(plan,accepted,expectedText) : null);
+                foreach(var retained in cleanup)Diagnostics.Write("Word.LineBatch.CleanupRetained",retained.Error);
                 undoCheckpoints.Push(before);
                 foreach(var item in accepted.Values)verifiedLineEdits[item.LineFix!.Role]=item;
                 Changed=true;snapshotCurrent=true;
             }
             catch(Exception error)
             {
-                Changed=previousChanged;snapshotCurrent=error is not AggregateException;
+                Changed=restored?previousChanged:true;snapshotCurrent=restored;
+                if(error.Data[AtomicLineBatch.CleanupDataKey] is IReadOnlyList<CheckpointCleanup> cleanup)
+                    foreach(var retained in cleanup)Diagnostics.Write("Word.LineBatch.CleanupRetained",retained.Error);
                 Diagnostics.Write("Word.LineBatch",error);
                 throw new InvalidOperationException("Chưa áp dụng được cả lượt sửa đường kẻ. Bản trước lượt sửa: "+before,error);
             }
@@ -921,7 +914,8 @@ public sealed partial class WordSession : IDisposable
         catch (Exception error)
         {
             Diagnostics.Write("Word.UndoCheckpoint", error);
-            snapshotCurrent = error is not AggregateException;
+            snapshotCurrent = CheckpointSwap.CurrentIsVerified(error);
+            if(!snapshotCurrent)Changed=true;
             throw;
         }
     }
@@ -975,26 +969,15 @@ public sealed partial class WordSession : IDisposable
     public void SaveCopy(string path) => SaveCopyCore(path);
     private void CloseConnection()
     {
-        // A dead COM server can throw from Close/Quit too. Still release both handles.
-        dynamic? oldDocument = document; document = null;
-        dynamic? oldApp = app; app = null;
-        try
+        object? oldDocument=document;document=null;
+        object? oldApp=app;app=null;
+        var failure=CloseOwnedConnection(oldDocument,oldApp,Release,(stage,error)=>
         {
-            if (oldDocument is not null)
-                try { oldDocument.Close(0); }
-                catch (COMException error) { Diagnostics.Write("Word.Close", error);if(LineCheckArtifactFolder is not null)checkCleanupFailures.Add(error); }
-        }
-        finally
-        {
-            Release(oldDocument);
-            try
-            {
-                if (oldApp is not null)
-                    try { oldApp.Quit(0); }
-                    catch (COMException error) { Diagnostics.Write("Word.Quit", error);if(LineCheckArtifactFolder is not null)checkCleanupFailures.Add(error); }
-            }
-            finally { Release(oldApp); }
-        }
+            Diagnostics.Write(stage,error);
+            if(LineCheckArtifactFolder is not null)checkCleanupFailures.Add(error);
+            return true; // Preserve the normal reconnect/disposal COM policy.
+        });
+        if(failure is not null)System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failure).Throw();
     }
     private void DisposeDocument() => CloseConnection();
     public void Dispose()

@@ -73,6 +73,62 @@ public static class TechnicalTextChecks
         foreach(string text in new[]{"Nội dung kế hoạch kế hoạch đã duyệt.","Công tác ngày/đêm kế hoạch kế hoạch đã xong."})
             assert(!TechnicalTextContext.IsTechnical(text) && Checker.Check([new(0,text)],DocumentProfile.Personal).Any(i=>i.Kind==FixKind.RepeatedText && i.CanFix),
                 "Additional known filename suffixes do not turn ordinary prose into a technical filename scope");
+        foreach(var sample in new (string Text,bool Repeats)[]
+        {
+            ("Console.WriteLine(\"kế hoạch kế hoạch\");",true),
+            ("print(\"Báo  cáo\")",false),
+            ("Tên hàm module.ghiNhan( 'kế hoạch kế hoạch').",true),
+            ("Tên hàm ghi\u0301Nhan(\"kế hoạch kế hoạch\").",true),
+            ("Mở /tài liệu tài liệu",true),
+            ("/tài liệu tài liệu",true),
+            ("   /Báo  cáo",false),
+            ("Đường dẫn: /tài liệu tài liệu",true),
+            ("File: /Báo  cáo",false),
+            ("Mở \"/Báo  cáo\"",false),
+            ("Mở (/tài liệu tài liệu)\r\a",true),
+            ("Địa chỉ \"tài liệu tài liệu\"@co\u0302ngty.vn",true),
+            ("Địa chỉ \"tài liệu tài liệu\"@côngty.vn",true),
+            ("Địa chỉ \"tài liệu tài liệu\"@te\u0302n.co\u0302ng",true)
+        })
+        {
+            string whole=sample.Text.TrimEnd('\r','\a','\n');
+            assert(TechnicalTextContext.IsTechnical(sample.Text),
+                "Quoted call arguments, complete root filenames and canonically decomposed email domains retain technical context");
+            var direct=RepeatedTextRules.Check(new(83,sample.Text));
+            assert(sample.Repeats?direct.Count==1 && !direct[0].CanFix && direct[0].Start==83 &&
+                direct[0].Original==whole && direct[0].Replacement==whole:direct.Count==0,
+                "Literal repetitions remain exact whole-paragraph manual notices; spacing-only literals do not invent a repetition");
+            foreach(var profile in Enum.GetValues<DocumentProfile>())
+            {
+                var issues=Checker.Check([new(83,sample.Text)],profile);
+                assert(issues.Any(i=>!i.CanFix && i.Start==83 && i.Original==whole && i.Replacement==whole) &&
+                    !issues.Any(i=>i.CanFix && !i.IsStyleOnly && i.Original!=i.Replacement),
+                    "The shared review path preserves literal words and double spaces in every profile while retaining the manual warning");
+            }
+        }
+        foreach(string text in new[]{"Nội dung / ta / tài liệu tài liệu đã duyệt.",
+            "Công tác ngày/đêm kế hoạch kế hoạch đã xong.",
+            "Cần duyệt (\"kế hoạch kế hoạch\") hôm nay.",
+            "Nội dung (\"Báo  cáo\") cần duyệt."})
+            assert(!TechnicalTextContext.IsTechnical(text) && Checker.Check([new(0,text)],DocumentProfile.Personal)
+                .Any(i=>i.CanFix && i.Original!=i.Replacement),
+                "A prose slash or spaced prose parenthesis containing a quotation does not become a function call or root filename");
+        var oldProse=Checker.Check([new(0,"Nội dung  báo cáo.")],DocumentProfile.Personal).Where(i=>i.CanFix).ToArray();
+        foreach(string suffix in new[]{" print(\"mẫu\")"," Mở /tài liệu"," nhan@co\u0302ngty.vn"})
+        {
+            bool rejected=false;
+            try{CurrentTextPlan.Validate(oldProse,Checker.Check([new(0,"Nội dung  báo cáo."+suffix)],DocumentProfile.Personal));}
+            catch(InvalidOperationException){rejected=true;}
+            assert(rejected,"An unchanged selected whitespace span loses permission when current text acquires the new technical context");
+        }
+        foreach(string text in new[]{"Số:  /BC-ABCD  nội dung.\r","Số:        /BC-ABCD  (bản sao)\r"})
+        {
+            var spaces=Checker.Check([new(41,text)]).Where(i=>i.Kind==FixKind.Text && i.Replacement==" ").ToArray();
+            int fieldEnd=text.IndexOf("/BC-ABCD",StringComparison.Ordinal)+"/BC-ABCD".Length;
+            assert(!TechnicalTextContext.IsTechnical(text) && spaces.Length==1 && spaces[0].Start==41+fieldEnd &&
+                spaces[0].Original=="  ",
+                "An administrative blank-number slash is not a root filename; only field padding is exempt and prose spacing retains its exact offset");
+        }
         const string guarded=@"Mở C:\tài liệu tài liệu\bao-cao.docx";
         var unsafeRow=RepeatedTextRules.Check(new(40,guarded,TextEditable:false));
         assert(unsafeRow.Count==1 && !unsafeRow[0].CanFix && unsafeRow[0].Start==40 && unsafeRow[0].Original==guarded,

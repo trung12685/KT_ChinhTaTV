@@ -5,12 +5,15 @@ public sealed record LineBatchReview(IReadOnlyList<Issue> Selection,IReadOnlyLis
 // Stage the existing, verified single-Line operation inside one atomic user action.
 public static class AtomicLineBatch
 {
-    public static void Apply(string current, string before, IReadOnlyList<Issue> plan,
+    public const string CleanupDataKey="ChinhTa.LineBatchCleanup";
+    public static IReadOnlyList<CheckpointCleanup> Apply(string current, string before, IReadOnlyList<Issue> plan,
         Action<Issue,string> applyStep, Action restoreOriginal, Action? verifyCompleted = null,
-        Func<LineBatchReview>? remainingIssues = null)
+        Func<LineBatchReview>? remainingIssues = null,Action<string>? deleteBackup=null)
     {
         var backups=new List<string>();
+        var cleanup=new List<CheckpointCleanup>();
         bool preserve=false;
+        Exception? operationFailure=null;
         try
         {
             void ApplyPass(IReadOnlyList<Issue> items)
@@ -45,6 +48,7 @@ public static class AtomicLineBatch
         }
         catch(Exception failure)
         {
+            operationFailure=failure;
             try {restoreOriginal();}
             catch(Exception restoreFailure)
             {
@@ -57,7 +61,12 @@ public static class AtomicLineBatch
         {
             if(!preserve)
                 foreach(string path in backups)
-                    try{File.Delete(path);}catch(IOException){}
+                    try{if(deleteBackup is null)File.Delete(path);else deleteBackup(path);}
+                    catch(Exception error) when(error is IOException or UnauthorizedAccessException)
+                    {cleanup.Add(new(path,error));}
+            if(operationFailure is not null && cleanup.Count>0)
+                operationFailure.Data[CleanupDataKey]=Array.AsReadOnly(cleanup.ToArray());
         }
+        return Array.AsReadOnly(cleanup.ToArray());
     }
 }

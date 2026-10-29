@@ -1,4 +1,4 @@
-> Bản thử0.1.77 đã gom đợt20–32 thành [một artifact Windows](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40940520669/artifacts/12927431090), nguồn `ac6f50cc2751835667971204dd4828d973c9408a`. CI Windows đã qua; Word thực vẫn NOT_RUN. Xem [hướng dẫn](PREVIEW-0.1.77.md) và [bằng chứng](PREVIEW-0.1.77-EVIDENCE.md). Release gần nhất vẫn0.1.76.
+> Mã đang tích lũy 0.1.78: [đợt 33–36](FORMAT-BATCH-33-36.md). Chưa có ZIP mới. Bản thử 0.1.77 đã gom đợt 20–32 thành [một artifact Windows](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40940520669/artifacts/12927431090), nguồn `ac6f50cc2751835667971204dd4828d973c9408a`; giữ nguyên gói đó. CI Windows của gói đã qua; Word thực vẫn NOT_RUN. Xem [hướng dẫn](PREVIEW-0.1.77.md) và [bằng chứng](PREVIEW-0.1.77-EVIDENCE.md). Release gần nhất vẫn 0.1.76.
 
 Đợt 22 bổ sung nền tảng bản sao toàn gói và đối chiếu XPS trước hiệu chuẩn, cùng nhóm kiểm Word độc lập cho Exactly/AtLeast. Xem [FORMAT-BATCH-22.md](FORMAT-BATCH-22.md). Chưa đo Single/1,5 hoặc bỏ Before/After trên clone; C28/C29 vẫn giữ quyền sửa cũ. Nhóm Word mới chưa được thực thi trên môi trường Linux.
 
@@ -7,6 +7,8 @@
 Đợt 27–29 xử lý các việc độc lập trong lúc chưa có Word-runtime: bảo toàn khoảng/lặp thuộc đường dẫn và tên tệp; phân loại lỗi đo để lỗi toàn vẹn/COM/cleanup không biến thành thiếu bằng chứng; thêm nhóm kiểm Word riêng cho sửa chữ, tổng12nhóm. Xem [FORMAT-BATCH-27-29.md](FORMAT-BATCH-27-29.md). Cần tiếp tục giảm báo nhầm theo dữ liệu và mẫu, không dừng toàn bộ phát triển để chờ riêng Exactly/AtLeast.
 
 Đợt30–32 tiếp tục bảo vệ tên tệp Office/OpenDocument, nhận đúng manifest DOCX hỏng, thêm lệnh kiểm ba nhóm và giữ lỗi đóng phiên kiểm. Bản thử có runtime đi kèm, kiểm EXE/ZIP/manifest và thử thay đổi file trên bản sao trước khi tải lên. Việc tiếp theo cần kết quả `office-groups.txt` trên máy Windows có Word cho ba nhóm clone, hiệu chuẩn và sửa chữ; đồng thời tiếp tục giảm báo nhầm theo mẫu. Quyền sửa Exactly/AtLeast vẫn giữ nguyên.
+
+Đợt 33–36 xử lý thêm các lỗi mở/đóng và báo nhầm đã tái hiện: chuyển tài liệu qua bản tạm, giữ trạng thái cũ tới khi mở thành công; phân biệt rollback thành công với lỗi phục hồi thật; giữ chuỗi trong lời gọi hàm/email Unicode và đường dẫn POSIX; bỏ preview cũ khi quét lỗi, thử dọn mọi tài nguyên độc lập. Kiểm callback và tệp thật không thay kiểm luồng Word thực.
 
 # Các phần còn thiếu và thứ tự hoàn thiện
 

@@ -49,19 +49,18 @@ public partial class MainWindow : Window
             Diagnostics.Write("UI.Operation", ex);
             if(ex is ScanAfterEditException && ex.InnerException is Exception cause)
                 Diagnostics.Write("UI.ScanAfterEdit.Cause",cause);
-            pending = displayed = null;
-            anchors.Clear();
-            highlighter.Clear();
-            Review.LoadIssues([]);
-            lastCoverage=null;
-            CoverageInfo.Visibility=Visibility.Collapsed;
+            var cleanupFailure=InvalidateReview();
+            if(cleanupFailure is not null)Diagnostics.Write("UI.Operation.PreviewCleanup",cleanupFailure);
             Status.Text=ex is ScanAfterEditException?ex.Message:
                 "Thao tác chưa hoàn tất. Danh sách lỗi cũ đã được xóa; hãy Quét lại trước khi sửa tiếp.";
             string message = ex is ScanAfterEditException?ex.Message:WordConnectionPolicy.IsDisconnected(ex)
                 ? "Ứng dụng mất kết nối với Microsoft Word. Hãy chọn Kiểm tra → Quét lại để thử khôi phục bản lưu gần nhất. " +
                   "Không cần đóng các cửa sổ Word khác. Nếu lỗi xảy ra ngay khi mở, hãy mở lại file."
                 : ex.Message;
-            MessageBox.Show(this, message + "\n\nBản làm việc: " + session.RecoveryPath +
+            if(ex.Data["ChinhTa.RecoveryInstruction"] is string recoveryInstruction)
+                message+="\n\n"+recoveryInstruction;
+            string cleanupNotice=cleanupFailure is null?"":"\n\nChưa dọn hết bản xem trước. Các lỗi dọn dẹp và lỗi thao tác ban đầu đều đã được giữ trong nhật ký.";
+            MessageBox.Show(this, message + cleanupNotice + "\n\nBản làm việc: " + session.RecoveryPath +
                 "\nNhật ký: " + Diagnostics.LogPath, "Không thể thực hiện", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
         finally { Mouse.OverrideCursor = null; }
@@ -82,7 +81,11 @@ public partial class MainWindow : Window
             Status.Text+=$" Mở Word/tệp: {openSeconds:F1}s; tổng mở: {total.Elapsed.TotalSeconds:F1}s.";
         });
     }
-    private void ScanClick(object sender, RoutedEventArgs e) { if (session.IsOpen) Run(Scan); }
+    private void ScanClick(object sender, RoutedEventArgs e)
+    {
+        if(!session.IsOpen && !session.CanRecover)return;
+        Run(()=>{if(!session.IsOpen)session.ReopenPreservedDocument();Scan();});
+    }
     private void CoverageClick(object sender,RoutedEventArgs e)
     {
         hover.Stop();
@@ -170,12 +173,26 @@ public partial class MainWindow : Window
             "Chọn hoặc rê chuột lên lỗi để đánh dấu riêng, không xuất lại Word." +
             (session.Recovered ? " Đã khôi phục kết nối Word từ bản lưu gần nhất." : "");
     }
+    internal Exception? InvalidateReview()=>IndependentCleanup.Complete(null,
+        [()=>{pending=displayed=null;anchors.Clear();},
+         ()=>Review.LoadIssues([]),
+         ()=>{lastCoverage=null;CoverageInfo.Visibility=Visibility.Collapsed;},
+         ClosePreview]);
     private void ClosePreview()
     {
-        highlighter.Reset();
-        Preview.Document = null;
-        xps?.Close(); xps = null;
-        if (xpsPath is not null) { File.Delete(xpsPath); xpsPath = null; }
+        var ownedXps=xps;string? ownedPath=xpsPath;
+        var failure=IndependentCleanup.Complete(null,
+            [()=>Preview.Document=null,
+             highlighter.Reset,
+             ()=>{ownedXps?.Close();if(ReferenceEquals(xps,ownedXps))xps=null;},
+             ()=>{if(ownedPath is not null)File.Delete(ownedPath);if(xpsPath==ownedPath)xpsPath=null;}]);
+        if(failure is not null)
+        {
+            // A failed close/delete retains its handle/path for a later attempt.
+            // Never let that failure skip invalidation of the visible document.
+            Diagnostics.Write("UI.PreviewCleanup",failure);
+            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failure).Throw();
+        }
     }
     private void ShowPreview(Issue? issue)
     {
@@ -325,7 +342,13 @@ public partial class MainWindow : Window
     {
         if (!CanDiscard()) { e.Cancel = true; return; }
         hover.Stop();
-        Run(() => { ClosePreview(); session.Dispose(); });
+        Run(() =>
+        {
+            var failure=CloseOwnedResources(ClosePreview,session.Dispose);
+            if(failure is not null)System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failure).Throw();
+        });
     }
+    internal static Exception? CloseOwnedResources(Action closePreview,Action closeSession)=>
+        IndependentCleanup.Complete(null,[closePreview,closeSession]);
 }
 

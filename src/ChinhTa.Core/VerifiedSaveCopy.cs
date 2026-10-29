@@ -30,7 +30,7 @@ public static class VerifiedSaveCopy
         }
         return current;
     }
-    private static void Guard(string working,string destination,IReadOnlyList<string> protectedFiles)
+    internal static void Guard(string working,string destination,IReadOnlyList<string> protectedFiles)
     {
         string resolved=Canonical(destination);
         if(Directory.Exists(destination))throw new IOException("Đích lưu là thư mục; hãy chọn tên tệp DOCX khác.");
