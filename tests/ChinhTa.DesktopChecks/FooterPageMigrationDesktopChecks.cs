@@ -68,7 +68,7 @@ public static class FooterPageMigrationDesktopChecks
 
         var invalid=new (string Name,Action<Glyphs,Canvas,int> Change)[]
         {
-            ("missing glyph",(g,_,_)=>g.UnicodeString=""),
+            ("missing glyph",(g,c,_)=>c.Children.Remove(g)),
             ("wrong cached physical value",(g,_,_)=>g.UnicodeString="8"),
             ("hidden glyph",(g,_,_)=>g.Opacity=0),
             ("hidden ancestor",(_,c,_)=>c.Visibility=Visibility.Hidden),
