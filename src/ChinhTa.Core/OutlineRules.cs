@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace ChinhTa.Core;
@@ -21,9 +22,29 @@ public static class OutlineRules
     private static readonly Regex Prefix=new(@"^(?<lead>[ \t]{0,32})(?:(?<number>[0-9]{1,3}(?:\.[0-9]{1,3}){0,3})(?<nd>[.)])|(?<roman>[IVXLCDM]{1,12})(?<rd>[.)])|(?<letter>[a-zđ])(?<ld>[.)])|(?<bullet>[-–—+]))(?<gap>[ \t]+)(?<body>.+)$",RegexOptions.CultureInvariant|RegexOptions.NonBacktracking);
     private static readonly Regex Hint=new(@"^[ \t]*(?:(?:[0-9]+\.)+[0-9]+[.)]|[0-9]{1,3}[.)]|[IVXLCDM]{1,12}[.)]|[a-zđ][.)]|[-–—+•●○*])(?:\s|$)",RegexOptions.CultureInvariant|RegexOptions.NonBacktracking);
     private const string ReferenceLabel=@"(?:[0-9]+(?:\.[0-9]+)*|[IVXLCDM]{1,12}|[a-zđ])";
-    private static readonly Regex References=new(@"\b(?:mục|điểm|khoản|phần|chương) +(?<label>"+ReferenceLabel+
-        @")(?:[.)])?(?:(?: *[-–—,] *| +(?:và|đến|tới) +)(?<label>"+ReferenceLabel+
-        @")(?:[.)])?)*(?![0-9]|\.[0-9])(?=\s|[,;:.!?]|$)",RegexOptions.IgnoreCase|RegexOptions.CultureInvariant);
+    private const string ReferenceSpace=@"[\p{Zs}\t]";
+    // Expand only fixed cue words, never normalize the paragraph or reuse
+    // normalized offsets as Word CPs. References grant no edit permission;
+    // they conservatively freeze numbering that would leave dangling labels.
+    private static string ReferenceWord(string word)
+    {
+        string decomposed=word.Normalize(NormalizationForm.FormD);
+        return word==decomposed?Regex.Escape(word):"(?:"+Regex.Escape(word)+"|"+Regex.Escape(decomposed)+")";
+    }
+    private static string ReferenceKey(string label)
+    {
+        if(label.Length==0 || !char.IsAsciiDigit(label[0]))return label;
+        // Numeric references may omit label padding. Compare each component's
+        // value as text, without changing the source label/CP or guessing that
+        // Roman/letter references belong to an Arabic numbering family.
+        return string.Join('.',label.Split('.').Select(component=>
+        {string digits=component.TrimStart('0');return digits.Length==0?"0":digits;}));
+    }
+    private static readonly Regex References=new(@"\b(?:"+string.Join('|',new[]{"mục","điểm","khoản","phần","chương"}.Select(ReferenceWord))+@")"+
+        ReferenceSpace+@"+(?:"+ReferenceWord("số")+ReferenceSpace+@"+)?(?:\("+ReferenceSpace+@"*(?<label>"+ReferenceLabel+@")"+ReferenceSpace+@"*\)|"+
+        @"(?<label>"+ReferenceLabel+@")(?:[.)])?(?:(?:"+ReferenceSpace+@"*[-–—,]"+ReferenceSpace+@"*|"+
+        ReferenceSpace+@"+(?:"+string.Join('|',new[]{"và","đến","tới"}.Select(ReferenceWord))+@")"+ReferenceSpace+@"+)(?<label>"+ReferenceLabel+
+        @")(?:[.)])?)*)(?![0-9]|\.[0-9])(?=\s|[,;:.!?]|$)",RegexOptions.IgnoreCase|RegexOptions.CultureInvariant);
     private static readonly Regex NumberPathHint=new(@"^[ \t]*(?<label>[0-9]+(?:\.[0-9]+)+)",RegexOptions.CultureInvariant|RegexOptions.NonBacktracking);
     private static readonly string[] Alphabets=["abcdefghijklmnopqrstuvwxyz","abcdđeghiklmnopqrstuvxy"];
     public static IReadOnlyList<OutlineFinding> Check(IReadOnlyList<Paragraph> rows)
@@ -33,11 +54,11 @@ public static class OutlineRules
         foreach(var label in rows.SelectMany(p=>References.Matches(p.Text).Cast<Match>())
             .SelectMany(m=>m.Groups["label"].Captures.Cast<Capture>()).Select(c=>c.Value))
         {
-            references.Add(label);
-            if(label.Length>0 && char.IsAsciiDigit(label[0]))
+            string key=ReferenceKey(label);references.Add(key);
+            if(key.Length>0 && char.IsAsciiDigit(key[0]))
                 // Edited paths have at most four components. Deeper references
                 // still guard those prefixes without quadratic prefix allocation.
-                for(int dot=label.IndexOf('.'),depth=0;dot>=0 && depth<4;dot=label.IndexOf('.',dot+1),depth++)references.Add(label[..dot]);
+                for(int dot=key.IndexOf('.'),depth=0;dot>=0 && depth<4;dot=key.IndexOf('.',dot+1),depth++)references.Add(key[..dot]);
         }
         void Notice(Paragraph row,FixKind kind,string title,string message)
         {
@@ -128,8 +149,8 @@ public static class OutlineRules
                     Family.Letter=>alphabets.Where(a=>index<a.Length).Select(a=>a[index].ToString()).Distinct().ToArray(),
                     _=>[]
                 };
-                bool referenced=members.Any(m=>m.Row.Outline!.HasReferences || references.Contains(m.Label)) ||
-                    Enumerable.Range(0,members.Length).SelectMany(Expected).Any(references.Contains);
+                bool referenced=members.Any(m=>m.Row.Outline!.HasReferences || references.Contains(ReferenceKey(m.Label))) ||
+                    Enumerable.Range(0,members.Length).SelectMany(Expected).Select(ReferenceKey).Any(references.Contains);
                 for(int i=1;i<members.Length;i++)
                 {
                     var item=members[i];var expected=Expected(i);

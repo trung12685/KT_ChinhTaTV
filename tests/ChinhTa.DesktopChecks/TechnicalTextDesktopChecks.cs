@@ -57,6 +57,32 @@ public static class TechnicalTextDesktopChecks
             var properties=body.Elements(w+"p").First().Elements(w+"r").First().Element(w+"rPr")!;
             assert((string?)properties.Element(w+"b")?.Attribute(w+"val")=="1" && (string?)properties.Element(w+"u")?.Attribute(w+"val")=="single",
                 "The real-Word fixture includes independent retained bold/underline text for post-edit and Undo checks");
+            var markRun=body.Elements(w+"p").First().Elements(w+"r").Single(r=>r.Element(w+"t")?.Value==",");
+            var markProperties=markRun.Element(w+"rPr")!;
+            assert((string?)markProperties.Element(w+"sz")?.Attribute(w+"val")=="28" &&
+                (string?)markProperties.Element(w+"b")?.Attribute(w+"val")=="1" &&
+                (string?)markProperties.Element(w+"u")?.Attribute(w+"val")=="single",
+                "The actual DOCX fixture gives the retained comma its own 14pt bold underlined run, distinct from its 13pt surrounding spaces");
+            var glyphStyles=new List<ObservedCharacterStyle?>();
+            foreach(var run in body.Elements(w+"p").First().Elements(w+"r"))
+            {
+                var format=run.Element(w+"rPr")!;string value=run.Element(w+"t")!.Value;
+                float size=float.Parse(format.Element(w+"sz")!.Attribute(w+"val")!.Value,System.Globalization.CultureInfo.InvariantCulture)/2;
+                var font=new ObservedFont("Times New Roman",size,(string?)format.Element(w+"b")?.Attribute(w+"val")=="1"?-1:0,0,0);
+                int underline=(string?)format.Element(w+"u")?.Attribute(w+"val")=="single"?1:0;
+                glyphStyles.AddRange(value.Select(c=>char.IsWhiteSpace(c)?null:new ObservedCharacterStyle(font,underline)));
+            }
+            var snapshots=paragraphs.Select(p=>new WordParagraphSnapshot(p.Start,p.Start+p.Text.Length,p.Text,1,false,true)).ToArray();
+            var punctuationProbe=CasePreservationPlan.Regions(plan,snapshots).Single();
+            var sourceStyle=new CharacterStyleEvidence(OfficeTechnicalTextCheck.Prose,glyphStyles,new(0,0,0,0,new(0,0,0,13,0,0)));
+            var expectedStyle=CasePreservationPlan.Expected(punctuationProbe,plan,sourceStyle,i=>OfficeTechnicalTextCheck.Prose[..(i.Start-origin)]);
+            int comma=expectedStyle.Text.IndexOf(',');var retained=expectedStyle.Styles[comma];
+            assert(punctuationProbe.Kind==FixKind.PunctuationSpace && expectedStyle.Text==OfficeTechnicalTextCheck.FixedProse &&
+                retained is {Underline:1,Font:{Size:14,Bold:-1}},
+                "The fixture's real selected text plan now creates a punctuation-only fingerprint retaining its source comma style");
+            var drift=expectedStyle.Styles.ToArray();drift[comma]=retained! with {Underline=0,Font=retained!.Font with {Size=13,Bold=0}};
+            assert(!expectedStyle.Matches(new(expectedStyle.Text,drift,sourceStyle.Paragraph)),
+                "The actual fixture model cannot certify correct repaired text when the retained comma loses its unselected source style");
         }
         finally{Directory.Delete(folder,true);}
     }

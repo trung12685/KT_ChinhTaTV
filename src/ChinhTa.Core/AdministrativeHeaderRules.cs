@@ -138,7 +138,16 @@ public static class AdministrativeHeaderRules
         if(number.Length==1 && number.Value[0] is >= '1' and <= '9')
             Edit(p,false,baseIndex+number.Index,number.Value,"0"+number.Value,"Thêm 0 trước số văn bản nhỏ hơn 10",result);
         var slash=parsed.Groups["slash"];
-        Edit(p,false,baseIndex+slash.Index,slash.Value,"/","Bỏ khoảng trắng quanh dấu / của số, ký hiệu",result);
+        // Padding before the slash still belongs to an unassigned serial slot,
+        // including after its dots/ellipsis. Only spaces after '/' belong to the
+        // identifier separator; a filled serial keeps the normal compact form.
+        if(Blank(number.Value))
+        {
+            int afterSlash=slash.Value.IndexOf('/')+1;
+            Edit(p,false,baseIndex+slash.Index+afterSlash,slash.Value[afterSlash..],"",
+                "Bỏ khoảng trắng sau dấu /, giữ độ rộng ô số chưa điền",result);
+        }
+        else Edit(p,false,baseIndex+slash.Index,slash.Value,"/","Bỏ khoảng trắng quanh dấu / của số, ký hiệu",result);
         var code=parsed.Groups["code"];
         foreach(Match separator in Hyphen.Matches(code.Value))
             Edit(p,false,baseIndex+code.Index+separator.Index,separator.Value,"-","Chuẩn hóa dấu nối trong ký hiệu",result);

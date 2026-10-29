@@ -30,12 +30,18 @@ public sealed partial class WordSession
         try{return VisibleFormatReader.ReadStyles((object)range,text,includeSpacing:true);}finally{Release(range);}
     }
     internal IReadOnlyList<Issue> CaseTrackingRegions(IReadOnlyList<Issue> plan)=>CasePreservationPlan.Regions(plan,lastFormatLayout);
+    internal CharacterStyleEvidence ReadCheckExpectedStyles(Issue probe,IReadOnlyList<Issue> plan)
+    {
+        if(LineCheckArtifactFolder is null)throw new InvalidOperationException("Chỉ dùng trong phiên kiểm Word riêng.");
+        return ExpectedCaseStyles(probe,plan);
+    }
     private CharacterStyleEvidence ExpectedCaseStyles(Issue probe,IReadOnlyList<Issue> plan)
     {
         dynamic range=document!.Range(probe.Start,probe.Start+probe.Length);
         try
         {
-            var source=VisibleFormatReader.ReadStyles((object)range,probe.Original,includeSpacing:plan.Any(i=>(i.Kind==FixKind.SignatureFormat || i.ParagraphFix is not null || i.SpacingFix is not null || i.CharacterFormat is {Role:ComponentRole.Body,PreserveEmphasis:true}) && i.Start==probe.Start));
+            var source=VisibleFormatReader.ReadStyles((object)range,probe.Original,includeSpacing:probe.Kind==FixKind.PunctuationSpace ||
+                plan.Any(i=>(i.Kind==FixKind.SignatureFormat || i.ParagraphFix is not null || i.SpacingFix is not null || i.CharacterFormat is {Role:ComponentRole.Body,PreserveEmphasis:true}) && i.Start==probe.Start));
             return CasePreservationPlan.Expected(probe,plan,source,item=>
             {
                 dynamic prefix=document!.Range(probe.Start,item.Start);

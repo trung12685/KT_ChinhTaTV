@@ -10,7 +10,7 @@ public static class SpacingRules
     private const string DayLabel=@"ng(?:à|a\u0300)y";
     private const string MonthLabel=@"th(?:á|a\u0301)ng";
     private const string YearLabel=@"n(?:ă|a\u0306)m";
-    private static readonly Regex BlankNumber=new(@"^[ \t]*"+NumberLabel+@"[ \t]*:(?<blank>[ \t]{2,})(?=/[\p{L}\p{N}])",
+    private static readonly Regex BlankNumber=new(@"^[ \t]*"+NumberLabel+@"[ \t]*:(?<blank>[._… \t]*)(?=/[ \t]*[\p{L}\p{N}])",
         RegexOptions.IgnoreCase|RegexOptions.CultureInvariant);
     private static readonly Regex MarkedCheckbox=new(@"\[(?<left> *)(?:[Xx✓✔])(?<right> *)\]",
         RegexOptions.CultureInvariant|RegexOptions.NonBacktracking);
@@ -20,11 +20,11 @@ public static class SpacingRules
     private static readonly Regex WordDateFields=new(@"^[ \t]*(?:(?<place>[\p{L}\p{M}][\p{L}\p{M} .’'\-]*),[ \t]*)?"+
         DayLabel+@":?(?<day>[0-9._… \t]*)"+MonthLabel+@"(?<month>[0-9._… \t]*)"+YearLabel+
         @"(?<year>[0-9._… \t]*)(?=$|[\r\n\a(,;.])",RegexOptions.IgnoreCase|RegexOptions.CultureInvariant);
-    // A labelled date form, not an arbitrary slash in prose. Keep only fields
-    // consisting entirely of spaces/tabs; a filled field still gets its usual
-    // spacing review. Match both spellings of the accent without normalizing
-    // the source, so all captured offsets remain Word/string offsets.
-    private static readonly Regex SlashDateFields=new(@"^[ \t]*(?:ng(?:à|a\u0300)y(?:[ \t]+sinh)?|sinh[ \t]+ng(?:à|a\u0300)y)[ \t]*:(?<day>[0-9 \t]*)/(?<month>[0-9 \t]*)/(?<year>[0-9 \t]*)(?=$|[\r\n\a(,;.])",
+    // A labelled date form, not an arbitrary slash in prose. Capture actual
+    // placeholder characters too: a period cannot stand in as a successful
+    // boundary before an unparsed year. Filled slots retain ordinary review.
+    // Raw captures preserve both NFC/NFD label offsets without normalization.
+    private static readonly Regex SlashDateFields=new(@"^[ \t]*(?:ng(?:à|a\u0300)y(?:[ \t]+sinh)?|sinh[ \t]+ng(?:à|a\u0300)y)[ \t]*:(?<day>[0-9._… \t]*)/(?<month>[0-9._… \t]*)/(?<year>[0-9._… \t]*)(?=$|[\r\n\a(,;])",
         RegexOptions.IgnoreCase|RegexOptions.CultureInvariant);
     public static bool IsBlankField(string text,int start,int length,bool identifiedAdministrativeHeader=false)
     {
@@ -61,7 +61,7 @@ public static class SpacingRules
             foreach(string name in new[]{"day","month","year"})
             {
                 var field=date.Groups[name];
-                if(field.Length>0 && field.Value.All(c=>c is ' ' or '\t') && start>=field.Index &&
+                if(field.Length>0 && field.Value.All(c=>c is ' ' or '\t' or '.' or '_' or '…') && start>=field.Index &&
                     (long)start+length<=field.Index+field.Length)return true;
             }
         return false;

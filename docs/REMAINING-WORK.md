@@ -1,4 +1,4 @@
-> Bản thử 0.1.78 đã gom [đợt 33–36](FORMAT-BATCH-33-36.md), [37–40](FORMAT-BATCH-37-40.md) và [41–44](FORMAT-BATCH-41-44.md) thành [một artifact Windows](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40950303966/artifacts/12930333908), nguồn `de1ea9652a1cbebdf4fabe6e8e3d1da9e07689a3`. CI Windows, EXE và kiểm gói đã qua; Word thực vẫn NOT_RUN. Xem [hướng dẫn](PREVIEW-0.1.78.md) và [bằng chứng](PREVIEW-0.1.78-EVIDENCE.md). Giữ riêng bản thử 0.1.77; release gần nhất vẫn 0.1.76.
+> Mã đang phát triển 0.1.79: [đợt 45–47](FORMAT-BATCH-45-47.md), chưa ZIP mới. Bản thử 0.1.78 đã gom [đợt 33–36](FORMAT-BATCH-33-36.md), [37–40](FORMAT-BATCH-37-40.md) và [41–44](FORMAT-BATCH-41-44.md) thành [một artifact Windows](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40950303966/artifacts/12930333908), nguồn `de1ea9652a1cbebdf4fabe6e8e3d1da9e07689a3`; giữ nguyên gói đó. CI Windows, EXE và kiểm gói đã qua; Word thực vẫn NOT_RUN. Xem [hướng dẫn](PREVIEW-0.1.78.md) và [bằng chứng](PREVIEW-0.1.78-EVIDENCE.md). Release gần nhất vẫn 0.1.76.
 
 Đợt 22 bổ sung nền tảng bản sao toàn gói và đối chiếu XPS trước hiệu chuẩn, cùng nhóm kiểm Word độc lập cho Exactly/AtLeast. Xem [FORMAT-BATCH-22.md](FORMAT-BATCH-22.md). Chưa đo Single/1,5 hoặc bỏ Before/After trên clone; C28/C29 vẫn giữ quyền sửa cũ. Nhóm Word mới chưa được thực thi trên môi trường Linux.
 
@@ -13,6 +13,8 @@
 Đợt 37–40 tiếp tục sửa lỗi release range có thể bỏ qua rollback và lỗi xóa tệp tạm che kết quả chính. C01 giữ ô vuông trống và các trường ngày slash có nhãn rõ; C25 nhận khoảng cuối sau một cặp quote/ngoặc đơn văn xuôi đã chứng minh. Kịch bản Word sửa chữ bổ sung các mẫu này, vẫn cần chạy thực sau khi có gói mới. Chưa mở parser mọi biểu mẫu, cú pháp mã hoặc dấu ngoặc lồng.
 
 Đợt 41–44 giữ dấu câu cũ trong bằng chứng style/cỡ của lượt sửa chung; đọc cỡ theo ranh giới Word thực; bổ sung ô đã đánh dấu, nhãn NFC/NFD và trường ngày bằng chữ; dọn đủ tài nguyên hậu kiểm phông mà không che lỗi chính. Phép chiếu chỉ nhận một dấu không đổi giữa ASCII spaces; chưa có fingerprint cho mọi lượt chỉ sửa dấu câu. Không thêm mutation path hoặc suy việc Word giữ định dạng từ kiểm Core/fake.
+
+Đợt 45–47 bổ sung fingerprint cho riêng C14 dấu phẩy/chấm phẩy trong một đoạn đã chứng minh, dùng lại đường hậu kiểm/rollback hiện có; bảo vệ dẫn chiếu NFC/NFD, khoảng ngang Unicode và nhãn có đệm 0; giữ placeholder ô số văn bản và ngày slash. Các đoạn lịch sử nói chưa có fingerprint chỉ sửa dấu câu mô tả trạng thái đến bản 0.1.78. Chưa mở cho mọi dấu câu hoặc tổ hợp style; chưa đổi writer Word. Cần Word thật xác minh dấu phẩy có style khác khoảng bên cạnh, nếu mất style phải FAIL/rollback chứ không coi chữ đúng là PASS.
 
 # Các phần còn thiếu và thứ tự hoàn thiện
 

@@ -23,6 +23,8 @@ internal static class OfficeTechnicalTextCheck
         "Tích chọn [        ] nếu đồng ý.",
         "Tích chọn [    X    ] nếu đồng ý.",
         "Ngày sinh:    /    /2026",
+        "Ngày sinh:    /    /…",
+        "Số:    ...    /BC-ABC",
         "Ngày 03 tháng        năm 2026",
         "So\u0302\u0301:        /BC-ABC"
     });
@@ -46,9 +48,9 @@ internal static class OfficeTechnicalTextCheck
         using var zip=ZipFile.Open(path,ZipArchiveMode.Update);var entry=zip.GetEntry("word/document.xml")!;XDocument xml;
         using(var input=entry.Open())xml=XDocument.Load(input,LoadOptions.PreserveWhitespace);
         XNamespace w="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
-        XElement Run(string value,bool retained=false)=>new(w+"r",new XElement(w+"rPr",
+        XElement Run(string value,bool retained=false,int size=13)=>new(w+"r",new XElement(w+"rPr",
             new XElement(w+"rFonts",new XAttribute(w+"ascii","Times New Roman"),new XAttribute(w+"hAnsi","Times New Roman")),
-            new XElement(w+"b",new XAttribute(w+"val",retained?1:0)),new XElement(w+"sz",new XAttribute(w+"val",26)),
+            new XElement(w+"b",new XAttribute(w+"val",retained?1:0)),new XElement(w+"sz",new XAttribute(w+"val",size*2)),
             new XElement(w+"u",new XAttribute(w+"val",retained?"single":"none"))),
             new XElement(w+"t",new XAttribute(XNamespace.Xml+"space","preserve"),value));
         XElement Row(string value)=>new(w+"p",new XElement(w+"pPr",new XElement(w+"jc",new XAttribute(w+"val","left"))),Run(value));
@@ -59,8 +61,9 @@ internal static class OfficeTechnicalTextCheck
         // Replace only the newly generated fixture's main body, keeping its
         // section and every other package part/relationship from the seed.
         var retainedSection=new XElement(section);
+        string rest=Prose["Nội dung".Length..];int comma=rest.IndexOf(',');
         body.ReplaceNodes(new XElement(w+"p",new XElement(w+"pPr",new XElement(w+"jc",new XAttribute(w+"val","left"))),
-            Run("Nội dung",true),Run(Prose["Nội dung".Length..])),
+            Run("Nội dung",true),Run(rest[..comma]),Run(",",true,14),Run(rest[(comma+1)..])),
             TechnicalRows.Select(Row),FormRows.Select(Row),ParagraphEndRows.Select(Row),Row(ValidTechnical),retainedSection);
         entry.Delete();using(var output=zip.CreateEntry("word/document.xml").Open())xml.Save(output);
         return path;
@@ -91,30 +94,42 @@ internal static class OfficeTechnicalTextCheck
         var decoration=test.ReadCheckDecorations(probe);
         if(decoration.Bold!=-1 || decoration.Underline!=1)
             throw new InvalidOperationException("Mẫu thiếu chữ đậm/gạch chân cần bảo toàn.");
-        var punctuation=selected.Single(i=>i.Kind==FixKind.PunctuationSpace);VerifyKept();test.Fix(punctuation);
-        string single=original.Replace(Prose,"Nội dung  kế hoạch kế hoạch, báo cáo đã xong.",StringComparison.Ordinal);
+        var punctuation=selected.Single(i=>i.Kind==FixKind.PunctuationSpace);
+        var punctuationProbe=test.CaseTrackingRegions([punctuation]).Single();
+        var originalStyles=test.ReadCheckCurrentStyles(Prose);
+        var singleStyles=test.ReadCheckExpectedStyles(punctuationProbe,[punctuation]);
+        const string singleProse="Nội dung  kế hoạch kế hoạch, báo cáo đã xong.";
+        VerifyKept();test.Fix(punctuation);
+        string single=original.Replace(Prose,singleProse,StringComparison.Ordinal);
         if(test.ReadCheckText()!=single || test.CheckUndoCount!=1 || test.ReadCheckDecorations(probe)!=decoration ||
-            test.Check().Any(i=>Chosen(i) && i.Kind==FixKind.PunctuationSpace))
+            test.Check().Any(i=>Chosen(i) && i.Kind==FixKind.PunctuationSpace) || !singleStyles.Matches(test.ReadCheckCurrentStyles(singleProse)))
             throw new InvalidOperationException("Sửa riêng dấu câu chưa giữ các phần chưa chọn hoặc kiểu chữ.");
         VerifyKept();test.Undo();test.Check();
-        if(test.ReadCheckText()!=original || test.CheckUndoCount!=0 || test.ReadCheckDecorations(probe)!=decoration)
+        if(test.ReadCheckText()!=original || test.CheckUndoCount!=0 || test.ReadCheckDecorations(probe)!=decoration ||
+            !originalStyles.Matches(test.ReadCheckCurrentStyles(Prose)))
             throw new InvalidOperationException("Một Undo của sửa riêng chưa về nguồn mẫu.");
-        pass("Chữ trong đường dẫn/tên tệp/địa chỉ: chỉ cảnh báo; sửa riêng dấu câu văn xuôi, giữ lỗi chưa chọn và kiểu đậm/gạch chân, một Undo");
+        pass("Chữ trong đường dẫn/tên tệp/địa chỉ: chỉ cảnh báo; sửa riêng dấu câu văn xuôi, giữ dấu phẩy 14 pt đậm/gạch chân và thuộc tính đoạn, một Undo");
 
         selected=test.Check().Where(Chosen).ToArray();bool restored=false;
         try{test.FixTextFailureProbe(selected,selected.Length);}
         catch(InvalidOperationException error) when(error.InnerException is OfficeTextProbeException){restored=true;}
-        if(!restored || test.ReadCheckText()!=original || test.Changed || test.CheckUndoCount!=0 || test.ReadCheckDecorations(probe)!=decoration)
+        if(!restored || test.ReadCheckText()!=original || test.Changed || test.CheckUndoCount!=0 || test.ReadCheckDecorations(probe)!=decoration ||
+            !originalStyles.Matches(test.ReadCheckCurrentStyles(Prose)))
             throw new InvalidOperationException("Lỗi cuối lượt chưa phục hồi văn xuôi, dòng kỹ thuật và trạng thái Undo.");
-        VerifyKept();test.FixMany(test.Check().Where(Chosen));
+        VerifyKept();selected=test.Check().Where(Chosen).ToArray();
+        var batchStyles=test.ReadCheckExpectedStyles(test.CaseTrackingRegions(selected).Single(),selected);
+        test.FixMany(selected);
         string expected=ExpectedText(original);
-        if(test.ReadCheckText()!=expected || test.CheckUndoCount!=1 || test.Check().Any(Chosen) || test.ReadCheckDecorations(probe)!=decoration)
+        if(test.ReadCheckText()!=expected || test.CheckUndoCount!=1 || test.Check().Any(Chosen) || test.ReadCheckDecorations(probe)!=decoration ||
+            !batchStyles.Matches(test.ReadCheckCurrentStyles(FixedProse)))
             throw new InvalidOperationException("Sửa nhóm văn xuôi chưa đạt nguyên văn/kiểu/Undo hoặc còn lỗi đã chọn.");
         VerifyKept();string saved=Path.Combine(folder,"technical-text-fixed.docx");test.SaveCopy(saved);test.Undo();test.Check();
-        if(test.ReadCheckText()!=original || test.CheckUndoCount!=0 || test.ReadCheckDecorations(probe)!=decoration)
+        if(test.ReadCheckText()!=original || test.CheckUndoCount!=0 || test.ReadCheckDecorations(probe)!=decoration ||
+            !originalStyles.Matches(test.ReadCheckCurrentStyles(Prose)))
             throw new InvalidOperationException("Một Undo chưa phục hồi cả nhóm văn xuôi trước lưu.");
         VerifyKept();test.Open(saved);test.Check();
         if(test.ReadCheckText()!=expected || test.Check().Any(Chosen) || test.ReadCheckDecorations(probe)!=decoration ||
+            !batchStyles.Matches(test.ReadCheckCurrentStyles(FixedProse)) ||
             !SHA256.HashData(File.ReadAllBytes(source)).SequenceEqual(digest))
             throw new InvalidOperationException("Lưu/mở chưa giữ dòng kỹ thuật, phông/chữ hoặc nguồn mẫu bất biến.");
         VerifyKept();pass("Văn xuôi và khoảng cuối sau ngoặc cùng tài liệu có tên tệp/địa chỉ/ô trống: sửa nhóm, lỗi cuối lượt/rollback, một Undo, lưu-mở; nguồn, chuỗi kỹ thuật và ô chọn/ngày chưa điền giữ nguyên");

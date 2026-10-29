@@ -1,5 +1,7 @@
 # Chính tả Việt
 
+Đang phát triển **0.1.79** sau bản thử 0.1.78: [đợt 45–47](docs/FORMAT-BATCH-45-47.md) bổ sung hậu kiểm riêng C14, giữ dẫn chiếu mục và placeholder số/ngày. Chưa có ZIP 0.1.79; gói tải dưới đây giữ nguyên mã 0.1.78.
+
 Đã có **[bản thử Windows 0.1.78](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40950303966/artifacts/12930333908)**, gom 12 cụm đợt 33–44 sau 0.1.77: giữ phiên/Undo khi mở lỗi, ô chọn/ngày chưa điền, khoảng cuối sau ngoặc và hậu kiểm định dạng. [Hướng dẫn dùng/kiểm Word](docs/PREVIEW-0.1.78.md) · [Nguồn và bằng chứng gói](docs/PREVIEW-0.1.78-EVIDENCE.md). Cần đăng nhập GitHub để tải; giải nén artifact rồi giải nén toàn bộ ZIP bên trong vào thư mục mới.
 
 [Đợt 33–36](docs/FORMAT-BATCH-33-36.md) · [37–40](docs/FORMAT-BATCH-37-40.md) · [41–44](docs/FORMAT-BATCH-41-44.md). CI Windows, EXE và kiểm ZIP đã qua; Microsoft Word thực vẫn NOT_RUN, quyền sửa Exactly/AtLeast giữ nguyên. Bản thử 0.1.77 và các release cũ bên dưới giữ riêng để đối chiếu.

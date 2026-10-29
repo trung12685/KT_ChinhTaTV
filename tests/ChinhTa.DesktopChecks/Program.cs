@@ -276,6 +276,7 @@ DelimiterClusterReviewChecks.Run(Assert);
         SpacingTrialPreviewChecks.Run(Assert);
         SpacingCalibrationReportChecks.Run(Assert);
         TechnicalTextDesktopChecks.Run(Assert);
+        PunctuationSessionPreservationChecks.Run(Assert);
         WordCheckCommandChecks.Run(Assert);
         WordCheckCleanupChecks.Run(Assert);
         WordConnectionCleanupChecks.Run(Assert);
