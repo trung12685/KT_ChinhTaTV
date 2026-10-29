@@ -160,6 +160,9 @@ public static class PageNumberPreviewVerifier
                     group.Add(next);remaining.Remove(next);
                 }
             var ordered=group.OrderBy(d=>d.Bounds.Left).ToArray();
+            if(ordered.Max(d=>d.Baseline)-ordered.Min(d=>d.Baseline)>.75 ||
+                ordered.Max(d=>d.Bounds.Height)-ordered.Min(d=>d.Bounds.Height)>.5)
+                throw new InvalidOperationException("Cụm số cuối trang không cùng dòng nền/chiều cao.");
             for(int i=1;i<ordered.Length;i++)
                 if(ordered[i].Bounds.Left<ordered[i-1].Bounds.Right-.5)
                     throw new InvalidOperationException("Các cụm số cuối trang chồng lên nhau; không ghép PAGE.");

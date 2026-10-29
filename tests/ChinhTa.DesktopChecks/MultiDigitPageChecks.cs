@@ -59,6 +59,8 @@ public static class MultiDigitPageChecks
             (g,n,i)=>{if(n==10 && i==1)g.StyleSimulations=StyleSimulations.BoldSimulation;}})
             assert(Reject(()=>PageNumberPreviewVerifier.Capture(Scene(change:change),20,Plan(),20)),
                 "A multi-digit source cannot bind missing, displaced, overlapping, extra or differently styled numeral chunks");
+        assert(Reject(()=>PageNumberPreviewVerifier.Capture(Scene(count:101,change:(g,n,i)=>{if(n==101)g.OriginY+=i*.6;}),20,Plan(101),20)),
+            "Adjacent numeral chunks cannot bridge into a sloped or multiple-baseline PAGE group");
         assert(Reject(()=>PageNumberPreviewVerifier.VerifyNoMigratedFooter(Scene(),Plan(),20)),
             "After migration, split footer numerals cannot evade the residual PAGE check");
     }
