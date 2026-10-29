@@ -78,7 +78,9 @@ public static class FooterPageMigrationChecks
             var parts=Parts();mutate(parts);assert(Check(parts).Single() is {CanFix:false,NumberFix:null},
                 "Mixed, locked, unknown-font, non-Arabic/restarted or structurally different footer fields retain a manual finding");
         }
-        assert(Check(Parts(),10).Single() is {CanFix:false},"The initial footer migration slice does not guess bindings for multi-glyph page numbers");
+        foreach(int pages in new[]{9,10,99,100,999,1000,10000})
+            assert(Check(Parts(),pages).Single() is {CanFix:true,NumberFix.FooterMigration.Valid:true},"PAGE-only footer supports bound multi-digit document page counts");
+        assert(Check(Parts(),10001).All(i=>!i.CanFix),"Out-of-bound page counts remain manual");
         var hiddenCustom=Parts();AddFirst(hiddenCustom,false,false);
         assert(!Check(hiddenCustom).Single().CanFix,"Migration cannot expose a previously inactive custom first footer");
         var defaultOnly=Parts();AddFirst(defaultOnly,false,true);

@@ -129,21 +129,51 @@ public static class PageNumberPreviewVerifier
             Opacity(glyph,page)==1 && glyph.Fill is SolidColorBrush brush && brush.Opacity==1 && brush.Color.A==255 &&
             $"{brush.Color.R:X2}{brush.Color.G:X2}{brush.Color.B:X2}"==color;
     }
+    private sealed record FooterDigit(Glyphs Glyph,Rect Bounds,double Baseline);
+    private sealed record FooterNumber(string Text,FooterDigit[] Digits);
+    private static FooterNumber[] FooterNumbers(FixedPage page,double bottomMm)
+    {
+        double edge=page.Height-bottomMm*96/25.4;var digits=new List<FooterDigit>();
+        foreach(var glyph in Walk(page).OfType<Glyphs>())
+        {
+            string text=glyph.UnicodeString??"";
+            if(text.Length==0 || text.Any(c=>c is <'0' or >'9'))continue;
+            var initial=Bounds(glyph,page);if(initial.IsEmpty || initial.Bottom<edge-.25)continue;
+            var evidence=GlyphEvidence(glyph,page,false);if(evidence is null)continue;
+            if(evidence.Value.Bounds.Top<edge-.25 || evidence.Value.Bounds.Bottom>page.Height+.25)
+                throw new InvalidOperationException("Cụm số cuối trang chưa nằm trọn lề dưới.");
+            var transform=PreviewPaintProof.ToPage(glyph,page)!;var run=glyph.ToGlyphRun();
+            double baseline=transform.Transform(run.BaselineOrigin).Y;
+            digits.Add(new(glyph,evidence.Value.Bounds,baseline));
+        }
+        if(digits.Count>128)throw new InvalidOperationException("Vùng số cuối trang quá phức tạp để ghép PAGE.");
+        var remaining=digits.ToHashSet();var result=new List<FooterNumber>();
+        while(remaining.Count>0)
+        {
+            var group=new List<FooterDigit>{remaining.First()};remaining.Remove(group[0]);
+            for(int i=0;i<group.Count;i++)
+                foreach(var next in remaining.ToArray())
+                {
+                    var current=group[i];double gap=Math.Max(next.Bounds.Left-current.Bounds.Right,current.Bounds.Left-next.Bounds.Right);
+                    if(Math.Abs(current.Baseline-next.Baseline)>.75 || Math.Abs(current.Bounds.Height-next.Bounds.Height)>.5 ||
+                        gap>Math.Min(current.Bounds.Height,next.Bounds.Height)*.25+1)continue;
+                    group.Add(next);remaining.Remove(next);
+                }
+            var ordered=group.OrderBy(d=>d.Bounds.Left).ToArray();
+            for(int i=1;i<ordered.Length;i++)
+                if(ordered[i].Bounds.Left<ordered[i-1].Bounds.Right-.5)
+                    throw new InvalidOperationException("Các cụm số cuối trang chồng lên nhau; không ghép PAGE.");
+            result.Add(new(string.Concat(ordered.Select(d=>d.Glyph.UnicodeString)),ordered));
+        }
+        return result.ToArray();
+    }
     private static HashSet<Glyphs> FooterGlyphs(FixedPage page,int number,PageFooterMigration migration,double bottomMm)
     {
         var source=migration.Source(number);if(source is null)return [];
-        double edge=page.Height-bottomMm*96/25.4;string expected=number.ToString(CultureInfo.InvariantCulture);
-        var found=new List<Glyphs>();
-        foreach(var glyph in Walk(page).OfType<Glyphs>().Where(g=>g.UnicodeString==expected))
-        {
-            var initial=Bounds(glyph,page);if(initial.IsEmpty || initial.Bottom<edge-.25)continue;
-            var evidence=GlyphEvidence(glyph,page,false);if(evidence is null)continue;
-            if(evidence.Value.Bounds.Top<edge-.25 || evidence.Value.Bounds.Bottom>page.Height+.25 || !FooterStyle(glyph,page,source))
-                throw new InvalidOperationException("Chữ số cuối trang chưa khớp phông/vùng PAGE đã duyệt; không di chuyển.");
-            found.Add(glyph);
-        }
-        if(found.Count!=1)throw new InvalidOperationException("Chưa ghép duy nhất một số PAGE cuối trang với phần đã duyệt.");
-        return found.ToHashSet();
+        var found=FooterNumbers(page,bottomMm).Where(g=>g.Text==number.ToString(CultureInfo.InvariantCulture)).ToArray();
+        if(found.Length!=1 || found[0].Digits.Any(d=>!FooterStyle(d.Glyph,page,source)))
+            throw new InvalidOperationException("Chưa ghép duy nhất số PAGE cuối trang với phông/vùng đã duyệt.");
+        return found[0].Digits.Select(d=>d.Glyph).ToHashSet();
     }
     public static void VerifyNoMigratedFooter(FixedDocumentSequence sequence,PageFooterMigration migration,double bottomMm)
     {
@@ -153,13 +183,9 @@ public static class PageNumberPreviewVerifier
         for(int n=0;n<paginator.PageCount;n++)
         {
             if(migration.Source(n+1) is null)continue;
-            using var rendered=paginator.GetPage(n);var page=Page(rendered);double edge=page.Height-bottomMm*96/25.4;
-            string expected=(n+1).ToString(CultureInfo.InvariantCulture);
-            foreach(var glyph in Walk(page).OfType<Glyphs>().Where(g=>g.UnicodeString==expected))
-            {
-                var bounds=Bounds(glyph,page);if(bounds.IsEmpty || bounds.Bottom<edge-.25)continue;
-                if(GlyphEvidence(glyph,page,false) is not null)throw new InvalidOperationException("Còn số PAGE cuối trang sau di chuyển; phải phục hồi.");
-            }
+            using var rendered=paginator.GetPage(n);var page=Page(rendered);
+            if(FooterNumbers(page,bottomMm).Any(g=>g.Text==(n+1).ToString(CultureInfo.InvariantCulture)))
+                throw new InvalidOperationException("Còn số PAGE cuối trang sau di chuyển; phải phục hồi.");
         }
     }
     public static PageNumberVisualSnapshot Capture(FixedDocumentSequence sequence,double topMm,PageFooterMigration? footerMigration=null,double bottomMm=0)

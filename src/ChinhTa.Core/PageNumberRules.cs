@@ -13,7 +13,7 @@ public sealed record PageFooterSource(string Font,float Size,bool Italic,string 
 }
 public sealed record PageFooterMigration(PageFooterSource? Default,PageFooterSource? First,bool DifferentFirst,int Pages)
 {
-    public bool Valid=>(Default is not null || First is not null) && (Default is null || Default.Valid) && (First is null || First.Valid) && Pages is >=1 and <=9;
+    public bool Valid=>(Default is not null || First is not null) && (Default is null || Default.Valid) && (First is null || First.Valid) && Pages is >=1 and <=10000;
     public PageFooterSource? Source(int page)=>page==1 && DifferentFirst?First:Default;
     public bool Removes(string type)=>type=="default"?Default is not null:type=="first" && First is not null;
 }
@@ -234,7 +234,7 @@ public static class PageNumberRules
             (!HasPage(firstFooter??new XElement(W+"ftr")) || firstSource is not null);
         bool decimalSource=(string?)num?.Attribute(W+"fmt") is null or "decimal" &&
             (num?.Attribute(W+"start") is null || PageLayoutGuard.Number(num,"start")==1);
-        PageFooterMigration? migration=footerPage && pages is >=1 and <=9 && pureFooters && decimalSource && geometry is {BottomMm:>0}?
+        PageFooterMigration? migration=footerPage && pages is >=1 and <=10000 && pureFooters && decimalSource && geometry is {BottomMm:>0}?
             new(defaultSource,firstSource,firstDifferent,pages):null;
         // Both PAGE-only references can be removed without exposing a previously
         // hidden custom first footer. Mixed footers retain the original safeguard.

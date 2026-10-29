@@ -12,7 +12,7 @@ public static class OfficeFocusedChecks
     public static void Run(Action<bool,string> assert)
     {
         var cases=OfficeFocusedCheck.Cases;
-        assert(cases.Count==8 && cases.Select(c=>c.Id).Distinct().Count()==cases.Count &&
+        assert(cases.Count==9 && cases.Select(c=>c.Id).Distinct().Count()==cases.Count &&
             cases.Any(c=>c.Id=="body-spacing") && cases.Any(c=>c.Id=="handwriting") && cases.Any(c=>c.Id=="footer-page-number") && cases.Any(c=>c.Id=="empty-page-layout"),
             "Focused Word checks expose independent spacing and handwriting families rather than require an earlier Subject PASS");
         var success=new OfficeSuiteReport(cases.Select(c=>new OfficeSuiteResult(c,OfficeSuiteStatus.Pass)).ToArray());
@@ -57,10 +57,10 @@ public static class OfficeFocusedChecks
                 assert(new[]{"Nội dung  kế hoạch kế hoạch đã được duyệt.","Công tác tổng hợp đã được thực hiện đầy đủ.","Nội dung đã đạt yêu cầu cần được giữ nguyên."}.All(texts.Contains),
                     "The extracted body source retains every paragraph required by the existing direct spacing scenario");
             }
-            foreach(var scenario in new[]{"footer-page-number","empty-page-layout"})
+            foreach(var scenario in new[]{"footer-page-number","footer-page-number-long","empty-page-layout"})
             {
                 string isolated=Path.Combine(folder,scenario);Directory.CreateDirectory(isolated);
-                string fixture=scenario=="footer-page-number"?OfficeFooterPageMigrationCheck.Create(modern,isolated):OfficeEmptyHeaderFooterCheck.Create(modern,isolated);
+                string fixture=scenario.StartsWith("footer-page-number",StringComparison.Ordinal)?OfficeFooterPageMigrationCheck.Create(modern,isolated,scenario.EndsWith("-long",StringComparison.Ordinal)):OfficeEmptyHeaderFooterCheck.Create(modern,isolated);
                 using var package=WordprocessingDocument.Open(fixture,false);
                 var errors=new OpenXmlValidator().Validate(package).ToArray();
                 assert(errors.Length==0,"The independent "+scenario+" Office fixture is schema-valid without requiring Subject or Word runtime: "+
