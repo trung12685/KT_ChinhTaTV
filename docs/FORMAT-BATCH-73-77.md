@@ -36,4 +36,8 @@ Báo cáo vẫn phân biệt nhóm chưa nhận diện/thiếu dữ liệu/một
 
 Core/OpenXML cục bộ: **8976 kiểm qua**, tăng **295** từ 8681 (157 dẫn chiếu, 138 Unicode). Build DesktopChecks Release: **0 warning/error**. Harness riêng qua 80 kiểm preflight mới cùng 143 hồi quy lưu; fixture dẫn chiếu 123 kiểm, tăng 33. Fixture sửa chữ với cả hai dạng Unicode của chú thích ngày qua 11 kiểm schema/part/selection/expected-story. Đây là các số thuộc runner tương ứng sau tích hợp, không cộng lặp vào Core. Các bài WPF mới gồm 19 kiểm giữ UI khi chọn nhầm đích, 15 xuất báo cáo và 80 chế độ vẽ; cần Windows thực thi.
 
-Word thực vẫn **NOT_RUN**. Mã có 15 nhóm Word độc lập; bản EXE 0.1.80 vẫn 13. Kết quả build/CI/đóng gói được cập nhật sau khi hoàn tất.
+[Windows CI 40973438980](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40973438980) của nguồn `bd1ec9ea0bbb9bc6664756ac92ccf5af25918398` đã **Success**; [job 123795580629](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40973438980/job/123795580629) qua Core/OpenXML, thực thi WPF/build, ghi evidence và tải log. Các bài WPF mới đã được thực thi trên Windows, gồm bốn ca pixel của nét và các ca trạng thái vẽ chữ. Tổng Windows lấy từ `check-evidence.json` của đúng lượt, không suy từ Linux.
+
+Nhánh preview riêng dùng nguyên commit này; [workflow đóng gói 40973832589](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40973832589) đã **Success**, gồm publish, EXE, metadata, ZIP và tamper checks. [Tải 0.1.81](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40973832589/artifacts/12941004409) · [bằng chứng nguồn/digest](PREVIEW-0.1.81-EVIDENCE.md). Tài liệu cập nhật sau không đổi EXE đã khóa.
+
+Word thực vẫn **NOT_RUN**. Gói 0.1.81 có 15 nhóm Word độc lập; bản EXE 0.1.80 vẫn 13.

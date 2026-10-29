@@ -2,11 +2,13 @@
 
 Gom 9 cụm đợt 69–77 sau 0.1.80: bài Word dấu câu/bookmark chạy riêng; giữ mảng JSON và dẫn chiếu La Mã/dấu nháy; chặn đích lưu bị dọn khi đóng phiên; kiểm đích trước Save để giữ trạng thái duyệt khi chọn nhầm; đồng nhất loại trừ ngày tháng NFC/NFD; đối chiếu thêm chế độ vẽ XPS và xuất báo cáo phạm vi kiểm TXT. Các gói/main/tag cũ giữ nguyên. Word thực **NOT_RUN** tại thời điểm chuẩn bị gói.
 
+[Tải artifact đã kiểm](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40973832589/artifacts/12941004409) · [Nguồn, CI và digest](PREVIEW-0.1.81-EVIDENCE.md). Artifact `ChinhTaViet-0.1.81-preview-bd1ec9ea`, khoảng 69,4 MB, lưu 30 ngày từ lần chạy ngày 30/10/2026 (UTC+7); cần đăng nhập GitHub để tải.
+
 Cần **Windows x64 và Microsoft Word desktop đã cài, mở và kích hoạt bình thường**. Gói có .NET 8 runtime; không cần SDK để chạy EXE. Kiểm Core/OpenXML, WPF, EXE và ZIP trong CI không chạy Microsoft Word.
 
 ## Tải và mở
 
-1. Tải artifact `ChinhTaViet-0.1.81-preview-<mã commit>` của workflow **Windows preview artifact** đã thành công; cần đăng nhập GitHub. Chỉ có bản tải sau khi workflow hoàn tất.
+1. Tải artifact `ChinhTaViet-0.1.81-preview-bd1ec9ea` từ liên kết trên; workflow **Windows preview artifact** đã thành công. Cần đăng nhập GitHub.
 2. Giải nén artifact rồi giải nén **toàn bộ** ZIP `ChinhTaViet-0.1.81-preview-<mã commit>-win-x64.zip` bên trong vào thư mục mới có quyền ghi. Giữ `samples`, DLL và tài liệu cạnh EXE.
 3. Mở `ChinhTa.Desktop.exe`, kiểm phiên bản 0.1.81. Dùng DOCX thử, duyệt đề xuất/bản xem trước, lưu tên mới ở ngoài thư mục làm việc riêng của phiên.
 4. Giữ `build-checks.json`, `preview-manifest.json`, TXT tiến độ và `SHA256.txt`. Commit/run phải thuộc đúng gói. Digest artifact ngoài khác SHA256 của ZIP ứng dụng bên trong.
