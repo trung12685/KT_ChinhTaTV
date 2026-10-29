@@ -1,6 +1,8 @@
 # Chính tả Việt 0.1.79 — bản thử tích lũy để kiểm Word
 
-Gom đợt 45–56 sau 0.1.78: hậu kiểm dấu câu có định dạng riêng, bảo vệ dẫn chiếu/literal/đệm biểu mẫu, giữ dữ liệu phục hồi sau Save lỗi, thông báo Hoàn tác/quét và xóa highlight cũ khi không định vị được cảnh báo. Chỉ có artifact sau khi workflow tạo gói thành công; các bản 0.1.77/0.1.78 và release/tag cũ giữ nguyên. Word thật **NOT_RUN** tại thời điểm chuẩn bị gói.
+Gom đợt 45–56 sau 0.1.78: hậu kiểm dấu câu có định dạng riêng, bảo vệ dẫn chiếu/literal/đệm biểu mẫu, giữ dữ liệu phục hồi sau Save lỗi, thông báo Hoàn tác/quét và xóa highlight cũ khi không định vị được cảnh báo. Các bản 0.1.77/0.1.78 và release/tag cũ giữ nguyên. Word thật **NOT_RUN** tại thời điểm tạo gói.
+
+[Tải artifact đã kiểm](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40960198832/artifacts/12935094001) · [Nguồn, CI và digest](PREVIEW-0.1.79-EVIDENCE.md). Artifact `ChinhTaViet-0.1.79-preview-3e8f268a`, khoảng 69,4 MB, lưu 30 ngày từ lần chạy ngày 30/10/2026 (UTC+7); cần đăng nhập GitHub để tải.
 
 Cần **Windows x64 và Microsoft Word desktop đã cài, mở và kích hoạt bình thường**. Gói có .NET 8 runtime; không cần SDK để chạy EXE. Các kiểm Core/OpenXML, WPF, EXE và ZIP trong CI không chạy Microsoft Word.
 

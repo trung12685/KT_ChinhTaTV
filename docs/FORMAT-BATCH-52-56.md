@@ -36,6 +36,8 @@ Nhóm thứ 13 `outline-references` dùng các mẫu số nhiều cấp/dẫn ch
 
 ## Kiểm chứng
 
-Core/OpenXML cục bộ: **7021 kiểm qua**, tăng **318** từ 6703. Build DesktopChecks Release 0 warning/error. Harness riêng: 94 kiểm cue lặp, 212 giữ dấu gốc, 12 Undo/quét và 92 checkpoint/Save; các số nằm trong runner tương ứng, không cộng lại. Harness fixture dấu câu qua 18 kiểm độc lập, giữ schema/part và bốn mẫu thật. CI Windows và gói cuối đợt đang chờ.
+Core/OpenXML cục bộ: **7021 kiểm qua**, tăng **318** từ 6703. Build DesktopChecks Release 0 warning/error. Harness riêng: 94 kiểm cue lặp, 212 giữ dấu gốc, 12 Undo/quét và 92 checkpoint/Save; các số nằm trong runner tương ứng, không cộng lại. Hai lớp fixture cuối qua 64 kiểm nguồn (19 dấu câu + 45 dẫn chiếu), giữ schema/part và mô hình lựa chọn; không cộng harness vào tổng runner.
+
+[Windows CI](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40959817177) của commit `3e8f268ad935a9cfb24a12427ec36224a7848e02` đã **Success**: [job 123749340881](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40959817177/job/123749340881) qua Core/OpenXML, WPF/build, ghi evidence và tải log. [Gói preview](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40960198832/artifacts/12935094001) trên đúng commit cũng đã qua build/EXE/metadata/ZIP/toàn vẹn; xem [bằng chứng gói](PREVIEW-0.1.79-EVIDENCE.md). Tổng Windows nằm trong evidence của đúng lượt, không suy từ Linux.
 
 Microsoft Word thực vẫn **NOT_RUN**. Kịch bản/biên dịch/Core/WPF không phải bằng chứng Word. Không mở thêm tự sửa Exactly/AtLeast, parser tổng quát hoặc từ điển/ngữ nghĩa.
