@@ -30,4 +30,6 @@ Kiểm WPF/Core xác minh schema, mọi part ngoài main và seed không đổi,
 
 Chạy runner chuẩn `dotnet run --project tests/ChinhTa.Checks -c Release` và trên Windows `dotnet run --project tests/ChinhTa.DesktopChecks -c Release`. Bằng chứng cuối đợt ghi theo commit triển khai, không cộng harness phụ vào số runner chính.
 
+Kết quả trên commit triển khai `918c9e41ba129e2bdda02e8a6fe1ae01e41cd54c`: **5.307 assertion Core/OpenXML đạt trên Linux**, tăng164 so với5.143; build DesktopChecks/Desktop Release không cảnh báo hoặc lỗi. **Windows CI SUCCESS**, [run40921878984](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40921878984), [job123617017609](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40921878984/job/123617017609). Core/OpenXML, WPF/build và ghi evidence đều đạt. Không suy số assertion Windows từ Linux và không coi CI là Word thực. [Bằng chứng](handoff-evidence/batch27-29-evidence.json).
+
 Cần tiếp tục xác minh hai nhóm clone/hiệu chuẩn và nhóm sửa chữ trên máy Windows có Word, xử lý sai khác thật nếu có; sau đó mới thiết kế writer Exactly/AtLeast với hậu kiểm, rollback/Undo/lưu-mở. Trong lúc chưa có bằng chứng Word, vẫn có thể xử lý các lỗi thể thức độc lập, mở rộng tập ngoại lệ lỗi chữ cơ bản và giảm báo nhầm. Không tự suy `xẽ→sẽ` hoặc `giành/dành` khi chưa có dữ liệu.
