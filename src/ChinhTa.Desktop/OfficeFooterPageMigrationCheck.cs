@@ -39,7 +39,9 @@ internal static class OfficeFooterPageMigrationCheck
         string isolated=Path.Combine(folder,"footer-page-migration");Directory.CreateDirectory(isolated);string source=Create(modern,isolated,multiDigit);
         byte[] sourceHash=SHA256.HashData(File.ReadAllBytes(source));test.Profile=DocumentProfile.State;test.Open(source);
         Issue Approved()=>test.Check().Single(i=>i.CanFix && i.NumberFix?.FooterMigration is not null);
-        var issue=Approved();string original=test.ReadCheckText();
+        var issue=Approved();
+        if(multiDigit && issue.NumberFix!.FooterMigration!.Pages<10)throw new InvalidOperationException("Mẫu PAGE nhiều chữ số chưa đạt ít nhất10trang thực tế.");
+        string original=test.ReadCheckText();
         bool restored=false;
         try{test.FixStagedFailureProbe([issue],2);}catch(InvalidOperationException error) when(error.InnerException is OfficeStagedProbeException){restored=true;}
         if(!restored || test.ReadCheckText()!=original || test.CheckUndoCount!=0 || test.Changed || Approved().NumberFix is null)

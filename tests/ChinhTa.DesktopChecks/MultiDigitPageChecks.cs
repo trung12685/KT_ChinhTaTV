@@ -67,8 +67,8 @@ public static class MultiDigitPageChecks
             "Adjacent numeral chunks cannot bridge into a sloped or multiple-baseline PAGE group");
         foreach(var change in new Action<Glyphs,int,int>[] {
             (g,n,i)=>{if(n==10)g.OriginY+=i*4;},
-            (g,n,i)=>{if(n==10)g.OriginX+=i*15;},
-            (g,n,i)=>{if(n==10)g.OriginX-=i*4;}})
+            (g,n,i)=>{if(n==10)g.OriginX+=i==0?-7.5:7.5;},
+            (g,n,i)=>{if(n==10)g.OriginX+=i==0?2:-2;}})
             assert(Reject(()=>PageNumberPreviewVerifier.VerifyNumbers(Scene(after:true,headerChange:change),30,15,20)),
                 "Header PAGE cannot pass by concatenating separated, overlapping or different-baseline digits");
         assert(Reject(()=>PageNumberPreviewVerifier.VerifyNoMigratedFooter(Scene(),Plan(),20)),
