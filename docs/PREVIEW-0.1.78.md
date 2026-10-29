@@ -4,6 +4,8 @@ Bản thử này gom đợt 33–44 sau 0.1.77: giữ phiên đang sửa khi m�
 
 Cần **Windows x64 và Microsoft Word desktop đã cài, mở và kích hoạt được bình thường**. Gói có sẵn .NET 8 runtime; không cần cài SDK để chạy EXE. Core/OpenXML, WPF và kiểm gói trong CI không thay kết quả Word thực.
 
+[Tải artifact đã kiểm](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40950303966/artifacts/12930333908) · [Nguồn, CI và digest](PREVIEW-0.1.78-EVIDENCE.md). Tên artifact: `ChinhTaViet-0.1.78-preview-de1ea965`, khoảng 69,4 MB, lưu 30 ngày từ lần chạy ngày 30/10/2026 (UTC+7). Cần đăng nhập GitHub để tải.
+
 ## Tải và mở ứng dụng
 
 1. Tải artifact `ChinhTaViet-0.1.78-preview-<mã commit>` của workflow **Windows preview artifact** tại kho GitHub; cần đăng nhập GitHub. Artifact chỉ có sau khi workflow tạo gói thành công.
