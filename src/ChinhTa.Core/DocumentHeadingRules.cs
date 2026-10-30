@@ -21,7 +21,7 @@ public static class DocumentHeadingRules
     {
         if(profile!=DocumentProfile.State)return [];
         var subjects=ShapeLineRules.Identify(layout,profile).Where(t=>t.Role==LineRole.Subject).ToArray();
-        if(subjects.Length!=1)return [];
+        if(subjects.Length!=1)return OfficialLetterRules.ObservationTargets(paragraphs,layout,profile);
         var target=subjects[0];
         return paragraphs.Take(40).Where(p=>p.Page==1 && !p.InTable && p.Start>=target.RegionStart && p.Start<=target.Start &&
             !string.IsNullOrWhiteSpace(Clean(p.Text))).ToArray();

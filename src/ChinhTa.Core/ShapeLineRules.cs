@@ -59,7 +59,7 @@ public static class ShapeLineRules
             }
         }
         var types = first.Select((p,i) => (p,i)).Where(x => !x.p.InTable && IsDocumentType(x.p.Text)).ToArray();
-        if (types.Length == 1)
+        if (types.Length == 1 && !first.Any(p=>p.InTable && OfficialLetterRules.IsSubject(p.Text)))
         {
             var (type, index) = types[0];
             LayoutParagraph? last = null;
@@ -80,6 +80,10 @@ public static class ShapeLineRules
         }
         return targets.OrderBy(t => t.Start).ToArray();
     }
+    public static IReadOnlyList<LineRole> RequiredRoles(IReadOnlyList<LayoutParagraph> layout,DocumentProfile profile)=>
+        OfficialLetterRules.Identify(layout,profile) is not null?[LineRole.Agency,LineRole.Motto]:Enum.GetValues<LineRole>();
+    public static IReadOnlyList<LineRole> UnidentifiedRoles(IReadOnlyList<LineTarget> targets,IReadOnlyList<LayoutParagraph> layout,DocumentProfile profile)=>
+        RequiredRoles(layout,profile).Where(role=>!targets.Any(t=>t.Role==role)).ToArray();
     public static IReadOnlyList<LineRole> UnidentifiedRoles(IReadOnlyList<LineTarget> targets) =>
         Enum.GetValues<LineRole>().Where(role => !targets.Any(t => t.Role == role)).ToArray();
     public static string Citation(LineTarget target)=>DocumentTypeCatalog.WithSource(Citation(target.Role),target.UserDefinedType);

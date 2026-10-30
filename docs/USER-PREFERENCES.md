@@ -5,3 +5,8 @@ Ngày28/10/2026 (UTC+7): tài liệu thường in rồi mới ký. Ưu tiên ch�
 Thể thức trước; sau đó lỗi chữ/khoảng trắng/dấu câu/từ-cụm lặp; ngữ cảnh/thư viện từ sau cùng. Công việc tối ưu tốc độ đã dừng, bộ đọc thử nghiệm tắt mặc định. Tích lũy khoảng5–10cụm trước gói Windows, giữ main và tag/gói cũ.
 
 Ngày30/10/2026 (UTC+7): sửa thủ công là mặc định và luồng chính. Người dùng tự nhập, chủ động áp dụng; máy sửa là chế độ riêng do người dùng bật. Dấu gạch chân màu trên bản xem trước có chú giải, không ghi đè định dạng Word. Bản thử0.1.82 sửa đoạn chữ thuần, chưa nhúng Word toàn trang.
+
+
+### 30/10/2026 — trích yếu theo Nghị định 30
+
+Người dùng yêu cầu sửa cảnh báo đang nhầm công văn với các văn bản có tên loại. Đối chiếu bản ký NĐ30 PL I.II.5.b: công văn V/v đặt dưới số/ký hiệu, cỡ 12–13 đứng thường, không yêu cầu nét trích yếu; tên loại và trích yếu văn bản có tên loại cỡ 13–14 đậm, căn giữa trang, có nét dưới trích yếu. Cỡ 13/14 người dùng nêu là các lựa chọn hợp lệ, không thu hẹp khoảng pháp định. Bảng Word là cách dựng mẫu, không bắt buộc pháp lý. Giữ sửa thủ công mặc định.

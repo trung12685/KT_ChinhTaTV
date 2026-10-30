@@ -20,8 +20,8 @@ public static class IndependentTextSuiteChecks
         assert(rejected,"An unknown Word scenario cannot silently resolve to an unrelated fixture");
 
         string all=string.Join(",",cases.Select(s=>s.Id));
-        assert(WordCheckCommand.TryParse(["--word-check",all],out var every) && every.SequenceEqual(cases) && every.Count==16,
-            "The explicit command list can select every one of the sixteen independent Word families in requested order");
+        assert(WordCheckCommand.TryParse(["--word-check",all],out var every) && every.SequenceEqual(cases) && every.Count==17,
+            "The explicit command list can select every one of the seventeen independent Word families in requested order");
         assert(!WordCheckCommand.TryParse(["--word-check","all"],out _) &&
             !WordCheckCommand.TryParse(["--word-check",retained.Id+","+retained.Id],out _) &&
             !WordCheckCommand.TryParse(["--word-check",annotated.Id+",unknown-text-family"],out _),

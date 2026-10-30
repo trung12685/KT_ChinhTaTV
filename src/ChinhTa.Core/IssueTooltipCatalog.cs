@@ -95,7 +95,9 @@ public static class IssueTooltipCatalog
             if(issue.Kind==FixKind.DocumentTypeText)
                 return Decree+"mục II.5, điểm b: tên loại văn bản được trình bày bằng chữ in hoa.";
             if(issue.Kind==FixKind.DocumentHeadingFormat)
-                return Decree+"mục I.4 và II.5, điểm b: Times New Roman, đen, cỡ 13–14, đứng, đậm; tên loại in hoa, trích yếu ngay dưới, căn giữa.";
+                return issue.CharacterFormat?.Role==ComponentRole.LetterSubject || citation==OfficialLetterRules.Citation?
+                    Decree+"mục I.4 và II.5.b: trích yếu công văn sau V/v, cỡ 12–13, đứng, căn giữa dưới số/ký hiệu, cách 6 pt; không yêu cầu đường kẻ trích yếu.":
+                    Decree+"mục I.4 và II.5, điểm b: Times New Roman, đen, cỡ 13–14, đứng, đậm; tên loại in hoa, trích yếu ngay dưới, căn giữa.";
             if(issue.Kind==FixKind.AdministrativePosition)
                 return Decree+"mục II.3.c và II.4.c: số/ký hiệu căn giữa dưới tên cơ quan; địa danh/ngày tháng cùng dòng số, căn giữa dưới quốc hiệu/tiêu ngữ.";
             if(issue.Kind==FixKind.PageNumber)

@@ -19,7 +19,7 @@ public sealed class DocumentTypeCatalogWindow:Window
         DockPanel.SetDock(heading,Dock.Top);root.Children.Add(heading);
         var note=new TextBlock{Text="NĐ30, Phụ lục III, phần I, trang 40: 27 tên loại hành chính và 3 loại bản sao. Bổ sung theo yêu cầu của bạn: Báo cáo đề xuất — BCĐX.",
             TextWrapping=TextWrapping.Wrap,Margin=new(0,0,0,10)};DockPanel.SetDock(note,Dock.Top);root.Children.Add(note);
-        var footer=new TextBlock{Text="Giữ đúng QyĐ, CTr, TTr, TrS. BCĐX do người dùng bổ sung. Bảng chỉ để tra cứu; không đổi mã cơ quan hoặc phần thể thức bản sao.",
+        var footer=new TextBlock{Text="Giữ đúng QyĐ, CTr, TTr, TrS. BCĐX do người dùng bổ sung. Công văn không có dòng tên loại: trích yếu V/v cỡ 12–13 dưới số/ký hiệu, không kẻ trích yếu. Tên loại/trích yếu của văn bản có tên loại cỡ 13–14 đậm, căn giữa và có nét dưới trích yếu. Bảng chỉ để tra cứu; không đổi mã cơ quan hoặc thể thức bản sao.",
             TextWrapping=TextWrapping.Wrap,Margin=new(0,10,0,0),Foreground=Brushes.DimGray};DockPanel.SetDock(footer,Dock.Bottom);root.Children.Add(footer);
         CatalogGrid.Columns.Add(new DataGridTextColumn{Header="Tên loại",Binding=new Binding(nameof(DocumentTypeEntry.Name)),Width=new DataGridLength(1,DataGridLengthUnitType.Star)});
         CatalogGrid.Columns.Add(new DataGridTextColumn{Header="Viết tắt",Binding=new Binding(nameof(DocumentTypeEntry.Abbreviation)),Width=90});
