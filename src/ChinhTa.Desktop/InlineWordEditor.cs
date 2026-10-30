@@ -44,6 +44,7 @@ internal sealed class InlineWordEditor
             else if(e.Key==Key.Escape){e.Handled=true;TryClose(ConfirmDiscard);}
         };
         ApplyButton.Click+=(_,_)=>Apply();cancel.Click+=(_,_)=>TryClose(ConfirmDiscard);
+        popup.Opened+=(_,_)=>{Editor.Focus();Keyboard.Focus(Editor);Editor.SelectAll();};
         popup.Closed+=(_,_)=>NotifyClosed();
     }
     private bool ConfirmDiscard()=>MessageBox.Show(owner,"Chữ đang nhập chưa được ghi. Đóng và bỏ bản nháp?","Sửa tại chữ",MessageBoxButton.YesNo,MessageBoxImage.Question,MessageBoxResult.No)==MessageBoxResult.Yes;

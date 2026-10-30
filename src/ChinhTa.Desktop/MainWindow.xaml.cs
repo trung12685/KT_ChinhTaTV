@@ -254,10 +254,9 @@ public partial class MainWindow : Window
          ClosePreview]);
     private void ClosePreview()
     {
-        inlineEditor?.DetachAnchor();
         var ownedXps=xps;string? ownedPath=xpsPath;
         var failure=IndependentCleanup.Complete(null,
-            [manualMarks.Clear,()=>Preview.Document=null,
+            [()=>inlineEditor?.DetachAnchor(),manualMarks.Clear,()=>Preview.Document=null,
              highlighter.Reset,
              ()=>{ownedXps?.Close();if(ReferenceEquals(xps,ownedXps))xps=null;},
              ()=>{if(ownedPath is not null)File.Delete(ownedPath);if(xpsPath==ownedPath)xpsPath=null;}]);
