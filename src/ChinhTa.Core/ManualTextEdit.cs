@@ -80,16 +80,26 @@ public sealed class ManualTextTarget
         int prefix=0;while(prefix<Original.Length && prefix<edited.Length && Original[prefix]==edited[prefix])prefix++;
         int suffix=0;while(suffix<Original.Length-prefix && suffix<edited.Length-prefix && Original[^(suffix+1)]==edited[^(suffix+1)])suffix++;
         int removed=Original.Length-prefix-suffix;string replacement=edited.Substring(prefix,edited.Length-prefix-suffix);
-        var doc=Read(source);var paragraph=Paragraphs(doc)[index];int offset=0;XElement? target=null;
+        return EditRange(prefix,removed,replacement);
+    }
+    // Explicit selection: never slide a repeated replacement into another run.
+    public ManualTextChange EditRange(int offset,int length,string replacement)
+    {
+        if(offset<0 || length<0 || offset>Original.Length-length)throw Unsupported();
+        string edited=Original.Remove(offset,length).Insert(offset,replacement);
+        if(!TextInput(edited))throw Unsupported();
+        if(edited==Original)throw new InvalidOperationException("Nội dung chưa thay đổi; chưa tạo lượt sửa hoặc Hoàn tác.");
+        int prefix=offset,removed=length;
+        var doc=Read(source);var paragraph=Paragraphs(doc)[index];int nodeOffset=0;XElement? target=null;
         foreach(var node in paragraph.Elements(W+"r").Elements(W+"t"))
         {
             if(node.Value.Length==0)continue;
-            if(prefix>=offset && prefix+removed<=offset+node.Value.Length && (removed>0 || prefix>offset || offset==0))
+            if(prefix>=nodeOffset && prefix+removed<=nodeOffset+node.Value.Length && (removed>0 || prefix>nodeOffset || nodeOffset==0))
             {target=node;break;}
-            offset+=node.Value.Length;
+            nodeOffset+=node.Value.Length;
         }
         if(target is null)throw new InvalidOperationException("Các chỗ sửa đi qua nhiều vùng định dạng. Hãy sửa từng từ/vùng trong một lần để giữ nguyên kiểu chữ.");
-        int local=prefix-offset;target.Value=target.Value.Remove(local,removed).Insert(local,replacement);
+        int local=prefix-nodeOffset;target.Value=target.Value.Remove(local,removed).Insert(local,replacement);
         target.SetAttributeValue(XNamespace.Xml+"space","preserve");
         return new(this,edited,doc.ToString(SaveOptions.DisableFormatting));
     }

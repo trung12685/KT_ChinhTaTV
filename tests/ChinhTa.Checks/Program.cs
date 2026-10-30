@@ -30,6 +30,7 @@ JsonArrayLiteralChecks.Run(Assert);
 WordSaveCompletionChecks.Run(Assert);
 DocumentHeadingChecks.Run(Assert);
         OfficialLetterChecks.Run(Assert);
+        InlineWordChecks.Run(Assert);
 StructuredTextChecks.Run(Assert);
 WholeBodyTextProofChecks.Run(Assert);
 TrackedMoveBoundaryChecks.Run(Assert);

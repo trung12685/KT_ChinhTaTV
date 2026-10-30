@@ -31,19 +31,23 @@ public partial class MainWindow : Window
         Title="Chính tả Việt — Bản thử nghiệm "+version;BuildVersion.Text="Bản "+version;
         Diagnostics.Write("UI.Start",null,$"DesktopModule={typeof(MainWindow).Module.ModuleVersionId}; CoreModule={typeof(Checker).Module.ModuleVersionId}");
         Review.ActiveIssueChanged+=Queue;
+        Preview.PreviewMouseLeftButtonDown+=PreviewWordClick;
+        Preview.LayoutUpdated+=(_,_)=>inlineEditor?.Reposition();
         EditModePicker.SelectedIndex=0;
         ProfilePicker.SelectedIndex = 0;
         hover.Tick += (_, _) => { hover.Stop(); if (pending is not null) Run(() => ShowPreview(pending)); };
     }
     private void EditModeChanged(object sender,SelectionChangedEventArgs e)
     {
-        if(Review is null || AutomaticButtons is null)return;
+        if(Review is null || AutomaticButtons is null || revertingSelection)return;
+        if(!ManualMode && !TryCloseInline())
+        {revertingSelection=true;try{EditModePicker.SelectedIndex=0;}finally{revertingSelection=false;}return;}
         AutomaticButtons.Visibility=ManualMode?Visibility.Collapsed:Visibility.Visible;
         ManualEditButton.Visibility=ManualMode?Visibility.Visible:Visibility.Collapsed;
         Review.AutomaticSelectionVisibility=ManualMode?Visibility.Collapsed:Visibility.Visible;
         Review.SelectOnHover=!ManualMode;
         if(ManualMode)foreach(var choice in Review.Choices)choice.IsChecked=false;
-        EditModeInfo.Text=ManualMode?"Bạn tự sửa chữ và chủ động áp dụng. Đỏ: thể thức đã nhận diện; vàng: cần xem xét. Dấu màu chỉ ở bản xem trước. Bản thử sửa đoạn chữ thuần ngoài bảng; chưa sửa trực tiếp phông/lề/bảng.":
+        EditModeInfo.Text=ManualMode?"Bấm vào một từ trên trang để sửa ngay tại chữ; Enter ghi, Esc hủy. Có thể sửa cả từ chưa được cảnh báo. Đỏ: thể thức đã nhận diện; vàng: cần xem xét. Dấu màu chỉ ở bản xem trước. Bản thử sửa từ trong đoạn thuần ngoài bảng; ô sửa đoạn vẫn có ở nút bên dưới. Chưa soạn thảo toàn trang/phông/lề/bảng.":
             "Máy áp dụng các gợi ý đủ điều kiện sau khi bạn duyệt. Các cảnh báo thủ công vẫn được giữ.";
         hover.Stop();pending=displayed=null;highlighter.Clear();
         if(Preview?.Document is not null)Run(RefreshManualMarks);
@@ -68,7 +72,9 @@ public partial class MainWindow : Window
     }
     private void ProfileChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (ProfilePicker.SelectedIndex < 0) return;
+        if (ProfilePicker.SelectedIndex < 0 || revertingSelection) return;
+        if(ProfilePicker.SelectedIndex!=(int)session.Profile && !TryCloseInline())
+        {revertingSelection=true;try{ProfilePicker.SelectedIndex=(int)session.Profile;}finally{revertingSelection=false;}return;}
         session.Profile = (DocumentProfile)ProfilePicker.SelectedIndex;
         if (ProfileInfo is not null) ProfileInfo.Text = DocumentProfiles.Description(session.Profile);
         if (session.IsOpen) Run(Scan);
@@ -77,6 +83,7 @@ public partial class MainWindow : Window
     internal void Run(Action action,Action<string> showFailure)
     {
         ArgumentNullException.ThrowIfNull(action);ArgumentNullException.ThrowIfNull(showFailure);
+        if(!inlineCommitInProgress && !TryCloseInline())return;
         hover.Stop();
         Mouse.OverrideCursor = Cursors.Wait;
         try { action(); }
@@ -249,7 +256,7 @@ public partial class MainWindow : Window
     {
         var ownedXps=xps;string? ownedPath=xpsPath;
         var failure=IndependentCleanup.Complete(null,
-            [manualMarks.Clear,()=>Preview.Document=null,
+            [()=>inlineEditor?.DetachAnchor(),manualMarks.Clear,()=>Preview.Document=null,
              highlighter.Reset,
              ()=>{ownedXps?.Close();if(ReferenceEquals(xps,ownedXps))xps=null;},
              ()=>{if(ownedPath is not null)File.Delete(ownedPath);if(xpsPath==ownedPath)xpsPath=null;}]);
@@ -431,7 +438,7 @@ public partial class MainWindow : Window
     }
     private void OnClosing(object? sender, CancelEventArgs e)
     {
-        if (!CanDiscard()) { e.Cancel = true; return; }
+        if (!TryCloseInline() || !CanDiscard()) { e.Cancel = true; return; }
         hover.Stop();
         Run(() =>
         {

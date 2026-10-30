@@ -1,6 +1,8 @@
 # Chính tả Việt
 
-Bản thử 0.1.83 sửa nhận diện trích yếu theo NĐ30: công văn V/v dưới số/ký hiệu dùng cỡ 12–13 và không yêu cầu nét trích yếu; văn bản có tên loại dùng cỡ 13–14 đậm, nét dưới trích yếu. [Cách thử](docs/PREVIEW-0.1.83.md). Chưa Word thực PASS.
+Bản thử **0.1.84** cho phép **bấm từ trên trang rồi sửa ngay tại từ**, kể cả từ chưa có cảnh báo; Enter/nút Ghi mới ghi vào DOCX và quét lại. Giữ sửa thủ công mặc định. [Cách thử và giới hạn](docs/PREVIEW-0.1.84.md). Chưa Word thực PASS.
+
+Bản thử 0.1.83 trước đó sửa nhận diện trích yếu theo NĐ30: công văn V/v dưới số/ký hiệu dùng cỡ 12–13 và không yêu cầu nét trích yếu; văn bản có tên loại dùng cỡ 13–14 đậm, nét dưới trích yếu. [Cách thử](docs/PREVIEW-0.1.83.md). Chưa Word thực PASS.
 
 Bản thử 0.1.82 trước đó: **sửa thủ công mặc định**, người dùng tự nhập và chủ động áp dụng; máy sửa là chế độ riêng. [Phạm vi và cách thử](docs/PREVIEW-0.1.82.md). Chưa có Word thực PASS. Không thay gói/main/tag cũ.
 
