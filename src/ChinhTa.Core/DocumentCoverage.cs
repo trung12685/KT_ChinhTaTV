@@ -25,15 +25,18 @@ public sealed class DocumentCoverageSnapshot
 {
     public const string Legend="Đã quan sát chỉ áp dụng các vùng đã nhận diện trong phạm vi hỗ trợ; không xác nhận toàn tài liệu đúng. Số cảnh báo độc lập với độ phủ. 8 nhóm thủ công và 1 quy tắc minh họa vẫn cần người dùng duyệt.";
     private readonly IReadOnlyDictionary<string,IReadOnlySet<int>> starts;
+    private readonly int expectedLineTargets;
     public IReadOnlyList<DocumentCoverageRow> Rows {get;}
     public int OtherRepairableFindings {get;}
     public int OtherManualFindings {get;}
     internal DocumentCoverageSnapshot(IEnumerable<DocumentCoverageRow> rows,IReadOnlyDictionary<string,IReadOnlySet<int>> bindings,
-        int otherRepairable=0,int otherManual=0)
+        int otherRepairable=0,int otherManual=0,int expectedLineTargets=3)
     {
         var copy=rows.ToArray();
         if(copy.Any(r=>!r.Observation.Valid || r.RepairableFindings<0 || r.ManualFindings<0) || copy.Select(r=>r.Id).Distinct().Count()!=copy.Length)
             throw new ArgumentException("Thông tin phạm vi kiểm chưa hợp lệ.");
+        if(expectedLineTargets is not (2 or 3))throw new ArgumentOutOfRangeException(nameof(expectedLineTargets));
+        this.expectedLineTargets=expectedLineTargets;
         Rows=Array.AsReadOnly(copy);
         starts=new ReadOnlyDictionary<string,IReadOnlySet<int>>(bindings.ToDictionary(p=>p.Key,p=>(IReadOnlySet<int>)new HashSet<int>(p.Value),StringComparer.Ordinal));
         OtherRepairableFindings=otherRepairable;OtherManualFindings=otherManual;
@@ -66,10 +69,10 @@ public sealed class DocumentCoverageSnapshot
     {
         if(id is not ("C11" or "C12" or "C32" or "C33") || !observation.Valid || !Rows.Any(r=>r.Id==id))
             throw new ArgumentException("Mã hoặc bằng chứng phạm vi hình học/trang chưa hợp lệ.");
-        if(observation.State==CoverageState.Observed && (id=="C12" && observation.RecognizedCount!=3 || id=="C11" && observation.RecognizedCount!=2))
+        if(observation.State==CoverageState.Observed && (id=="C12" && observation.RecognizedCount!=expectedLineTargets || id=="C11" && observation.RecognizedCount!=2))
             observation=observation with{State=CoverageState.Partial,Reason=observation.Reason+" Chưa nhận diện đủ các mốc của nhóm."};
         return new(Rows.Select(r=>r.Id==id && r.State!=CoverageState.NotApplicable?r with{Observation=observation}:r),starts,
-            OtherRepairableFindings,OtherManualFindings);
+            OtherRepairableFindings,OtherManualFindings,expectedLineTargets);
     }
     public DocumentCoverageSnapshot WithFindings(IReadOnlyList<Issue> findings)
     {
@@ -80,7 +83,7 @@ public sealed class DocumentCoverageSnapshot
             if(id is null || !counts.ContainsKey(id) || Rows.Single(r=>r.Id==id).State==CoverageState.NotApplicable){if(issue.CanFix)otherRepair++;else otherManual++;continue;}
             var prior=counts[id];counts[id]=(prior.Repair+(issue.CanFix?1:0),prior.Manual+(issue.CanFix?0:1));
         }
-        return new(Rows.Select(r=>r with{RepairableFindings=counts[r.Id].Repair,ManualFindings=counts[r.Id].Manual}),starts,otherRepair,otherManual);
+        return new(Rows.Select(r=>r with{RepairableFindings=counts[r.Id].Repair,ManualFindings=counts[r.Id].Manual}),starts,otherRepair,otherManual,expectedLineTargets);
     }
     private string? Family(Issue issue)=>issue.Kind switch
     {

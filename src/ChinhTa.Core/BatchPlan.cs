@@ -57,7 +57,7 @@ public static class BatchPlan
             if(current.CharacterFormat is CharacterFormat style && (!style.Valid ||
                 !(current.Kind==FixKind.BodyFormat && style.Role==ComponentRole.Body && (style.PreserveEmphasis?style.Bold is null:style.Bold==false) && !style.Italic ||
                   current.Kind==FixKind.AdministrativeFormat && style.Bold is null && style.Role is null ||
-                  current.Kind==FixKind.DocumentHeadingFormat && style.Bold==true && !style.Italic && style.Role is null ||
+                  current.Kind==FixKind.DocumentHeadingFormat && !style.Italic && (style.Bold==true && style.Role is null || style.Bold==false && style.Role==ComponentRole.LetterSubject) ||
                   current.Kind==FixKind.AgencyFormat && style.Role is ComponentRole.Agency or ComponentRole.AgencyParent ||
                   current.Kind==FixKind.SignatureFormat && style.Role is ComponentRole.SignatureAuthority or ComponentRole.SignatureName ||
                   current.Kind==FixKind.RecipientFormat && style.Role is ComponentRole.RecipientItem or ComponentRole.RecipientLabel) ||

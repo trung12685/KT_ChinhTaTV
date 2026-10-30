@@ -1,6 +1,8 @@
 # Chính tả Việt
 
-Đang chuẩn bị bản thử0.1.82: **sửa thủ công mặc định**, người dùng tự nhập và chủ động áp dụng; máy sửa là chế độ riêng. [Phạm vi và cách thử](docs/PREVIEW-0.1.82.md). Chưa có Word thực PASS. Không thay gói/main/tag cũ.
+Bản thử 0.1.83 sửa nhận diện trích yếu theo NĐ30: công văn V/v dưới số/ký hiệu dùng cỡ 12–13 và không yêu cầu nét trích yếu; văn bản có tên loại dùng cỡ 13–14 đậm, nét dưới trích yếu. [Cách thử](docs/PREVIEW-0.1.83.md). Chưa Word thực PASS.
+
+Bản thử 0.1.82 trước đó: **sửa thủ công mặc định**, người dùng tự nhập và chủ động áp dụng; máy sửa là chế độ riêng. [Phạm vi và cách thử](docs/PREVIEW-0.1.82.md). Chưa có Word thực PASS. Không thay gói/main/tag cũ.
 
 
 Đã có **[bản thử Windows 0.1.81](https://github.com/trung12685/KT_ChinhTaTV/actions/runs/40973832589/artifacts/12941004409)**, gom [đợt 69–72](docs/FORMAT-BATCH-69-72.md) và [73–77](docs/FORMAT-BATCH-73-77.md): bài Word độc lập, dữ liệu/dẫn chiếu/Unicode, kiểm đích trước lưu, đối chiếu XPS và báo cáo phạm vi TXT. [Hướng dẫn kiểm](docs/PREVIEW-0.1.81.md) · [Nguồn và bằng chứng gói](docs/PREVIEW-0.1.81-EVIDENCE.md). Core/WPF, EXE, metadata và ZIP đã qua; Word thực vẫn NOT_RUN. Cần đăng nhập GitHub để tải, giải nén toàn bộ ZIP bên trong vào thư mục mới. Gói cũ giữ nguyên.

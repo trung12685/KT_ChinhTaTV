@@ -13,12 +13,12 @@ public record HeadingFormat(float Size, int? Alignment = null,float? MaximumSize
         float.IsFinite(size) && (MaximumSize is float maximum?size>=Size && size<=maximum:Math.Abs(size-Size)<.01f) && bold==-1 && italic==0 &&
         color is 0 or -16777216 && (Alignment is null || alignment==Alignment);
 }
-public enum ComponentRole { AgencyParent, Agency, RecipientLabel, RecipientItem, Body, SignatureAuthority, SignatureName }
+public enum ComponentRole { AgencyParent, Agency, RecipientLabel, RecipientItem, Body, SignatureAuthority, SignatureName, LetterSubject }
 public record CharacterFormat(float Size,bool Italic,bool? Bold=null,ComponentRole? Role=null,bool PreserveSize=false,bool RepairInvalidSizes=false,bool PreserveEmphasis=false)
 {
     public (float Minimum,float Maximum) SizeRange=>Role switch
     {
-        ComponentRole.Agency or ComponentRole.AgencyParent=>(12,13),
+        ComponentRole.Agency or ComponentRole.AgencyParent or ComponentRole.LetterSubject=>(12,13),
         ComponentRole.Body or ComponentRole.SignatureAuthority or ComponentRole.SignatureName=>(13,14),
         ComponentRole.RecipientLabel=>(12,12),ComponentRole.RecipientItem=>(11,11),
         _=>Bold==true || Italic?(13,14):(13,13)
@@ -27,6 +27,7 @@ public record CharacterFormat(float Size,bool Italic,bool? Bold=null,ComponentRo
     {
         ComponentRole.Body=>Size>=13 && Size<=14 && !Italic && (PreserveEmphasis?Bold is null:Bold==false),
         ComponentRole.SignatureAuthority or ComponentRole.SignatureName=>Size>=13 && Size<=14 && !Italic && Bold==true,
+        ComponentRole.LetterSubject=>Size>=12 && Size<=13 && !Italic && Bold==false,
         ComponentRole.AgencyParent=>Size>=12 && Size<=13 && !Italic && Bold==false,
         ComponentRole.Agency=>Size>=12 && Size<=13 && !Italic && Bold==true,
         ComponentRole.RecipientLabel=>Size==12 && Italic && Bold==true,

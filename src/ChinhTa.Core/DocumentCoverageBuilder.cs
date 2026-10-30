@@ -21,6 +21,7 @@ public static class DocumentCoverageBuilder
         var headings=paragraphs.Where(p=>p.Page==1 && HeadingRules.IsCandidate(p.Text,profile)).ToArray();
         var national=headings.Where(p=>!Clean(p).TrimStart().StartsWith("Độc",StringComparison.OrdinalIgnoreCase)).ToArray();
         var mottos=headings.Where(p=>Clean(p).TrimStart().StartsWith("Độc",StringComparison.OrdinalIgnoreCase)).ToArray();
+        var letter=OfficialLetterRules.Identify(layout,profile);
         var titles=DocumentHeadingRules.ObservationTargets(paragraphs,layout,profile);
         var types=titles.Where(p=>ShapeLineRules.IsDocumentType(p.Text)).ToArray();
         var subjects=titles.Where(p=>!ShapeLineRules.IsDocumentType(p.Text)).ToArray();
@@ -44,7 +45,8 @@ public static class DocumentCoverageBuilder
         void Add(ReportCapability cap,IReadOnlyList<Paragraph> candidates,Func<Paragraph,bool> observed,string reason,Func<Paragraph,bool>? excluded=null)
         {
             bindings[cap.Id]=new HashSet<int>(candidates.Select(p=>p.Start));
-            var observation=Applicable(cap.Id,profile)?Observation(candidates,observed,reason):new(CoverageState.NotApplicable,0,0,"Nhóm này không áp dụng chế độ tài liệu đang chọn.");
+            var observation=letter is not null && cap.Id is "C09" or "C24"?new CoverageObservation(CoverageState.NotApplicable,0,0,"Đã nhận diện công văn V/v; không có tên loại riêng như BÁO CÁO/QUYẾT ĐỊNH. Trích yếu nằm dưới số/ký hiệu, kiểm theo chính sách công văn."):
+                Applicable(cap.Id,profile)?Observation(candidates,observed,reason):new(CoverageState.NotApplicable,0,0,"Nhóm này không áp dụng chế độ tài liệu đang chọn.");
             if(observation.State==CoverageState.Unavailable && input.XmlAvailable && excluded is not null && candidates.Any(excluded))
                 observation=observation with{State=CoverageState.Partial,Reason="Có nguồn/bố cục đã quan sát nhưng còn ngoài phạm vi được xác minh. "+observation.Reason};
             rows.Add(new(cap.Id,cap.Name,cap.Scope,observation));
@@ -72,7 +74,9 @@ public static class DocumentCoverageBuilder
                 case "C07":Add(cap,numbers,p=>FontKnown(p,13,13,false,null),"Chỉ phông dòng số/ký hiệu đã nhận diện.");break;
                 case "C08":Add(cap,dates,p=>FontKnown(p,13,14,true,null),"Chỉ phông dòng ngày/địa danh đã nhận diện.");break;
                 case "C09":Add(cap,types,p=>FontKnown(p,13,14,false,true),"Chỉ quan sát phông vùng tên loại đã nhận diện; không xác minh mọi biến thể tên loại.");break;
-                case "C10":Add(cap,subjects,p=>FontKnown(p,13,14,false,true),"Chỉ quan sát phông trích yếu đã nhận diện; không tự chuyển toàn hoa sang chữ thường.");break;
+                case "C10":Add(cap,subjects,p=>letter is null?FontKnown(p,13,14,false,true):FontKnown(p,12,13,false,false),
+                    letter is null?"Văn bản có tên loại: trích yếu dưới tên loại, đứng, đậm, cỡ 13–14; nét kẻ kiểm riêng.":
+                    "Công văn V/v: trích yếu dưới số/ký hiệu, đứng, không đậm, cỡ 12–13; không yêu cầu đường kẻ. Khoảng 6 pt và vị trí dọc cần duyệt riêng; không chứng nhận từ phông.");break;
                 case "C22":Add(cap,agency.Select(c=>c.Row).ToArray(),AgencyKnown,"Chỉ tên cơ quan đã nhận diện; chưa đối chiếu danh tính/mã chính thức.");break;
                 case "C23":Add(cap,recipients.Select(c=>c.Row).ToArray(),RecipientKnown,"Chỉ nhãn/dòng nơi nhận đã khớp cấu trúc XML; không xác minh địa chỉ người nhận.");break;
                 case "C24":Add(cap,types,TextKnown,"Chỉ chữ hoa/thường tên loại đã nhận diện; không suy đoán tên loại bị thiếu.");break;
@@ -119,7 +123,7 @@ public static class DocumentCoverageBuilder
                 default:Add(cap,nonempty,TextKnown,"Chỉ các quy tắc chữ/khoảng trắng/dấu câu trong phạm vi catalog và vùng XML được phép; không phải kiểm chính tả đầy đủ.");break;
             }
         }
-        var snapshot=new DocumentCoverageSnapshot(rows,bindings);
+        var snapshot=new DocumentCoverageSnapshot(rows,bindings,expectedLineTargets:ShapeLineRules.RequiredRoles(layout,profile).Count);
         if(input.External is not null)foreach(var entry in input.External)snapshot=snapshot.WithExternalEvidence(entry.Key,entry.Value);
         return snapshot.WithFindings(input.Findings??[]);
     }

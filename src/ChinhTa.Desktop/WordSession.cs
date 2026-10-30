@@ -240,6 +240,7 @@ public sealed partial class WordSession : IDisposable
         LineShapes = ReadLineShapes();
         var issues = Checker.Check(paragraphs, Profile).ToList();
         issues.AddRange(DocumentHeadingRules.Check(paragraphs,headerLayout,Profile));
+        issues.AddRange(OfficialLetterRules.Check(paragraphs,headerLayout,Profile));
         issues.AddRange(ComponentRules.Check(paragraphs,headerLayout,Profile));
         issues.AddRange(SignatureRules.Check(paragraphs,Profile));
         string? bodySpacingCoverage=null;
@@ -256,7 +257,7 @@ public sealed partial class WordSession : IDisposable
                 (textProofWarning is null?"Không đọc/đối chiếu được XML hiện tại.":"Mã kiểm tra: "+textProofWarning.DiagnosticCode+".");
         if(bodySpacingCoverage is not null)
             CoverageNotice=CoverageNotice is null?bodySpacingCoverage:CoverageNotice+" "+bodySpacingCoverage;
-        if ((lineLayoutUnavailable || mappingWarning is not null && LineTargets.Count < 3) && paragraphs.FirstOrDefault(p => p.Text.Length > 0) is Paragraph first)
+        if ((lineLayoutUnavailable || mappingWarning is not null && LineTargets.Count < ShapeLineRules.RequiredRoles(headerLayout,Profile).Count) && paragraphs.FirstOrDefault(p => p.Text.Length > 0) is Paragraph first)
             issues.Add(new(first.Start, first.Text.Length, first.Text, first.Text,
                 "Chưa đối chiếu đủ các mốc đường kẻ. " +
                 (mappingWarning is null ? "Không đọc được cấu trúc XML của tài liệu." : "Mã kiểm tra: " + mappingWarning.DiagnosticCode + ".") +
@@ -264,12 +265,13 @@ public sealed partial class WordSession : IDisposable
                 false, FixKind.ShapeLine, CanFix: false, Title: "Chưa kiểm tra được đường kẻ"));
         if (Profile == DocumentProfile.State && paragraphs.FirstOrDefault(p => p.Text.Length > 0) is Paragraph reference)
         {
-            foreach (var role in ShapeLineRules.UnidentifiedRoles(LineTargets))
+            foreach (var role in ShapeLineRules.UnidentifiedRoles(LineTargets,headerLayout,Profile))
             {
                 string label = role switch {LineRole.Agency => "cơ quan ban hành", LineRole.Motto => "tiêu ngữ", _ => "trích yếu"};
                 issues.Add(new(reference.Start, reference.Text.Length, reference.Text, reference.Text,
+                    role==LineRole.Subject?"Chưa xác định chắc loại văn bản và khối trích yếu. Công văn V/v không yêu cầu đường kẻ trích yếu; văn bản có tên loại mới kiểm nét dưới trích yếu. Cần kiểm tra lại nhận diện, chưa kết luận thiếu nét.":
                     "Chưa nhận diện được mốc " + label + "; chưa kết luận đường kẻ vùng này đúng hoặc thiếu. Cần kiểm tra lại nhận diện.",
-                    false, FixKind.ShapeLine, CanFix:false, Title:"Chưa kiểm tra đường kẻ dưới " + label));
+                    false, FixKind.ShapeLine, CanFix:false, Title:role==LineRole.Subject?"Chưa xác định loại để kiểm trích yếu":"Chưa kiểm tra đường kẻ dưới " + label));
             }
         }
         // Page eligibility needs settings and header/footer relationships from
