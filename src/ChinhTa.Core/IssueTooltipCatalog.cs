@@ -25,6 +25,7 @@ public static class IssueTooltipCatalog
     public static IssueTooltipInfo Describe(Issue issue)=>new(IssueReviewCatalog.Describe(issue).Label,Basis(issue)+(issue.Citation?.Contains(DocumentTypeCatalog.UserNote,StringComparison.Ordinal)==true?" BCĐX là bổ sung theo yêu cầu người dùng.":""),Action(issue));
     private static string Basis(Issue issue)
     {
+        if(issue.Kind==FixKind.SpellingReview)return "Gợi ý từ/ngữ cảnh của bộ chính tả thử nghiệm. "+(issue.SpellingSource??"Chưa rõ nguồn")+". Không phải kết luận theo Nghị định 30.";
         if(issue.Kind==FixKind.OutlineOrder)
             return "Theo yêu cầu người dùng: các mục cùng cấp trong cùng mục cha đánh thứ tự liên tiếp; cần duyệt dẫn chiếu.";
         if(issue.Kind==FixKind.OutlineMarker)
@@ -123,6 +124,7 @@ public static class IssueTooltipCatalog
     }
     private static string Action(Issue issue)
     {
+        if(issue.Kind==FixKind.SpellingReview)return issue.Suggestion+" Chọn cảnh báo rồi bấm Ô sửa từ/cụm để duyệt từng chỗ.";
         if(!issue.CanFix)
             return issue.Kind==FixKind.AdministrativeNumber && issue.Title==AdministrativeHeaderRules.TypeMismatchTitle
                 ?"Đối chiếu tên loại và ký hiệu đã đăng ký; sửa bên ghi sai trong Word rồi quét lại."

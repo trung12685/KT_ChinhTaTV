@@ -21,6 +21,7 @@ internal static class OfficeFocusedCheck
         $"DESKTOP_MODULE {typeof(OfficeFocusedCheck).Module.ModuleVersionId}\nCORE_MODULE {typeof(Checker).Module.ModuleVersionId}";
     internal static IReadOnlyList<OfficeSuiteCase> Cases {get;}=Array.AsReadOnly(new[]
     {
+        new OfficeSuiteCase("vietnamese-spelling","Duyệt gợi ý chính tả và sửa đúng từ/cụm"),
         new OfficeSuiteCase("inline-word","Bấm chữ trên trang và sửa từng từ"),
         new OfficeSuiteCase("document-subject","Trích yếu công văn và văn bản có tên loại"),
         new OfficeSuiteCase("manual-text","Sửa nội dung thủ công"),
@@ -131,6 +132,7 @@ internal static class OfficeFocusedCheck
     // earlier technical-text or retained-mark fixture as a prerequisite.
     internal static Action<WordSession,string,string,Action<string>> Scenario(string id)=>id switch
     {
+        "vietnamese-spelling"=>OfficeSpellingCheck.Run,
         "inline-word"=>OfficeInlineWordCheck.Run,
         "document-subject"=>OfficeDocumentSubjectCheck.Run,
         "manual-text"=>OfficeManualTextCheck.Run,

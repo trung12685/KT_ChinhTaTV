@@ -25,7 +25,11 @@ public partial class MainWindow
             catch(InlineEditUnavailableException unavailable){Status.Text=unavailable.Message;}
         });
         if(draft is null)return;
-        var current=draft;
+        var spelling=Review.Choices.Select(c=>c.Issue).FirstOrDefault(i=>i.Kind==FixKind.SpellingReview && i.Start==draft.Target.Start+draft.Offset && i.Original==draft.Original);
+        OpenInlineEditor(hit,draft,spelling?.SpellingSuggestions);
+    }
+    private void OpenInlineEditor(PreviewWordHit hit,InlineWordDraft current,IReadOnlyList<string>? suggestions=null)
+    {
         inlineEditor=new InlineWordEditor(this,hit,current,replacement=>
         {
             bool applied=false,reviewed=false;string? failure=null;
@@ -37,7 +41,7 @@ public partial class MainWindow
             }
             finally{inlineCommitInProgress=false;}
             return new(applied,reviewed,failure);
-        },()=>inlineEditor=null);
+        },()=>inlineEditor=null,suggestions);
         inlineEditor.Open();
     }
 }

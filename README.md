@@ -1,5 +1,7 @@
 # Chính tả Việt
 
+Bản thử **0.1.85** thêm gợi ý chính tả tiếng Việt để người dùng duyệt từng từ/cụm. Chọn **Chính tả → Nạp dữ liệu chính tả từ ZIP…** và dùng bộ `2026-10-24.zip` đã có; nếu chưa nạp chỉ chạy vài nhóm lỗi mẫu. Chọn gợi ý chỉ điền ô nháp; bấm Ghi mới sửa. [Cách thử, nguồn và giới hạn](docs/PREVIEW-0.1.85.md) · [Triển khai và đánh giá](docs/FORMAT-BATCH-83.md). Word thực chưa chạy.
+
 Bản thử **0.1.84** cho phép **bấm từ trên trang rồi sửa ngay tại từ**, kể cả từ chưa có cảnh báo; Enter/nút Ghi mới ghi vào DOCX và quét lại. Giữ sửa thủ công mặc định. [Cách thử và giới hạn](docs/PREVIEW-0.1.84.md). Chưa Word thực PASS.
 
 Bản thử 0.1.83 trước đó sửa nhận diện trích yếu theo NĐ30: công văn V/v dưới số/ký hiệu dùng cỡ 12–13 và không yêu cầu nét trích yếu; văn bản có tên loại dùng cỡ 13–14 đậm, nét dưới trích yếu. [Cách thử](docs/PREVIEW-0.1.83.md). Chưa Word thực PASS.

@@ -8,6 +8,7 @@ void Assert(bool condition, string name)
     if (!condition) throw new Exception("FAIL: " + name);
     Console.WriteLine("PASS: " + name); checks++;
 }
+VietnameseSpellingChecks.Run(Assert);
 DocxLineMetadataChecks.Run(Assert);
 LineCompatibilityChecks.Run(Assert);
 RenderedLineProofChecks.Run(Assert);

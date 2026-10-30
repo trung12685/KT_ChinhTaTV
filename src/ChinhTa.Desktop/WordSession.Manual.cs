@@ -8,6 +8,16 @@ public sealed partial class WordSession
     {
         CheckCore();return ManualTextTarget.Prepare(ReadPageBodyXml(),lastWordParagraphs,issue.Start,issue.Length,issue.Original);
     });
+    public InlineWordDraft PrepareSpellingEdit(Issue issue,string previewPath)=>ReadWithRecovery("Word.Spelling.Prepare",()=>
+    {
+        if(issue.Kind!=FixKind.SpellingReview || spacingReferencePath!=previewPath || spacingReferenceFlat is null)
+            throw new InvalidOperationException("Cảnh báo/bản xem trước không còn hiện tại; hãy Quét lại.");
+        string reference=spacingReferenceFlat;var current=CheckCore();
+        if(!current.Any(i=>i.Kind==FixKind.SpellingReview && i.Start==issue.Start && i.Length==issue.Length && i.Original==issue.Original && i.SpellingSource==issue.SpellingSource))
+            throw new InvalidOperationException("Gợi ý đã thay đổi; hãy Quét lại trước khi sửa.");
+        var target=ManualTextTarget.Prepare(ReadPageBodyXml(),lastWordParagraphs,issue.Start,issue.Length,issue.Original);target.RequireCurrent(reference);
+        return new InlineWordDraft(target,issue.Start-target.Start,issue.Original);
+    });
     public InlineWordDraft PrepareInlineWord(PreviewAnchor hit,string previewPath)=>ReadWithRecovery("Word.Inline.Prepare",()=>
     {
         if(spacingReferencePath!=previewPath || spacingReferenceFlat is null)throw new InvalidOperationException("Bản xem trước không còn gắn với tài liệu; hãy Quét lại.");

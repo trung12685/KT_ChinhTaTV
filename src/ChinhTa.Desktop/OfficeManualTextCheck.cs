@@ -8,14 +8,14 @@ internal static class OfficeManualTextCheck
 {
     internal const string Text="Người dùng tự sửa nội dung trong bản thử này.";
     internal const string Edited="Người dùng chủ động sửa nội dung trong bản thử này.";
-    internal static string Create(string folder)
+    internal static string Create(string folder,string firstText=Text)
     {
         XNamespace p="http://schemas.microsoft.com/office/2006/xmlPackage",w="http://schemas.openxmlformats.org/wordprocessingml/2006/main",r="http://schemas.openxmlformats.org/package/2006/relationships";
         XElement Part(string name,string type,XElement root)=>new(p+"part",new XAttribute(p+"name","/"+name),new XAttribute(p+"contentType",type),new XElement(p+"xmlData",root));
         XElement Paragraph(string text)=>new(w+"p",new XElement(w+"pPr",new XElement(w+"spacing",new XAttribute(w+"after",120))),new XElement(w+"r",
             new XElement(w+"rPr",new XElement(w+"rFonts",new XAttribute(w+"ascii","Times New Roman"),new XAttribute(w+"hAnsi","Times New Roman")),new XElement(w+"b"),new XElement(w+"sz",new XAttribute(w+"val",26))),new XElement(w+"t",text)));
         string flat=new XElement(p+"package",Part("_rels/.rels","application/vnd.openxmlformats-package.relationships+xml",new XElement(r+"Relationships",new XElement(r+"Relationship",new XAttribute("Id","main"),new XAttribute("Type","http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument"),new XAttribute("Target","word/document.xml")))),
-            Part("word/document.xml","application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml",new XElement(w+"document",new XElement(w+"body",Paragraph(Text),Paragraph("Đoạn này phải giữ nguyên chữ và định dạng."),new XElement(w+"sectPr"))))).ToString(SaveOptions.DisableFormatting);
+            Part("word/document.xml","application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml",new XElement(w+"document",new XElement(w+"body",Paragraph(firstText),Paragraph("Đoạn này phải giữ nguyên chữ và định dạng."),new XElement(w+"sectPr"))))).ToString(SaveOptions.DisableFormatting);
         string file=Path.Combine(folder,"manual-input.docx");IsolatedWordPackage.FromFlat(flat).WriteNew(file);return file;
     }
     internal static void Run(WordSession test,string modern,string folder,Action<string> pass)

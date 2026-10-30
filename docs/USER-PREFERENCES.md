@@ -15,3 +15,8 @@ Người dùng yêu cầu sửa cảnh báo đang nhầm công văn với các v
 ### 30/10/2026 — sửa trực tiếp tại từng từ trên trang
 
 Người dùng muốn bấm vào chữ sai rồi sửa tại đó như thao tác Word, kể cả lỗi chưa có cảnh báo, thay vì sửa chung cả đoạn. Tiếp tục nghiên cứu bộ soạn thảo đầy đủ; ưu tiên thử trước lớp nhập tại từ trên trang thật, ghi đúng vùng do người dùng chọn và giữ cấu trúc Word. Không đổi mặc định sang máy sửa. Không mô tả lớp nhập từng từ là Word nhúng hoặc live reflow toàn trang.
+
+
+### 30/10/2026 — thử tận dụng bộ từ điển/ngữ cảnh người dùng gửi
+
+Người dùng đồng ý tiếp tục sau đánh giá ZIP Python. Chuyển bộ gợi ý sang C#; không dùng trình ghi DOCX Python có mất ngắt trang. Giữ sửa tay mặc định, không xem tần suất là kết luận sai. Dữ liệu đầy đủ nạp cục bộ từ ZIP đã gửi; ghi nguồn/hash, chưa phát hành kèm khi điều kiện phân phối từng nguồn chưa rõ.

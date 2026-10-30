@@ -9,6 +9,12 @@ namespace ChinhTa.Desktop;
 public sealed record PreviewWordHit(PreviewAnchor Anchor,string Word,Rect Bounds,FixedPage Page);
 public sealed partial class PreviewHighlighter
 {
+    public PreviewWordHit? SelectedPhrase(FixedDocumentSequence document,PreviewAnchor anchor,string original)
+    {
+        if(anchor.Offset<0 || anchor.Length!=original.Length || anchor.Offset>anchor.PageText.Length-anchor.Length || anchor.PageText.Substring(anchor.Offset,anchor.Length)!=original)return null;
+        var index=GetIndex(document,anchor.Page);var boxes=MeasureReference(document,anchor);
+        return index is null || boxes.Count==0?null:new(anchor,original,boxes[0],index.Page);
+    }
     public PreviewWordHit? HitWord(FixedDocumentSequence document,int pageNumber,Point point)
     {
         if(!double.IsFinite(point.X) || !double.IsFinite(point.Y))return null;

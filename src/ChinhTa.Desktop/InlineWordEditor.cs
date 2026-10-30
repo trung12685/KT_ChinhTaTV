@@ -17,17 +17,26 @@ internal sealed class InlineWordEditor
     private bool busy,blocked,applied,composing,closedOnce,detached;
     private Point? lastPosition;
     internal TextBox Editor {get;}
+    internal IReadOnlyList<Button> SuggestionButtons {get;}
     internal TextBlock Feedback {get;}
     internal Button ApplyButton {get;}
     internal bool IsOpen=>popup.IsOpen;
     internal bool Dirty=>!applied && Editor.Text!=draft.Original;
-    internal InlineWordEditor(Window owner,PreviewWordHit hit,InlineWordDraft draft,Func<string,ManualApplyResult> apply,Action closed)
+    internal InlineWordEditor(Window owner,PreviewWordHit hit,InlineWordDraft draft,Func<string,ManualApplyResult> apply,Action closed,IReadOnlyList<string>? suggestions=null)
     {
         this.owner=owner;this.hit=hit;this.draft=draft;this.apply=apply;this.closed=closed;
         var body=new StackPanel{Width=Math.Clamp(hit.Bounds.Width+90,220,420)};
         Editor=new TextBox{Text=draft.Original,FontSize=18,Padding=new Thickness(5),AcceptsReturn=false,AcceptsTab=false,TextWrapping=TextWrapping.Wrap,VerticalScrollBarVisibility=ScrollBarVisibility.Auto,MaxHeight=100};
         Feedback=new TextBlock{Text="Sửa chữ tại đây • Enter ghi • Esc hủy. Chưa ghi vào Word.",TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,5,0,5)};
         body.Children.Add(Editor);body.Children.Add(new ScrollViewer{MaxHeight=130,VerticalScrollBarVisibility=ScrollBarVisibility.Auto,Content=Feedback});
+        var proposals=new WrapPanel();var suggestionButtons=new List<Button>();
+        foreach(string suggestion in (suggestions??[]).Distinct(StringComparer.Ordinal).Take(3))
+        {
+            var button=new Button{Content=suggestion,Margin=new Thickness(0,0,5,5),Padding=new Thickness(5),ToolTip="Điền vào ô sửa; chưa ghi vào Word."};
+            button.Click+=(_,_)=>{if(busy || blocked || applied)return;Editor.Text=suggestion;Editor.Focus();Editor.SelectAll();};
+            proposals.Children.Add(button);suggestionButtons.Add(button);
+        }
+        SuggestionButtons=suggestionButtons.AsReadOnly();body.Children.Add(proposals);
         var buttons=new StackPanel{Orientation=Orientation.Horizontal,HorizontalAlignment=HorizontalAlignment.Right};
         ApplyButton=new Button{Content="Ghi chữ tôi sửa",IsEnabled=false,Padding=new Thickness(8,4,8,4)};
         var cancel=new Button{Content="Hủy / Đóng",Margin=new Thickness(8,0,0,0),Padding=new Thickness(8,4,8,4)};

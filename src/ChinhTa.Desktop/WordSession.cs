@@ -17,6 +17,7 @@ public sealed partial class WordSession : IDisposable
     private IReadOnlyList<WordParagraphSnapshot> lastFormatLayout = [];
     private IReadOnlyList<WordParagraphSnapshot> lastWordParagraphs = [];
     private IReadOnlyList<Paragraph> lastBodyParagraphs = [];
+    public VietnameseSpellingModel SpellingModel {get;set;}=VietnameseSpellingModel.Starter;
     private readonly Dictionary<LineRole,Issue> verifiedLineEdits = new();
     public IReadOnlyList<Issue> VerifiedLineEdits => verifiedLineEdits.Values.ToArray();
     public IReadOnlyList<LineTarget> LineTargets { get; private set; } = [];
@@ -245,6 +246,7 @@ public sealed partial class WordSession : IDisposable
         issues.AddRange(SignatureRules.Check(paragraphs,Profile));
         string? bodySpacingCoverage=null;
         issues.AddRange(BodyRuleScan.Check(paragraphs,headerLayout,Profile,notice=>bodySpacingCoverage=notice));
+        issues.AddRange(SpellingModel.CheckParagraphs(paragraphs).Where(s=>!issues.Any(i=>i.CanFix && !i.IsStyleOnly && i.Start<(long)s.Start+s.Length && s.Start<(long)i.Start+i.Length)).ToArray());
         timing.Mark("RulesAndLineInventory");
         foreach(var issue in issues.Where(i=>!i.CanFix && i.Kind is FixKind.AgencyFormat or FixKind.DocumentHeadingFormat))
         {
