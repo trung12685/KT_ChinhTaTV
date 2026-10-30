@@ -92,7 +92,7 @@ public static class ManualModeChecks
         var marks=fixedPage.Children.OfType<System.Windows.Shapes.Rectangle>().ToArray();
         assert(mapped==2 && layer.Count==2 && marks.Any(m=>m.Fill==Brushes.Firebrick) && marks.Any(m=>m.Fill==Brushes.DarkGoldenrod),
             "Mapped required issues are red, review/manual issues yellow, and unmapped issues are never placed by guesswork");
-        var red=marks.Single(m=>m.Tag==required);red.RaiseEvent(new MouseButtonEventArgs(Mouse.PrimaryDevice,Environment.TickCount,MouseButton.Left){RoutedEvent=UIElement.MouseLeftButtonDownEvent});
+        var red=marks.Single(m=>Equals(m.Tag,required));red.RaiseEvent(new MouseButtonEventArgs(Mouse.PrimaryDevice,Environment.TickCount,MouseButton.Left){RoutedEvent=UIElement.MouseLeftButtonDownEvent});
         assert(selected==required,"Clicking a preview underline selects the exact corresponding issue for manual review");
         highlighter.Show(sequence,anchors[required]);highlighter.Clear();
         assert(layer.Count==2 && fixedPage.Children.OfType<System.Windows.Shapes.Rectangle>().Count()==2,"Selection highlighting can clear without erasing persistent manual issue underlines");
