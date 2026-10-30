@@ -21,6 +21,8 @@ public partial class MainWindow : Window
     private DocumentCoverageSnapshot? lastCoverage;
     private readonly Dictionary<Issue, PreviewAnchor> anchors = new();
     private readonly PreviewHighlighter highlighter = new();
+    private readonly IssueUnderlineLayer manualMarks=new();
+    internal bool ManualMode=>EditModePicker.SelectedIndex!=1;
     private IReadOnlyList<IssueChoice> choices=>Review.Choices;
     public MainWindow()
     {
@@ -29,8 +31,40 @@ public partial class MainWindow : Window
         Title="Chính tả Việt — Bản thử nghiệm "+version;BuildVersion.Text="Bản "+version;
         Diagnostics.Write("UI.Start",null,$"DesktopModule={typeof(MainWindow).Module.ModuleVersionId}; CoreModule={typeof(Checker).Module.ModuleVersionId}");
         Review.ActiveIssueChanged+=Queue;
+        EditModePicker.SelectedIndex=0;
         ProfilePicker.SelectedIndex = 0;
         hover.Tick += (_, _) => { hover.Stop(); if (pending is not null) Run(() => ShowPreview(pending)); };
+    }
+    private void EditModeChanged(object sender,SelectionChangedEventArgs e)
+    {
+        if(Review is null || AutomaticButtons is null)return;
+        AutomaticButtons.Visibility=ManualMode?Visibility.Collapsed:Visibility.Visible;
+        ManualEditButton.Visibility=ManualMode?Visibility.Visible:Visibility.Collapsed;
+        Review.AutomaticSelectionVisibility=ManualMode?Visibility.Collapsed:Visibility.Visible;
+        Review.SelectOnHover=!ManualMode;
+        if(ManualMode)foreach(var choice in Review.Choices)choice.IsChecked=false;
+        EditModeInfo.Text=ManualMode?"Bạn tự sửa chữ và chủ động áp dụng. Đỏ: thể thức đã nhận diện; vàng: cần xem xét. Dấu màu chỉ ở bản xem trước. Bản thử sửa đoạn chữ thuần ngoài bảng; chưa sửa trực tiếp phông/lề/bảng.":
+            "Máy áp dụng các gợi ý đủ điều kiện sau khi bạn duyệt. Các cảnh báo thủ công vẫn được giữ.";
+        hover.Stop();pending=displayed=null;highlighter.Clear();
+        if(Preview?.Document is not null)Run(RefreshManualMarks);
+    }
+    private void RefreshManualMarks()
+    {
+        manualMarks.Clear();
+        if(ManualMode && Preview.Document is System.Windows.Documents.FixedDocumentSequence sequence)
+            manualMarks.Show(sequence,highlighter,choices.Select(c=>c.Issue),anchors,Review.SelectIssue);
+    }
+    private void ManualEditClick(object sender,RoutedEventArgs e)
+    {
+        hover.Stop();if(!ManualMode)return;
+        if(Review.SelectedIssue is not Issue issue){MessageBox.Show(this,"Chọn một lỗi trong danh sách hoặc bấm dấu gạch chân trước khi sửa.","Sửa thủ công");return;}
+        ManualTextTarget? target=null;Run(()=>target=session.PrepareManualText(issue));if(target is null)return;
+        new ManualTextEditWindow(target,edited=>
+        {
+            bool applied=false,reviewed=false;string? failure=null;
+            Run(()=>EditThenScan.Run(()=>{session.ApplyManualText(target,edited);applied=true;},()=>{Scan();reviewed=true;Status.Text="Đã áp dụng nội dung bạn nhập; Hoàn tác một lần để trở lại. "+Status.Text;}),message=>failure=message);
+            return new(applied,reviewed,failure);
+        },issue.Start-target.Start,issue.Length){Owner=this}.ShowDialog();
     }
     private void ProfileChanged(object sender, SelectionChangedEventArgs e)
     {
@@ -196,6 +230,7 @@ public partial class MainWindow : Window
         timing.Mark("InspectGeometry");
         timing.Count("PreparedPreviewSources",highlighter.PreparedSources);
         Review.LoadIssues(found,anchors);
+        RefreshManualMarks();
         timing.Mark("ShowIssues");timing.Count("Completed",1);
         CoverageInfo.Text=(lastCoverage?.Summary??"")+(session.CoverageNotice is { } notice?"\n"+notice:"");
         CoverageInfo.Visibility=CoverageInfo.Text.Length==0?Visibility.Collapsed:Visibility.Visible;
@@ -214,7 +249,7 @@ public partial class MainWindow : Window
     {
         var ownedXps=xps;string? ownedPath=xpsPath;
         var failure=IndependentCleanup.Complete(null,
-            [()=>Preview.Document=null,
+            [manualMarks.Clear,()=>Preview.Document=null,
              highlighter.Reset,
              ()=>{ownedXps?.Close();if(ReferenceEquals(xps,ownedXps))xps=null;},
              ()=>{if(ownedPath is not null)File.Delete(ownedPath);if(xpsPath==ownedPath)xpsPath=null;}]);
@@ -241,7 +276,7 @@ public partial class MainWindow : Window
         bool pageWarning = issue.Kind is FixKind.PageLayout or FixKind.PageNumber;
         if (pageWarning) highlighter.Clear();
         bool marked = !pageWarning && highlighter.Show(document, anchor);
-        if (issue.LineFix is ShapeLineFix lineFix) highlighter.ShowLineSuggestion(document,anchor.Page,lineFix);
+        if (!ManualMode && issue.LineFix is ShapeLineFix lineFix) highlighter.ShowLineSuggestion(document,anchor.Page,lineFix);
         displayed = issue;
         Status.Text = $"Trang {anchor.Page} — {IssueReviewCatalog.Describe(issue).Label}. " +
             (pageWarning ? "Thiết lập trang; xem thông số trong Chi tiết lỗi. " : marked ? $"Đánh dấu: {timer.Elapsed.TotalMilliseconds:F0} ms." :
@@ -257,6 +292,7 @@ public partial class MainWindow : Window
                 "Kiểm tra thể thức");
             return;
         }
+        if(ManualMode){ManualEditClick(sender,e);return;}
         ConfirmFix([issue]);
     }
     private void FixCheckedClick(object sender, RoutedEventArgs e) =>
@@ -269,6 +305,7 @@ public partial class MainWindow : Window
     private void ConfirmFix(IReadOnlyList<Issue> selected)
     {
         hover.Stop();
+        if(ManualMode)throw new InvalidOperationException("Đang ở chế độ sửa thủ công. Chuyển chế độ nếu muốn máy áp dụng gợi ý.");
         if (selected.Count == 0)
         {
             MessageBox.Show(this, "Chưa chọn lỗi nào. Tích ô bên cạnh các lỗi cần sửa.", "Chọn lỗi");

@@ -316,6 +316,7 @@ DelimiterClusterReviewChecks.Run(Assert);
         BodyEmphasisWriterChecks.Run(Assert);
         RepairProgressDesktopChecks.Run(Assert);
         DocumentTypeCatalogDesktopChecks.Run(Assert);
+        ManualModeChecks.Run(Assert);
         Console.WriteLine($"{checks} WPF checks passed.");
     }
 }

@@ -388,5 +388,6 @@ Assert(ShapeLineRules.UnidentifiedRoles(lineTargets).Count==0 &&
     "Trích yếu chưa nhận diện phải có cảnh báo chưa kiểm tra, không im lặng bỏ qua");
 Assert(ShapeLineRules.UnidentifiedRoles([]).Count==3,
     "Không nhận diện được mốc nào phải nêu rõ ba vùng chưa được kiểm tra");
+ManualTextEditChecks.Run(Assert);
 Console.WriteLine($"{checks} checks passed.");
 
