@@ -129,6 +129,7 @@ internal static class OfficeFocusedCheck
     // earlier technical-text or retained-mark fixture as a prerequisite.
     internal static Action<WordSession,string,string,Action<string>> Scenario(string id)=>id switch
     {
+        "manual-text"=>OfficeManualTextCheck.Run,
         "handwriting"=>OfficeSignatureWritingSpaceCheck.Run,
         "signature"=>OfficeSignatureFormatCheck.Run,
         "page-layout"=>OfficePageLayoutCheck.Run,
