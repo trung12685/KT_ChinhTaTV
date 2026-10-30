@@ -21,6 +21,7 @@ internal static class OfficeFocusedCheck
         $"DESKTOP_MODULE {typeof(OfficeFocusedCheck).Module.ModuleVersionId}\nCORE_MODULE {typeof(Checker).Module.ModuleVersionId}";
     internal static IReadOnlyList<OfficeSuiteCase> Cases {get;}=Array.AsReadOnly(new[]
     {
+        new OfficeSuiteCase("manual-text","Sửa nội dung thủ công"),
         new OfficeSuiteCase("handwriting","Chỗ ký tay 80 pt"),
         new OfficeSuiteCase("signature","Phông khối ký"),
         new OfficeSuiteCase("page-layout","Khổ giấy và lề"),

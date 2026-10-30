@@ -10,6 +10,12 @@ namespace ChinhTa.Desktop;
 public partial class IssueReviewPanel : UserControl
 {
     private IssueReviewModel model=null!;
+    public bool SelectOnHover {get;set;}=true;
+    public static readonly DependencyProperty AutomaticSelectionVisibilityProperty=DependencyProperty.Register(nameof(AutomaticSelectionVisibility),typeof(Visibility),typeof(IssueReviewPanel),new PropertyMetadata(Visibility.Visible,(d,_)=>((IssueReviewPanel)d).RefreshSummary()));
+    public Visibility AutomaticSelectionVisibility {get=>(Visibility)GetValue(AutomaticSelectionVisibilityProperty);set=>SetValue(AutomaticSelectionVisibilityProperty,value);}
+    public void SelectIssue(Issue issue)
+    {var choice=model.Choices.FirstOrDefault(c=>c.Issue==issue);if(choice is not null){IssueList.SelectedItem=choice;IssueList.ScrollIntoView(choice);}}
+
     public IReadOnlyList<IssueChoice> Choices=>model.Choices;
     public Issue? SelectedIssue=>(IssueList.SelectedItem as IssueChoice)?.Issue;
     public event Action<Issue>? ActiveIssueChanged;
@@ -25,13 +31,15 @@ public partial class IssueReviewPanel : UserControl
         IssueList.ItemsSource=view;
         IssueList.SelectedItem=null;
         model.All.PropertyChanged+=SelectionChanged;
-        Summary.Text=model.Summary;
+        RefreshSummary();
         Empty.Visibility=Choices.Count==0?Visibility.Visible:Visibility.Collapsed;
         IssueList.Visibility=Choices.Count==0?Visibility.Collapsed:Visibility.Visible;
         DetailText.Text="Chọn lỗi để xem mô tả, gợi ý và căn cứ.";
     }
+    private void RefreshSummary()
+    {if(model is not null && Summary is not null)Summary.Text=AutomaticSelectionVisibility==Visibility.Visible?model.Summary:$"{Choices.Count} cảnh báo — chọn mục để tự sửa";}
     private void SelectionChanged(object? sender,PropertyChangedEventArgs args)
-    {if(args.PropertyName==nameof(IssueChoiceGroup.SelectedCount))Summary.Text=model.Summary;}
+    {if(args.PropertyName==nameof(IssueChoiceGroup.SelectedCount))RefreshSummary();}
     private void IssueSelected(object sender,SelectionChangedEventArgs args)
     {
         if(IssueList.SelectedItem is not IssueChoice choice)return;
@@ -39,6 +47,7 @@ public partial class IssueReviewPanel : UserControl
     }
     private void IssueHover(object sender,MouseEventArgs args)
     {
+        if(!SelectOnHover)return;
         if(sender is not FrameworkElement {DataContext:IssueChoice choice})return;
         if(IssueList.SelectedItem!=choice)IssueList.SelectedItem=choice;
         else ActiveIssueChanged?.Invoke(choice.Issue);
