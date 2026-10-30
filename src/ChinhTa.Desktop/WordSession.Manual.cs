@@ -8,15 +8,33 @@ public sealed partial class WordSession
     {
         CheckCore();return ManualTextTarget.Prepare(ReadPageBodyXml(),lastWordParagraphs,issue.Start,issue.Length,issue.Original);
     });
+    public InlineWordDraft PrepareInlineWord(PreviewAnchor hit,string previewPath)=>ReadWithRecovery("Word.Inline.Prepare",()=>
+    {
+        if(spacingReferencePath!=previewPath || spacingReferenceFlat is null)throw new InvalidOperationException("Bản xem trước không còn gắn với tài liệu; hãy Quét lại.");
+        string reference=spacingReferenceFlat;CheckCore();
+        var binding=InlineWordLocator.Locate(hit,lastWordParagraphs);
+        if(binding is null)throw new InlineEditUnavailableException("Chưa ghép chắc chữ vừa bấm với một vị trí duy nhất trong Word. Không chọn đoán chữ trùng; hãy dùng ô sửa đoạn hoặc sửa trong Word.");
+        ManualTextTarget target;
+        try{target=ManualTextTarget.Prepare(ReadPageBodyXml(),lastWordParagraphs,binding.Paragraph.Start+binding.Offset,binding.Word.Length,binding.Word);}
+        catch(InvalidOperationException error){throw new InlineEditUnavailableException(error.Message,error);}
+        target.RequireCurrent(reference);
+        return new InlineWordDraft(target,binding.Offset,binding.Word);
+    });
+    internal void ApplyInlineFailureProbe(InlineWordDraft draft,string replacement)
+    {
+        if(LineCheckArtifactFolder is null)throw new InvalidOperationException("Chỉ dùng trong bài Word riêng.");
+        ApplyManualTextCore(draft.Target,"",true,draft.Change(replacement));
+    }
+    public void ApplyInlineWord(InlineWordDraft draft,string replacement)=>ApplyManualTextCore(draft.Target,"",false,draft.Change(replacement));
     public void ApplyManualText(ManualTextTarget target,string edited)=>ApplyManualTextCore(target,edited,false);
     internal void ApplyManualFailureProbe(ManualTextTarget target,string edited)
     {
         if(LineCheckArtifactFolder is null)throw new InvalidOperationException("Chỉ dùng trong bài Word riêng.");
         ApplyManualTextCore(target,edited,true);
     }
-    private void ApplyManualTextCore(ManualTextTarget target,string edited,bool failAfterSave)
+    private void ApplyManualTextCore(ManualTextTarget target,string edited,bool failAfterSave,ManualTextChange? exactChange=null)
     {
-        target.RequireCurrent(ReadPageBodyXml());var change=target.Edit(edited);
+        target.RequireCurrent(ReadPageBodyXml());var change=exactChange??target.Edit(edited);
         string story=ReadStoryText();dynamic content=document!.Content;int start;
         try{start=(int)content.Start;}finally{Release(content);}
         dynamic prefixRange=document!.Range(start,target.Start);string prefix;
@@ -67,3 +85,5 @@ public sealed partial class WordSession
         }
     }
 }
+
+public sealed class InlineEditUnavailableException(string message,Exception? inner=null):InvalidOperationException(message,inner);

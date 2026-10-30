@@ -10,3 +10,8 @@ Ngày30/10/2026 (UTC+7): sửa thủ công là mặc định và luồng chính.
 ### 30/10/2026 — trích yếu theo Nghị định 30
 
 Người dùng yêu cầu sửa cảnh báo đang nhầm công văn với các văn bản có tên loại. Đối chiếu bản ký NĐ30 PL I.II.5.b: công văn V/v đặt dưới số/ký hiệu, cỡ 12–13 đứng thường, không yêu cầu nét trích yếu; tên loại và trích yếu văn bản có tên loại cỡ 13–14 đậm, căn giữa trang, có nét dưới trích yếu. Cỡ 13/14 người dùng nêu là các lựa chọn hợp lệ, không thu hẹp khoảng pháp định. Bảng Word là cách dựng mẫu, không bắt buộc pháp lý. Giữ sửa thủ công mặc định.
+
+
+### 30/10/2026 — sửa trực tiếp tại từng từ trên trang
+
+Người dùng muốn bấm vào chữ sai rồi sửa tại đó như thao tác Word, kể cả lỗi chưa có cảnh báo, thay vì sửa chung cả đoạn. Tiếp tục nghiên cứu bộ soạn thảo đầy đủ; ưu tiên thử trước lớp nhập tại từ trên trang thật, ghi đúng vùng do người dùng chọn và giữ cấu trúc Word. Không đổi mặc định sang máy sửa. Không mô tả lớp nhập từng từ là Word nhúng hoặc live reflow toàn trang.

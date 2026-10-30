@@ -1,3 +1,5 @@
+> Bản thử 0.1.84 thêm bấm từng từ trên bản xem trước và nhập tại vị trí đó; không cần cảnh báo/CanFix và không phải gửi cả đoạn. Chỉ ghi sau Enter/nút Ghi, một Undo, giữ nháp khi lỗi. Chưa phải Word nhúng hoặc soạn thảo toàn trang; phạm vi đoạn thuần ngoài bảng và ánh xạ duy nhất, chưa Word thực PASS. Xem [PREVIEW-0.1.84.md](PREVIEW-0.1.84.md) và [đợt 82](FORMAT-BATCH-82.md).
+
 > Bản thử 0.1.83: sửa trích yếu theo NĐ30 PL I.II.5.b; công văn V/v không còn yêu cầu đường kẻ trích yếu, phông 12–13 đứng thường; văn bản có tên loại giữ 13–14 đậm và nét dưới trích yếu. Hai/ba mốc được tính riêng. Chưa đo đủ mọi mẫu hoặc Word thực PASS. Xem [PREVIEW-0.1.83.md](PREVIEW-0.1.83.md) và [đợt 81](FORMAT-BATCH-81.md).
 
 > Bản thử0.1.82 theo yêu cầu mới: sửa thủ công là mặc định, ô sửa đoạn do người dùng nhập, dấu đỏ/vàng chỉ trên XPS và đường ghi riêng có hậu kiểm toàn gói/Undo/rollback. Phạm vi chữ thuần ngoài bảng; chưa Word thực PASS. Xem [PREVIEW-0.1.82.md](PREVIEW-0.1.82.md) và [đợt78–80](FORMAT-BATCH-78-80.md). Các mốc0.1.81 dưới đây là lịch sử trước bản thử này.

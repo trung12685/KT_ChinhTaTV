@@ -11,7 +11,7 @@ using ChinhTa.Desktop;
 public static class ManualModeChecks
 {
     private const string Text="Sai nội dung.";
-    private static ManualTextTarget Target()
+    internal static ManualTextTarget Target()
     {
         XNamespace p="http://schemas.microsoft.com/office/2006/xmlPackage",w="http://schemas.openxmlformats.org/wordprocessingml/2006/main",r="http://schemas.openxmlformats.org/package/2006/relationships";
         XElement Part(string name,string type,XElement root)=>new(p+"part",new XAttribute(p+"name","/"+name),new XAttribute(p+"contentType",type),new XElement(p+"xmlData",root));

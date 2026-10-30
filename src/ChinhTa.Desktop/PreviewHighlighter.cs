@@ -9,7 +9,7 @@ using LineGeometry = ChinhTa.Core.LineGeometry;
 namespace ChinhTa.Desktop;
 
 /// <summary>Transient shapes on cached fixed pages. No edits to Word or the on-disk XPS.</summary>
-public sealed class PreviewHighlighter
+public sealed partial class PreviewHighlighter
 {
     private record Run(Glyphs Glyph, int Start, int Length);
     private record PageIndex(FixedPage Page, string Text, List<Run> Runs,Lazy<PreviewTextIndex> Prepared);
