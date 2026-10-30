@@ -53,6 +53,10 @@ static class Program
                     Console.WriteLine("::error::"+error.ToString().Replace("%","%25",StringComparison.Ordinal)
                         .Replace("\r","%0D",StringComparison.Ordinal).Replace("\n","%0A",StringComparison.Ordinal));
             };
+        if(args.Length==2 && args[0]=="--verify-spelling-package")
+        {
+            BundledSpellingDesktopChecks.VerifyPackage(args[1],Assert);return;
+        }
         if(args.Length==2 && args[0]=="--verify-report-package")
         {
             ProgressReportDesktopChecks.VerifyPackage(args[1],Assert);
@@ -320,6 +324,7 @@ DelimiterClusterReviewChecks.Run(Assert);
         OfficialLetterDesktopChecks.Run(Assert);
         InlineWordDesktopChecks.Run(Assert);
         SpellingDesktopChecks.Run(Assert);
+        BundledSpellingDesktopChecks.Run(Assert);
         Console.WriteLine($"{checks} WPF checks passed.");
     }
 }

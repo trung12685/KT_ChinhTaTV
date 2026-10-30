@@ -1,0 +1,30 @@
+{
+  "containerSha256": "7063c1b4cfad7a3656f5016b926577eb3c9060fd79107d1aa08688367fc0a1ff",
+  "id": "vi-offline-v1",
+  "wordlistCommit": "688b0953c8cdb21ee090ce80b83cefdb052fe2cd",
+  "contextCommit": "3c971fd1c5d03561e00b267d3d0057b81a9bea84",
+  "sourceHashes": {
+    "vi_vtb-ud-train.conllu": "1df180722db99b724f7368aca50597133bee28606de3394cd8d12a57da89978d",
+    "vi_vtb-ud-dev.conllu": "0b779257b9225575b3b30e15d64cc4ef9945a77f8cceb9f92d794b483a2752dd",
+    "vi_vtb-ud-test.conllu": "abc1b0ea98661bbb494a8c0da123ba2fe1a3ef71322c380fe66468884d9b4285"
+  },
+  "trainingSentences": 2639,
+  "heldOutSentences": 659,
+  "tokens": 50220,
+  "unigrams": 3314,
+  "bigrams": 30607,
+  "trigrams": 41821,
+  "licenses": {
+    "words.txt": "GPL-2.0",
+    "lm.json": "CC-BY-SA-4.0"
+  },
+  "files": {
+    "CC-BY-SA-4.0.txt": "df653272772ee86b0098bfc640b0ab583f6ecf59bb6254b82feaba3aed3ed93c",
+    "GPL-2.0.txt": "c03cea027b4b40e4402fabd08557736727ec3d5bc54ad64ab6472de432198cad",
+    "NOTICE.txt": "776b3bef29fc4c16ad62548648dc79d99e489a8873f07d144aa92471c74bef95",
+    "UD-README.md": "480326037a1b6cc6018556072fdd3cb6c4ccd0c1dea73bb78ee6259d39d4fbbe",
+    "WORDLIST-README.md": "b44ae9399d55850dd5795bc25eed589a70b8e452825c9e1331f118e00a688b0f",
+    "lm.json": "c0cd7d2005d7978aeb6cba2ae1b5a2fd8c6baf605c7a001d067da1455d868c13",
+    "words.txt": "b83d49308336f12ca46d06287d8db6e2cdc7a725d9a9dac56930051775fafb90"
+  }
+}

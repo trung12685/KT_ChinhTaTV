@@ -11,12 +11,13 @@ public partial class MainWindow
     private void ShowSpellingSource()
     {
         var source=session.SpellingModel.Source;
-        SpellingInfo.Text="Chính tả thử nghiệm: "+source.Name+(source.Starter?". Chỉ vài nhóm lỗi mẫu; nạp ZIP để dùng từ điển/ngữ cảnh của bạn.":$". {source.Headwords:N0} mục từ; {source.Bigrams:N0} bigram; {source.Trigrams:N0} trigram. Mã nguồn dữ liệu: {source.Fingerprint[..12]}.")+" Gợi ý màu vàng, duyệt từng chỗ; chưa kiểm chính tả toàn diện, chưa kiểm vùng trong bảng/đối tượng.";
+        SpellingInfo.Text="Chính tả thử nghiệm: "+source.Name+(source.Starter?". Chỉ vài nhóm dự phòng; hãy giải nén lại toàn bộ gói để dùng bộ kèm.":$". {source.Headwords:N0} mục từ; {source.Bigrams:N0} bigram; {source.Trigrams:N0} trigram. Mã nguồn dữ liệu: {source.Fingerprint[..12]}.")+" Gợi ý màu vàng, duyệt từng chỗ; chưa kiểm chính tả toàn diện, chưa kiểm vùng trong bảng/đối tượng.";
     }
     private void LoadSpellingCache()
     {
-        try{if(File.Exists(SpellingCache)){using var stream=File.OpenRead(SpellingCache);session.SpellingModel=VietnameseSpellingImport.LoadZip(stream);}}
-        catch(Exception error){Diagnostics.Write("Spelling.LoadLocal",error);session.SpellingModel=VietnameseSpellingModel.Starter;Status.Text="Chưa nạp được dữ liệu chính tả đã lưu. Đang dùng bộ mẫu nhỏ; bạn có thể nạp lại ZIP.";}
+        bool warning=false;
+        session.SpellingModel=VietnameseSpellingDefaults.Select(SpellingCache,VietnameseSpellingDefaults.DirectoryPath,(operation,error)=>{warning=true;Diagnostics.Write(operation,error);});
+        if(warning)Status.Text=session.SpellingModel.Source.Starter?"Chưa đọc được bộ chính tả kèm. Đang dùng vài nhóm dự phòng; hãy giải nén lại toàn bộ gói.":"Chưa đọc được dữ liệu riêng đã lưu; đang dùng bộ kèm ứng dụng. Tệp đã nạp vẫn được giữ để kiểm tra.";
         ShowSpellingSource();
     }
     private async void ImportSpellingClick(object sender,RoutedEventArgs e)
@@ -40,7 +41,16 @@ public partial class MainWindow
     private void ResetSpellingClick(object sender,RoutedEventArgs e)
     {
         if(!ImportSpellingMenu.IsEnabled || !TryCloseInline())return;
-        Run(()=>{if(File.Exists(SpellingCache))File.Delete(SpellingCache);session.SpellingModel=VietnameseSpellingModel.Starter;ShowSpellingSource();if(session.IsOpen)Scan();});
+        Run(()=>{var bundled=VietnameseSpellingDefaults.Load(VietnameseSpellingDefaults.DirectoryPath);if(File.Exists(SpellingCache))File.Delete(SpellingCache);session.SpellingModel=bundled;ShowSpellingSource();if(session.IsOpen)Scan();});
+    }
+    private void SpellingSourcesClick(object sender,RoutedEventArgs e)
+    {
+        Run(()=>
+        {
+            string text="Đang dùng: "+session.SpellingModel.Source.Name+"\nMã SHA256: "+session.SpellingModel.Source.Fingerprint+"\n\n"+File.ReadAllText(Path.Combine(VietnameseSpellingDefaults.DirectoryPath,"NOTICE.txt"));
+            var box=new System.Windows.Controls.TextBox{Text=text,IsReadOnly=true,TextWrapping=TextWrapping.Wrap,VerticalScrollBarVisibility=System.Windows.Controls.ScrollBarVisibility.Auto,Margin=new Thickness(12)};
+            new Window{Owner=this,Title="Nguồn và giấy phép dữ liệu chính tả",Width=740,Height=600,Content=box}.ShowDialog();
+        });
     }
     private void SpellingEdit(Issue issue)
     {

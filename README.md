@@ -1,5 +1,7 @@
 # Chính tả Việt
 
+Bản thử **0.1.86** có sẵn bộ chính tả ngoại tuyến: mở lần đầu đã dùng được, không cần từng người nạp ZIP. Bộ riêng đã nạp vẫn được ưu tiên. Có 72.535 mục từ, nguồn và giấy phép trong gói; ngữ cảnh còn nhỏ nên vẫn duyệt tay từng gợi ý. [Cách dùng](docs/PREVIEW-0.1.86.md) · [Nguồn và đánh giá](docs/FORMAT-BATCH-84.md). Word thực chưa chạy.
+
 Bản thử **0.1.85** thêm gợi ý chính tả tiếng Việt để người dùng duyệt từng từ/cụm. Chọn **Chính tả → Nạp dữ liệu chính tả từ ZIP…** và dùng bộ `2026-10-24.zip` đã có; nếu chưa nạp chỉ chạy vài nhóm lỗi mẫu. Chọn gợi ý chỉ điền ô nháp; bấm Ghi mới sửa. [Cách thử, nguồn và giới hạn](docs/PREVIEW-0.1.85.md) · [Triển khai và đánh giá](docs/FORMAT-BATCH-83.md). Word thực chưa chạy.
 
 Bản thử **0.1.84** cho phép **bấm từ trên trang rồi sửa ngay tại từ**, kể cả từ chưa có cảnh báo; Enter/nút Ghi mới ghi vào DOCX và quét lại. Giữ sửa thủ công mặc định. [Cách thử và giới hạn](docs/PREVIEW-0.1.84.md). Chưa Word thực PASS.

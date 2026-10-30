@@ -20,3 +20,8 @@ Người dùng muốn bấm vào chữ sai rồi sửa tại đó như thao tác
 ### 30/10/2026 — thử tận dụng bộ từ điển/ngữ cảnh người dùng gửi
 
 Người dùng đồng ý tiếp tục sau đánh giá ZIP Python. Chuyển bộ gợi ý sang C#; không dùng trình ghi DOCX Python có mất ngắt trang. Giữ sửa tay mặc định, không xem tần suất là kết luận sai. Dữ liệu đầy đủ nạp cục bộ từ ZIP đã gửi; ghi nguồn/hash, chưa phát hành kèm khi điều kiện phân phối từng nguồn chưa rõ.
+
+
+### 31/10/2026 — đóng gói dữ liệu dùng chung
+
+Người dùng đã nạp ZIP và yêu cầu ứng dụng có sẵn dữ liệu từ đầu cho mọi người. Đóng gói bộ có nguồn/giấy phép rõ, tự nạp ngoại tuyến; giữ bộ riêng đã nạp trên máy và cho phép chủ động dùng bộ chung. Nạp ZIP là lựa chọn nâng cao, không phải bước bắt buộc lúc bắt đầu. Giữ sửa thủ công mặc định.

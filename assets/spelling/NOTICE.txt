@@ -1,0 +1,23 @@
+Offline Vietnamese spelling data v1 / Chính tả Việt 0.1.86
+
+Word list: Viet74K, Hồ Ngọc Đức, redistributed by duyet/vietnamese-wordlist.
+Source: https://github.com/duyet/vietnamese-wordlist/tree/688b0953c8cdb21ee090ce80b83cefdb052fe2cd
+License: GNU GPL version 2 (GPL-2.0.txt). words.txt is the unmodified source
+word list, also the preferred form for modification. WORDLIST-README.md
+retains upstream attribution. The application normalizes lookup keys only.
+
+Context counts: adapted from UD_Vietnamese-VTB, VLSP treebank.
+Source: https://github.com/UniversalDependencies/UD_Vietnamese-VTB/tree/3c971fd1c5d03561e00b267d3d0057b81a9bea84
+License: CC BY-SA 4.0, https://creativecommons.org/licenses/by-sa/4.0/
+Full license: CC-BY-SA-4.0.txt; upstream attribution: UD-README.md.
+Contributors: Nguyễn Thị Lương; Hà Mỹ Linh; Lê Hồng Phương; Nguyễn Thị Minh Huyền.
+Reference: Nguyen et al. (2009), Building a Large Syntactically-Annotated
+Corpus of Vietnamese, Third Linguistic Annotation Workshop, pp.182–185.
+Changes by the Chính tả Việt project: deduplicate sentence text, deterministic
+80/20 holdout, NFC/lowercase token lookup, count unigrams/bigrams/trigrams,
+omit annotations and sentence text from runtime model. Adapted lm.json is
+provided under CC BY-SA 4.0. This is a pinned repository snapshot, not a claim
+of a released UD edition or a Vietnamese spelling standard.
+Rebuild recipe: scripts/SpellingData/build.py in the application source repo.
+No endorsement by the upstream authors. No user documents or uploaded ZIP data.
+The data files are separate from application code and retain their own licenses.

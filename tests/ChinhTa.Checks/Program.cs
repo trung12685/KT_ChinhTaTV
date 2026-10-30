@@ -9,6 +9,7 @@ void Assert(bool condition, string name)
     Console.WriteLine("PASS: " + name); checks++;
 }
 VietnameseSpellingChecks.Run(Assert);
+BundledSpellingChecks.Run(Assert);
 DocxLineMetadataChecks.Run(Assert);
 LineCompatibilityChecks.Run(Assert);
 RenderedLineProofChecks.Run(Assert);

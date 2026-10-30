@@ -36,8 +36,8 @@ public static class VietnameseSpellingChecks
         assert(a.Start==source.IndexOf("điễm",StringComparison.Ordinal) && nfd.Substring(b.Start,b.Length)==b.Original && a.Suggestions.SequenceEqual(b.Suggestions),"Emoji and decomposed marks keep source offsets while lookup keys normalize consistently");
         foreach(string text in new[]{"Đây là https://example.com/dứt/điễm", "Gửi tới a@b.vn dứt điễm", "ma_diem = điễm", "Nguyễn Điễm", "API HTTP CPU", "x123 abc_unknown", "foobar", "kĩ thuật hoà bình"})
             assert(model.Check(text).Count==0,"Names, technical content, variants and unsupported unknowns are not declared spelling errors: "+text);
-        var conditioned=new VietnameseSpellingModel(["chất","chặt"],[],new Dictionary<(string,string),long>{[("nâng","chất")]=20,[("chất","lượng")]=20,[("nâng","chặt")]=20,[("chặt","lượng")]=20},new Dictionary<(string,string,string),long>{[("nâng","chất","lượng")]=10},new("Trigram fixture","tri",2,0,4,1));
-        assert(conditioned.Check("nâng chât lượng").Single().Suggestions[0]=="chất","Actual three-token context breaks a bigram tie; sentence markers are not invented around an interior window");
+        var conditioned=new VietnameseSpellingModel(["hoạch","hoách"],[],new Dictionary<(string,string),long>{[("lập","hoạch")]=20,[("hoạch","tốt")]=20,[("lập","hoách")]=20,[("hoách","tốt")]=20},new Dictionary<(string,string,string),long>{[("lập","hoạch","tốt")]=10},new("Trigram fixture","tri",2,0,4,1));
+        assert(conditioned.Check("lập hoach tốt").Single().Suggestions[0]=="hoạch","Actual three-token context breaks a bigram tie outside the reviewed expression rules; sentence markers are not invented around an interior window");
         foreach(string text in new[]{"Đinh vít được đóng trong hộp.","Cần giải quyết xung đột lợi ích.","Chấp hành đúng qui định.","Đây là người có năng lực và phẩm chất tốt.","Tổ công tác phối hợp với Công an phường."})
             assert(model.Check(text).Count==0,"Ordinary valid prose cannot be replaced solely by a more frequent corpus word: "+text);
         var phrase=model.Check("Tương lai sáng lạng.");
