@@ -319,6 +319,7 @@ DelimiterClusterReviewChecks.Run(Assert);
         ManualModeChecks.Run(Assert);
         OfficialLetterDesktopChecks.Run(Assert);
         InlineWordDesktopChecks.Run(Assert);
+        SpellingDesktopChecks.Run(Assert);
         Console.WriteLine($"{checks} WPF checks passed.");
     }
 }

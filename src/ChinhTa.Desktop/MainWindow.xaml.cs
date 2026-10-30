@@ -27,6 +27,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        LoadSpellingCache();
         string version=typeof(MainWindow).Assembly.GetName().Version?.ToString(3)??"chưa rõ";
         Title="Chính tả Việt — Bản thử nghiệm "+version;BuildVersion.Text="Bản "+version;
         Diagnostics.Write("UI.Start",null,$"DesktopModule={typeof(MainWindow).Module.ModuleVersionId}; CoreModule={typeof(Checker).Module.ModuleVersionId}");
@@ -62,6 +63,8 @@ public partial class MainWindow : Window
     {
         hover.Stop();if(!ManualMode)return;
         if(Review.SelectedIssue is not Issue issue){MessageBox.Show(this,"Chọn một lỗi trong danh sách hoặc bấm dấu gạch chân trước khi sửa.","Sửa thủ công");return;}
+        if(issue.Kind==FixKind.SpellingReview){SpellingEdit(issue);return;}
+        if(!TryCloseInline())return;
         ManualTextTarget? target=null;Run(()=>target=session.PrepareManualText(issue));if(target is null)return;
         new ManualTextEditWindow(target,edited=>
         {

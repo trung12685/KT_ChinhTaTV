@@ -5,7 +5,7 @@ namespace ChinhTa.Core;
 public record Paragraph(int Start, string Text, bool Bold = false, float Size = 13,
     int Alignment = 1, string Font = "Times New Roman", bool Italic = false,
     int Color = 0, bool InTable = false, int Page = 1, bool FormatObserved = false, bool FormatMixed = false, bool TextEditable = true, bool BoldMixed = false, OutlineParagraphInfo? Outline = null, bool FormatEditable = false,FormatEvidence? FormatEvidence=null,ObservedParagraphStyle? ParagraphStyle=null,BodyFlow? Flow=null);
-public enum FixKind { Text, NationalHeading, StateMotto, PartyHeading, Advisory, PageLayout, ShapeLine, AdministrativeNumber, AdministrativeDate, AdministrativeFormat, AdministrativePosition, DocumentHeadingFormat, RepeatedText, PunctuationSpace, ParenthesisSpace, SentenceEndSpace, ColonSpace, SentenceInnerSpace, SentenceAfterSpace, OutlineOrder, OutlineMarker, AgencyFormat, AgencyText, RecipientFormat, RecipientText, DocumentTypeText, ParagraphEndSpace, BodyFormat, BodyParagraph, BodyGap, BodyLineSpacing, QuoteSpace, SignatureFormat, PageNumber }
+public enum FixKind { Text, NationalHeading, StateMotto, PartyHeading, Advisory, PageLayout, ShapeLine, AdministrativeNumber, AdministrativeDate, AdministrativeFormat, AdministrativePosition, DocumentHeadingFormat, RepeatedText, PunctuationSpace, ParenthesisSpace, SentenceEndSpace, ColonSpace, SentenceInnerSpace, SentenceAfterSpace, OutlineOrder, OutlineMarker, AgencyFormat, AgencyText, RecipientFormat, RecipientText, DocumentTypeText, ParagraphEndSpace, BodyFormat, BodyParagraph, BodyGap, BodyLineSpacing, QuoteSpace, SignatureFormat, PageNumber, SpellingReview }
 public record HeadingFormat(float Size, int? Alignment = null,float? MaximumSize=null,bool RepairInvalidSizes=false)
 {
     public bool Matches(string font,float size,int bold,int italic,int color,int? alignment)=>
@@ -43,7 +43,7 @@ public sealed record OutlineEditContext(int? ParentStart,int GroupStart,string L
 public record Issue(int Start, int Length, string Original, string Replacement,
     string Message, bool BatchSafe, FixKind Kind = FixKind.Text,
     bool CanFix = true, string? Citation = null, HeadingFormat? Format = null, string? Title = null, ShapeLineFix? LineFix = null,
-    CharacterFormat? CharacterFormat = null, AdministrativeCenterFix? CenterFix = null,IReadOnlyList<Issue>? Prerequisites=null,OutlineEditContext? OutlineContext=null,BodyParagraphFix? ParagraphFix=null,BodySpacingFix? SpacingFix=null,PageLayoutFix? PageFix=null,PageNumberFix? NumberFix=null)
+    CharacterFormat? CharacterFormat = null, AdministrativeCenterFix? CenterFix = null,IReadOnlyList<Issue>? Prerequisites=null,OutlineEditContext? OutlineContext=null,BodyParagraphFix? ParagraphFix=null,BodySpacingFix? SpacingFix=null,PageLayoutFix? PageFix=null,PageNumberFix? NumberFix=null,IReadOnlyList<string>? SpellingSuggestions=null,string? SpellingSource=null)
 {
     public bool IsStyleOnly=>CharacterFormat is not null || ParagraphFix is not null || SpacingFix is not null;
     public string DisplayText => Title ?? Original;
@@ -52,7 +52,7 @@ public record Issue(int Start, int Length, string Original, string Replacement,
     public bool AddsSpaceBeforeOpeningQuote=>Kind==FixKind.QuoteSpace && Original is "“" or "\"" && Replacement==" "+Original;
     public bool AddsSpaceAfterClosingQuote => Kind==FixKind.QuoteSpace && Original is "”" or "\"" && Replacement==Original+" ";
     public bool AddsSpaceAfterClosingParenthesis => Kind==FixKind.ParenthesisSpace && Original==")" && Replacement==") ";
-    public string Suggestion => NumberFix is not null?NumberFix.Suggestion:PageFix is not null?PageFix.Suggestion:!CanFix ? "Kiểm tra thủ công; không tự sửa."
+    public string Suggestion => Kind==FixKind.SpellingReview?"Gợi ý: "+string.Join("; ",SpellingSuggestions??[])+". Bạn chọn rồi tự xác nhận ghi; không sửa hàng loạt.":NumberFix is not null?NumberFix.Suggestion:PageFix is not null?PageFix.Suggestion:!CanFix ? "Kiểm tra thủ công; không tự sửa."
         : LineFix is not null ? Prerequisites is {Count:>0} required?$"Sửa kèm {required.Count} mục liên quan, đo lại rồi tạo/đặt lại đường kẻ.":"Tạo/đặt lại Shape Line theo số đo và cấu hình đã chọn."
         : CenterFix is not null ? "Căn giữa trong ô đã xác minh, bỏ thụt lề ngang; giữ nguyên chữ và khoảng cách dọc."
         : Format is {RepairInvalidSizes:true,MaximumSize:float headingMaximum} selectiveHeading ? $"Times New Roman, đen, đứng, đậm; chỉ đưa cỡ ngoài {selectiveHeading.Size:0.#}–{headingMaximum:0.#} về {selectiveHeading.Size:0.#}; giữ cỡ đúng và chữ."+(selectiveHeading.Alignment is null?"":" Căn giữa trong ô.")

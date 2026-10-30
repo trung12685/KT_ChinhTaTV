@@ -25,6 +25,7 @@ public static class IssueReviewCatalog
         bool space=issue.Kind==FixKind.Text && issue.Original.Length>0 && issue.Original.All(c=>c==' ') && issue.Replacement==" ";
         var (key,family,order,label)=issue.Kind switch
         {
+            FixKind.SpellingReview=>("vietnamese-spelling","Chính tả tiếng Việt — cần duyệt",89,issue.Title??"Nghi vấn chính tả"),
             FixKind.Text when space=>("spacing","Khoảng trắng thừa",10,"Khoảng trắng thừa"),
             FixKind.ParagraphEndSpace=>("spacing","Khoảng trắng thừa",10,issue.CanFix?"Thừa khoảng trắng cuối đoạn":issue.Title??"Kiểm tra khoảng trắng cuối đoạn"),
             FixKind.Text=>("spelling","Gợi ý chính tả",90,"Gợi ý chính tả: "+Brief(issue.Original,20)+" → "+Brief(issue.Replacement,20)),

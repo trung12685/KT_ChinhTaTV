@@ -1,3 +1,7 @@
+# Cập nhật 0.1.85 — chính tả duyệt tay đang thử
+
+Đã có bộ gợi ý C# và nạp dữ liệu ZIP cục bộ; xem [FORMAT-BATCH-83](FORMAT-BATCH-83.md). Chưa có bộ chuẩn độc lập đủ lớn, chưa đo precision/recall trên văn bản thực, chưa xử lý đầy đủ tên riêng/chuyên ngành, chưa hỗ trợ sửa tay trong bảng/field/đối tượng. Chưa xác nhận Word thực. Ưu tiên kế tiếp là chạy nhóm Word `vietnamese-spelling`, thu ví dụ cảnh báo nhầm/bỏ sót đã ẩn thông tin riêng, kiểm quyền phân phối từng nguồn và dựng bộ chuẩn tách khỏi corpus.
+
 > Bản thử 0.1.84 thêm bấm từng từ trên bản xem trước và nhập tại vị trí đó; không cần cảnh báo/CanFix và không phải gửi cả đoạn. Chỉ ghi sau Enter/nút Ghi, một Undo, giữ nháp khi lỗi. Chưa phải Word nhúng hoặc soạn thảo toàn trang; phạm vi đoạn thuần ngoài bảng và ánh xạ duy nhất, chưa Word thực PASS. Xem [PREVIEW-0.1.84.md](PREVIEW-0.1.84.md) và [đợt 82](FORMAT-BATCH-82.md).
 
 > Bản thử 0.1.83: sửa trích yếu theo NĐ30 PL I.II.5.b; công văn V/v không còn yêu cầu đường kẻ trích yếu, phông 12–13 đứng thường; văn bản có tên loại giữ 13–14 đậm và nét dưới trích yếu. Hai/ba mốc được tính riêng. Chưa đo đủ mọi mẫu hoặc Word thực PASS. Xem [PREVIEW-0.1.83.md](PREVIEW-0.1.83.md) và [đợt 81](FORMAT-BATCH-81.md).
