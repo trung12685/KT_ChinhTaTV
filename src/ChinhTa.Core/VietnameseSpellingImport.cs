@@ -59,7 +59,7 @@ public static class VietnameseSpellingImport
         byte[] dictionary=Find(zip,"dictionary/words.txt",16*1024*1024),model=Find(zip,"app/lm.json",48*1024*1024);
         return Parse(dictionary,model);
     }
-    public static VietnameseSpellingModel Parse(byte[] dictionary,byte[] model)
+    public static VietnameseSpellingModel Parse(byte[] dictionary,byte[] model,string? sourceName=null)
     {
         if(dictionary.Length>16*1024*1024 || model.Length>48*1024*1024)throw new InvalidOperationException("Dữ liệu ngôn ngữ vượt giới hạn.");
         var utf8=new UTF8Encoding(false,true);string data=utf8.GetString(dictionary);
@@ -101,6 +101,6 @@ public static class VietnameseSpellingImport
         if(uni.Count==0 || uni.Values.Sum()!=main.GetProperty("total").GetInt64())throw new InvalidOperationException("Tổng token mô hình không khớp; giữ bộ đang dùng.");
         byte[] content=[..dictionary,..model];string fingerprint=Convert.ToHexString(SHA256.HashData(content));
         string creditText=string.Join(", ",sources.Where(s=>!string.IsNullOrWhiteSpace(s)).Order(StringComparer.Ordinal).Take(10));
-        return new(words,uni,bi,tri,new("Dữ liệu nạp trên máy"+(creditText.Length==0?"":" — "+creditText),fingerprint,words.Count,uni.Count,bi.Count,tri.Count));
+        return new(words,uni,bi,tri,new(sourceName??("Dữ liệu nạp trên máy"+(creditText.Length==0?"":" — "+creditText)),fingerprint,words.Count,uni.Count,bi.Count,tri.Count));
     }
 }

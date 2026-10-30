@@ -1,3 +1,7 @@
+# Cập nhật 0.1.86 — đã có dữ liệu chung
+
+Đã đóng gói bộ chính tả ngoại tuyến với giấy phép, nguồn, version/hash và kiểm nạp bản publish/sau ZIP. Dữ liệu riêng hợp lệ vẫn được ưu tiên. Bộ chung có 72.535 mục từ nhưng ngữ cảnh còn nhỏ; cần mở rộng dữ liệu được phép phân phối và bộ chuẩn gán nhãn độc lập. Xem [FORMAT-BATCH-84](FORMAT-BATCH-84.md). Word thực chưa chạy.
+
 # Cập nhật 0.1.85 — chính tả duyệt tay đang thử
 
 Đã có bộ gợi ý C# và nạp dữ liệu ZIP cục bộ; xem [FORMAT-BATCH-83](FORMAT-BATCH-83.md). Chưa có bộ chuẩn độc lập đủ lớn, chưa đo precision/recall trên văn bản thực, chưa xử lý đầy đủ tên riêng/chuyên ngành, chưa hỗ trợ sửa tay trong bảng/field/đối tượng. Chưa xác nhận Word thực. Ưu tiên kế tiếp là chạy nhóm Word `vietnamese-spelling`, thu ví dụ cảnh báo nhầm/bỏ sót đã ẩn thông tin riêng, kiểm quyền phân phối từng nguồn và dựng bộ chuẩn tách khỏi corpus.

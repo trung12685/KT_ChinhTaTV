@@ -102,12 +102,21 @@ public sealed class VietnameseSpellingModel
             if(owned.Contains(i) || protectedTokens.Contains(i) || word.Length is <2 or >32)continue;
             string prev=i>0 && !protectedTokens.Contains(i-1) && OnlySpace(text,tokens[i-1].Start+tokens[i-1].Length,token.Start)?tokens[i-1].Key:"";
             string next=i+1<tokens.Count && !protectedTokens.Contains(i+1) && OnlySpace(text,token.Start+token.Length,tokens[i+1].Start)?tokens[i+1].Key:"";
-            if(Source.Starter)
+            // Reviewed local expressions also work when a small licensed corpus
+            // has too few counts. These rules do not fabricate LM frequencies.
+            string? correction=(word,prev,next) switch
             {
-                string? correction=word=="điễm" && prev=="dứt"?"điểm":word=="nghành" && next=="giáo"?"ngành":null;
-                if(correction is not null)result.Add(new(token.Start,token.Length,token.Original,Array.AsReadOnly(new[]{MatchCase(token.Original,correction)}),"Nhóm lỗi mẫu có điều kiện; chưa kiểm chính tả đầy đủ."));
+                ("sử",_,"lý")=>"xử",("xung","bổ",_)=>"sung",
+                ("điễm","dứt",_)=>"điểm",("nghành",_,"giáo")=>"ngành",
+                ("chât",_,"lượng")=>"chất",("hiễu",_,"nội")=>"hiểu",
+                ("đo","bến","sang")=>"đò",_=>null
+            };
+            if(correction is not null)
+            {
+                result.Add(new(token.Start,token.Length,token.Original,Array.AsReadOnly(new[]{MatchCase(token.Original,correction)}),"Cặp chữ trong ngữ cảnh đã duyệt; vẫn cần người dùng đối chiếu, không phải kết luận từ tần suất."));
                 continue;
             }
+            if(Source.Starter)continue;
             long ol=Bi(prev,word),orr=Bi(word,next),os=ol+orr,ot=Tri(prev,word,next);bool known=lexicon.Contains(word);
             IEnumerable<string> candidates=known?Confusions.GetValueOrDefault(word)??[]:Candidates(word);
             var ranked=candidates.Where(c=>!OrthographicVariant(word,c)).Select(candidate=>

@@ -67,6 +67,11 @@ jobs:
           Copy-Item docs/KIEM-TRA-WORD.cmd artifacts/win-x64/
           dotnet run --project scripts/PreviewMetadata -c Release -- prepare artifacts/win-x64 $env:PREVIEW_VERSION "docs/PREVIEW-$env:PREVIEW_VERSION.md"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Verify packaged offline spelling data without user import or network
+        shell: pwsh
+        run: |
+          dotnet run --project tests/ChinhTa.DesktopChecks -c Release -- --verify-spelling-package artifacts/win-x64
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Preview metadata tamper regression checks
         shell: pwsh
         run: |
@@ -116,6 +121,8 @@ jobs:
           dotnet run --project scripts/PreviewMetadata -c Release -- verify artifacts/preview-extracted $env:PREVIEW_VERSION
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           dotnet run --project tests/ChinhTa.DesktopChecks -c Release -- --verify-report-package artifacts/preview-extracted
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          dotnet run --project tests/ChinhTa.DesktopChecks -c Release -- --verify-spelling-package artifacts/preview-extracted
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $hash = (Get-FileHash "artifacts/package/$name" -Algorithm SHA256).Hash.ToLowerInvariant()
           "$hash  $name" | Set-Content artifacts/package/SHA256.txt -Encoding ascii
