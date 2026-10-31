@@ -20,7 +20,7 @@ Gợi ý của Add-in nằm trong bảng. Dấu gạch đỏ do Word tự tạo 
 1. Cần Word desktop trên Windows và .NET Framework 4.8. **Word 32-bit dùng gói win-x86; Word 64-bit dùng win-x64**, kể cả khi Windows là 64-bit. Xem trong Word → Tệp → Tài khoản → Giới thiệu về Word. Bộ xử lý .NET 8 đúng kiến trúc được đóng kèm. Chưa có gói Mac hoặc Word Web.
 2. Giải nén toàn bộ gói vào thư mục mới, đóng mọi cửa sổ Word.
 3. Chạy **CAI-ADDIN.cmd** trong đúng gói x86/x64. Script chép vào thư mục phiên bản/commit/kiến trúc của người dùng rồi đăng ký hai lớp COM và một Add-in Word dưới HKCU; không thay đăng ký của ứng dụng khác hoặc dừng tiến trình Word. Script có chế độ `Install-WordAddin.ps1 -DryRun` để chỉ kiểm và xem đích.
-4. Mở Word → tab **Chính tả Việt** → **Mở bảng kiểm tra** → **Quét lại**.
+4. Mở Word bình thường (không chọn Run as administrator) → tab **Chính tả Việt** → **Mở bảng kiểm tra** → **Quét lại**.
 5. Thử một tài liệu mới có `Cần sử lý và bổ xung nhân lực.`. Chọn từng lỗi, gõ sửa trong Word, Quét lại, Ctrl+Z, lưu bản sao, mở lại để đối chiếu.
 6. Tạo bảng hai ô, đặt cùng câu có lỗi trong cả hai ô. Quét, chọn lỗi ở ô thứ hai và kiểm tra không nhảy về ô đầu. Thử thêm emoji ở phía trước lỗi, chữ tiếng Việt dạng dấu kết hợp, đoạn có tab; sửa một chữ rồi thử chọn kết quả cũ phải yêu cầu quét lại. Các bước này cần thử trên Word thật.
 7. Thử thêm một từ/tên mới ở tab **Từ cá nhân**, đóng/mở Word và tải lại danh sách; xóa để kiểm lại. Thêm xung phải vẫn giữ cảnh báo bổ xung. Khi muốn Word nhận mục từ đơn, dùng nút Đồng bộ riêng.
@@ -38,7 +38,7 @@ Kho mô hình riêng người dùng đã nạp ở 0.1.85/0.1.86 được ưu ti
 
 ## Kiểm thử và giới hạn xác nhận
 
-Build/checks của Core, Desktop cũ, worker/protocol, từ cá nhân và COM control được ghi đúng commit trong build-checks.json của gói. Kiểm host có COM callable wrapper, IOleObject, Ribbon, native range giả lập với bảng/emoji/dấu kết ô, phân biệt từ trùng và giữ Unicode qua pipe cũ Windows. Kiểm worker có tách tab/ô, đếm phạm vi, bỏ qua trường/đối tượng, chặn kết quả cũ và từ điển cá nhân. Đây là kiểm đối tượng giả lập và bộ xử lý, chưa đo tọa độ Word thật. Mỗi gói có kiểm worker self-contained đúng PE x86/x64, bộ dò kiến trúc và cú pháp bằng Windows PowerShell 5. Có kiểm cài/COM activation/gỡ thực trên tài khoản CI sạch, với một tệp PE giả lập đường dẫn Word chỉ để thử bộ cài; không chạy tệp giả lập như Word. Probe COM không tham chiếu DLL host của dự án kiểm thử và xác nhận DLL được nạp từ đúng thư mục đã cài. Kiểm giữ từ cá nhân, Add-in khác, từ chối gói sai kiến trúc trước khi chép/đăng ký, và chặn gỡ bằng gói cũ. Đây chưa phải Word thực.
+Build/checks của Core, Desktop cũ, worker/protocol, từ cá nhân và COM control được ghi đúng commit trong build-checks.json của gói. Kiểm host có COM callable wrapper, IOleObject, Ribbon, native range giả lập với bảng/emoji/dấu kết ô, phân biệt từ trùng và giữ Unicode qua pipe cũ Windows. Kiểm worker có tách tab/ô, đếm phạm vi, bỏ qua trường/đối tượng, chặn kết quả cũ và từ điển cá nhân. Đây là kiểm đối tượng giả lập và bộ xử lý, chưa đo tọa độ Word thật. Mỗi gói có kiểm worker self-contained đúng PE x86/x64, bộ dò kiến trúc và cú pháp bằng Windows PowerShell 5. Có kiểm cài/COM activation/gỡ thực trên tài khoản CI sạch, với một tệp PE giả lập đường dẫn Word chỉ để thử bộ cài; không chạy tệp giả lập như Word. Probe COM không tham chiếu DLL host của dự án kiểm thử và xác nhận DLL được nạp từ đúng thư mục đã cài. Kiểm giữ từ cá nhân, Add-in khác, từ chối gói sai kiến trúc trước khi chép/đăng ký, và chặn gỡ bằng gói cũ. Phép activation dùng cùng tài khoản nhưng không có quyền quản trị, một window station/desktop riêng và DACL riêng cho tiến trình kiểm thử; không đổi ACL của desktop đã có hoặc chính sách máy. Bộ kiểm này không nằm trong gói cài. Đây chưa phải Word thực.
 
 **Microsoft Word thực: NOT_RUN.** Chưa tuyên bố Word đã load COM/ActiveX pane, đưa con trỏ vào trang đúng trên mọi build, nhận dictionary đang mở, hoặc chạy an toàn trên mọi bản Office. Các kiểm bằng đối tượng giả lập/COM wrapper không thay cho các bước Word thật bên trên.
 
@@ -61,3 +61,7 @@ Gói x86 ghi Registry32; x64 ghi Registry64. Cài từ PowerShell 32-bit hoặc 
 Nếu 0.1.87 dừng đúng thông báo Office 32-bit như trên, nhánh dừng nằm trước bước chép/đăng ký. Tải gói 0.1.89 win-x86, giải nén đầy đủ, đóng Word rồi chạy CAI-ADDIN.cmd. Không sửa hoặc bỏ dòng chặn trong bộ cài cũ, vì nó chưa có worker/đăng ký COM phù hợp.
 
 Giữ chức năng kiểm bảng/tab và giao thức v2 của 0.1.88. 0.1.89 tập trung vào tương thích cài đặt; chưa chuyển thêm luật thể thức hoặc lớp gạch màu. **Word thực x86 và x64: NOT_RUN**. Cần xác nhận tab và bảng kiểm tra trên Word đang dùng.
+
+## Ngữ cảnh người dùng của đăng ký COM
+
+Gói hiện cài riêng cho người dùng qua HKCU. Trên máy CI, tiến trình nâng quyền không nạp được đăng ký này; tiến trình cùng người dùng đã bỏ quyền quản trị nạp đúng DLL và các interface COM x86/x64. Vì vậy hãy mở Word bình thường khi thử. Chưa có chế độ cài toàn máy/HKLM cho Word bị bắt buộc chạy nâng quyền. Không thay UAC/chính sách bảo vệ để thử; nếu máy bắt buộc cách chạy đó thì giữ thông báo để xử lý cấu hình cài đặt phù hợp.
