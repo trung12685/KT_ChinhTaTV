@@ -1,3 +1,7 @@
+## Word Add-in 0.1.89: cài Word 32-bit và 64-bit
+
+Phản hồi máy dùng Office 32-bit đã làm rõ giới hạn gói x64 cũ. Bản này đóng riêng win-x86/win-x64, dò PE của Word, ghi Registry32/Registry64 đúng kiến trúc và giữ từ cá nhân. Có kiểm activation COM/cài/gỡ trên CI với fixture, chưa xác nhận Word thực. Giữ kiểm bảng/tab của 0.1.88. Hướng dẫn: [WORD-ADDIN-0.1.89.md](WORD-ADDIN-0.1.89.md).
+
 ## Word Add-in 0.1.88: bảng/tab và đối chiếu vùng chọn
 
 Bộ xử lý đã mở kiểm chữ trong các đoạn thuộc ô bảng/đoạn tab, tách ranh giới để tránh ghép sai cụm từ. Kết quả là offset chuỗi; host phải đọc lại prefix/vùng chữ/từng ký tự native trước khi chọn. Có số liệu phạm vi đã kiểm/bỏ qua và giới hạn gợi ý. Chưa có xác nhận Word runtime; chưa chuyển toàn bộ luật thể thức hoặc dấu gạch màu riêng. Hướng dẫn: [WORD-ADDIN-0.1.88.md](WORD-ADDIN-0.1.88.md).

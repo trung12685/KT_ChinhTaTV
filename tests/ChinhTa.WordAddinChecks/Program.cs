@@ -6,9 +6,10 @@ using ChinhTa.WordProtocol;
 
 internal static class Program
 {
-    [STAThread]private static void Main()
+    [STAThread]private static void Main(string[] args)
     {
         int checks=0;void Assert(bool condition,string message){if(!condition)throw new Exception("FAIL: "+message);checks++;Console.WriteLine("PASS "+message);}
+        if(args.Length==1)Assert(args[0]==(Environment.Is64BitProcess?"x64":"x86"),"The host checks run in the expected native process architecture: "+args[0]);
         var connect=new Connect();string ribbon=connect.GetCustomUI("Microsoft.Word.Document");
         var xml=System.Xml.Linq.XDocument.Parse(ribbon);
         Assert(xml.Descendants().Any(e=>e.Name.LocalName=="button" && (string?)e.Attribute("onAction")=="OpenPane"),"The real COM host exposes a Word ribbon command for its task pane");
