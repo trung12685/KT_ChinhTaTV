@@ -64,6 +64,15 @@ try {
         $absent=$null -eq $key;if ($key) { $key.Close() }
         Assert $absent 'The connector CLSID is not mistakenly written to the opposite architecture view'
     } finally { $otherRegistry.Close() }
+    if ($env:GITHUB_REF -like 'refs/heads/diagnostic/*') {
+        $framework=if ($Architecture -eq 'x64') { 'Framework64' } else { 'Framework' }
+        $regAsm=Join-Path $env:SystemRoot ("Microsoft.NET\$framework\v4.0.30319\RegAsm.exe")
+        $reference=Join-Path $fixtureRoot 'regasm-reference.reg'
+        & $regAsm (Join-Path $target 'ChinhTa.WordAddin.dll') "/regfile:$reference" /codebase /nologo
+        if ($LASTEXITCODE -ne 0) { throw 'RegAsm reference generation failed' }
+        'Reference registry generated without registering it:'
+        Get-Content $reference
+    }
     & $ProbeExe $Architecture $target
     if ($LASTEXITCODE -ne 0) { throw 'Registered COM activation probe failed' }
     Assert ((Get-FileHash $personal -Algorithm SHA256).Hash -eq $personalHash) 'Installation and COM activation preserve the personal dictionary bytes'
