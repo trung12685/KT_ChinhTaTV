@@ -9,6 +9,8 @@ internal sealed class WordSnapshot:IDisposable
     private WordSnapshot(object doc,string hash,List<ParagraphDto> paragraphs){document=doc;Hash=hash;Paragraphs=paragraphs;}
     internal static string Text(object doc)
     {dynamic d=doc;object content=d.Content;try{dynamic range=content;return (string)range.Text;}finally{ComLifetime.Release(content);}}
+    private string ReadRange(int start,int end)
+    {dynamic d=document;object range=d.Range(start,end);try{dynamic r=range;return (string?)r.Text??"";}finally{ComLifetime.Release(range);}}
     internal static WordSnapshot Capture(object window)
     {
         dynamic w=window;object doc=w.Document;object? rows=null;
@@ -48,9 +50,11 @@ internal sealed class WordSnapshot:IDisposable
         try
         {
             dynamic ps=rows;row=ps[finding.ParagraphIndex];dynamic p=row;range=p.Range;dynamic r=range;
-            var now=new ParagraphDto{Index=finding.ParagraphIndex,Start=(int)r.Start,End=(int)r.End,Text=(string)r.Text};
+            var now=new ParagraphDto{Index=finding.ParagraphIndex,Start=(int)r.Start,End=(int)r.End,Text=(string)r.Text,InTable=(bool)r.Information[12]};
             if(!BridgeContract.CanSelect(before,now,finding,Hash,BridgeContract.Hash(Text(document))))throw new InvalidOperationException("Vị trí/chữ không còn khớp. Hãy Quét lại.");
-            target=d.Range(finding.Start,finding.Start+finding.Length);dynamic selection=target;
+            var proven=NativeRangeProof.Resolve(now,finding,ReadRange);
+            RequireCurrent(window);
+            target=d.Range(proven.Start,proven.End);dynamic selection=target;
             if((string)selection.Text!=finding.Original)throw new InvalidOperationException("Chưa ghép chắc vùng chữ trong Word; không chọn đoán.");
             selection.Select();dynamic owner=window;owner.Activate();
             object activePane=owner.ActivePane;try{dynamic editPane=activePane;editPane.Activate();}finally{ComLifetime.Release(activePane);}

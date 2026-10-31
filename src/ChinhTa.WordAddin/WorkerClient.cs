@@ -32,7 +32,7 @@ internal sealed class WorkerClient:IDisposable
             string? line=await read;
             if(line is null || line.Length>BridgeContract.MaxFrame){Stop();throw new InvalidOperationException("Mất kết nối bộ xử lý; chưa xác nhận thao tác đã hoàn tất.");}
             var response=json.Deserialize<BridgeResponse>(line);
-            if(response is null || response.Version!=1 || response.Id!=request.Id || response.DocumentId!=request.DocumentId || response.SnapshotHash!=request.SnapshotHash){Stop();throw new InvalidOperationException("Kết quả không khớp lượt yêu cầu; chưa dùng kết quả này.");}
+            if(response is null || response.Version!=BridgeContract.Version || response.Id!=request.Id || response.DocumentId!=request.DocumentId || response.SnapshotHash!=request.SnapshotHash){Stop();throw new InvalidOperationException("Kết quả không khớp lượt yêu cầu/phiên bản; hãy cài đầy đủ cùng một gói Add-in.");}
             if(!response.Success)throw new InvalidOperationException(response.Error);
             return response;
         }

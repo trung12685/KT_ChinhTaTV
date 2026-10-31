@@ -1,6 +1,6 @@
 # Chính tả Việt
 
-Đang thử **Word COM Add-in 0.1.87**: bảng kiểm tra ngay trong Word, chọn chữ để người dùng tự sửa, từ điển cá nhân và xuất từ đơn sang Word. Bộ xử lý .NET 8 dùng lại nền hiện có, lớp COM .NET Framework 4.8 dành cho Word Windows x64. [Phạm vi, cài/gỡ và cách thử](docs/WORD-ADDIN-0.1.87.md). Chưa Word thực PASS; bản Desktop 0.1.86 giữ riêng.
+Đang thử **Word COM Add-in 0.1.88**: kiểm chữ trong nội dung chính, ô bảng và đoạn có tab; đối chiếu vị trí để người dùng chọn lỗi và tự sửa trong Word. Có từ điển cá nhân và xuất từ đơn sang Word. Bộ xử lý .NET 8 dùng lại nền hiện có, lớp COM .NET Framework 4.8 dành cho Word Windows x64. [Phạm vi, cài/gỡ và cách thử](docs/WORD-ADDIN-0.1.88.md). Chưa xác nhận trên Word thật; bản Desktop 0.1.86 giữ riêng.
 
 Bản thử **0.1.86** có sẵn bộ chính tả ngoại tuyến: mở lần đầu đã dùng được, không cần từng người nạp ZIP. Bộ riêng đã nạp vẫn được ưu tiên. Có 72.535 mục từ, nguồn và giấy phép trong gói; ngữ cảnh còn nhỏ nên vẫn duyệt tay từng gợi ý. [Cách dùng](docs/PREVIEW-0.1.86.md) · [Nguồn và đánh giá](docs/FORMAT-BATCH-84.md). Word thực chưa chạy.
 

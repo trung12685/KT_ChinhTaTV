@@ -24,10 +24,13 @@ try
     add=Request("add");add.Term="VNeID";var saved=service.Handle(add);Assert(saved.Success && saved.Terms.Contains("VNeID") && saved.DictionaryRevision==2,"A new personal term is persisted with its preferred spelling and revision");
     var mirror=service.Handle(Request("mirror"));Assert(mirror.Success && File.Exists(mirror.MirrorPath),"A separate UTF-16LE Word dictionary can be exported without changing Word options");
     var bad=Request("unknown");Assert(!service.Handle(bad).Success,"Unknown operations fail closed");
-    request.Version=99;Assert(!service.Handle(request).Success,"Incompatible bridge versions are rejected before analysis");request.Version=1;
-    paragraph.End--;response=service.Handle(request);Assert(response.Success && response.Findings.Count==0 && response.SkippedParagraphs==1,"Nonlinear native/string mapping is reported and skipped rather than guessed");paragraph.End++;
-    paragraph.InTable=true;Assert(service.Handle(request).SkippedParagraphs==1,"The first prototype explicitly reports table paragraphs outside its scan scope");paragraph.InTable=false;
+    request.Version=1;Assert(!service.Handle(request).Success,"The old absolute-CP protocol is rejected before analysis or personal dictionary changes");request.Version=BridgeContract.Version;
+    paragraph.End--;paragraph.InTable=true;response=service.Handle(request);
+    Assert(response.Success && response.Findings.Count==2 && response.Findings.All(x=>x.InTable) && response.ScannedTableParagraphs==1 && response.SkippedParagraphs==0,"Table paragraphs with different native/string lengths are analyzed with string offsets, not guessed Word coordinates");
+    Assert(response.Findings.All(x=>paragraph.Text.Substring(x.Offset,x.Length)==x.Original),"Every finding is anchored to the unchanged source paragraph string");paragraph.End++;paragraph.InTable=false;
     request.Paragraphs.Add(paragraph);Assert(!service.Handle(request).Success,"Duplicate paragraph identities cannot silently merge findings");request.Paragraphs.RemoveAt(1);
+    TableChecks.Run(service,Assert);
+    NativeRangeChecks.Run(Assert);
     // In CI verify the actual worker stdio executable as well as its service.
     if(Environment.GetEnvironmentVariable("GITHUB_ACTIONS")=="true")
     {
