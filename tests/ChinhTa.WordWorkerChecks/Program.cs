@@ -37,6 +37,7 @@ try
         await process.StandardInput.WriteLineAsync(JsonSerializer.Serialize(request));await process.StandardInput.FlushAsync();
         var read=process.StandardOutput.ReadLineAsync();if(await Task.WhenAny(read,Task.Delay(30000))!=read)throw new Exception("Worker IPC timeout");
         var actual=JsonSerializer.Deserialize<BridgeResponse>((await read)!);
+        if(actual is not {Success:true} || actual.Findings.Count!=2 || actual.Id!=request.Id)Console.WriteLine("Synthetic IPC response: "+JsonSerializer.Serialize(actual));
         Assert(actual is {Success:true} && actual.Findings.Count==2 && actual.Id==request.Id,"A real child worker exchanges framed UTF-8 JSON and produces the expected Vietnamese findings");
         await process.StandardInput.WriteLineAsync("not JSON");await process.StandardInput.FlushAsync();
         var malformed=JsonSerializer.Deserialize<BridgeResponse>((await process.StandardOutput.ReadLineAsync())!);Assert(malformed is {Success:false},"Malformed IPC input returns an error instead of acting on a stale request");

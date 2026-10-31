@@ -7,6 +7,9 @@ using ChinhTa.WordProtocol;
 bool isolated=args.Length==2 && args[0]=="--test-stdio";
 if(!isolated && (args.Length!=1 || args[0]!="--stdio"))return 2;
 Console.InputEncoding=new UTF8Encoding(false,true);Console.OutputEncoding=new UTF8Encoding(false);
+// Process.StandardInput may emit one UTF-8 BOM on Windows. Console.In does not
+// consistently consume it after InputEncoding is assigned; consume it once at the stream start.
+Console.SetIn(new StreamReader(Console.OpenStandardInput(),new UTF8Encoding(false,true),detectEncodingFromByteOrderMarks:true));
 string folder=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"ChinhTaViet","WordAddin");
 if(isolated)folder=Path.GetFullPath(args[1]);
 string cache=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"ChinhTaViet","Spelling","local-import.zip");
