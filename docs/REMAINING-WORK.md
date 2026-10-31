@@ -1,3 +1,7 @@
+## Word Add-in 0.1.88: bảng/tab và đối chiếu vùng chọn
+
+Bộ xử lý đã mở kiểm chữ trong các đoạn thuộc ô bảng/đoạn tab, tách ranh giới để tránh ghép sai cụm từ. Kết quả là offset chuỗi; host phải đọc lại prefix/vùng chữ/từng ký tự native trước khi chọn. Có số liệu phạm vi đã kiểm/bỏ qua và giới hạn gợi ý. Chưa có xác nhận Word runtime; chưa chuyển toàn bộ luật thể thức hoặc dấu gạch màu riêng. Hướng dẫn: [WORD-ADDIN-0.1.88.md](WORD-ADDIN-0.1.88.md).
+
 # Cập nhật Word Add-in 0.1.87
 
 Đã có mã bản thử COM host, bảng chọn lỗi để sửa trực tiếp bằng Word, worker dùng lại Core và kho từ cá nhân có kiểm dữ liệu/đồng bộ từ đơn riêng. [Cách thử và phạm vi](WORD-ADDIN-0.1.87.md). Word thực NOT_RUN; cần thử load/pane/chọn chữ/Undo/lưu và đồng bộ dictionary trên Word x64 trước khi chuyển thêm thể thức và bảng.

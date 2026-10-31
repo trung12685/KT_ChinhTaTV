@@ -13,17 +13,19 @@ public sealed class ParagraphDto
 public sealed class FindingDto
 {
     public int ParagraphIndex {get;set;}
-    public int Start {get;set;}
+    // UTF-16 string offset in ParagraphDto.Text. Never a native Word CP.
+    public int Offset {get;set;}
     public int Length {get;set;}
+    public bool InTable {get;set;}
     public string Original {get;set;}="";
     public string Message {get;set;}="";
     public string Category {get;set;}="";
     public string[] Suggestions {get;set;}=Array.Empty<string>();
-    public override string ToString()=>Original+" — "+Message;
+    public override string ToString()=>"Đoạn "+ParagraphIndex+(InTable?" (bảng)":"")+": "+Original+" — "+Message;
 }
 public sealed class BridgeRequest
 {
-    public int Version {get;set;}=1;
+    public int Version {get;set;}=BridgeContract.Version;
     public string Id {get;set;}="";
     public string Operation {get;set;}="";
     public string DocumentId {get;set;}="";
@@ -33,7 +35,7 @@ public sealed class BridgeRequest
 }
 public sealed class BridgeResponse
 {
-    public int Version {get;set;}=1;
+    public int Version {get;set;}=BridgeContract.Version;
     public string Id {get;set;}="";
     public string DocumentId {get;set;}="";
     public string SnapshotHash {get;set;}="";
@@ -46,19 +48,26 @@ public sealed class BridgeResponse
     public string MirrorPath {get;set;}="";
     public string Notice {get;set;}="";
     public int SkippedParagraphs {get;set;}
+    public int TotalParagraphs {get;set;}
+    public int ScannedParagraphs {get;set;}
+    public int ScannedTableParagraphs {get;set;}
+    public int ScannedSegments {get;set;}
     public bool Truncated {get;set;}
 }
 public static class BridgeContract
 {
+    // v2 separates string offsets from native Word positions. Reject v1 peers.
+    public const int Version=2;
     public const int MaxFrame=4*1024*1024;
     public static string Hash(string text)
     {using(var sha=SHA256.Create())return BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(text))).Replace("-","");}
-    public static bool Linear(ParagraphDto p)=>p.Start>=0 && p.End>=p.Start && (long)p.End-p.Start==p.Text.Length;
+    public static bool HasBounds(ParagraphDto p)=>p.Index>0 && p.Start>=0 && p.End>=p.Start && p.Text is not null;
     public static bool CanSelect(ParagraphDto before,ParagraphDto now,FindingDto finding,string originalHash,string currentHash)
     {
-        int offset=finding.Start-before.Start;
-        return originalHash==currentHash && Linear(before) && Linear(now) && before.Start==now.Start && before.End==now.End && before.Text==now.Text &&
-            before.Index==now.Index && finding.ParagraphIndex==before.Index && offset>=0 && finding.Length>0 && offset<=before.Text.Length-finding.Length &&
+        int offset=finding.Offset;
+        return originalHash==currentHash && HasBounds(before) && HasBounds(now) && before.Start==now.Start && before.End==now.End && before.Text==now.Text &&
+            before.Index==now.Index && before.InTable==now.InTable && finding.ParagraphIndex==before.Index && finding.InTable==before.InTable &&
+            offset>=0 && finding.Length>0 && offset<=before.Text.Length-finding.Length &&
             before.Text.Substring(offset,finding.Length)==finding.Original && finding.Length==finding.Original.Length;
     }
 }

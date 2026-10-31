@@ -14,7 +14,7 @@ public sealed class TaskPaneView:UserControl
     private readonly TextBox details=new TextBox{Dock=DockStyle.Bottom,Height=110,Multiline=true,ReadOnly=true,ScrollBars=ScrollBars.Vertical};
     private readonly TextBox term=new TextBox{Dock=DockStyle.Top};
     private readonly ListBox terms=new ListBox{Dock=DockStyle.Fill};
-    private readonly Label status=new Label{Dock=DockStyle.Bottom,Height=85,AutoEllipsis=true,Text="Bấm Quét để kiểm nội dung chính. Bấm Chọn chữ, rồi sửa ngay bằng bàn phím trong Word. Mọi gợi ý đều cần bạn duyệt."};
+    private readonly TextBox status=new TextBox{Dock=DockStyle.Bottom,Height=125,Multiline=true,ReadOnly=true,ScrollBars=ScrollBars.Vertical,Text="Bấm Quét để kiểm nội dung chính và ô bảng. Bấm Chọn chữ, rồi sửa bằng bàn phím trong Word. Mọi gợi ý đều cần bạn duyệt."};
     private readonly FlowLayoutPanel actions=new FlowLayoutPanel{Dock=DockStyle.Top,AutoSize=true};
     private bool busy;
     public TaskPaneView()
@@ -23,7 +23,7 @@ public sealed class TaskPaneView:UserControl
         var tabs=new TabControl{Dock=DockStyle.Fill};var review=new TabPage("Kiểm tra");var dictionary=new TabPage("Từ cá nhân");tabs.TabPages.Add(review);tabs.TabPages.Add(dictionary);
         review.Controls.Add(findings);review.Controls.Add(details);review.Controls.Add(actions);
         AddButton(actions,"Quét lại",Scan);AddButton(actions,"Chọn chữ",SelectFinding);
-        findings.SelectedIndexChanged+=(_,_)=>{if(findings.SelectedItem is FindingDto f)details.Text=f.Original+"\r\n"+f.Message+"\r\nGợi ý: "+string.Join("; ",f.Suggestions)+"\r\nBạn sửa trực tiếp trong Word; bảng này không ghi thay chữ.";};
+        findings.SelectedIndexChanged+=(_,_)=>{if(findings.SelectedItem is FindingDto f)details.Text="Đoạn "+f.ParagraphIndex+(f.InTable?" trong bảng":"")+": "+f.Original+"\r\n"+f.Message+"\r\nGợi ý: "+string.Join("; ",f.Suggestions)+"\r\nBạn sửa trực tiếp trong Word; bảng này không ghi thay chữ.";};
         findings.DoubleClick+=(_,_)=>SelectFinding();
         var dictionaryActions=new FlowLayoutPanel{Dock=DockStyle.Top,AutoSize=true};
         dictionary.Controls.Add(terms);dictionary.Controls.Add(dictionaryActions);dictionary.Controls.Add(term);
@@ -45,11 +45,13 @@ public sealed class TaskPaneView:UserControl
         if(busy)return;busy=true;WordSnapshot? captured=null;
         try
         {
+            ClearResults();status.Text="Đang đọc và kiểm tra văn bản. Bạn vẫn có thể gõ trong Word; hãy quét lại nếu tài liệu thay đổi.";
             RequireWindow();captured=WordSnapshot.Capture(window!);
             var response=await worker.Send(new(){Operation="scan",DocumentId=captured.DocumentId,SnapshotHash=captured.Hash,Paragraphs=captured.Paragraphs.ToList()});
             if(IsDisposed)return;RequireWindow();captured.RequireCurrent(window!);
             snapshot?.Dispose();snapshot=captured;captured=null;findings.DataSource=response.Findings;details.Clear();
-            status.Text=response.Source+"\r\n"+response.Findings.Count+" gợi ý; "+response.SkippedParagraphs+" đoạn chưa kiểm. "+(response.Truncated?"Danh sách giới hạn 1.000 mục. ":"")+response.Notice;
+            status.Text=response.Source+"\r\n"+response.Findings.Count+" gợi ý. Đã kiểm "+response.ScannedParagraphs+"/"+response.TotalParagraphs+" đoạn ("+response.ScannedTableParagraphs+" trong bảng); bỏ qua "+response.SkippedParagraphs+" đoạn. "+
+                (response.Truncated?"Dừng ở 1.000 mục; chưa kiểm xong tài liệu. ":"")+response.Notice;
         }
         catch(Exception error){Fail("Scan",error);}
         finally{captured?.Dispose();busy=false;}
@@ -74,7 +76,7 @@ public sealed class TaskPaneView:UserControl
             string value=operation=="remove"?terms.SelectedItem as string??"":term.Text;
             if(value.Length==0)throw new InvalidOperationException("Nhập từ cần thêm hoặc chọn mục cần xóa.");
             var response=await worker.Send(new(){Operation=operation,Term=value});if(IsDisposed)return;
-            terms.DataSource=response.Terms;findings.DataSource=null;snapshot?.Dispose();snapshot=null;
+            terms.DataSource=response.Terms;ClearResults();
             status.Text="Đã lưu từ điển cá nhân, bản "+response.DictionaryRevision+". Quét lại để cập nhật. Thêm từ không bỏ qua lỗi dùng từ theo ngữ cảnh. Chọn Đồng bộ nếu muốn Word nhận từ đơn.";
         }
         catch(Exception error){Fail("Dictionary",error);}
@@ -105,6 +107,7 @@ public sealed class TaskPaneView:UserControl
         finally{ComLifetime.Release(entry);ComLifetime.Release(dictionaries);busy=false;}
     }
     private void Fail(string operation,Exception error){HostLog.Error(operation,error);if(!IsDisposed)status.Text=error.Message;}
+    private void ClearResults(){findings.DataSource=null;details.Clear();snapshot?.Dispose();snapshot=null;}
     protected override void Dispose(bool disposing)
     {
         if(disposing){worker.Dispose();snapshot?.Dispose();snapshot=null;ComLifetime.Release(window);window=null;application=null;}
