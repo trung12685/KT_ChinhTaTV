@@ -40,7 +40,7 @@ jobs:
           $testOutput=Join-Path $PWD 'artifacts/host-checks'
           dotnet build tests/ChinhTa.WordAddinChecks -c Release -p:PlatformTarget=${{ matrix.architecture }} -p:OutputPath="$testOutput/"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          & "$testOutput/net48/ChinhTa.WordAddinChecks.exe" '${{ matrix.architecture }}' | Tee-Object artifacts/host.log
+          & "$testOutput/ChinhTa.WordAddinChecks.exe" '${{ matrix.architecture }}' | Tee-Object artifacts/host.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Architecture and Windows PowerShell checks
         shell: pwsh
@@ -57,7 +57,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           Compress-Archive artifacts/word-addin/* artifacts/registration-input.zip
           Expand-Archive artifacts/registration-input.zip artifacts/registration-input
-          & "$env:SystemRoot/System32/WindowsPowerShell/v1.0/powershell.exe" -NoProfile -File tests/ChinhTa.WordRegistrationChecks/InstallerChecks.ps1 -PackagePath artifacts/registration-input -Architecture '${{ matrix.architecture }}' -ProbeExe "$probeOutput/net48/ChinhTa.WordRegistrationChecks.exe" | Tee-Object artifacts/install.log
+          & "$env:SystemRoot/System32/WindowsPowerShell/v1.0/powershell.exe" -NoProfile -File tests/ChinhTa.WordRegistrationChecks/InstallerChecks.ps1 -PackagePath artifacts/registration-input -Architecture '${{ matrix.architecture }}' -ProbeExe "$probeOutput/ChinhTa.WordRegistrationChecks.exe" | Tee-Object artifacts/install.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $core=[regex]::Match((Get-Content artifacts/core.log -Raw),'(?m)^(\d+) checks passed\.').Groups[1].Value
           $desktop=[regex]::Match((Get-Content artifacts/desktop.log -Raw),'(?m)^(\d+) WPF checks passed\.').Groups[1].Value
