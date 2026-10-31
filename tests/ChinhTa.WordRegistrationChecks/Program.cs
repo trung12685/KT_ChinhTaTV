@@ -9,7 +9,28 @@ internal static class Program
         if(args.Length!=2)throw new ArgumentException("Expected architecture and installed package directory");
         int checks=0;void Assert(bool value,string message){if(!value)throw new Exception("FAIL: "+message);checks++;Console.WriteLine("PASS "+message);}
         Assert(args[0]==(Environment.Is64BitProcess?"x64":"x86"),"Registration probe runs as "+args[0]);
-        object connector=Activator.CreateInstance(Type.GetTypeFromProgID("ChinhTaViet.WordAddin.Connect",true)!)!;
+        Console.WriteLine("Administrator role enabled: "+new System.Security.Principal.WindowsPrincipal(System.Security.Principal.WindowsIdentity.GetCurrent()).IsInRole(System.Security.Principal.WindowsBuiltInRole.Administrator));
+        Console.WriteLine("EnableLUA: "+Microsoft.Win32.Registry.GetValue("HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System","EnableLUA",null));
+        string registered="CLSID\\{E0382B17-15A1-49D9-AC6A-9322607C6AF7}\\InprocServer32";
+        using(var key=Microsoft.Win32.Registry.ClassesRoot.OpenSubKey(registered))
+        {
+            Console.WriteLine("Merged COM registry: "+(key is null?"MISSING":string.Join("; ",key.GetValueNames().Select(n=>n+"="+key.GetValue(n)))));
+        }
+        object connector;
+        try{connector=Activator.CreateInstance(Type.GetTypeFromProgID("ChinhTaViet.WordAddin.Connect",true)!)!;}
+        catch(Exception failure)
+        {
+            Console.Error.WriteLine("Native COM activation failed before any explicit host assembly load: "+failure);
+            try
+            {
+                var diagnostic=Assembly.LoadFrom(Path.Combine(args[1],"ChinhTa.WordAddin.dll"));
+                Console.Error.WriteLine("Diagnostic assembly: "+diagnostic.FullName+" at "+diagnostic.Location);
+                var instance=diagnostic.CreateInstance("ChinhTa.WordAddin.Connect");
+                Console.Error.WriteLine("Diagnostic managed creation: "+instance?.GetType().FullName);
+            }
+            catch(Exception diagnosticFailure){Console.Error.WriteLine("Diagnostic load failure: "+diagnosticFailure);}
+            throw;
+        }
         object? pane=null;
         try
         {

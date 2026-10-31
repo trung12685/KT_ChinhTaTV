@@ -1,7 +1,7 @@
 name: Word Add-in preview
 on:
   push:
-    branches: ['preview/word-addin-*']
+    branches: ['preview/word-addin-*', 'diagnostic/word-addin-*']
   workflow_dispatch:
 permissions:
   contents: read
@@ -19,17 +19,20 @@ jobs:
         with:
           dotnet-version: 8.0.x
       - name: Core and OpenXML checks
+        if: ${{ !startsWith(github.ref, 'refs/heads/diagnostic/') }}
         shell: pwsh
         run: |
           New-Item artifacts -ItemType Directory -Force | Out-Null
           dotnet run --project tests/ChinhTa.Checks -c Release | Tee-Object artifacts/core.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Existing desktop regression checks
+        if: ${{ !startsWith(github.ref, 'refs/heads/diagnostic/') }}
         shell: pwsh
         run: |
           dotnet run --project tests/ChinhTa.DesktopChecks -c Release | Tee-Object artifacts/desktop.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Worker protocol and dictionary checks
+        if: ${{ !startsWith(github.ref, 'refs/heads/diagnostic/') }}
         shell: pwsh
         run: |
           dotnet run --project tests/ChinhTa.WordWorkerChecks -c Release | Tee-Object artifacts/worker.log
@@ -38,6 +41,7 @@ jobs:
         shell: pwsh
         run: |
           $testOutput=Join-Path $PWD 'artifacts/host-checks'
+          New-Item artifacts -ItemType Directory -Force | Out-Null
           dotnet build tests/ChinhTa.WordAddinChecks -c Release -p:PlatformTarget=${{ matrix.architecture }} -p:OutputPath="$testOutput/"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           & "$testOutput/ChinhTa.WordAddinChecks.exe" '${{ matrix.architecture }}' | Tee-Object artifacts/host.log
@@ -59,6 +63,7 @@ jobs:
           Expand-Archive artifacts/registration-input.zip artifacts/registration-input
           & "$env:SystemRoot/System32/WindowsPowerShell/v1.0/powershell.exe" -NoProfile -File tests/ChinhTa.WordRegistrationChecks/InstallerChecks.ps1 -PackagePath artifacts/registration-input -Architecture '${{ matrix.architecture }}' -ProbeExe "$probeOutput/ChinhTa.WordRegistrationChecks.exe" | Tee-Object artifacts/install.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ('${{ github.ref }}'.StartsWith('refs/heads/diagnostic/')) { 'COM registration diagnostic only; no distributable artifact.' >> $env:GITHUB_STEP_SUMMARY; exit 0 }
           $core=[regex]::Match((Get-Content artifacts/core.log -Raw),'(?m)^(\d+) checks passed\.').Groups[1].Value
           $desktop=[regex]::Match((Get-Content artifacts/desktop.log -Raw),'(?m)^(\d+) WPF checks passed\.').Groups[1].Value
           $worker=[regex]::Match((Get-Content artifacts/worker.log -Raw),'(?m)^(\d+) worker checks passed\.').Groups[1].Value
@@ -79,6 +84,7 @@ jobs:
           Copy-Item artifacts/build-checks.json artifacts/package/
           "Word Add-in 0.1.89 win-${{ matrix.architecture }}, commit $env:GITHUB_SHA. Core $core, desktop $desktop, worker $worker, host $wordHostChecks, architecture $architectureChecks, registration $registrationChecks, installer $installerChecks. Installed/activated/uninstalled in a disposable CI fixture, not a user PC. Word runtime: NOT_RUN." >> $env:GITHUB_STEP_SUMMARY
       - uses: actions/upload-artifact@v4
+        if: ${{ !startsWith(github.ref, 'refs/heads/diagnostic/') }}
         with:
           name: ChinhTaViet-WordAddin-0.1.89-win-${{ matrix.architecture }}-${{ github.sha }}
           path: artifacts/package/*
