@@ -14,7 +14,7 @@ internal static class StandardUserProbe
     {
         if(Environment.GetEnvironmentVariable("GITHUB_ACTIONS")!="true")throw new InvalidOperationException("Standard-user launch is only used on disposable CI runners");
         IntPtr token=IntPtr.Zero,sid=IntPtr.Zero,label=IntPtr.Zero;
-        var process=new ProcessInfo();
+        var process=new ProcessInfo();string? probeFolder=null;
         try
         {
             var administrator=new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid,null);
@@ -28,19 +28,26 @@ internal static class StandardUserProbe
             IntPtr integrity=IntPtr.Add(label,size);Marshal.Copy(bytes,0,integrity,bytes.Length);
             Marshal.StructureToPtr(new SidAndAttributes{Sid=integrity,Attributes=0x20},label,false);
             if(!SetTokenInformation(token,25,label,size+bytes.Length))throw new Win32Exception(Marshal.GetLastWin32Error());
-            string executable=System.Reflection.Assembly.GetExecutingAssembly().Location;
-            var command=new StringBuilder('"'+executable+'"'+" "+args[0]+" \""+args[1]+"\" --standard-user");
-            var startup=new StartupInfo{Size=Marshal.SizeOf(typeof(StartupInfo)),Flags=0x100,StdInput=GetStdHandle(-10),StdOutput=GetStdHandle(-11),StdError=GetStdHandle(-12)};
+            string source=System.Reflection.Assembly.GetExecutingAssembly().Location;
+            probeFolder=Path.Combine(args[1],"ci-probe-"+Guid.NewGuid().ToString("N"));Directory.CreateDirectory(probeFolder);
+            string executable=Path.Combine(probeFolder,Path.GetFileName(source));File.Copy(source,executable);
+            if(File.Exists(source+".config"))File.Copy(source+".config",executable+".config");
+            string log=Path.Combine(probeFolder,"result.log");
+            var command=new StringBuilder('"'+executable+'"'+" "+args[0]+" \""+args[1]+"\" --standard-user \""+log+"\"");
+            var startup=new StartupInfo{Size=Marshal.SizeOf(typeof(StartupInfo))};
             Console.WriteLine("Launching the same architecture registration probe with administrator privileges removed.");
-            if(!CreateProcessAsUser(token,executable,command,IntPtr.Zero,IntPtr.Zero,true,0x08000000,IntPtr.Zero,Path.GetDirectoryName(executable)!,ref startup,out process))throw new Win32Exception(Marshal.GetLastWin32Error());
+            if(!CreateProcessAsUser(token,executable,command,IntPtr.Zero,IntPtr.Zero,false,0x08000000,IntPtr.Zero,Path.GetDirectoryName(executable)!,ref startup,out process))throw new Win32Exception(Marshal.GetLastWin32Error());
             if(WaitForSingleObject(process.Process,60000)!=0){TerminateProcess(process.Process,1);throw new TimeoutException("Standard-user COM probe did not exit");}
             if(!GetExitCodeProcess(process.Process,out uint result))throw new Win32Exception(Marshal.GetLastWin32Error());
+            Console.WriteLine("Standard-user probe exit code: 0x"+result.ToString("X8"));
+            if(File.Exists(log))Console.WriteLine(File.ReadAllText(log));else Console.WriteLine("Standard-user probe did not produce its managed startup log.");
             return unchecked((int)result);
         }
         finally
         {
             if(process.Thread!=IntPtr.Zero)CloseHandle(process.Thread);if(process.Process!=IntPtr.Zero)CloseHandle(process.Process);
             if(token!=IntPtr.Zero)CloseHandle(token);if(sid!=IntPtr.Zero)Marshal.FreeHGlobal(sid);if(label!=IntPtr.Zero)Marshal.FreeHGlobal(label);
+            if(probeFolder is not null && Directory.Exists(probeFolder))Directory.Delete(probeFolder,true);
         }
     }
     [StructLayout(LayoutKind.Sequential)]private struct SidAndAttributes{public IntPtr Sid;public uint Attributes;}

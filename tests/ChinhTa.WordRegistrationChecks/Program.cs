@@ -7,7 +7,12 @@ internal static class Program
     [STAThread]private static void Main(string[] args)
     {
         if(args.Length==2 && StandardUserProbe.Administrator){Environment.ExitCode=StandardUserProbe.Run(args);return;}
-        if(args.Length==3 && args[2]=="--standard-user")args=args.Take(2).ToArray();
+        if(args.Length==4 && args[2]=="--standard-user")
+        {
+            var log=new StreamWriter(args[3],false,new System.Text.UTF8Encoding(false)){AutoFlush=true};Console.SetOut(log);Console.SetError(log);
+            AppDomain.CurrentDomain.UnhandledException+=(_,e)=>Console.Error.WriteLine(e.ExceptionObject);
+            args=args.Take(2).ToArray();
+        }
         if(args.Length!=2)throw new ArgumentException("Expected architecture and installed package directory");
         int checks=0;void Assert(bool value,string message){if(!value)throw new Exception("FAIL: "+message);checks++;Console.WriteLine("PASS "+message);}
         Assert(!StandardUserProbe.Administrator,"Per-user COM activation is tested without administrator privileges");
