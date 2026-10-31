@@ -25,3 +25,8 @@ Người dùng đồng ý tiếp tục sau đánh giá ZIP Python. Chuyển bộ
 ### 31/10/2026 — đóng gói dữ liệu dùng chung
 
 Người dùng đã nạp ZIP và yêu cầu ứng dụng có sẵn dữ liệu từ đầu cho mọi người. Đóng gói bộ có nguồn/giấy phép rõ, tự nạp ngoại tuyến; giữ bộ riêng đã nạp trên máy và cho phép chủ động dùng bộ chung. Nạp ZIP là lựa chọn nâng cao, không phải bước bắt buộc lúc bắt đầu. Giữ sửa thủ công mặc định.
+
+
+### 31/10/2026 — chuyển luồng chính sang Add-in Word
+
+Người dùng muốn thảo luận rồi tiếp tục hướng Add-in để tự sửa ngay trong tài liệu Word. Ưu tiên bản thử có bảng lỗi, bấm chọn đúng chữ, gõ trong Word và từ điển cá nhân. Tệp Vietnamese.dic đã được nghiên cứu: danh sách âm tiết không thay kiểm ngữ cảnh; các mục chữ đã có trong nguồn Viet74K. Thêm từ cần tồn tại qua nâng cấp, giữ từ điển Word hiện có và không làm tắt các cảnh báo dùng từ theo ngữ cảnh. Add-in không tự thay chữ hay tắt proofing trên cả tài liệu.

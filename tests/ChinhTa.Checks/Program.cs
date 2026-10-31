@@ -10,6 +10,7 @@ void Assert(bool condition, string name)
 }
 VietnameseSpellingChecks.Run(Assert);
 BundledSpellingChecks.Run(Assert);
+PersonalLexiconChecks.Run(Assert);
 DocxLineMetadataChecks.Run(Assert);
 LineCompatibilityChecks.Run(Assert);
 RenderedLineProofChecks.Run(Assert);

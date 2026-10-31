@@ -4,7 +4,8 @@ using System.Text.RegularExpressions;
 
 namespace ChinhTa.Core;
 public sealed record SpellingToken(int Start,int Length,string Original,string Key);
-public sealed record SpellingFinding(int Start,int Length,string Original,IReadOnlyList<string> Suggestions,string Reason);
+public enum SpellingFindingKind { UnknownLexeme,ContextConfusion,ReviewedExpression }
+public sealed record SpellingFinding(int Start,int Length,string Original,IReadOnlyList<string> Suggestions,string Reason,SpellingFindingKind Kind=SpellingFindingKind.ReviewedExpression);
 public sealed record SpellingSource(string Name,string Fingerprint,int Headwords,int Vocabulary,int Bigrams,int Trigrams,bool Starter=false);
 
 // Resource-backed, local suggestions only. Counts rank candidates; they are not
@@ -71,9 +72,10 @@ public sealed class VietnameseSpellingModel
         char.IsUpper(source[0])?char.ToUpperInvariant(suggestion[0])+suggestion[1..]:suggestion;
     private static bool OnlySpace(string source,int start,int end)=>end>=start && source.AsSpan(start,end-start).IndexOfAnyExcept(' ','\t')<0;
     private static bool IsName(SpellingToken token)=>token.Original.Length>0 && char.IsUpper(token.Original[0]);
-    public IReadOnlyList<SpellingFinding> Check(string text)
+    public IReadOnlyList<SpellingFinding> Check(string text,IReadOnlyList<PersonalTerm>? personalTerms=null)
     {
         if(text.Length>64000 || TechnicalTextContext.IsTechnical(text))return [];
+        var personalSpans=personalTerms is null?Array.Empty<(int Start,int Length)>():PersonalLexiconRules.Spans(text,personalTerms);
         var tokens=Tokenize(text);var protectedTokens=new HashSet<int>();
         for(int i=0;i<tokens.Count;i++)
         {
@@ -118,6 +120,7 @@ public sealed class VietnameseSpellingModel
             }
             if(Source.Starter)continue;
             long ol=Bi(prev,word),orr=Bi(word,next),os=ol+orr,ot=Tri(prev,word,next);bool known=lexicon.Contains(word);
+            if(!known && personalSpans.Any(s=>token.Start>=s.Start && token.Start+token.Length<=s.Start+s.Length))continue;
             IEnumerable<string> candidates=known?Confusions.GetValueOrDefault(word)??[]:Candidates(word);
             var ranked=candidates.Where(c=>!OrthographicVariant(word,c)).Select(candidate=>
             {
@@ -129,7 +132,7 @@ public sealed class VietnameseSpellingModel
             }).Where(x=>x.evidence).OrderByDescending(x=>x.score).ThenBy(x=>x.candidate,StringComparer.Ordinal).Take(3).ToArray();
             if(ranked.Length==0)continue;
             result.Add(new(token.Start,token.Length,token.Original,Array.AsReadOnly(ranked.Select(x=>MatchCase(token.Original,x.candidate)).ToArray()),
-                (known?"Từ có thể hợp lệ nhưng cần đối chiếu ngữ cảnh.":"Chưa xác nhận mục từ; có ứng viên được ngữ cảnh ủng hộ.")+" Tần suất chỉ hỗ trợ xếp hạng, không chứng minh câu sai."));
+                (known?"Từ có thể hợp lệ nhưng cần đối chiếu ngữ cảnh.":"Chưa xác nhận mục từ; có ứng viên được ngữ cảnh ủng hộ.")+" Tần suất chỉ hỗ trợ xếp hạng, không chứng minh câu sai.",known?SpellingFindingKind.ContextConfusion:SpellingFindingKind.UnknownLexeme));
         }
         return result.OrderBy(x=>x.Start).ToArray();
     }

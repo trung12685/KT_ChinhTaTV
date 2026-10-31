@@ -1,3 +1,7 @@
+# Cập nhật Word Add-in 0.1.87
+
+Đã có mã bản thử COM host, bảng chọn lỗi để sửa trực tiếp bằng Word, worker dùng lại Core và kho từ cá nhân có kiểm dữ liệu/đồng bộ từ đơn riêng. [Cách thử và phạm vi](WORD-ADDIN-0.1.87.md). Word thực NOT_RUN; cần thử load/pane/chọn chữ/Undo/lưu và đồng bộ dictionary trên Word x64 trước khi chuyển thêm thể thức và bảng.
+
 # Cập nhật 0.1.86 — đã có dữ liệu chung
 
 Đã đóng gói bộ chính tả ngoại tuyến với giấy phép, nguồn, version/hash và kiểm nạp bản publish/sau ZIP. Dữ liệu riêng hợp lệ vẫn được ưu tiên. Bộ chung có 72.535 mục từ nhưng ngữ cảnh còn nhỏ; cần mở rộng dữ liệu được phép phân phối và bộ chuẩn gán nhãn độc lập. Xem [FORMAT-BATCH-84](FORMAT-BATCH-84.md). Word thực chưa chạy.

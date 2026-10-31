@@ -1,0 +1,69 @@
+name: Word Add-in preview
+on:
+  push:
+    branches: ['preview/word-addin-*']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Core and OpenXML checks
+        shell: pwsh
+        run: |
+          New-Item artifacts -ItemType Directory -Force | Out-Null
+          dotnet run --project tests/ChinhTa.Checks -c Release | Tee-Object artifacts/core.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Existing desktop regression checks
+        shell: pwsh
+        run: |
+          dotnet run --project tests/ChinhTa.DesktopChecks -c Release | Tee-Object artifacts/desktop.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Worker protocol and dictionary checks
+        shell: pwsh
+        run: |
+          dotnet run --project tests/ChinhTa.WordWorkerChecks -c Release | Tee-Object artifacts/worker.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Framework COM host and native control checks without Word
+        shell: pwsh
+        run: |
+          dotnet build tests/ChinhTa.WordAddinChecks -c Release
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & tests/ChinhTa.WordAddinChecks/bin/Release/net48/ChinhTa.WordAddinChecks.exe | Tee-Object artifacts/host.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Package and verify install dry run
+        shell: pwsh
+        run: |
+          & scripts/WordAddin/package.ps1 -Output artifacts/word-addin
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $core=[regex]::Match((Get-Content artifacts/core.log -Raw),'(?m)^(\d+) checks passed\.').Groups[1].Value
+          $desktop=[regex]::Match((Get-Content artifacts/desktop.log -Raw),'(?m)^(\d+) WPF checks passed\.').Groups[1].Value
+          $worker=[regex]::Match((Get-Content artifacts/worker.log -Raw),'(?m)^(\d+) worker checks passed\.').Groups[1].Value
+          $wordHostChecks=[regex]::Match((Get-Content artifacts/host.log -Raw),'(?m)^(\d+) Word host checks passed\.').Groups[1].Value
+          if (!$core -or !$desktop -or !$worker -or !$wordHostChecks) { throw 'Missing successful check totals' }
+          @{Version='0.1.87';Commit=$env:GITHUB_SHA;Core=[int]$core;Desktop=[int]$desktop;Worker=[int]$worker;Host=[int]$wordHostChecks;Word='NOT_RUN'} | ConvertTo-Json | Set-Content artifacts/build-checks.json -Encoding UTF8
+          Copy-Item artifacts/build-checks.json artifacts/word-addin/
+          New-Item artifacts/package -ItemType Directory -Force | Out-Null
+          $name="ChinhTaViet-WordAddin-0.1.87-$($env:GITHUB_SHA.Substring(0,8))-win-x64.zip"
+          Compress-Archive artifacts/word-addin/* "artifacts/package/$name"
+          Expand-Archive "artifacts/package/$name" artifacts/extracted
+          & artifacts/extracted/Install-WordAddin.ps1 -DryRun
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          (Get-FileHash "artifacts/package/$name" -Algorithm SHA256).Hash | Set-Content artifacts/package/SHA256.txt
+          Copy-Item artifacts/build-checks.json artifacts/package/
+          "Word Add-in 0.1.87, commit $env:GITHUB_SHA. Core $core, desktop $desktop, worker $worker, host $wordHostChecks. Word runtime: NOT_RUN. Installer dry run only; no user Office registration changed." >> $env:GITHUB_STEP_SUMMARY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ChinhTaViet-WordAddin-0.1.87-${{ github.sha }}
+          path: artifacts/package/*
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: WordAddin-check-logs-${{ github.sha }}
+          path: artifacts/*.log
