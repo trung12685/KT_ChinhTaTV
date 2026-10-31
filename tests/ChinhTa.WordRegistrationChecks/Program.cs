@@ -6,8 +6,11 @@ internal static class Program
 {
     [STAThread]private static void Main(string[] args)
     {
+        if(args.Length==2 && StandardUserProbe.Administrator){Environment.ExitCode=StandardUserProbe.Run(args);return;}
+        if(args.Length==3 && args[2]=="--standard-user")args=args.Take(2).ToArray();
         if(args.Length!=2)throw new ArgumentException("Expected architecture and installed package directory");
         int checks=0;void Assert(bool value,string message){if(!value)throw new Exception("FAIL: "+message);checks++;Console.WriteLine("PASS "+message);}
+        Assert(!StandardUserProbe.Administrator,"Per-user COM activation is tested without administrator privileges");
         Assert(args[0]==(Environment.Is64BitProcess?"x64":"x86"),"Registration probe runs as "+args[0]);
         Console.WriteLine("Administrator role enabled: "+new System.Security.Principal.WindowsPrincipal(System.Security.Principal.WindowsIdentity.GetCurrent()).IsInRole(System.Security.Principal.WindowsBuiltInRole.Administrator));
         Console.WriteLine("EnableLUA: "+Microsoft.Win32.Registry.GetValue("HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System","EnableLUA",null));
