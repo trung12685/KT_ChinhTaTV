@@ -39,7 +39,7 @@ class ImportChecks(unittest.TestCase):
             source=root/'local.jsonl';source.write_bytes(raw);output=root/'output'
             with patch.object(subject,'SHA256',hashlib.sha256(raw).hexdigest()),patch.object(subject,'load_corpus',return_value=({}, {},['Thực hiện'],[])):
                 subject.prepare(source,root,output)
-            metadata=json.loads((output/'metadata.json').read_text());cases=[json.loads(s) for s in (output/'cases.jsonl').read_text().splitlines()]
+            metadata=json.loads((output/'metadata.json').read_text(encoding='utf-8'));cases=[json.loads(s) for s in (output/'cases.jsonl').read_text(encoding='utf-8').splitlines()]
             self.assertEqual(metadata['Counts']['ExcludedTrainingOverlap'],1);self.assertFalse(metadata['ReserveEvaluated']);self.assertGreater(metadata['Counts']['ReservedRows'],0)
             included={r['Text'] for r in cases};self.assertEqual('Hom qua' in included,'Hòm qua' in included)
             self.assertNotIn('Thuc hiện',included);self.assertEqual(hashlib.sha256((output/'cases.jsonl').read_bytes()).hexdigest(),metadata['CasesSHA256'])
