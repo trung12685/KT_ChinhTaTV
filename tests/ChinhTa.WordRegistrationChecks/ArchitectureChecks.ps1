@@ -28,7 +28,7 @@ try {
     Assert (Reject { Read-ExecutableArchitecture (Join-Path $folder 'unsupported.exe') }) 'Unsupported PE architecture cannot be mistaken for x86'
     [IO.File]::WriteAllBytes((Join-Path $folder 'short.exe'),[byte[]]@(1,2,3))
     Assert (Reject { Read-ExecutableArchitecture (Join-Path $folder 'short.exe') }) 'A truncated executable is rejected'
-    foreach ($name in @('Architecture.ps1','Install-WordAddin.ps1','Uninstall-WordAddin.ps1')) {
+    foreach ($name in @('Architecture.ps1','Install-WordAddin.ps1','Uninstall-WordAddin.ps1','Diagnose-WordAddin.ps1')) {
         $parseTokens=$null;$parseErrors=$null
         [void][Management.Automation.Language.Parser]::ParseFile((Join-Path $RepositoryRoot ('scripts/WordAddin/'+$name)),[ref]$parseTokens,[ref]$parseErrors)
         Assert (@($parseErrors).Count -eq 0) ("Windows PowerShell parses "+$name)
