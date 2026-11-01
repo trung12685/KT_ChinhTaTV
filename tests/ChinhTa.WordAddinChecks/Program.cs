@@ -40,6 +40,7 @@ internal static class Program
         _=new Connect();Assert(true,"A failing diagnostic sink cannot prevent the connector from being created");
         HostLog.Observer=null;
         FakeWordChecks.Run(Assert);
+        LiveHostChecks.Run(Assert);
         Assert(!typeof(Connect).Assembly.GetReferencedAssemblies().Any(a=>a.Name=="Office"),"The COM host embeds the required Office interface metadata and does not redistribute an Office runtime DLL");
         Console.WriteLine($"{checks} Word host checks passed. Microsoft Word: NOT_RUN.");
     }

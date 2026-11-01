@@ -1,6 +1,6 @@
 # Chính tả Việt
 
-Đang thử **Word COM Add-in 0.1.90**: kiểm chữ trong nội dung chính, ô bảng và đoạn có tab; đối chiếu vị trí để người dùng chọn lỗi và tự sửa trong Word. Có từ điển cá nhân và xuất từ đơn sang Word. Bộ xử lý .NET 8 dùng lại nền hiện có, lớp COM .NET Framework 4.8 dành cho Word Windows 32-bit/64-bit với hai gói x86/x64. [Phạm vi, cài/gỡ và cách thử](docs/WORD-ADDIN-0.1.90.md). 0.1.90 sửa hợp đồng SAFEARRAY của callback COM và thêm chẩn đoán nạp. Chưa xác nhận trên Word thật; bản Desktop 0.1.86 giữ riêng.
+Đang thử **Word COM Add-in 0.1.91**: mặc định kiểm đoạn đang soạn và gạch riêng trên màn hình; đỏ cho chính tả (điễm/nghành/sử lý/bổ xung/sáng lạng), xanh cho gợi ý, vàng cho thể thức đang chọn. Kèm Vietnamese.dic người dùng cung cấp, từ cá nhân và ba chế độ Chính tả / Thể thức / Kiểm sâu. Có gói Word Windows x86/x64, giữ sửa tay/Undo/Lưu của Word. [Phạm vi và cách thử](docs/WORD-ADDIN-0.1.91.md). Chưa xác nhận trên Word thật; Desktop 0.1.86 giữ riêng.
 
 Bản thử **0.1.86** có sẵn bộ chính tả ngoại tuyến: mở lần đầu đã dùng được, không cần từng người nạp ZIP. Bộ riêng đã nạp vẫn được ưu tiên. Có 72.535 mục từ, nguồn và giấy phép trong gói; ngữ cảnh còn nhỏ nên vẫn duyệt tay từng gợi ý. [Cách dùng](docs/PREVIEW-0.1.86.md) · [Nguồn và đánh giá](docs/FORMAT-BATCH-84.md). Word thực chưa chạy.
 

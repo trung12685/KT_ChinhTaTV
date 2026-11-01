@@ -90,7 +90,7 @@ function Assert-WordPackageArchitecture([string]$PackageArchitecture,[string]$Of
 }
 
 function Get-WordAddinTarget($Manifest) {
-    return Join-Path $env:LOCALAPPDATA ("ChinhTaViet\WordAddin\0.1.90-"+$Manifest.Commit.Substring(0,8)+'-win-'+$Manifest.Architecture)
+    return Join-Path $env:LOCALAPPDATA ("ChinhTaViet\WordAddin\0.1.91-"+$Manifest.Commit.Substring(0,8)+'-win-'+$Manifest.Architecture)
 }
 
 function Get-WordAddinClasses {

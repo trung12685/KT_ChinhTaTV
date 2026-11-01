@@ -47,7 +47,7 @@ internal static class Program
             pane=Activator.CreateInstance(Type.GetTypeFromProgID("ChinhTaViet.WordAddin.Pane",true)!)!;
             var loaded=AppDomain.CurrentDomain.GetAssemblies().Single(a=>a.GetName().Name=="ChinhTa.WordAddin");
             Assert(string.Equals(Path.GetFullPath(loaded.Location),Path.GetFullPath(Path.Combine(args[1],"ChinhTa.WordAddin.dll")),StringComparison.OrdinalIgnoreCase),"COM loaded the installed host rather than a test-project copy");
-            Assert(loaded.GetName().Version==new Version(0,1,90,0),"The installed COM host has the package assembly version");
+            Assert(loaded.GetName().Version==new Version(0,1,91,0),"The installed COM host has the package assembly version");
             Assert(!loaded.GetReferencedAssemblies().Any(a=>a.Name=="Office"),"Activation requires no redistributed Office PIA");
             void Query(object value,string text,string label)
             {

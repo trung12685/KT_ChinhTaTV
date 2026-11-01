@@ -14,7 +14,8 @@ string folder=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.L
 if(isolated)folder=Path.GetFullPath(args[1]);
 string cache=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"ChinhTaViet","Spelling","local-import.zip");
 var model=isolated?VietnameseSpellingDefaults.Load(VietnameseSpellingDefaults.DirectoryPath):VietnameseSpellingDefaults.Select(cache,VietnameseSpellingDefaults.DirectoryPath);
-var service=new WorkerService(model,new(Path.Combine(folder,"personal-terms.json")),Path.Combine(folder,"ChinhTaViet.User.dic"));
+var syllables=SyllableDictionary.Load(Path.Combine(AppContext.BaseDirectory,"proofing","Vietnamese.words.txt"));
+var service=new WorkerService(model,new(Path.Combine(folder,"personal-terms.json")),Path.Combine(folder,"ChinhTaViet.User.dic"),syllables);
 var options=new JsonSerializerOptions{MaxDepth=16};
 while(true)
 {
