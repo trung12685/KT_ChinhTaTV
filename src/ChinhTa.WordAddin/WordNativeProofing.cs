@@ -42,7 +42,7 @@ internal static class WordNativeProofing
         }
         finally
         {
-            try{if(collection is not null && active is not null){dynamic dictionaries=collection;dictionaries.ActiveCustomDictionary=active;}}
+            try{if(collection is not null && active is not null){dynamic dictionaries=collection;dictionaries.ActiveCustomDictionary=(dynamic)active;}}
             finally{ComLifetime.Release(entry);ComLifetime.Release(active);ComLifetime.Release(collection);}
         }
     }

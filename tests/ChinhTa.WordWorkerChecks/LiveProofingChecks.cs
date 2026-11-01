@@ -34,6 +34,7 @@ internal static class LiveProofingChecks
         assert(dates.Success && dates.Findings.Any(f=>f.Category=="Context" && f.Original=="ngày 31/02/2026"),"Deep review flags an impossible calendar date as blue contextual advice, not a spelling error");
         dates=service.Handle(Scan("Hẹn ngày 29/02/2024.","deep"));assert(dates.Success && dates.Findings.All(f=>f.Category!="Context"),"The deep calendar rule accepts a real leap-day date");
         dates=service.Handle(Scan("Hẹn thứ hai, ngày 01/11/2026.","deep"));assert(dates.Success && dates.Findings.Any(f=>f.Category=="Context" && f.Message.Contains("chủ nhật")),"Deep review distinguishes a day-of-week/date inconsistency without choosing what to rewrite");
+        assert(service.Handle(Scan("Ngày ٣١/٠٢/٢٠٢٦.","deep")).Success,"Unrecognized numeral scripts cannot crash calendar checking through Int32 parsing");
     }
     private static void NamedAndLetter(WorkerService service,Func<string,string,BridgeRequest> scan,Action<bool,string> assert)
     {

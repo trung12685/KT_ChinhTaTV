@@ -3,7 +3,7 @@ using ChinhTa.WordProtocol;
 namespace ChinhTa.WordWorker;
 internal static class DeepReview
 {
-    private static readonly Regex Dates=new(@"(?:(?<weekday>thứ\s+(?:hai|ba|tư|năm|sáu|bảy)|chủ\s+nhật)\s*,?\s*)?ngày\s+(?<day>\d{1,2})(?:\s*/\s*(?<month>\d{1,2})\s*/\s*|\s+tháng\s+(?<month>\d{1,2})\s+năm\s+)(?<year>\d{4})\b",RegexOptions.IgnoreCase|RegexOptions.CultureInvariant|RegexOptions.NonBacktracking);
+    private static readonly Regex Dates=new(@"(?:(?<weekday>thứ\s+(?:hai|ba|tư|năm|sáu|bảy)|chủ\s+nhật)\s*,?\s*)?ngày\s+(?<day>[0-9]{1,2})(?:\s*/\s*(?<month>[0-9]{1,2})\s*/\s*|\s+tháng\s+(?<month>[0-9]{1,2})\s+năm\s+)(?<year>[0-9]{4})\b",RegexOptions.IgnoreCase|RegexOptions.CultureInvariant|RegexOptions.NonBacktracking);
     internal static IEnumerable<FindingDto> Check(string text)
     {
         foreach(Match match in Dates.Matches(text))
