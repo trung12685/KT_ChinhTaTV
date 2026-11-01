@@ -2,14 +2,14 @@ using System.Runtime.InteropServices;
 using Office=Microsoft.Office.Core;
 namespace ChinhTa.WordAddin;
 // Office's established automation interface; kept independent of the VS SDK.
-[ComVisible(true),Guid("B65AD801-ABAF-11D0-BB8B-00A0C90F2744"),InterfaceType(ComInterfaceType.InterfaceIsDual)]
+[ComImport,Guid("B65AD801-ABAF-11D0-BB8B-00A0C90F2744"),InterfaceType(ComInterfaceType.InterfaceIsDual),TypeLibType((TypeLibTypeFlags)4160)]
 public interface IOfficeConnection
 {
-    [DispId(1)]void OnConnection([MarshalAs(UnmanagedType.IDispatch)]object application,int mode,[MarshalAs(UnmanagedType.IDispatch)]object addin,ref Array custom);
-    [DispId(2)]void OnDisconnection(int mode,ref Array custom);
-    [DispId(3)]void OnAddInsUpdate(ref Array custom);
-    [DispId(4)]void OnStartupComplete(ref Array custom);
-    [DispId(5)]void OnBeginShutdown(ref Array custom);
+    [DispId(1)]void OnConnection([In,MarshalAs(UnmanagedType.IDispatch)]object application,[In]int mode,[In,MarshalAs(UnmanagedType.IDispatch)]object addin,[In,MarshalAs(UnmanagedType.SafeArray,SafeArraySubType=VarEnum.VT_VARIANT)]ref Array custom);
+    [DispId(2)]void OnDisconnection([In]int mode,[In,MarshalAs(UnmanagedType.SafeArray,SafeArraySubType=VarEnum.VT_VARIANT)]ref Array custom);
+    [DispId(3)]void OnAddInsUpdate([In,MarshalAs(UnmanagedType.SafeArray,SafeArraySubType=VarEnum.VT_VARIANT)]ref Array custom);
+    [DispId(4)]void OnStartupComplete([In,MarshalAs(UnmanagedType.SafeArray,SafeArraySubType=VarEnum.VT_VARIANT)]ref Array custom);
+    [DispId(5)]void OnBeginShutdown([In,MarshalAs(UnmanagedType.SafeArray,SafeArraySubType=VarEnum.VT_VARIANT)]ref Array custom);
 }
 [ComVisible(true),Guid(Ids.ConnectGuid),ProgId(Ids.ConnectProgId),ClassInterface(ClassInterfaceType.AutoDispatch)]
 public sealed class Connect:IOfficeConnection,Office.IRibbonExtensibility,Office.ICustomTaskPaneConsumer
@@ -17,13 +17,18 @@ public sealed class Connect:IOfficeConnection,Office.IRibbonExtensibility,Office
     private object? application;
     private Office.ICTPFactory? factory;
     private readonly Dictionary<int,Office.CustomTaskPane> panes=new Dictionary<int,Office.CustomTaskPane>();
-    public void OnConnection(object app,int mode,object addin,ref Array custom){application=app;}
-    public void OnDisconnection(int mode,ref Array custom)=>Close();
-    public void OnAddInsUpdate(ref Array custom){}
-    public void OnStartupComplete(ref Array custom){}
-    public void OnBeginShutdown(ref Array custom)=>Close();
-    public void CTPFactoryAvailable(Office.ICTPFactory value){factory=value;}
-    public string GetCustomUI(string ribbonId)=>"<customUI xmlns='http://schemas.microsoft.com/office/2009/07/customui'><ribbon><tabs><tab id='ChinhTaVietTab' label='Chính tả Việt'><group id='ChinhTaVietReview' label='Sửa trực tiếp trong Word'><button id='ChinhTaVietOpen' label='Mở bảng kiểm tra' size='large' imageMso='SpellingAndGrammar' onAction='OpenPane'/></group></tab></tabs></ribbon></customUI>";
+    public Connect(){HostLog.Event("Construct");}
+    public void OnConnection(object app,int mode,object addin,ref Array custom){HostLog.Event("OnConnection.Enter");application=app;HostLog.Event("OnConnection.Complete");}
+    public void OnDisconnection(int mode,ref Array custom){HostLog.Event("OnDisconnection");Close();}
+    public void OnAddInsUpdate(ref Array custom){HostLog.Event("OnAddInsUpdate");}
+    public void OnStartupComplete(ref Array custom){HostLog.Event("OnStartupComplete");}
+    public void OnBeginShutdown(ref Array custom){HostLog.Event("OnBeginShutdown");Close();}
+    public void CTPFactoryAvailable(Office.ICTPFactory value){HostLog.Event("CTPFactoryAvailable");factory=value;}
+    public string GetCustomUI(string ribbonId)
+    {
+        HostLog.Event("GetCustomUI");
+        return "<customUI xmlns='http://schemas.microsoft.com/office/2009/07/customui'><ribbon><tabs><tab id='ChinhTaVietTab' label='Chính tả Việt'><group id='ChinhTaVietReview' label='Sửa trực tiếp trong Word'><button id='ChinhTaVietOpen' label='Mở bảng kiểm tra' size='large' imageMso='SpellingAndGrammar' onAction='OpenPane'/></group></tab></tabs></ribbon></customUI>";
+    }
     public void OpenPane(object control)
     {
         object? window=null;
@@ -39,6 +44,7 @@ public sealed class Connect:IOfficeConnection,Office.IRibbonExtensibility,Office
                 view.Bind(application,window);window=null;pane.Width=390;pane.DockPosition=Office.MsoCTPDockPosition.msoCTPDockPositionRight;panes.Add(id,pane);
             }
             pane.Visible=true;
+            HostLog.Event("OpenPane.Complete");
         }
         catch(Exception error){HostLog.Error("OpenPane",error);System.Windows.Forms.MessageBox.Show(error.Message,"Chính tả Việt");}
         finally{ComLifetime.Release(window);}
@@ -68,9 +74,21 @@ internal static class ComLifetime
 }
 internal static class HostLog
 {
-    internal static void Error(string operation,Exception error)
+    internal static Action<string>? Observer {get;set;}
+    internal static void Event(string operation)=>Write(operation);
+    internal static void Error(string operation,Exception error)=>Write(operation+" "+error.GetType().Name+" 0x"+error.HResult.ToString("X8"));
+    private static void Write(string detail)
     {
-        try{string folder=System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"ChinhTaViet","WordAddin");System.IO.Directory.CreateDirectory(folder);System.IO.File.AppendAllText(System.IO.Path.Combine(folder,"addin.log"),DateTimeOffset.Now.ToString("O")+" "+operation+" "+error.GetType().Name+" 0x"+error.HResult.ToString("X8")+Environment.NewLine);}
-        catch(System.IO.IOException){}catch(UnauthorizedAccessException){}
+        try
+        {
+            if(Observer is not null){Observer(detail);return;}
+            string folder=System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"ChinhTaViet","WordAddin");
+            System.IO.Directory.CreateDirectory(folder);string path=System.IO.Path.Combine(folder,"addin.log");
+            // No document text, paths, selection or dictionary terms are logged.
+            if(System.IO.File.Exists(path) && new System.IO.FileInfo(path).Length>1024*1024)System.IO.File.Delete(path);
+            using(var process=System.Diagnostics.Process.GetCurrentProcess())
+                System.IO.File.AppendAllText(path,DateTimeOffset.Now.ToString("O")+" v"+typeof(Connect).Assembly.GetName().Version+" "+process.ProcessName+" "+(Environment.Is64BitProcess?"x64":"x86")+" "+detail+Environment.NewLine);
+        }
+        catch(Exception){} // Diagnostic I/O must never prevent Office from loading.
     }
 }

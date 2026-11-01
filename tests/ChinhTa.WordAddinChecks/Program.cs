@@ -10,6 +10,7 @@ internal static class Program
     {
         int checks=0;void Assert(bool condition,string message){if(!condition)throw new Exception("FAIL: "+message);checks++;Console.WriteLine("PASS "+message);}
         if(args.Length==1)Assert(args[0]==(Environment.Is64BitProcess?"x64":"x86"),"The host checks run in the expected native process architecture: "+args[0]);
+        var stages=new List<string>();HostLog.Observer=stages.Add;
         var connect=new Connect();string ribbon=connect.GetCustomUI("Microsoft.Word.Document");
         var xml=System.Xml.Linq.XDocument.Parse(ribbon);
         Assert(xml.Descendants().Any(e=>e.Name.LocalName=="button" && (string?)e.Attribute("onAction")=="OpenPane"),"The real COM host exposes a Word ribbon command for its task pane");
@@ -34,6 +35,10 @@ internal static class Program
         }
         finally{if(connection!=IntPtr.Zero)Marshal.Release(connection);Marshal.Release(com);}
         NativeLifecycleChecks.Run(connect,Assert);
+        Assert(stages.Contains("Construct") && stages.Contains("OnConnection.Enter") && stages.Contains("OnConnection.Complete") && stages.Contains("GetCustomUI") && stages.Contains("OnStartupComplete"),"Startup tracing records COM lifecycle stages without accessing a Word document");
+        HostLog.Observer=_=>throw new System.IO.IOException("First-party diagnostic failure fixture");
+        _=new Connect();Assert(true,"A failing diagnostic sink cannot prevent the connector from being created");
+        HostLog.Observer=null;
         FakeWordChecks.Run(Assert);
         Assert(!typeof(Connect).Assembly.GetReferencedAssemblies().Any(a=>a.Name=="Office"),"The COM host embeds the required Office interface metadata and does not redistribute an Office runtime DLL");
         Console.WriteLine($"{checks} Word host checks passed. Microsoft Word: NOT_RUN.");
