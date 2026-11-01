@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 
 namespace ChinhTa.Core;
 public sealed record SpellingToken(int Start,int Length,string Original,string Key);
-public enum SpellingFindingKind { UnknownLexeme,ContextConfusion,ReviewedExpression }
+public enum SpellingFindingKind { UnknownLexeme,ContextConfusion,ReviewedExpression,MissingDiacritics }
 public sealed record SpellingFinding(int Start,int Length,string Original,IReadOnlyList<string> Suggestions,string Reason,SpellingFindingKind Kind=SpellingFindingKind.ReviewedExpression);
 public sealed record SpellingSource(string Name,string Fingerprint,int Headwords,int Vocabulary,int Bigrams,int Trigrams,bool Starter=false);
 
@@ -23,14 +23,17 @@ public sealed class VietnameseSpellingModel
     private readonly Dictionary<(string,string),long> bi;
     private readonly Dictionary<(string,string,string),long> tri;
     private readonly Dictionary<string,HashSet<string>> index=new(StringComparer.Ordinal);
+    private readonly Lazy<DiacriticReview> diacritics;
     public SpellingSource Source {get;}
+    public bool Recognizes(string word)=>lexicon.Contains(Key(word));
     public static VietnameseSpellingModel Starter {get;}=new(["sáng","lạng","xán","lạn","dứt","điễm","điểm","ngành","nghành","giáo","dục"],[],[],[],new("Bộ mẫu nhỏ của dự án — chưa nạp dữ liệu lớn","starter-v1",11,0,0,0,true));
     public VietnameseSpellingModel(IEnumerable<string> words,IEnumerable<KeyValuePair<string,long>> unigrams,
         IEnumerable<KeyValuePair<(string,string),long>> bigrams,IEnumerable<KeyValuePair<(string,string,string),long>> trigrams,SpellingSource source)
     {
-        Source=source;lexicon=words.SelectMany(w=>Tokens.Matches(w).Cast<Match>().Select(m=>Key(m.Value)))
+        string[] entries=words.Select(Key).ToArray();Source=source;lexicon=entries.SelectMany(w=>Tokens.Matches(w).Cast<Match>().Select(m=>Key(m.Value)))
             .Where(w=>w.Length is >=2 and <=32 && w.All(c=>char.IsLetter(c) || char.GetUnicodeCategory(c) is UnicodeCategory.NonSpacingMark)).ToHashSet(StringComparer.Ordinal);
         uni=unigrams.ToDictionary(p=>p.Key,p=>p.Value,StringComparer.Ordinal);bi=bigrams.ToDictionary(p=>p.Key,p=>p.Value);tri=trigrams.ToDictionary(p=>p.Key,p=>p.Value);
+        diacritics=new(()=>new DiacriticReview(entries,bi,tri));
         foreach(string word in lexicon.Order(StringComparer.Ordinal))foreach(string signature in Signatures(Base(word)))
         {if(!index.TryGetValue(signature,out var values))index[signature]=values=new(StringComparer.Ordinal);values.Add(word);}
     }
@@ -73,6 +76,8 @@ public sealed class VietnameseSpellingModel
     private static bool OnlySpace(string source,int start,int end)=>end>=start && source.AsSpan(start,end-start).IndexOfAnyExcept(' ','\t')<0;
     private static bool IsName(SpellingToken token)=>token.Original.Length>0 && char.IsUpper(token.Original[0]);
     public IReadOnlyList<SpellingFinding> Check(string text,IReadOnlyList<PersonalTerm>? personalTerms=null)
+        =>Check(text,personalTerms,false);
+    public IReadOnlyList<SpellingFinding> Check(string text,IReadOnlyList<PersonalTerm>? personalTerms,bool includeDiacriticReview)
     {
         if(text.Length>64000 || TechnicalTextContext.IsTechnical(text))return [];
         var personalSpans=personalTerms is null?Array.Empty<(int Start,int Length)>():PersonalLexiconRules.Spans(text,personalTerms);
@@ -134,6 +139,9 @@ public sealed class VietnameseSpellingModel
             result.Add(new(token.Start,token.Length,token.Original,Array.AsReadOnly(ranked.Select(x=>MatchCase(token.Original,x.candidate)).ToArray()),
                 (known?"Từ có thể hợp lệ nhưng cần đối chiếu ngữ cảnh.":"Chưa xác nhận mục từ; có ứng viên được ngữ cảnh ủng hộ.")+" Tần suất chỉ hỗ trợ xếp hạng, không chứng minh câu sai.",known?SpellingFindingKind.ContextConfusion:SpellingFindingKind.UnknownLexeme));
         }
+        if(includeDiacriticReview && !Source.Starter)
+            foreach(var finding in diacritics.Value.Check(text,tokens,personalSpans))
+                if(!result.Any(f=>f.Start<(long)finding.Start+finding.Length && finding.Start<(long)f.Start+f.Length))result.Add(finding);
         return result.OrderBy(x=>x.Start).ToArray();
     }
     public IReadOnlyList<Issue> CheckParagraphs(IReadOnlyList<Paragraph> paragraphs)=>paragraphs.Where(p=>p.TextEditable && !p.InTable && !p.Text.Contains('\t')).SelectMany(p=>Check(p.Text.TrimEnd('\r','\a','\n')).Select(f=>

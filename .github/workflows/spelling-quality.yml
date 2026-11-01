@@ -1,0 +1,49 @@
+name: Vietnamese spelling quality audit
+on:
+  push:
+    branches: ['quality/spelling-*']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Prepare pinned, excluded development audit
+        shell: pwsh
+        run: |
+          python scripts/SpellingEvaluation/prepare.py --sources artifacts/source-corpus --output artifacts/evaluation --fetch
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Existing worker, dictionary and native-position regressions
+        shell: pwsh
+        run: |
+          dotnet run --project tests/ChinhTa.WordWorkerChecks -c Release | Tee-Object artifacts/worker.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Measure baseline and candidate through the full worker
+        shell: pwsh
+        run: |
+          dotnet run --project tests/ChinhTa.SpellingEvaluation -c Release -- artifacts/evaluation artifacts/spelling-quality.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python scripts/SpellingEvaluation/summarize.py artifacts/spelling-quality.json --output artifacts/spelling-quality.md
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Copy-Item artifacts/evaluation/metadata.json artifacts/audit-metadata.json
+          Get-Content artifacts/spelling-quality.md >> $env:GITHUB_STEP_SUMMARY
+          @{Commit=$env:GITHUB_SHA;InstallerProduced=$false;Word='NOT_RUN';ProductionQualified=$false} | ConvertTo-Json | Set-Content artifacts/quality-build.json -Encoding UTF8
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: spelling-quality-audit
+          retention-days: 30
+          path: |
+            artifacts/spelling-quality.json
+            artifacts/spelling-quality.md
+            artifacts/audit-metadata.json
+            artifacts/quality-build.json
+            artifacts/worker.log

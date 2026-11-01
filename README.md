@@ -1,5 +1,9 @@
 # Chính tả Việt
 
+Đã mở [đánh giá trên lỗi thực](docs/SPELLING-REAL-ERROR-AUDIT.md): 7.547 câu / 9.030 đích lỗi phát triển, 1.792 câu dự trữ chưa chấm. Nguyên mẫu tăng phát hiện nhưng tăng cảnh báo trên phần được nguồn gán đúng; cần giảm báo nhầm trước khi bật cho người dùng. Chỉ xuất số tổng hợp, không đóng gói dữ liệu nguồn hoặc tạo bộ cài trong đợt này.
+
+Ưu tiên mới sau phản hồi **“Hom qua” bị bỏ sót**: nâng chất lượng chính tả theo [lộ trình và cửa kiểm](docs/SPELLING-QUALITY-ROADMAP.md), có [báo cáo đo qua toàn bộ worker](docs/SPELLING-QUALITY-AUDIT.md). Đã có nguyên mẫu phục hồi dấu tổng quát nhưng còn tắt trong ứng dụng; đợt này chưa xuất bộ cài. Kết quả kiểm code không chứng nhận độ chính xác tiếng Việt.
+
 Đang thử **Word COM Add-in 0.1.91**: mặc định kiểm đoạn đang soạn và gạch riêng trên màn hình; đỏ cho chính tả (điễm/nghành/sử lý/bổ xung/sáng lạng), xanh cho gợi ý, vàng cho thể thức đang chọn. Kèm Vietnamese.dic người dùng cung cấp, từ cá nhân và ba chế độ Chính tả / Thể thức / Kiểm sâu. Có gói Word Windows x86/x64, giữ sửa tay/Undo/Lưu của Word. [Phạm vi và cách thử](docs/WORD-ADDIN-0.1.91.md). Chưa xác nhận trên Word thật; Desktop 0.1.86 giữ riêng.
 
 Bản thử **0.1.86** có sẵn bộ chính tả ngoại tuyến: mở lần đầu đã dùng được, không cần từng người nạp ZIP. Bộ riêng đã nạp vẫn được ưu tiên. Có 72.535 mục từ, nguồn và giấy phép trong gói; ngữ cảnh còn nhỏ nên vẫn duyệt tay từng gợi ý. [Cách dùng](docs/PREVIEW-0.1.86.md) · [Nguồn và đánh giá](docs/FORMAT-BATCH-84.md). Word thực chưa chạy.

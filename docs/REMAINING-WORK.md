@@ -1,3 +1,11 @@
+## Đo lỗi thực: cần giảm báo nhầm trước khi bật nguyên mẫu
+
+Đã bổ sung bộ đo VSEC với 7.547 câu / 9.030 đích lỗi, giữ 1.792 câu dự trữ chưa chấm. Nhận đáp án thay thế/xóa từ, kiểm vị trí UTF-16, loại nhãn mâu thuẫn/không ghép được và chia nhóm câu tương đương trước tách tập. Nguyên mẫu tăng độ phát hiện nhưng cảnh báo trên phần nguồn gán đúng cũng tăng; chưa đủ điều kiện dùng rộng rãi. Cần ưu tiên giảm báo nhầm, từ có trong từ điển nhưng dùng sai, dấu đã gõ sai và chất lượng gợi ý; tiếp tục bộ văn bản đúng được thẩm định, phạm vi HOA/tên/chuyên ngành và Word thật. [Kết quả](SPELLING-REAL-ERROR-AUDIT.md) · [Phương pháp](../scripts/SpellingEvaluation/REAL-ERRORS.md). Mô hình ứng dụng và bộ cài chưa thay đổi.
+
+## Ưu tiên 2026-11-01: chất lượng chính tả có đo lường
+
+Người dùng đã chạy bản thử và phát hiện “Hom qua” bị bỏ sót. Phản hồi này chưa xác nhận toàn bộ luồng Word; nó cho thấy tra từ đơn và ít cặp ngoại lệ chưa đủ. Đã có bộ đo toàn worker trên 1.379 ca, nguyên mẫu phục hồi dấu theo cụm/ngữ cảnh và chính sách tên/từ vựng dùng chung trong thử nghiệm. Nguyên mẫu còn tắt ở đường ứng dụng; chưa tạo bộ cài mới. Cần bộ chuẩn lỗi thực/văn bản đúng được rà soát độc lập, xử lý tiếp từ dùng sai/dấu sai/HOA/ranh giới từ và đạt cửa kiểm trước khi mở rộng giao diện/thể thức. [Lộ trình cụ thể](SPELLING-QUALITY-ROADMAP.md) · [Kết quả và giới hạn](SPELLING-QUALITY-AUDIT.md).
+
 ## Word Add-in 0.1.91: kiểm khi gõ và phân loại chính tả
 
 Đã thêm mã gạch riêng trong đoạn đang soạn, từ điển Vietnamese.dic kèm theo và chế độ kiểm chính tả/thể thức/kiểm sâu ngoại tuyến. Cả điễm, nghành, sử lý, bổ xung, sáng lạng thuộc lỗi chính tả màu đỏ. Gợi ý ngữ cảnh màu xanh chỉ dùng cho những nhận xét còn cần cân nhắc, kể cả ngày/thứ không khớp. Dấu riêng không ghi định dạng vào file; chưa xác nhận trên Word thật. Dùng lại luật tên loại/trích yếu, công văn riêng và khổ giấy/lề theo quan sát; chưa chuyển mọi phép đo XPS/header/footer/body/signature. [Cách dùng và giới hạn](WORD-ADDIN-0.1.91.md).

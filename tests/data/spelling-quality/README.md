@@ -1,0 +1,5 @@
+# Developer regression fixtures, not independent quality certification
+
+These first-party sentences exercise user feedback, missing marks, reviewed misspellings, valid-word errors, typing/segmentation, names, legitimate variants, boundaries, private terms and UTF-16 offsets. They are developer-authored/checked, not a blind corpus double-annotated by Vietnamese language reviewers. Some cases deliberately remain beyond current coverage. Do not remove failures or convert them into clean labels to improve reported recall. Do not train a model on this file and then call performance here an independent benchmark.
+
+Use the full worker pipeline, including the strict syllable dictionary. Compare the 0.1.91-compatible baseline (generic restoration disabled) and the candidate on the same rows. Report per group, extra red warnings, detection and correction separately. An ambiguous word in isolation is not automatically an error: “hom giống”, “hòm”, “ngay hôm nay”, personal names and accepted terms must remain reviewable and stable.

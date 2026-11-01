@@ -1,7 +1,7 @@
 using ChinhTa.Core;
 using ChinhTa.WordProtocol;
 namespace ChinhTa.WordWorker;
-public sealed class WorkerService(VietnameseSpellingModel model,PersonalLexiconStore personal,string mirrorPath,SyllableDictionary? syllables=null)
+public sealed class WorkerService(VietnameseSpellingModel model,PersonalLexiconStore personal,string mirrorPath,SyllableDictionary? syllables=null,bool experimentalQuality=false)
 {
     private static readonly HashSet<FixKind> TextKinds=[FixKind.Text,FixKind.RepeatedText,FixKind.PunctuationSpace,FixKind.ParenthesisSpace,FixKind.QuoteSpace,FixKind.SentenceEndSpace,FixKind.ParagraphEndSpace,FixKind.ColonSpace,FixKind.SentenceInnerSpace,FixKind.SentenceAfterSpace];
     public BridgeResponse Handle(BridgeRequest request)
@@ -25,7 +25,7 @@ public sealed class WorkerService(VietnameseSpellingModel model,PersonalLexiconS
                     if(!BridgeContract.HasBounds(row) || !TextSegments.Supported(row.Text)){response.SkippedParagraphs++;continue;}
                     foreach(var segment in TextSegments.Read(row.Text))
                     {
-                        var spelling=request.ReviewMode=="format"?Array.Empty<SpellingFinding>():model.Check(segment.Text,data.Terms)
+                        var spelling=request.ReviewMode=="format"?Array.Empty<SpellingFinding>():model.Check(segment.Text,data.Terms,experimentalQuality)
                             .Where(f=>request.ReviewMode!="spelling" || f.Kind!=SpellingFindingKind.ContextConfusion).ToArray();
                         var regular=Checker.Check([new(0,segment.Text,Alignment:0)],DocumentProfile.Personal)
                             .Where(i=>TextKinds.Contains(i.Kind) && (segment.ParagraphEnd || i.Kind is not (FixKind.ParagraphEndSpace or FixKind.SentenceEndSpace))).ToArray();
@@ -34,7 +34,7 @@ public sealed class WorkerService(VietnameseSpellingModel model,PersonalLexiconS
                             if(!regular.Any(i=>i.Start<(long)issue.Start+issue.Length && issue.Start<(long)i.Start+i.Length))
                                 response.Findings.Add(new(){ParagraphIndex=row.Index,Offset=segment.Offset+issue.Start,Length=issue.Length,InTable=row.InTable,Original=issue.Original,Message=issue.Reason,Category=issue.Kind==SpellingFindingKind.ContextConfusion?"Context":"Spelling",Suggestions=issue.Suggestions.ToArray()});
                         if(request.StrictSpelling && request.ReviewMode!="format" && syllables is not null)
-                            foreach(var issue in syllables.Check(segment.Text,data.Terms))
+                            foreach(var issue in experimentalQuality?syllables.Check(segment.Text,data.Terms,model.Recognizes):syllables.Check(segment.Text,data.Terms))
                                 if(!response.Findings.Any(f=>f.ParagraphIndex==row.Index && f.Offset<segment.Offset+issue.Start+issue.Length && segment.Offset+issue.Start<f.Offset+f.Length))
                                     response.Findings.Add(new(){ParagraphIndex=row.Index,Offset=segment.Offset+issue.Start,Length=issue.Length,InTable=row.InTable,Original=issue.Original,Message=issue.Reason,Category="Spelling",Suggestions=issue.Suggestions.ToArray()});
                         if(request.ReviewMode=="deep" && !TechnicalTextContext.IsTechnical(segment.Text))
