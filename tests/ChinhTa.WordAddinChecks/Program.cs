@@ -33,6 +33,7 @@ internal static class Program
             {IntPtr pointer=IntPtr.Zero;try{id=new Guid(key);Assert(Marshal.QueryInterface(com,ref id,out pointer)==0,"Office can query the embedded Ribbon and task-pane consumer interfaces: "+key);}finally{if(pointer!=IntPtr.Zero)Marshal.Release(pointer);}}
         }
         finally{if(connection!=IntPtr.Zero)Marshal.Release(connection);Marshal.Release(com);}
+        NativeLifecycleChecks.Run(connect,Assert);
         FakeWordChecks.Run(Assert);
         Assert(!typeof(Connect).Assembly.GetReferencedAssemblies().Any(a=>a.Name=="Office"),"The COM host embeds the required Office interface metadata and does not redistribute an Office runtime DLL");
         Console.WriteLine($"{checks} Word host checks passed. Microsoft Word: NOT_RUN.");
