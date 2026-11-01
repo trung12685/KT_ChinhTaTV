@@ -1,7 +1,7 @@
 ﻿param([switch]$DryRun)
 $ErrorActionPreference='Stop'
 $manifest=Get-Content (Join-Path $PSScriptRoot 'addin-package.json') -Raw -Encoding UTF8 | ConvertFrom-Json
-if ($manifest.Version -ne '0.1.90' -or $manifest.Architecture -notin @('x86','x64') -or $manifest.Commit -notmatch '^[0-9a-f]{40}$') { throw 'Thiếu thông tin phiên bản/kiến trúc gói để gỡ đúng Add-in.' }
+if ($manifest.Version -ne '0.1.91' -or $manifest.Architecture -notin @('x86','x64') -or $manifest.Commit -notmatch '^[0-9a-f]{40}$') { throw 'Thiếu thông tin phiên bản/kiến trúc gói để gỡ đúng Add-in.' }
 . (Join-Path $PSScriptRoot 'Architecture.ps1')
 $keys=Get-WordAddinKeys
 $view=Get-AddinRegistryView $manifest.Architecture

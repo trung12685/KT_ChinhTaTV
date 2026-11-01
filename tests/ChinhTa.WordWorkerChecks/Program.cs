@@ -31,6 +31,7 @@ try
     request.Paragraphs.Add(paragraph);Assert(!service.Handle(request).Success,"Duplicate paragraph identities cannot silently merge findings");request.Paragraphs.RemoveAt(1);
     TableChecks.Run(service,Assert);
     NativeRangeChecks.Run(Assert);
+    LiveProofingChecks.Run(root,assets,Assert);
     // In CI verify the actual worker stdio executable as well as its service.
     if(Environment.GetEnvironmentVariable("GITHUB_ACTIONS")=="true")
     {

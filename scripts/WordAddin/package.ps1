@@ -12,7 +12,12 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 Copy-Item (Join-Path $root 'src/ChinhTa.WordAddin/bin/Release/net48/ChinhTa.WordAddin.dll') $Output
 Copy-Item (Join-Path $root 'src/ChinhTa.WordAddin/bin/Release/net48/ChinhTa.WordProtocol.dll') $Output
 Copy-Item (Join-Path $PSScriptRoot 'Install-WordAddin.ps1'),(Join-Path $PSScriptRoot 'Uninstall-WordAddin.ps1'),(Join-Path $PSScriptRoot 'Architecture.ps1'),(Join-Path $PSScriptRoot 'CAI-ADDIN.cmd'),(Join-Path $PSScriptRoot 'GO-ADDIN.cmd'),(Join-Path $PSScriptRoot 'CHANDOAN-ADDIN.cmd'),(Join-Path $PSScriptRoot 'Diagnose-WordAddin.ps1') $Output
-Copy-Item (Join-Path $root 'docs/WORD-ADDIN-0.1.90.md') $Output
+Copy-Item (Join-Path $root 'docs/WORD-ADDIN-0.1.91.md') $Output
+New-Item (Join-Path $Output 'proofing') -ItemType Directory -Force | Out-Null
+$dictionaryBytes=[Convert]::FromBase64String([IO.File]::ReadAllText((Join-Path $root 'assets/word-proofing/Vietnamese.dic.base64')))
+[IO.File]::WriteAllBytes((Join-Path $Output 'proofing/Vietnamese.dic'),$dictionaryBytes)
+if ((Get-FileHash (Join-Path $Output 'proofing/Vietnamese.dic') -Algorithm SHA256).Hash -ne '1417975F8479F3A4009CF6AF120E16CCEA190F89B392FB16889D67ED66B6E769') { throw 'Supplied Vietnamese.dic hash mismatch' }
+Copy-Item (Join-Path $root 'assets/word-proofing/SOURCE.md') (Join-Path $Output 'proofing')
 . (Join-Path $PSScriptRoot 'Architecture.ps1')
 if ((Read-ExecutableArchitecture (Join-Path $Output 'worker/ChinhTa.WordWorker.exe')) -ne $Architecture) { throw 'Worker PE architecture does not match its package' }
 if (Test-Path (Join-Path $Output 'Office.dll')) { throw 'Office PIA must be embedded, not redistributed with the preview' }
@@ -27,16 +32,16 @@ try {
     $process.StartInfo.RedirectStandardInput=$true;$process.StartInfo.RedirectStandardOutput=$true;$process.StartInfo.RedirectStandardError=$true
     $process.StartInfo.StandardOutputEncoding=[Text.Encoding]::UTF8
     [void]$process.Start()
-    $text='Mục'+"`t"+'Cần sử lý.'+"`r"+[char]7
-    $request=@{Version=2;Id=[Guid]::NewGuid().ToString();Operation='scan';DocumentId=[Guid]::NewGuid().ToString();SnapshotHash=('A'*64);Paragraphs=@(@{Index=1;Start=100;End=(99+$text.Length);Text=$text;InTable=$true})} | ConvertTo-Json -Depth 6 -Compress -EscapeHandling EscapeNonAscii
+    $text='điễm, nghành, sử lý, bổ xung, sáng lạng.'+"`r"+[char]7
+    $request=@{Version=3;ReviewMode='spelling';StrictSpelling=$true;Id=[Guid]::NewGuid().ToString();Operation='scan';DocumentId=[Guid]::NewGuid().ToString();SnapshotHash=('A'*64);Paragraphs=@(@{Index=1;Start=100;End=(99+$text.Length);Text=$text;InTable=$true})} | ConvertTo-Json -Depth 6 -Compress -EscapeHandling EscapeNonAscii
     $process.StandardInput.WriteLine($request);$process.StandardInput.Close()
     if (!$process.WaitForExit(20000)) { $process.Kill();throw 'Packaged worker smoke timed out' }
     $reply=$process.StandardOutput.ReadToEnd() | ConvertFrom-Json
-    if ($process.ExitCode -ne 0 -or !$reply.Success -or $reply.Version -ne 2 -or $reply.ScannedTableParagraphs -ne 1 -or $reply.ScannedSegments -ne 2 -or $reply.Source -notlike 'Bộ kèm ứng dụng v1*' -or @($reply.Findings).Count -ne 1 -or $reply.Findings[0].Original -ne 'sử' -or $reply.Findings[0].Offset -ne $text.IndexOf('sử')) { throw ('Packaged worker failed to load its dictionary and analyze a table/tab paragraph with string offsets: '+$process.StandardError.ReadToEnd()) }
+    if ($process.ExitCode -ne 0 -or !$reply.Success -or $reply.Version -ne 3 -or $reply.ScannedTableParagraphs -ne 1 -or $reply.ScannedSegments -ne 1 -or $reply.Source -notlike 'Bộ kèm ứng dụng v1*' -or @($reply.Findings).Count -ne 5 -or @($reply.Findings | Where-Object Category -ne 'Spelling').Count -ne 0) { throw ('Packaged worker did not classify all five reviewed examples as spelling errors: '+$process.StandardError.ReadToEnd()) }
     "Packaged worker win-$Architecture table/dictionary/stdio smoke passed; Word NOT_RUN."
 } finally { $process.Dispose();if (Test-Path $probeRoot) { Remove-Item $probeRoot -Recurse -Force } }
 $files=[ordered]@{}
 Get-ChildItem $Output -Recurse -File | Sort-Object FullName | ForEach-Object { $relative=$_.FullName.Substring($Output.Length+1).Replace('\','/');$files[$relative]=(Get-FileHash $_.FullName -Algorithm SHA256).Hash }
-@{Version='0.1.90';Architecture=$Architecture;Runtime="win-$Architecture";Word='NOT_RUN';Commit=$env:GITHUB_SHA;Files=$files} | ConvertTo-Json -Depth 6 | Set-Content (Join-Path $Output 'addin-package.json') -Encoding UTF8
+@{Version='0.1.91';Architecture=$Architecture;Runtime="win-$Architecture";Word='NOT_RUN';Commit=$env:GITHUB_SHA;Files=$files} | ConvertTo-Json -Depth 6 | Set-Content (Join-Path $Output 'addin-package.json') -Encoding UTF8
 & (Join-Path $Output 'Install-WordAddin.ps1') -DryRun
 & (Join-Path $Output 'Uninstall-WordAddin.ps1') -DryRun

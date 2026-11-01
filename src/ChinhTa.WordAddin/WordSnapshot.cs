@@ -6,12 +6,13 @@ internal sealed class WordSnapshot:IDisposable
     internal readonly string DocumentId=Guid.NewGuid().ToString();
     internal string Hash {get;}
     internal IReadOnlyList<ParagraphDto> Paragraphs {get;}
+    internal List<SectionDto> Sections {get;private set;}=new List<SectionDto>();
     private WordSnapshot(object doc,string hash,List<ParagraphDto> paragraphs){document=doc;Hash=hash;Paragraphs=paragraphs;}
     internal static string Text(object doc)
     {dynamic d=doc;object content=d.Content;try{dynamic range=content;return (string)range.Text;}finally{ComLifetime.Release(content);}}
     private string ReadRange(int start,int end)
     {dynamic d=document;object range=d.Range(start,end);try{dynamic r=range;return (string?)r.Text??"";}finally{ComLifetime.Release(range);}}
-    internal static WordSnapshot Capture(object window)
+    internal static WordSnapshot Capture(object window,bool observeFormat=false)
     {
         dynamic w=window;object doc=w.Document;object? rows=null;
         try
@@ -27,12 +28,12 @@ internal sealed class WordSnapshot:IDisposable
                 {
                     dynamic p=row;range=p.Range;dynamic r=range;
                     bool table=(bool)r.Information[12];
-                    result.Add(new(){Index=i,Start=(int)r.Start,End=(int)r.End,Text=(string)r.Text,InTable=table});
+                    result.Add(new(){Index=i,Start=(int)r.Start,End=(int)r.End,Text=(string)r.Text,InTable=table,Format=observeFormat?WordFormatSnapshot.Read(range,table):null});
                 }
                 finally{ComLifetime.Release(range);ComLifetime.Release(row);}
             }
             if(Text(doc)!=before)throw new InvalidOperationException("Tài liệu đổi trong lúc đọc. Hãy Quét lại.");
-            return new(doc,BridgeContract.Hash(before),result);
+            return new(doc,BridgeContract.Hash(before),result){Sections=observeFormat?WordFormatSnapshot.Sections(doc):new List<SectionDto>()};
         }
         catch{ComLifetime.Release(doc);throw;}
         finally{ComLifetime.Release(rows);}

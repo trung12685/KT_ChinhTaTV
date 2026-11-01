@@ -1,3 +1,7 @@
+## Word Add-in 0.1.91: kiểm khi gõ và phân loại chính tả
+
+Đã thêm mã gạch riêng trong đoạn đang soạn, từ điển Vietnamese.dic kèm theo và chế độ kiểm chính tả/thể thức/kiểm sâu ngoại tuyến. Cả điễm, nghành, sử lý, bổ xung, sáng lạng thuộc lỗi chính tả màu đỏ. Gợi ý ngữ cảnh màu xanh chỉ dùng cho những nhận xét còn cần cân nhắc, kể cả ngày/thứ không khớp. Dấu riêng không ghi định dạng vào file; chưa xác nhận trên Word thật. Dùng lại luật tên loại/trích yếu, công văn riêng và khổ giấy/lề theo quan sát; chưa chuyển mọi phép đo XPS/header/footer/body/signature. [Cách dùng và giới hạn](WORD-ADDIN-0.1.91.md).
+
 ## Word Add-in 0.1.90: sửa hợp đồng COM khi Word nạp
 
 Phản hồi 0.1.89 bị bỏ tích/không hiện Ribbon đã dẫn tới phép thử gọi lifecycle qua vtable native. Bản cũ thất bại, bản khai báo đủ SAFEARRAY(VARIANT) vượt qua trên Windows x86/x64. Có log khởi tạo và CHANDOAN-ADDIN.cmd trong gói. Cần xác nhận Ribbon/pane/quét/chọn/sửa/Undo/lưu trên Word thật trước khi mở rộng. [Hướng dẫn 0.1.90](WORD-ADDIN-0.1.90.md).

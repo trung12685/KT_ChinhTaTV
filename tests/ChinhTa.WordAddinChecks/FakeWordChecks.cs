@@ -41,12 +41,20 @@ public static class FakeWordChecks
         }
     }
 }
-public sealed class FakeWindow(FakeDocument doc){public FakeDocument Document {get;set;}=doc;public FakePane ActivePane {get;}=new();public void Activate(){} }
+public sealed class FakeWindow(FakeDocument doc)
+{
+    public FakeDocument Document {get;set;}=doc;public FakePane ActivePane {get;}=new();public void Activate(){}
+    public FakeSelection Selection=>new(Document);
+    public void GetPoint(out int left,out int top,out int width,out int height,object range){left=((FakeRange)range).Start*10;top=50;width=10;height=16;}
+}
+public sealed class FakeSelection(FakeDocument doc){public FakeRange Range=>new(doc,0,0);}
+public sealed class FakeFields(bool present){public int Count=>present?1:0;}
 public sealed class FakePane{public bool Activated {get;private set;}public void Activate(){Activated=true;}}
 public sealed class FakeDocument(string text,int[]? nativeMap=null,bool inTable=false)
 {
     public string Text {get;set;}=text;
     public bool InTable {get;set;}=inTable;
+    public bool HasFields {get;set;}
     public int[][]? ParagraphBounds {get;set;}
     public int NativeLength=>nativeMap is null?Text.Length:nativeMap.Length-1;
     public string Read(int start,int end)=>nativeMap is null?Text.Substring(start,end-start):Text.Substring(nativeMap[start],nativeMap[end]-nativeMap[start]);
@@ -64,6 +72,7 @@ public sealed class FakeParagraphs(FakeDocument doc)
 public sealed class FakeParagraph(FakeDocument doc,int index){public FakeRange Range=>doc.ParagraphBounds is null?doc.Content:new(doc,doc.ParagraphBounds[index-1][0],doc.ParagraphBounds[index-1][1]);}
 public sealed class FakeRange(FakeDocument doc,int start,int end)
 {
+    public int StoryType=>1;public FakeFields Fields=>new(doc.HasFields);public FakeParagraphs Paragraphs=>new(doc);
     public int Start=>start;public int End=>end;public string Text=>doc.Read(start,end);
     public FakeInformation Information=>new(doc.InTable);
     public void Select(){doc.SelectedStart=start;doc.SelectedEnd=end;}

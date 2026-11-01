@@ -16,9 +16,10 @@ public sealed class Connect:IOfficeConnection,Office.IRibbonExtensibility,Office
 {
     private object? application;
     private Office.ICTPFactory? factory;
+    private LiveReviewSession? live;
     private readonly Dictionary<int,Office.CustomTaskPane> panes=new Dictionary<int,Office.CustomTaskPane>();
     public Connect(){HostLog.Event("Construct");}
-    public void OnConnection(object app,int mode,object addin,ref Array custom){HostLog.Event("OnConnection.Enter");application=app;HostLog.Event("OnConnection.Complete");}
+    public void OnConnection(object app,int mode,object addin,ref Array custom){HostLog.Event("OnConnection.Enter");application=app;live?.Dispose();live=new LiveReviewSession(app);HostLog.Event("OnConnection.Complete");}
     public void OnDisconnection(int mode,ref Array custom){HostLog.Event("OnDisconnection");Close();}
     public void OnAddInsUpdate(ref Array custom){HostLog.Event("OnAddInsUpdate");}
     public void OnStartupComplete(ref Array custom){HostLog.Event("OnStartupComplete");}
@@ -27,7 +28,14 @@ public sealed class Connect:IOfficeConnection,Office.IRibbonExtensibility,Office
     public string GetCustomUI(string ribbonId)
     {
         HostLog.Event("GetCustomUI");
-        return "<customUI xmlns='http://schemas.microsoft.com/office/2009/07/customui'><ribbon><tabs><tab id='ChinhTaVietTab' label='Chính tả Việt'><group id='ChinhTaVietReview' label='Sửa trực tiếp trong Word'><button id='ChinhTaVietOpen' label='Mở bảng kiểm tra' size='large' imageMso='SpellingAndGrammar' onAction='OpenPane'/></group></tab></tabs></ribbon></customUI>";
+        return "<customUI xmlns='http://schemas.microsoft.com/office/2009/07/customui'><ribbon><tabs><tab id='ChinhTaVietTab' label='Chính tả Việt'><group id='ChinhTaVietReview' label='Sửa trực tiếp trong Word'><button id='ChinhTaVietOpen' label='Mở bảng kiểm tra' size='large' imageMso='SpellingAndGrammar' onAction='OpenPane'/><checkBox id='ChinhTaVietLive' label='Gạch lỗi khi gõ' screentip='Bật/tắt dấu gạch riêng của Add-in. Dấu gạch gốc của Word theo tùy chọn Word.' getPressed='GetLivePressed' onAction='ToggleLive'/><button id='ChinhTaVietNative' label='Tiếng Việt cho vùng chọn' onAction='EnableNativeProofing'/></group></tab></tabs></ribbon></customUI>";
+    }
+    public bool GetLivePressed(object control)=>live?.Enabled??true;
+    public void ToggleLive(object control,bool pressed){if(live is not null)live.Enabled=pressed;}
+    public void EnableNativeProofing(object control)
+    {
+        try{if(application is null)return;WordNativeProofing.EnableForSelection(application);System.Windows.Forms.MessageBox.Show("Đã bật kiểm chính tả Word và đặt tiếng Việt cho vùng chọn/vị trí đang gõ. Tài liệu có thể cần lưu thay đổi ngôn ngữ.","Chính tả Việt");}
+        catch(Exception error){HostLog.Error("NativeProofing",error);System.Windows.Forms.MessageBox.Show(error.Message,"Chính tả Việt");}
     }
     public void OpenPane(object control)
     {
@@ -41,7 +49,7 @@ public sealed class Connect:IOfficeConnection,Office.IRibbonExtensibility,Office
                 pane=factory.CreateCTP(Ids.PaneProgId,"Chính tả Việt — sửa thủ công",window);
                 object content=pane.ContentControl;
                 if(content is not TaskPaneView view)throw new InvalidOperationException("Word chưa tạo được bảng kiểm tra của Add-in.");
-                view.Bind(application,window);window=null;pane.Width=390;pane.DockPosition=Office.MsoCTPDockPosition.msoCTPDockPositionRight;panes.Add(id,pane);
+                view.Bind(application,window,live);window=null;pane.Width=420;pane.DockPosition=Office.MsoCTPDockPosition.msoCTPDockPositionRight;panes.Add(id,pane);
             }
             pane.Visible=true;
             HostLog.Event("OpenPane.Complete");
@@ -51,6 +59,7 @@ public sealed class Connect:IOfficeConnection,Office.IRibbonExtensibility,Office
     }
     private void Close()
     {
+        live?.Dispose();live=null;
         foreach(var pane in panes.Values)try{if(pane.ContentControl is TaskPaneView view)view.Dispose();pane.Delete();}catch(Exception error){HostLog.Error("ClosePane",error);}finally{ComLifetime.Release(pane);}
         panes.Clear();ComLifetime.Release(factory);factory=null;application=null;
     }
