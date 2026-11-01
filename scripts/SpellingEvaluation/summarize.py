@@ -1,6 +1,6 @@
 """Render measured counts without calling a development audit 'accuracy'."""
 from pathlib import Path
-import argparse,json
+import argparse,json,sys
 
 def render(path):
     d=json.loads(path.read_text(encoding='utf-8-sig'))
@@ -19,5 +19,6 @@ def render(path):
     return '\n'.join(lines)
 
 if __name__=='__main__':
+    sys.stdout.reconfigure(encoding='utf-8')
     p=argparse.ArgumentParser();p.add_argument('report',type=Path);p.add_argument('--output',type=Path,required=True);a=p.parse_args()
     text=render(a.report);a.output.parent.mkdir(parents=True,exist_ok=True);a.output.write_text(text,encoding='utf-8',newline='\n');print(text)
