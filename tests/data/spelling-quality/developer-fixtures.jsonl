@@ -1,0 +1,61 @@
+{"Id": "accent-00", "Group": "missing_diacritics", "Kind": "developer_fixture", "Text": "Hom qua tôi đã gửi báo cáo.", "Edits": [{"Start": 0, "Length": 3, "Original": "Hom", "Target": "Hôm"}], "Terms": []}
+{"Id": "accent-01", "Group": "missing_diacritics", "Kind": "developer_fixture", "Text": "hom qua tôi đã gửi báo cáo.", "Edits": [{"Start": 0, "Length": 3, "Original": "hom", "Target": "hôm"}], "Terms": []}
+{"Id": "accent-02", "Group": "missing_diacritics", "Kind": "developer_fixture", "Text": "Hôm qua tôi da gửi báo cáo.", "Edits": [{"Start": 12, "Length": 2, "Original": "da", "Target": "đã"}], "Terms": []}
+{"Id": "accent-03", "Group": "missing_diacritics", "Kind": "developer_fixture", "Text": "Toi là người soạn văn bản.", "Edits": [{"Start": 0, "Length": 3, "Original": "Toi", "Target": "Tôi"}], "Terms": []}
+{"Id": "accent-04", "Group": "missing_diacritics", "Kind": "developer_fixture", "Text": "Ngay mai sẽ có cuộc họp.", "Edits": [{"Start": 0, "Length": 4, "Original": "Ngay", "Target": "Ngày"}], "Terms": []}
+{"Id": "accent-05", "Group": "missing_diacritics", "Kind": "developer_fixture", "Text": "Chung ta cần kiểm tra lại.", "Edits": [{"Start": 0, "Length": 5, "Original": "Chung", "Target": "Chúng"}], "Terms": []}
+{"Id": "accent-06", "Group": "missing_diacritics", "Kind": "developer_fixture", "Text": "Hãy thuc hiện đúng quy định.", "Edits": [{"Start": 4, "Length": 4, "Original": "thuc", "Target": "thực"}], "Terms": []}
+{"Id": "accent-07", "Group": "missing_diacritics", "Kind": "developer_fixture", "Text": "Phải nghiêm tuc chấp hành.", "Edits": [{"Start": 12, "Length": 3, "Original": "tuc", "Target": "túc"}], "Terms": []}
+{"Id": "accent-08", "Group": "missing_diacritics", "Kind": "developer_fixture", "Text": "Đề nghi kiểm tra hồ sơ.", "Edits": [{"Start": 3, "Length": 4, "Original": "nghi", "Target": "nghị"}], "Terms": []}
+{"Id": "accent-09", "Group": "missing_diacritics", "Kind": "developer_fixture", "Text": "Công tac kiểm tra cần thận trọng.", "Edits": [{"Start": 5, "Length": 3, "Original": "tac", "Target": "tác"}], "Terms": []}
+{"Id": "accent-10", "Group": "missing_diacritics", "Kind": "developer_fixture", "Text": "Nội dung thong báo đã rõ.", "Edits": [{"Start": 9, "Length": 5, "Original": "thong", "Target": "thông"}], "Terms": []}
+{"Id": "accent-11", "Group": "missing_diacritics", "Kind": "developer_fixture", "Text": "Báo cao về kết quả công tác.", "Edits": [{"Start": 4, "Length": 3, "Original": "cao", "Target": "cáo"}], "Terms": []}
+{"Id": "accent-12", "Group": "missing_diacritics", "Kind": "developer_fixture", "Text": "Cần bao đảm quyền lợi.", "Edits": [{"Start": 4, "Length": 3, "Original": "bao", "Target": "bảo"}], "Terms": []}
+{"Id": "accent-13", "Group": "missing_diacritics", "Kind": "developer_fixture", "Text": "Đơn vi đã báo cáo.", "Edits": [{"Start": 4, "Length": 2, "Original": "vi", "Target": "vị"}], "Terms": []}
+{"Id": "accent-14", "Group": "missing_diacritics", "Kind": "developer_fixture", "Text": "Nhân dan tham gia góp ý.", "Edits": [{"Start": 5, "Length": 3, "Original": "dan", "Target": "dân"}], "Terms": []}
+{"Id": "reviewed-0", "Group": "reviewed_spelling", "Kind": "developer_fixture", "Text": "điễm.", "Edits": [{"Start": 0, "Length": 4, "Original": "điễm", "Target": "điểm"}], "Terms": []}
+{"Id": "reviewed-1", "Group": "reviewed_spelling", "Kind": "developer_fixture", "Text": "nghành.", "Edits": [{"Start": 0, "Length": 6, "Original": "nghành", "Target": "ngành"}], "Terms": []}
+{"Id": "reviewed-2", "Group": "reviewed_spelling", "Kind": "developer_fixture", "Text": "Cần sử lý hồ sơ.", "Edits": [{"Start": 4, "Length": 2, "Original": "sử", "Target": "xử"}], "Terms": []}
+{"Id": "reviewed-3", "Group": "reviewed_spelling", "Kind": "developer_fixture", "Text": "Cần bổ xung nhân lực.", "Edits": [{"Start": 7, "Length": 4, "Original": "xung", "Target": "sung"}], "Terms": []}
+{"Id": "reviewed-4", "Group": "reviewed_spelling", "Kind": "developer_fixture", "Text": "Tương lai sáng lạng.", "Edits": [{"Start": 10, "Length": 9, "Original": "sáng lạng", "Target": "xán lạn"}], "Terms": []}
+{"Id": "context-0", "Group": "real_word_and_wrong_mark", "Kind": "developer_fixture", "Text": "Tôi cần sữa lỗi.", "Edits": [{"Start": 8, "Length": 3, "Original": "sữa", "Target": "sửa"}], "Terms": []}
+{"Id": "context-1", "Group": "real_word_and_wrong_mark", "Kind": "developer_fixture", "Text": "Cô ấy uống sửa tươi.", "Edits": [{"Start": 11, "Length": 3, "Original": "sửa", "Target": "sữa"}], "Terms": []}
+{"Id": "context-2", "Group": "real_word_and_wrong_mark", "Kind": "developer_fixture", "Text": "Chính phủ ban hàng văn bản.", "Edits": [{"Start": 14, "Length": 4, "Original": "hàng", "Target": "hành"}], "Terms": []}
+{"Id": "context-3", "Group": "real_word_and_wrong_mark", "Kind": "developer_fixture", "Text": "Các hoạt động diển ra thuận lợi.", "Edits": [{"Start": 14, "Length": 4, "Original": "diển", "Target": "diễn"}], "Terms": []}
+{"Id": "typing-0", "Group": "typing_and_segmentation", "Kind": "developer_fixture", "Text": "Cơ quna đã thông báo.", "Edits": [{"Start": 3, "Length": 4, "Original": "quna", "Target": "quan"}], "Terms": []}
+{"Id": "typing-1", "Group": "typing_and_segmentation", "Kind": "developer_fixture", "Text": "Hmok qua tôi gửi thư.", "Edits": [{"Start": 0, "Length": 4, "Original": "Hmok", "Target": "Hôm"}], "Terms": []}
+{"Id": "typing-2", "Group": "typing_and_segmentation", "Kind": "developer_fixture", "Text": "Cầnthực hiện ngay.", "Edits": [{"Start": 0, "Length": 7, "Original": "Cầnthực", "Target": "Cần thực"}], "Terms": []}
+{"Id": "typing-3", "Group": "typing_and_segmentation", "Kind": "developer_fixture", "Text": "Báo cáo cần sửa lỗii.", "Edits": [{"Start": 16, "Length": 4, "Original": "lỗii", "Target": "lỗi"}], "Terms": []}
+{"Id": "clean-00", "Group": "correct_and_ambiguous", "Kind": "developer_fixture", "Text": "Hom giống đã được chuẩn bị.", "Edits": [], "Terms": []}
+{"Id": "clean-01", "Group": "correct_and_ambiguous", "Kind": "developer_fixture", "Text": "Cắt hom để nhân giống cây.", "Edits": [], "Terms": []}
+{"Id": "clean-02", "Group": "correct_and_ambiguous", "Kind": "developer_fixture", "Text": "Hôm qua tôi đã gửi báo cáo.", "Edits": [], "Terms": []}
+{"Id": "clean-03", "Group": "correct_and_ambiguous", "Kind": "developer_fixture", "Text": "Tôi cần mua một cái hòm.", "Edits": [], "Terms": []}
+{"Id": "clean-04", "Group": "correct_and_ambiguous", "Kind": "developer_fixture", "Text": "Ngay hôm nay chúng tôi thực hiện.", "Edits": [], "Terms": []}
+{"Id": "clean-05", "Group": "correct_and_ambiguous", "Kind": "developer_fixture", "Text": "Chấp hành đúng qui định.", "Edits": [], "Terms": []}
+{"Id": "clean-06", "Group": "correct_and_ambiguous", "Kind": "developer_fixture", "Text": "Kĩ thuật hoà nhập được sử dụng.", "Edits": [], "Terms": []}
+{"Id": "clean-07", "Group": "correct_and_ambiguous", "Kind": "developer_fixture", "Text": "Đây là chiếc áo da.", "Edits": [], "Terms": []}
+{"Id": "clean-08", "Group": "correct_and_ambiguous", "Kind": "developer_fixture", "Text": "Con ba ba được nuôi trong ao.", "Edits": [], "Terms": []}
+{"Id": "clean-09", "Group": "correct_and_ambiguous", "Kind": "developer_fixture", "Text": "Nam đi học đúng giờ.", "Edits": [], "Terms": []}
+{"Id": "clean-10", "Group": "correct_and_ambiguous", "Kind": "developer_fixture", "Text": "Mai đã gửi thư.", "Edits": [], "Terms": []}
+{"Id": "clean-11", "Group": "correct_and_ambiguous", "Kind": "developer_fixture", "Text": "Đinh vít được đóng trong hộp.", "Edits": [], "Terms": []}
+{"Id": "clean-12", "Group": "correct_and_ambiguous", "Kind": "developer_fixture", "Text": "Cần giải quyết xung đột lợi ích.", "Edits": [], "Terms": []}
+{"Id": "clean-13", "Group": "correct_and_ambiguous", "Kind": "developer_fixture", "Text": "Chất lượng công tác được bảo đảm.", "Edits": [], "Terms": []}
+{"Id": "clean-14", "Group": "correct_and_ambiguous", "Kind": "developer_fixture", "Text": "Tổ công tác phối hợp với Công an phường.", "Edits": [], "Terms": []}
+{"Id": "name-0", "Group": "names_and_codes", "Kind": "developer_fixture", "Text": "Nguyễn Văn Nam đã đến.", "Edits": [], "Terms": []}
+{"Id": "name-1", "Group": "names_and_codes", "Kind": "developer_fixture", "Text": "Nguyễn Điễm đã gửi thư.", "Edits": [], "Terms": []}
+{"Id": "name-2", "Group": "names_and_codes", "Kind": "developer_fixture", "Text": "John Smith đã gửi thư.", "Edits": [], "Terms": []}
+{"Id": "name-3", "Group": "names_and_codes", "Kind": "developer_fixture", "Text": "OpenAI hỗ trợ nghiên cứu.", "Edits": [], "Terms": []}
+{"Id": "name-4", "Group": "names_and_codes", "Kind": "developer_fixture", "Text": "API HTTP CPU hoạt động bình thường.", "Edits": [], "Terms": []}
+{"Id": "name-5", "Group": "names_and_codes", "Kind": "developer_fixture", "Text": "VNeID được sử dụng.", "Edits": [], "Terms": []}
+{"Id": "name-6", "Group": "names_and_codes", "Kind": "developer_fixture", "Text": "HOM là mã sản phẩm của công ty.", "Edits": [], "Terms": []}
+{"Id": "boundary-0", "Group": "technical_and_boundaries", "Kind": "developer_fixture", "Text": "Mở C:\\Data\\Hom qua.txt", "Edits": [], "Terms": []}
+{"Id": "boundary-1", "Group": "technical_and_boundaries", "Kind": "developer_fixture", "Text": "Gửi đến user@example.com để xử lý.", "Edits": [], "Terms": []}
+{"Id": "boundary-2", "Group": "technical_and_boundaries", "Kind": "developer_fixture", "Text": "Xem https://example.com/Hom/qua", "Edits": [], "Terms": []}
+{"Id": "boundary-3", "Group": "technical_and_boundaries", "Kind": "developer_fixture", "Text": "ma_hom = qua", "Edits": [], "Terms": []}
+{"Id": "boundary-4", "Group": "technical_and_boundaries", "Kind": "developer_fixture", "Text": "Hôm\tqua", "Edits": [], "Terms": []}
+{"Id": "boundary-5", "Group": "technical_and_boundaries", "Kind": "developer_fixture", "Text": "Hom\tqua", "Edits": [], "Terms": []}
+{"Id": "personal-0", "Group": "personal_dictionary", "Kind": "developer_fixture", "Text": "Hom qua được gọi là tên nhãn hiệu. ", "Edits": [], "Terms": ["Hom"]}
+{"Id": "unicode-0", "Group": "unicode_offsets", "Kind": "developer_fixture", "Text": "😀 Hom qua tôi đã gửi báo cáo.", "Edits": [{"Start": 3, "Length": 3, "Original": "Hom", "Target": "Hôm"}], "Terms": []}
+{"Id": "unicode-1", "Group": "unicode_offsets", "Kind": "developer_fixture", "Text": "Hãy thuc hiện đúng quy định.", "Edits": [{"Start": 5, "Length": 4, "Original": "thuc", "Target": "thực"}], "Terms": []}
+{"Id": "allcaps-0", "Group": "capitalization", "Kind": "developer_fixture", "Text": "HOM QUA TÔI ĐÃ GỬI THƯ.", "Edits": [{"Start": 0, "Length": 3, "Original": "HOM", "Target": "HÔM"}], "Terms": []}
+{"Id": "title-0", "Group": "capitalization", "Kind": "developer_fixture", "Text": "Hom Qua Tôi Đã Gửi Thư.", "Edits": [{"Start": 0, "Length": 3, "Original": "Hom", "Target": "Hôm"}], "Terms": []}

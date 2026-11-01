@@ -32,6 +32,7 @@ try
     TableChecks.Run(service,Assert);
     NativeRangeChecks.Run(Assert);
     LiveProofingChecks.Run(root,assets,Assert);
+    ExperimentalQualityChecks.Run(root,assets,Assert);
     // In CI verify the actual worker stdio executable as well as its service.
     if(Environment.GetEnvironmentVariable("GITHUB_ACTIONS")=="true")
     {
