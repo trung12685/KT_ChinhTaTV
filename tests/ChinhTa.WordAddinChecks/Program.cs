@@ -34,7 +34,7 @@ internal static class Program
             {IntPtr pointer=IntPtr.Zero;try{id=new Guid(key);Assert(Marshal.QueryInterface(com,ref id,out pointer)==0,"Office can query the embedded Ribbon and task-pane consumer interfaces: "+key);}finally{if(pointer!=IntPtr.Zero)Marshal.Release(pointer);}}
         }
         finally{if(connection!=IntPtr.Zero)Marshal.Release(connection);Marshal.Release(com);}
-        NativeLifecycleChecks.Run(connect,Assert);
+        try{NativeLifecycleChecks.Run(connect,Assert);}catch(Exception error){Console.WriteLine(error);throw;}
         Assert(stages.Contains("Construct") && stages.Contains("OnConnection.Enter") && stages.Contains("OnConnection.Complete") && stages.Contains("GetCustomUI") && stages.Contains("OnStartupComplete"),"Startup tracing records COM lifecycle stages without accessing a Word document");
         HostLog.Observer=_=>throw new System.IO.IOException("First-party diagnostic failure fixture");
         _=new Connect();Assert(true,"A failing diagnostic sink cannot prevent the connector from being created");

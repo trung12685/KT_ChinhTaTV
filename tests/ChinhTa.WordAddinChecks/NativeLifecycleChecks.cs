@@ -28,6 +28,7 @@ internal static class NativeLifecycleChecks
                 if(custom==IntPtr.Zero)throw new OutOfMemoryException("SAFEARRAY allocation failed");
                 try
                 {
+                    Console.WriteLine("Calling native OnConnection with SAFEARRAY count="+count);
                     int result=Method<Connection>(7)(connection,dispatch,1,dispatch,ref custom);
                     Console.WriteLine("Native OnConnection SAFEARRAY count="+count+" HRESULT=0x"+result.ToString("X8"));
                     assert(result==0,"Office-style unmanaged OnConnection accepts a VARIANT SAFEARRAY with "+count+" elements");

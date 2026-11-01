@@ -11,8 +11,8 @@ dotnet publish $workerProject -c Release -r "win-$Architecture" --self-contained
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 Copy-Item (Join-Path $root 'src/ChinhTa.WordAddin/bin/Release/net48/ChinhTa.WordAddin.dll') $Output
 Copy-Item (Join-Path $root 'src/ChinhTa.WordAddin/bin/Release/net48/ChinhTa.WordProtocol.dll') $Output
-Copy-Item (Join-Path $PSScriptRoot 'Install-WordAddin.ps1'),(Join-Path $PSScriptRoot 'Uninstall-WordAddin.ps1'),(Join-Path $PSScriptRoot 'Architecture.ps1'),(Join-Path $PSScriptRoot 'CAI-ADDIN.cmd'),(Join-Path $PSScriptRoot 'GO-ADDIN.cmd') $Output
-Copy-Item (Join-Path $root 'docs/WORD-ADDIN-0.1.89.md') $Output
+Copy-Item (Join-Path $PSScriptRoot 'Install-WordAddin.ps1'),(Join-Path $PSScriptRoot 'Uninstall-WordAddin.ps1'),(Join-Path $PSScriptRoot 'Architecture.ps1'),(Join-Path $PSScriptRoot 'CAI-ADDIN.cmd'),(Join-Path $PSScriptRoot 'GO-ADDIN.cmd'),(Join-Path $PSScriptRoot 'CHANDOAN-ADDIN.cmd'),(Join-Path $PSScriptRoot 'Diagnose-WordAddin.ps1') $Output
+Copy-Item (Join-Path $root 'docs/WORD-ADDIN-0.1.90.md') $Output
 . (Join-Path $PSScriptRoot 'Architecture.ps1')
 if ((Read-ExecutableArchitecture (Join-Path $Output 'worker/ChinhTa.WordWorker.exe')) -ne $Architecture) { throw 'Worker PE architecture does not match its package' }
 if (Test-Path (Join-Path $Output 'Office.dll')) { throw 'Office PIA must be embedded, not redistributed with the preview' }
@@ -37,6 +37,6 @@ try {
 } finally { $process.Dispose();if (Test-Path $probeRoot) { Remove-Item $probeRoot -Recurse -Force } }
 $files=[ordered]@{}
 Get-ChildItem $Output -Recurse -File | Sort-Object FullName | ForEach-Object { $relative=$_.FullName.Substring($Output.Length+1).Replace('\','/');$files[$relative]=(Get-FileHash $_.FullName -Algorithm SHA256).Hash }
-@{Version='0.1.89';Architecture=$Architecture;Runtime="win-$Architecture";Word='NOT_RUN';Commit=$env:GITHUB_SHA;Files=$files} | ConvertTo-Json -Depth 6 | Set-Content (Join-Path $Output 'addin-package.json') -Encoding UTF8
+@{Version='0.1.90';Architecture=$Architecture;Runtime="win-$Architecture";Word='NOT_RUN';Commit=$env:GITHUB_SHA;Files=$files} | ConvertTo-Json -Depth 6 | Set-Content (Join-Path $Output 'addin-package.json') -Encoding UTF8
 & (Join-Path $Output 'Install-WordAddin.ps1') -DryRun
 & (Join-Path $Output 'Uninstall-WordAddin.ps1') -DryRun
