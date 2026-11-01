@@ -3,3 +3,5 @@
 .vs/
 *.user
 artifacts/
+private-evaluation/
+__pycache__/

@@ -3,6 +3,10 @@
 The normal regression suite protects code behavior. It does not measure whether
 Vietnamese spelling warnings are correct in real text.
 
+For the pinned real-error development audit, alternative answers, source-label
+agreement and reserved partition, see [REAL-ERRORS.md](REAL-ERRORS.md). Its reports
+contain aggregates only. The normal application still disables the prototype.
+
 Run from the repository root:
 
     python scripts/SpellingEvaluation/prepare.py --sources /path/to/UD_Vietnamese-VTB --output /tmp/spelling-audit

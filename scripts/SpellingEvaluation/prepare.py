@@ -11,8 +11,7 @@ def fold(text):
 def utf16(text):
     return len(text.encode('utf-16-le'))//2
 
-def prepare(sources,output,fetch=False):
-    output.mkdir(parents=True,exist_ok=True)
+def load_corpus(sources,fetch=False):
     manifest=json.loads((ROOT/'assets/spelling/manifest.json').read_text(encoding='utf-8'))
     source_hashes={};sentences=[];seen=set()
     for split in ('train','dev','test'):
@@ -41,6 +40,11 @@ def prepare(sources,output,fetch=False):
         ts=tokens(text);uni.update(ts);bi.update(zip(ts,ts[1:]));tri.update(zip(ts,ts[1:],ts[2:]))
     with zipfile.ZipFile(ROOT/'assets/spelling/default-data.zip') as z:lm=json.loads(z.read('lm.json'))
     if dict(uni)!=lm['uni'] or dict(bi)!={(a,b):n for a,b,n in lm['bi']} or dict(tri)!={(a,b,c):n for a,b,c,n in lm['tri']}:raise ValueError('Runtime LM contains different counts/split')
+    return manifest,source_hashes,train,audit
+
+def prepare(sources,output,fetch=False):
+    output.mkdir(parents=True,exist_ok=True)
+    manifest,source_hashes,train,audit=load_corpus(sources,fetch)
     fixture=ROOT/'tests/data/spelling-quality/developer-fixtures.jsonl'
     rows=[json.loads(line) for line in fixture.read_text(encoding='utf-8').splitlines() if line.strip()]
     for text in audit:

@@ -1,0 +1,59 @@
+name: Vietnamese real-error spelling audit
+on:
+  push:
+    branches: ['quality/real-spelling-*']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check source alignment and answer scoring with first-party fixtures
+        shell: pwsh
+        run: |
+          python scripts/SpellingEvaluation/test_prepare_vsec.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          dotnet run --project tests/ChinhTa.SpellingEvaluation -c Release -- --self-check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Prepare local sources and development partitions
+        shell: pwsh
+        run: |
+          python scripts/SpellingEvaluation/prepare.py --sources private-evaluation/training-sources --output private-evaluation/legacy --fetch
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python scripts/SpellingEvaluation/prepare_vsec.py --source private-evaluation/VSEC.jsonl --training-sources private-evaluation/training-sources --output private-evaluation/vsec-development --fetch
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Measure full-worker behavior and export aggregates only
+        shell: pwsh
+        run: |
+          New-Item artifacts -ItemType Directory -Force | Out-Null
+          dotnet run --project tests/ChinhTa.SpellingEvaluation -c Release -- private-evaluation/legacy artifacts/legacy-quality.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python scripts/SpellingEvaluation/summarize.py artifacts/legacy-quality.json --output artifacts/legacy-quality.md
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          dotnet run --project tests/ChinhTa.SpellingEvaluation -c Release -- private-evaluation/vsec-development artifacts/real-error-quality.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python scripts/SpellingEvaluation/summarize_external.py artifacts/real-error-quality.json --output artifacts/real-error-quality.md
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Copy-Item private-evaluation/vsec-development/metadata.json artifacts/source-metadata.json
+          Get-Content artifacts/real-error-quality.md >> $env:GITHUB_STEP_SUMMARY
+          @{Commit=$env:GITHUB_SHA;InstallerProduced=$false;Word='NOT_RUN';ProductionQualified=$false;SourceTextRedistributed=$false;ReserveEvaluated=$false} | ConvertTo-Json | Set-Content artifacts/quality-build.json -Encoding UTF8
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: real-error-spelling-audit
+          retention-days: 30
+          path: |
+            artifacts/legacy-quality.json
+            artifacts/legacy-quality.md
+            artifacts/real-error-quality.json
+            artifacts/real-error-quality.md
+            artifacts/source-metadata.json
+            artifacts/quality-build.json
